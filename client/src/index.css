@@ -462,6 +462,12 @@
     color: var(--muted-foreground);
   }
   
+  /* Remove extra margin from p tags inside task list items */
+  ul[data-type="taskList"] li > div > p {
+    margin: 0;
+    padding: 0;
+  }
+  
   /* Horizontal rule - dotted gray per user preference */
   hr {
     border: none;
