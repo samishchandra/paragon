@@ -1416,3 +1416,80 @@ pre.with-line-numbers code .line::before {
 .ProseMirror a:hover {
   color: oklch(0.75 0.15 220);
 }
+
+
+/* Wiki Link Styles */
+.wiki-link {
+  color: var(--primary);
+  background: oklch(0.58 0.15 220 / 0.15);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.wiki-link::before {
+  content: '[[';
+  color: var(--muted-foreground);
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.wiki-link::after {
+  content: ']]';
+  color: var(--muted-foreground);
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.wiki-link:hover {
+  background: oklch(0.58 0.15 220 / 0.25);
+  color: oklch(0.75 0.15 220);
+}
+
+.wiki-link-invalid {
+  background: oklch(0.5 0.2 25 / 0.15);
+  color: oklch(0.7 0.2 25);
+  border: 1px dashed oklch(0.6 0.2 25 / 0.5);
+}
+
+.wiki-link-invalid:hover {
+  background: oklch(0.5 0.2 25 / 0.25);
+}
+
+/* Invalid Link Styles (for regular links) */
+.link-invalid {
+  text-decoration: underline wavy oklch(0.65 0.25 25);
+  text-underline-offset: 3px;
+}
+
+.link-invalid::after {
+  content: '⚠';
+  font-size: 0.7em;
+  margin-left: 0.25em;
+  color: oklch(0.65 0.25 25);
+  vertical-align: super;
+}
+
+/* Link validation tooltip */
+.ProseMirror a.link-invalid {
+  position: relative;
+}
+
+.ProseMirror a.link-invalid:hover::before {
+  content: 'Invalid URL';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.5rem;
+  background: oklch(0.25 0.02 25);
+  border: 1px solid oklch(0.5 0.2 25);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: oklch(0.85 0.15 25);
+  white-space: nowrap;
+  z-index: 10;
+}

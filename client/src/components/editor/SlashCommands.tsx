@@ -19,6 +19,7 @@ import {
   FileText,
   Type,
   Calendar,
+  Link2,
 } from 'lucide-react';
 
 /*
@@ -170,6 +171,18 @@ const commands: CommandItem[] = [
     icon: <Calendar size={18} className="text-cyan-400" />,
     command: (editor) => editor.chain().focus().insertDatePill().run(),
     keywords: ['date', 'today', 'calendar', 'time', 'schedule'],
+  },
+  {
+    title: 'Wiki Link',
+    description: 'Insert a [[page name]] link',
+    icon: <Link2 size={18} className="text-cyan-400" />,
+    command: (editor) => {
+      const pageName = window.prompt('Enter page name:');
+      if (pageName) {
+        editor.chain().focus().insertContent(`[[${pageName}]]`).run();
+      }
+    },
+    keywords: ['wiki', 'internal', 'page', 'link', 'backlink'],
   },
 ];
 

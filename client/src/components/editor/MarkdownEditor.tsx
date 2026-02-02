@@ -26,6 +26,8 @@ import { DatePill } from './extensions/DatePill';
 import { SortableTable } from './extensions/SortableTable';
 import { MarkdownPaste } from './extensions/MarkdownPaste';
 import { TableRowDrag } from './extensions/TableRowDrag';
+import { WikiLink } from './extensions/WikiLink';
+import { LinkValidation } from './extensions/LinkValidation';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 
@@ -144,6 +146,15 @@ export function MarkdownEditor({
     }),
     TableRowDrag.configure({
       enableDrag: true,
+    }),
+    WikiLink.configure({
+      onWikiLinkClick: (pageName) => {
+        console.log('Wiki link clicked:', pageName);
+        // In a real app, this would navigate to the page or open it
+      },
+    }),
+    LinkValidation.configure({
+      validateOnChange: true,
     }),
   ], [placeholder]);
 
