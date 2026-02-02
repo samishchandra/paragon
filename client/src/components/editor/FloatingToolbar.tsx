@@ -17,22 +17,16 @@ import {
   List,
   ListOrdered,
   CheckSquare,
-  MoreHorizontal,
+  Pilcrow,
+  FileCode,
 } from 'lucide-react';
 import { useCallback, useState, useEffect, useRef } from 'react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
 
 /*
  * DESIGN: Dark Mode Craftsman
  * Mobile-responsive floating toolbar
  * Touch-friendly buttons with proper sizing
- * Collapsible groups on smaller screens
+ * Auto-positioning to stay within viewport
  */
 
 interface FloatingToolbarProps {
@@ -79,6 +73,7 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const toolbarRef = useRef<HTMLDivElement>(null);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const showTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const setLink = useCallback(() => {
     if (linkUrl) {
@@ -124,46 +119,69 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
       
       try {
         const { selection } = editor.state;
-      const { empty, from, to } = selection;
+        const { empty, from, to } = selection;
 
-      // Hide if selection is empty or in code block
-      if (empty || editor.isActive('codeBlock')) {
-        // Delay hiding to allow button clicks
+        // Hide if selection is empty or in code block
+        if (empty || editor.isActive('codeBlock')) {
+          // Clear any pending show timeout
+          if (showTimeoutRef.current) {
+            clearTimeout(showTimeoutRef.current);
+            showTimeoutRef.current = null;
+          }
+          // Delay hiding to allow button clicks
+          if (hideTimeoutRef.current) {
+            clearTimeout(hideTimeoutRef.current);
+          }
+          hideTimeoutRef.current = setTimeout(() => {
+            setIsVisible(false);
+            setShowLinkInput(false);
+          }, 150);
+          return;
+        }
+
+        // Clear any pending hide
         if (hideTimeoutRef.current) {
           clearTimeout(hideTimeoutRef.current);
+          hideTimeoutRef.current = null;
         }
-        hideTimeoutRef.current = setTimeout(() => {
-          setIsVisible(false);
-          setShowLinkInput(false);
-        }, 150);
-        return;
-      }
 
-      // Clear any pending hide
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current);
-        hideTimeoutRef.current = null;
-      }
+        // Get selection coordinates
+        const start = editor.view.coordsAtPos(from);
+        const end = editor.view.coordsAtPos(to);
+        
+        // Get editor container bounds
+        const editorRect = editor.view.dom.getBoundingClientRect();
+        
+        // Calculate toolbar dimensions
+        const toolbarWidth = toolbarRef.current?.offsetWidth || 450;
+        const toolbarHeight = 45;
+        
+        // Calculate center position relative to viewport
+        let centerX = (start.left + end.left) / 2;
+        let topY = start.top - toolbarHeight - 10; // Position above selection
+        
+        // Ensure toolbar stays within viewport horizontally
+        const minX = toolbarWidth / 2 + 10;
+        const maxX = window.innerWidth - toolbarWidth / 2 - 10;
+        centerX = Math.max(minX, Math.min(maxX, centerX));
+        
+        // Convert to position relative to editor
+        const left = centerX - editorRect.left;
+        const top = topY - editorRect.top;
 
-      // Get selection coordinates
-      const start = editor.view.coordsAtPos(from);
-      const end = editor.view.coordsAtPos(to);
-      
-      // Get editor container bounds
-      const editorRect = editor.view.dom.getBoundingClientRect();
-      
-      // Calculate center position relative to editor
-      let left = ((start.left + end.left) / 2) - editorRect.left;
-      const top = start.top - editorRect.top - 55; // Position above selection
-
-      // Ensure toolbar stays within editor bounds on mobile
-      const toolbarWidth = toolbarRef.current?.offsetWidth || 300;
-      const minLeft = toolbarWidth / 2 + 10;
-      const maxLeft = editorRect.width - toolbarWidth / 2 - 10;
-      left = Math.max(minLeft, Math.min(maxLeft, left));
-
-      setPosition({ top: Math.max(10, top), left });
-      setIsVisible(true);
+        // Add delay before showing toolbar (200ms)
+        if (!isVisible) {
+          if (showTimeoutRef.current) {
+            clearTimeout(showTimeoutRef.current);
+          }
+          showTimeoutRef.current = setTimeout(() => {
+            setPosition({ top: Math.max(10, top), left });
+            setIsVisible(true);
+          }, 200);
+        } else {
+          // Already visible, update position immediately
+          setPosition({ top: Math.max(10, top), left });
+        }
       } catch (error) {
         console.warn('FloatingToolbar: Error updating position', error);
       }
@@ -178,8 +196,11 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
       if (hideTimeoutRef.current) {
         clearTimeout(hideTimeoutRef.current);
       }
+      if (showTimeoutRef.current) {
+        clearTimeout(showTimeoutRef.current);
+      }
     };
-  }, [editor]);
+  }, [editor, isVisible]);
 
   // Keep toolbar visible when interacting with it
   const handleToolbarMouseDown = (e: React.MouseEvent) => {
@@ -267,7 +288,41 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
       style={{ top: position.top, left: position.left, transform: 'translateX(-50%)' }}
       onMouseDown={handleToolbarMouseDown}
     >
-      {/* Primary text formatting - Always visible */}
+      {/* Paragraph style - convert to normal paragraph */}
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setParagraph().run())}
+        isActive={editor.isActive('paragraph') && !editor.isActive('heading') && !editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList') && !editor.isActive('blockquote') && !editor.isActive('codeBlock')}
+        title="Paragraph"
+      >
+        <Pilcrow size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+
+      {/* Headings */}
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 1 }).run())}
+        isActive={editor.isActive('heading', { level: 1 })}
+        title="Heading 1"
+      >
+        <Heading1 size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 2 }).run())}
+        isActive={editor.isActive('heading', { level: 2 })}
+        title="Heading 2"
+      >
+        <Heading2 size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 3 }).run())}
+        isActive={editor.isActive('heading', { level: 3 })}
+        title="Heading 3"
+      >
+        <Heading3 size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+
+      <Divider />
+
+      {/* Primary text formatting */}
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBold().run())}
         isActive={editor.isActive('bold')}
@@ -289,31 +344,27 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
       >
         <Underline size={18} className="sm:w-4 sm:h-4" />
       </ToolbarButton>
-      
-      {/* Desktop: Show more buttons */}
-      <div className="hidden sm:flex items-center">
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleStrike().run())}
-          isActive={editor.isActive('strike')}
-          title="Strikethrough"
-        >
-          <Strikethrough size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleCode().run())}
-          isActive={editor.isActive('code')}
-          title="Inline Code (Ctrl+E)"
-        >
-          <Code size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHighlight().run())}
-          isActive={editor.isActive('highlight')}
-          title="Highlight"
-        >
-          <Highlighter size={16} />
-        </ToolbarButton>
-      </div>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleStrike().run())}
+        isActive={editor.isActive('strike')}
+        title="Strikethrough"
+      >
+        <Strikethrough size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleCode().run())}
+        isActive={editor.isActive('code')}
+        title="Inline Code (Ctrl+E)"
+      >
+        <Code size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHighlight().run())}
+        isActive={editor.isActive('highlight')}
+        title="Highlight"
+      >
+        <Highlighter size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
 
       <ToolbarButton
         onMouseDown={handleLinkClick}
@@ -325,149 +376,67 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
 
       <Divider />
 
-      {/* Desktop: Headings */}
-      <div className="hidden md:flex items-center">
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 1 }).run())}
-          isActive={editor.isActive('heading', { level: 1 })}
-          title="Heading 1"
-        >
-          <Heading1 size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 2 }).run())}
-          isActive={editor.isActive('heading', { level: 2 })}
-          title="Heading 2"
-        >
-          <Heading2 size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 3 }).run())}
-          isActive={editor.isActive('heading', { level: 3 })}
-          title="Heading 3"
-        >
-          <Heading3 size={16} />
-        </ToolbarButton>
+      {/* Block elements */}
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBlockquote().run())}
+        isActive={editor.isActive('blockquote')}
+        title="Quote"
+      >
+        <Quote size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBulletList().run())}
+        isActive={editor.isActive('bulletList')}
+        title="Bullet List"
+      >
+        <List size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleOrderedList().run())}
+        isActive={editor.isActive('orderedList')}
+        title="Numbered List"
+      >
+        <ListOrdered size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleTaskList().run())}
+        isActive={editor.isActive('taskList')}
+        title="Task List"
+      >
+        <CheckSquare size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleCodeBlock().run())}
+        isActive={editor.isActive('codeBlock')}
+        title="Code Block"
+      >
+        <FileCode size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
 
-        <Divider />
+      <Divider />
 
-        {/* Block elements */}
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBlockquote().run())}
-          isActive={editor.isActive('blockquote')}
-          title="Quote"
-        >
-          <Quote size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBulletList().run())}
-          isActive={editor.isActive('bulletList')}
-          title="Bullet List"
-        >
-          <List size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleOrderedList().run())}
-          isActive={editor.isActive('orderedList')}
-          title="Numbered List"
-        >
-          <ListOrdered size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleTaskList().run())}
-          isActive={editor.isActive('taskList')}
-          title="Task List"
-        >
-          <CheckSquare size={16} />
-        </ToolbarButton>
-
-        <Divider />
-
-        {/* Alignment */}
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('left').run())}
-          isActive={editor.isActive({ textAlign: 'left' })}
-          title="Align Left"
-        >
-          <AlignLeft size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('center').run())}
-          isActive={editor.isActive({ textAlign: 'center' })}
-          title="Align Center"
-        >
-          <AlignCenter size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('right').run())}
-          isActive={editor.isActive({ textAlign: 'right' })}
-          title="Align Right"
-        >
-          <AlignRight size={16} />
-        </ToolbarButton>
-      </div>
-
-      {/* Mobile/Tablet: More options dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            className="flex md:hidden items-center justify-center w-9 h-9 rounded-md
-              bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80
-              transition-all duration-100 ease-out touch-manipulation"
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <MoreHorizontal size={18} />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          {/* Mobile-only formatting options */}
-          <div className="sm:hidden">
-            <DropdownMenuItem onSelect={() => editor.chain().focus().toggleStrike().run()}>
-              <Strikethrough size={16} className="mr-2" /> Strikethrough
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => editor.chain().focus().toggleCode().run()}>
-              <Code size={16} className="mr-2" /> Inline Code
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => editor.chain().focus().toggleHighlight().run()}>
-              <Highlighter size={16} className="mr-2" /> Highlight
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </div>
-          
-          <DropdownMenuItem onSelect={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
-            <Heading1 size={16} className="mr-2" /> Heading 1
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
-            <Heading2 size={16} className="mr-2" /> Heading 2
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
-            <Heading3 size={16} className="mr-2" /> Heading 3
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => editor.chain().focus().toggleBlockquote().run()}>
-            <Quote size={16} className="mr-2" /> Quote
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => editor.chain().focus().toggleBulletList().run()}>
-            <List size={16} className="mr-2" /> Bullet List
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => editor.chain().focus().toggleOrderedList().run()}>
-            <ListOrdered size={16} className="mr-2" /> Numbered List
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => editor.chain().focus().toggleTaskList().run()}>
-            <CheckSquare size={16} className="mr-2" /> Task List
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => editor.chain().focus().setTextAlign('left').run()}>
-            <AlignLeft size={16} className="mr-2" /> Align Left
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => editor.chain().focus().setTextAlign('center').run()}>
-            <AlignCenter size={16} className="mr-2" /> Align Center
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => editor.chain().focus().setTextAlign('right').run()}>
-            <AlignRight size={16} className="mr-2" /> Align Right
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Alignment */}
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('left').run())}
+        isActive={editor.isActive({ textAlign: 'left' })}
+        title="Align Left"
+      >
+        <AlignLeft size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('center').run())}
+        isActive={editor.isActive({ textAlign: 'center' })}
+        title="Align Center"
+      >
+        <AlignCenter size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('right').run())}
+        isActive={editor.isActive({ textAlign: 'right' })}
+        title="Align Right"
+      >
+        <AlignRight size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
     </div>
   );
 }
