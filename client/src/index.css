@@ -443,7 +443,7 @@
     display: flex;
     align-items: center;
     height: 1.5em; /* Match line-height to vertically center checkbox */
-    margin-top: 0.15em; /* Fine-tune vertical alignment with text - moved down to align with text baseline */
+    margin-top: 0.05em; /* Fine-tune vertical alignment with text - adjusted to align better with text */
   }
   
   ul[data-type="taskList"] li > label input[type="checkbox"] {
