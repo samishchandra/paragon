@@ -30,6 +30,11 @@ import {
   CheckCircle,
   FileText,
   Code2,
+  Rows,
+  Columns,
+  Plus,
+  Trash2,
+  ToggleLeft,
 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import {
@@ -284,12 +289,102 @@ export function EditorToolbar({ editor, onCopyMarkdown, className = '' }: Editor
       <Divider />
 
       {/* Insert elements */}
-      <ToolbarButton
-        onClick={addTable}
-        tooltip="Insert Table"
-      >
-        <Table size={16} />
-      </ToolbarButton>
+      {/* Table dropdown with controls */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`h-8 px-2 gap-1 ${editor.isActive('table') ? 'bg-primary text-primary-foreground' : ''}`}
+          >
+            <Table size={16} />
+            <span className="text-xs">Table</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuItem onClick={addTable}>
+            <Plus size={16} className="mr-2" /> Insert Table (3×3)
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().addColumnBefore().run()}
+            disabled={!editor.can().addColumnBefore()}
+          >
+            <Columns size={16} className="mr-2" /> Add Column Before
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+            disabled={!editor.can().addColumnAfter()}
+          >
+            <Columns size={16} className="mr-2" /> Add Column After
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().deleteColumn().run()}
+            disabled={!editor.can().deleteColumn()}
+          >
+            <Trash2 size={16} className="mr-2 text-destructive" /> Delete Column
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().addRowBefore().run()}
+            disabled={!editor.can().addRowBefore()}
+          >
+            <Rows size={16} className="mr-2" /> Add Row Before
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+            disabled={!editor.can().addRowAfter()}
+          >
+            <Rows size={16} className="mr-2" /> Add Row After
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().deleteRow().run()}
+            disabled={!editor.can().deleteRow()}
+          >
+            <Trash2 size={16} className="mr-2 text-destructive" /> Delete Row
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+            disabled={!editor.can().toggleHeaderRow()}
+          >
+            <ToggleLeft size={16} className="mr-2" /> Toggle Header Row
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().toggleHeaderColumn().run()}
+            disabled={!editor.can().toggleHeaderColumn()}
+          >
+            <ToggleLeft size={16} className="mr-2" /> Toggle Header Column
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().toggleHeaderCell().run()}
+            disabled={!editor.can().toggleHeaderCell()}
+          >
+            <ToggleLeft size={16} className="mr-2" /> Toggle Header Cell
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().mergeCells().run()}
+            disabled={!editor.can().mergeCells()}
+          >
+            <Table size={16} className="mr-2" /> Merge Cells
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().splitCell().run()}
+            disabled={!editor.can().splitCell()}
+          >
+            <Table size={16} className="mr-2" /> Split Cell
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().deleteTable().run()}
+            disabled={!editor.can().deleteTable()}
+            className="text-destructive"
+          >
+            <Trash2 size={16} className="mr-2" /> Delete Table
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       
       {showImageInput ? (
         <div className="flex items-center gap-1 px-2 py-1 bg-secondary rounded-md">
