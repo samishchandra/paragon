@@ -359,7 +359,7 @@ export function MarkdownEditor({
   return (
     <div className={`flex flex-col h-full bg-background rounded-lg border border-border overflow-hidden ${className}`}>
       {/* Top Toolbar */}
-      {showToolbar && <EditorToolbar editor={editor} onCopyMarkdown={copyAsMarkdown} />}
+      {showToolbar && <EditorToolbar editor={editor} onCopyMarkdown={copyAsMarkdown} onOpenLinkPopover={() => setIsLinkPopoverOpen(true)} />}
       
       {/* Editor Content */}
       <div className="flex-1 overflow-auto relative">

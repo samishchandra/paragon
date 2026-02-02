@@ -61,6 +61,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 interface EditorToolbarProps {
   editor: Editor;
   onCopyMarkdown?: () => void;
+  onOpenLinkPopover?: () => void;
   className?: string;
 }
 
@@ -109,7 +110,7 @@ const Divider = () => (
   <div className="w-px h-6 bg-border mx-1" />
 );
 
-export function EditorToolbar({ editor, onCopyMarkdown, className = '' }: EditorToolbarProps) {
+export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '' }: EditorToolbarProps) {
   const [imageUrl, setImageUrl] = useState('');
   const [showImageInput, setShowImageInput] = useState(false);
 
@@ -191,6 +192,13 @@ export function EditorToolbar({ editor, onCopyMarkdown, className = '' }: Editor
         tooltip="Highlight"
       >
         <Highlighter size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => onOpenLinkPopover?.()}
+        isActive={editor.isActive('link')}
+        tooltip="Link (Ctrl+K)"
+      >
+        <Link size={16} />
       </ToolbarButton>
 
       <Divider />
