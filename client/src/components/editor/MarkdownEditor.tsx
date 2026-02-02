@@ -91,6 +91,7 @@ export function MarkdownEditor({
       },
       // Disable extensions that we configure separately to avoid duplicates
       // This fixes mobile crash issues caused by duplicate extension registration
+      link: false, // We configure Link separately
     }),
     Placeholder.configure({
       placeholder,
@@ -243,9 +244,12 @@ export function MarkdownEditor({
 
   // Handle keyboard shortcuts for markdown auto-detection
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Skip if editor is destroyed
+      if (editor.isDestroyed) return;
+      
       // Cmd/Ctrl+K for link popover
       if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
         event.preventDefault();

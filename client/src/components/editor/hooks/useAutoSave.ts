@@ -69,6 +69,8 @@ export function useAutoSave(
   // Check for recoverable content on mount
   useEffect(() => {
     if (!enabled) return;
+    // Skip on initial render when editor is not ready
+    if (!editor || editor.isDestroyed) return;
 
     try {
       const savedContent = localStorage.getItem(storageKey);
@@ -76,7 +78,13 @@ export function useAutoSave(
       
       if (savedContent && !dismissed) {
         // Check if saved content is different from current
-        const currentContent = editor?.getHTML() || '';
+        let currentContent = '';
+        try {
+          currentContent = editor.getHTML() || '';
+        } catch {
+          // Editor might not be ready yet
+          return;
+        }
         if (savedContent !== currentContent && savedContent.length > 50) {
           setState(prev => ({ ...prev, hasRecoverableContent: true }));
         }
@@ -88,7 +96,7 @@ export function useAutoSave(
 
   // Save content to localStorage
   const saveContent = useCallback(() => {
-    if (!editor || !enabled) return;
+    if (!editor || !enabled || editor.isDestroyed) return;
 
     try {
       const content = editor.getHTML();
@@ -137,9 +145,11 @@ export function useAutoSave(
 
   // Debounced save on content change
   useEffect(() => {
-    if (!editor || !enabled) return;
+    if (!editor || !enabled || editor.isDestroyed) return;
 
     const handleUpdate = () => {
+      // Skip if editor is destroyed
+      if (editor.isDestroyed) return;
       // Clear existing timeout
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -163,10 +173,11 @@ export function useAutoSave(
 
   // Save on page unload
   useEffect(() => {
-    if (!editor || !enabled) return;
+    if (!editor || !enabled || editor.isDestroyed) return;
 
     const handleBeforeUnload = () => {
       // Immediate save without debounce
+      if (editor.isDestroyed) return;
       try {
         const content = editor.getHTML();
         if (content.length >= 20) {
@@ -213,9 +224,10 @@ export function useAutoSave(
 
   // Recover content from localStorage
   const recover = useCallback((): string | null => {
+    if (!editor || editor.isDestroyed) return null;
     try {
       const content = localStorage.getItem(storageKey);
-      if (content && editor) {
+      if (content && editor && !editor.isDestroyed) {
         editor.commands.setContent(content);
         lastContentRef.current = content;
         setState(prev => ({ ...prev, hasRecoverableContent: false }));

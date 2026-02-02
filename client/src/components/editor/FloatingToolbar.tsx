@@ -116,8 +116,14 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
 
   // Update toolbar visibility and position based on selection
   useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    
     const updateToolbar = () => {
-      const { selection } = editor.state;
+      // Skip if editor is destroyed
+      if (editor.isDestroyed) return;
+      
+      try {
+        const { selection } = editor.state;
       const { empty, from, to } = selection;
 
       // Hide if selection is empty or in code block
@@ -158,6 +164,9 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
 
       setPosition({ top: Math.max(10, top), left });
       setIsVisible(true);
+      } catch (error) {
+        console.warn('FloatingToolbar: Error updating position', error);
+      }
     };
 
     editor.on('selectionUpdate', updateToolbar);

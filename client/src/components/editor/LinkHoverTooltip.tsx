@@ -32,14 +32,16 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const showTooltip = useCallback((linkElement: HTMLElement) => {
+    if (!editor || editor.isDestroyed) return;
     if (hideTimeoutRef.current) {
       clearTimeout(hideTimeoutRef.current);
       hideTimeoutRef.current = null;
     }
 
-    const href = linkElement.getAttribute('href') || '';
-    const rect = linkElement.getBoundingClientRect();
-    const editorRect = editor.view.dom.getBoundingClientRect();
+    try {
+      const href = linkElement.getAttribute('href') || '';
+      const rect = linkElement.getBoundingClientRect();
+      const editorRect = editor.view.dom.getBoundingClientRect();
 
     setTooltip({
       isVisible: true,
@@ -50,6 +52,9 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
       },
       linkElement,
     });
+    } catch (error) {
+      console.warn('LinkHoverTooltip: Error showing tooltip', error);
+    }
   }, [editor]);
 
   const hideTooltip = useCallback(() => {
@@ -67,7 +72,10 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
 
   // Handle mouse events on the editor
   useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    
     const editorElement = editor.view.dom;
+    if (!editorElement) return;
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
