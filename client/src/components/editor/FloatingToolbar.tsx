@@ -152,9 +152,10 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         // Get editor container bounds
         const editorRect = editor.view.dom.getBoundingClientRect();
         
-        // Get actual toolbar width after render, or estimate
+        // Get actual toolbar dimensions after render, or estimate
         const toolbarWidth = toolbarRef.current?.offsetWidth || 500;
-        const toolbarHeight = 40;
+        // Use actual height for multi-row support, with fallback
+        const toolbarHeight = toolbarRef.current?.offsetHeight || 40;
         
         // Calculate center position of selection relative to editor
         const selectionCenterX = ((start.left + end.left) / 2) - editorRect.left;

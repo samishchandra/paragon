@@ -956,6 +956,7 @@
 .floating-toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 2px;
   padding: 4px 6px;
   border-radius: 8px;
@@ -965,7 +966,8 @@
   border: 1px solid oklch(0.35 0.01 250 / 0.5);
   box-shadow: 0 4px 20px oklch(0 0 0 / 0.3);
   max-width: calc(100% - 16px);
-  white-space: nowrap;
+  /* Allow wrapping to multiple rows */
+  white-space: normal;
 }
 
 @media (min-width: 640px) {
