@@ -22,6 +22,7 @@ import { Callout } from './extensions/Callout';
 import { ResizableImage } from './extensions/ResizableImage';
 import { DatePill } from './extensions/DatePill';
 import { SortableTable } from './extensions/SortableTable';
+import { MarkdownPaste } from './extensions/MarkdownPaste';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 
@@ -134,6 +135,9 @@ export function MarkdownEditor({
     }),
     SortableTable.configure({
       enableSorting: true,
+    }),
+    MarkdownPaste.configure({
+      enableMarkdownPaste: true,
     }),
   ], [placeholder]);
 
