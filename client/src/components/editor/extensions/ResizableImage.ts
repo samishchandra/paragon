@@ -1,0 +1,186 @@
+import Image from '@tiptap/extension-image';
+import { mergeAttributes } from '@tiptap/core';
+
+export interface ResizableImageOptions {
+  HTMLAttributes: Record<string, unknown>;
+  allowBase64: boolean;
+}
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    resizableImage: {
+      setImage: (options: { src: string; alt?: string; title?: string; width?: number }) => ReturnType;
+    };
+  }
+}
+
+export const ResizableImage = Image.extend<ResizableImageOptions>({
+  name: 'resizableImage',
+
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      HTMLAttributes: {},
+      allowBase64: true,
+    };
+  },
+
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        parseHTML: (element: HTMLElement) => {
+          const width = element.getAttribute('width') || element.style.width;
+          return width ? parseInt(width, 10) : null;
+        },
+        renderHTML: (attributes: Record<string, unknown>) => {
+          if (!attributes.width) {
+            return {};
+          }
+          return {
+            width: attributes.width,
+            style: `width: ${attributes.width}px`,
+          };
+        },
+      },
+      height: {
+        default: null,
+        parseHTML: (element: HTMLElement) => {
+          const height = element.getAttribute('height') || element.style.height;
+          return height ? parseInt(height, 10) : null;
+        },
+        renderHTML: (attributes: Record<string, unknown>) => {
+          if (!attributes.height) {
+            return {};
+          }
+          return {
+            height: attributes.height,
+          };
+        },
+      },
+      align: {
+        default: 'center',
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-align') || 'center',
+        renderHTML: (attributes: Record<string, unknown>) => ({
+          'data-align': attributes.align,
+        }),
+      },
+    };
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    const align = HTMLAttributes['data-align'] || 'center';
+    const wrapperStyle = {
+      left: 'margin-right: auto;',
+      center: 'margin-left: auto; margin-right: auto;',
+      right: 'margin-left: auto;',
+    }[align as string] || 'margin-left: auto; margin-right: auto;';
+
+    return [
+      'figure',
+      { 
+        class: 'image-resizer',
+        style: wrapperStyle,
+      },
+      [
+        'img',
+        mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+      ],
+    ];
+  },
+
+  addNodeView() {
+    return ({ node, editor, getPos }) => {
+      const container = document.createElement('figure');
+      container.classList.add('image-resizer');
+      
+      const img = document.createElement('img');
+      img.src = node.attrs.src;
+      img.alt = node.attrs.alt || '';
+      if (node.attrs.width) {
+        img.style.width = `${node.attrs.width}px`;
+      }
+      
+      // Resize handle
+      const resizeHandle = document.createElement('div');
+      resizeHandle.classList.add('resize-handle');
+      resizeHandle.style.cssText = `
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        width: 12px;
+        height: 12px;
+        background: var(--primary);
+        border-radius: 2px;
+        cursor: se-resize;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+      `;
+      
+      container.appendChild(img);
+      container.appendChild(resizeHandle);
+      
+      // Show handle on hover
+      container.addEventListener('mouseenter', () => {
+        resizeHandle.style.opacity = '1';
+      });
+      container.addEventListener('mouseleave', () => {
+        resizeHandle.style.opacity = '0';
+      });
+      
+      // Resize logic
+      let startX: number;
+      let startWidth: number;
+      
+      const onMouseDown = (e: MouseEvent) => {
+        e.preventDefault();
+        startX = e.clientX;
+        startWidth = img.offsetWidth;
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      };
+      
+      const onMouseMove = (e: MouseEvent) => {
+        const diff = e.clientX - startX;
+        const newWidth = Math.max(100, startWidth + diff);
+        img.style.width = `${newWidth}px`;
+      };
+      
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        
+        const pos = typeof getPos === 'function' ? getPos() : null;
+        if (pos !== null && pos !== undefined) {
+          editor.chain().focus().updateAttributes('resizableImage', {
+            width: img.offsetWidth,
+          }).run();
+        }
+      };
+      
+      resizeHandle.addEventListener('mousedown', onMouseDown);
+      
+      return {
+        dom: container,
+        update: (updatedNode) => {
+          if (updatedNode.type.name !== 'resizableImage') {
+            return false;
+          }
+          img.src = updatedNode.attrs.src;
+          img.alt = updatedNode.attrs.alt || '';
+          if (updatedNode.attrs.width) {
+            img.style.width = `${updatedNode.attrs.width}px`;
+          }
+          return true;
+        },
+        destroy: () => {
+          resizeHandle.removeEventListener('mousedown', onMouseDown);
+        },
+      };
+    };
+  },
+});
+
+export default ResizableImage;
