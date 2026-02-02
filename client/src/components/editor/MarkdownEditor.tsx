@@ -12,7 +12,6 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Underline from '@tiptap/extension-underline';
-import Strike from '@tiptap/extension-strike';
 import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Typography from '@tiptap/extension-typography';
@@ -92,9 +91,8 @@ export function MarkdownEditor({
       },
       // Disable extensions that we configure separately to avoid duplicates
       // This fixes mobile crash issues caused by duplicate extension registration
-      link: false, // We configure Link separately
-      underline: false, // We configure Underline separately
-      strike: false, // Avoid potential conflicts
+      link: false, // We configure Link separately with custom options
+      underline: false, // Disable to avoid duplicate - we don't need separate config
       bold: {
         HTMLAttributes: {
           class: 'font-bold',
@@ -153,7 +151,6 @@ export function MarkdownEditor({
       },
     }),
     Underline,
-    Strike,
     Subscript,
     Superscript,
     Typography,
