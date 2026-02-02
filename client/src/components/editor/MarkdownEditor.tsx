@@ -30,6 +30,7 @@ import { WikiLink } from './extensions/WikiLink';
 import { LinkValidation } from './extensions/LinkValidation';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
+import { FindReplace } from './FindReplace';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -208,6 +209,9 @@ export function MarkdownEditor({
 
   // State for link popover
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
+  
+  // State for find/replace panel
+  const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
 
   // Handle keyboard shortcuts for markdown auto-detection
   useEffect(() => {
@@ -218,6 +222,20 @@ export function MarkdownEditor({
       if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
         event.preventDefault();
         setIsLinkPopoverOpen(true);
+        return;
+      }
+      
+      // Cmd/Ctrl+F for find/replace
+      if ((event.metaKey || event.ctrlKey) && event.key === 'f') {
+        event.preventDefault();
+        setIsFindReplaceOpen(true);
+        return;
+      }
+      
+      // Cmd/Ctrl+H for find/replace with replace panel open
+      if ((event.metaKey || event.ctrlKey) && event.key === 'h') {
+        event.preventDefault();
+        setIsFindReplaceOpen(true);
         return;
       }
 
@@ -369,6 +387,13 @@ export function MarkdownEditor({
 
   return (
     <div className={`flex flex-col h-full bg-background rounded-lg border border-border overflow-hidden ${className}`}>
+      {/* Find/Replace Panel */}
+      <FindReplace 
+        editor={editor} 
+        isOpen={isFindReplaceOpen} 
+        onClose={() => setIsFindReplaceOpen(false)} 
+      />
+      
       {/* Top Toolbar */}
       {showToolbar && <EditorToolbar editor={editor} onCopyMarkdown={copyAsMarkdown} onOpenLinkPopover={() => setIsLinkPopoverOpen(true)} />}
       
