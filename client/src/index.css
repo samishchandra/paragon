@@ -362,11 +362,16 @@
   }
   
   li {
-    margin: 0.25rem 0;
+    margin: 0;
+    padding: 0.125rem 0;
   }
   
   li > ul, li > ol {
-    margin: 0.25rem 0;
+    margin: 0.25rem 0 0 0;
+  }
+  
+  li > p {
+    margin-bottom: 0;
   }
   
   /* Task lists */
@@ -379,11 +384,13 @@
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
+    margin: 0;
+    padding: 0.125rem 0;
   }
   
   ul[data-type="taskList"] li > label {
     flex-shrink: 0;
-    margin-top: 0.25rem;
+    margin-top: 0.125rem;
   }
   
   ul[data-type="taskList"] li > label input[type="checkbox"] {
