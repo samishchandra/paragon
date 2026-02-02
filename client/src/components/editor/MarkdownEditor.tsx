@@ -48,6 +48,8 @@ const isMobileDevice = () => {
   return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768;
 };
 
+export type LineSpacing = 'compact' | 'normal' | 'relaxed';
+
 export interface MarkdownEditorProps {
   content?: string;
   onChange?: (content: string) => void;
@@ -65,6 +67,10 @@ export interface MarkdownEditorProps {
   autoSaveKey?: string;
   /** Auto-save debounce delay in ms (default: 1000) */
   autoSaveDelay?: number;
+  /** Line spacing: 'compact' | 'normal' | 'relaxed' (default: 'normal') */
+  lineSpacing?: LineSpacing;
+  /** Callback when line spacing changes */
+  onLineSpacingChange?: (spacing: LineSpacing) => void;
 }
 
 export function MarkdownEditor({
@@ -80,9 +86,30 @@ export function MarkdownEditor({
   autoSave = true,
   autoSaveKey = 'manus-editor-content',
   autoSaveDelay = 1000,
+  lineSpacing: initialLineSpacing = 'normal',
+  onLineSpacingChange,
 }: MarkdownEditorProps) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
+  
+  // Line spacing state
+  const [lineSpacing, setLineSpacing] = useState<LineSpacing>(initialLineSpacing);
+  
+  // Handle line spacing change
+  const handleLineSpacingChange = useCallback((spacing: LineSpacing) => {
+    setLineSpacing(spacing);
+    onLineSpacingChange?.(spacing);
+    // Persist to localStorage
+    localStorage.setItem('manus-editor-line-spacing', spacing);
+  }, [onLineSpacingChange]);
+  
+  // Load saved line spacing on mount
+  useEffect(() => {
+    const savedSpacing = localStorage.getItem('manus-editor-line-spacing') as LineSpacing | null;
+    if (savedSpacing && ['compact', 'normal', 'relaxed'].includes(savedSpacing)) {
+      setLineSpacing(savedSpacing);
+    }
+  }, []);
 
   // Build extensions array - conditionally include problematic extensions on mobile
   const extensions = useMemo(() => {
@@ -404,6 +431,8 @@ export function MarkdownEditor({
         <EditorToolbar 
           editor={editor} 
           onOpenLinkPopover={() => setIsLinkPopoverOpen(true)}
+          lineSpacing={lineSpacing}
+          onLineSpacingChange={handleLineSpacingChange}
         />
       )}
       
@@ -417,7 +446,7 @@ export function MarkdownEditor({
       )}
       
       {/* Main editor area */}
-      <div className="editor-content-wrapper">
+      <div className={`editor-content-wrapper line-spacing-${lineSpacing}`}>
         <EditorContent editor={editor} className="editor-content" />
         
         {/* Floating toolbar on text selection (desktop only) */}

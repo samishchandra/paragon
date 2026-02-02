@@ -220,6 +220,55 @@
   }
 }
 
+/* Line spacing variants */
+.line-spacing-compact .tiptap-editor {
+  line-height: 1.35;
+}
+.line-spacing-compact .tiptap-editor p {
+  margin-bottom: 0.5rem;
+}
+.line-spacing-compact .tiptap-editor li {
+  line-height: 1.35;
+}
+.line-spacing-compact .tiptap-editor ul[data-type="taskList"] li {
+  line-height: 1.35;
+}
+.line-spacing-compact .tiptap-editor ul[data-type="taskList"] li > label {
+  height: 1.35em;
+}
+
+.line-spacing-normal .tiptap-editor {
+  line-height: 1.5;
+}
+.line-spacing-normal .tiptap-editor p {
+  margin-bottom: 0.75rem;
+}
+.line-spacing-normal .tiptap-editor li {
+  line-height: 1.5;
+}
+.line-spacing-normal .tiptap-editor ul[data-type="taskList"] li {
+  line-height: 1.5;
+}
+.line-spacing-normal .tiptap-editor ul[data-type="taskList"] li > label {
+  height: 1.5em;
+}
+
+.line-spacing-relaxed .tiptap-editor {
+  line-height: 1.75;
+}
+.line-spacing-relaxed .tiptap-editor p {
+  margin-bottom: 1rem;
+}
+.line-spacing-relaxed .tiptap-editor li {
+  line-height: 1.75;
+}
+.line-spacing-relaxed .tiptap-editor ul[data-type="taskList"] li {
+  line-height: 1.75;
+}
+.line-spacing-relaxed .tiptap-editor ul[data-type="taskList"] li > label {
+  height: 1.75em;
+}
+
 /* TipTap Editor Styles */
 .tiptap-editor {
   font-family: var(--font-sans);
@@ -394,7 +443,9 @@
   
   ul[data-type="taskList"] li > label {
     flex-shrink: 0;
-    margin-top: 0.15rem;
+    display: flex;
+    align-items: center;
+    height: 1.5em; /* Match line-height to vertically center checkbox */
   }
   
   ul[data-type="taskList"] li > label input[type="checkbox"] {
