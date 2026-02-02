@@ -139,27 +139,32 @@ export const MarkdownPaste = Extension.create<MarkdownPasteOptions>({
         key: markdownPastePluginKey,
         props: {
           handlePaste(view, event, slice) {
-            const clipboardData = event.clipboardData;
-            if (!clipboardData) return false;
+            try {
+              const clipboardData = event.clipboardData;
+              if (!clipboardData) return false;
 
-            // Get plain text from clipboard
-            const text = clipboardData.getData('text/plain');
-            if (!text) return false;
+              // Get plain text from clipboard
+              const text = clipboardData.getData('text/plain');
+              if (!text) return false;
 
-            // Check if it looks like markdown
-            if (!looksLikeMarkdown(text)) return false;
+              // Check if it looks like markdown
+              if (!looksLikeMarkdown(text)) return false;
 
-            // Convert markdown to HTML
-            const html = markdownToHtml(text);
-            
-            // Insert the converted HTML
-            editor.commands.insertContent(html, {
-              parseOptions: {
-                preserveWhitespace: false,
-              },
-            });
+              // Convert markdown to HTML
+              const html = markdownToHtml(text);
+              
+              // Insert the converted HTML
+              editor.commands.insertContent(html, {
+                parseOptions: {
+                  preserveWhitespace: false,
+                },
+              });
 
-            return true;
+              return true;
+            } catch (error) {
+              console.warn('MarkdownPaste: Error handling paste', error);
+              return false;
+            }
           },
         },
       }),

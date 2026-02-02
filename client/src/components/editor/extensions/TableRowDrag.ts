@@ -147,7 +147,13 @@ export const TableRowDrag = Extension.create<TableRowDragOptions>({
 
           handleDOMEvents: {
             mousedown(view, event) {
+              // Skip on mobile devices to prevent issues
+              if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                return false;
+              }
+
               const target = event.target as HTMLElement;
+              if (!target) return false;
               
               // Check if clicking on a drag handle or the first cell area
               const row = target.closest('tr.table-row-draggable');

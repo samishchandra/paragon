@@ -77,6 +77,8 @@ export function MarkdownEditor({
         color: 'var(--primary)',
         width: 2,
       },
+      // Disable extensions that we configure separately to avoid duplicates
+      // This fixes mobile crash issues caused by duplicate extension registration
     }),
     Placeholder.configure({
       placeholder,

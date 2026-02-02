@@ -105,11 +105,14 @@ export const WikiLink = Mark.create<WikiLinkOptions>({
         key: new PluginKey('wikiLinkInput'),
         props: {
           handleTextInput: (view, from, to, text) => {
-            // Check if we're completing a wiki link with ]]
-            if (text === ']') {
-              const { state } = view;
-              const { doc } = state;
-              const textBefore = doc.textBetween(Math.max(0, from - 100), from, '\n');
+            try {
+              // Check if we're completing a wiki link with ]]
+              if (text === ']') {
+                const { state } = view;
+                const { doc } = state;
+                if (from < 0 || from > doc.content.size) return false;
+                
+                const textBefore = doc.textBetween(Math.max(0, from - 100), from, '\n');
               
               // Check for pattern [[something]
               const match = textBefore.match(/\[\[([^\[\]]+)\]$/);
@@ -133,8 +136,12 @@ export const WikiLink = Mark.create<WikiLinkOptions>({
                 view.dispatch(tr);
                 return true;
               }
+              }
+              return false;
+            } catch (error) {
+              console.warn('WikiLink: Error handling text input', error);
+              return false;
             }
-            return false;
           },
         },
       }),
@@ -143,23 +150,30 @@ export const WikiLink = Mark.create<WikiLinkOptions>({
         key: new PluginKey('wikiLinkClick'),
         props: {
           handleClick: (view, pos, event) => {
-            const { state } = view;
-            const { doc } = state;
-            const $pos = doc.resolve(pos);
-            
-            // Check if clicked on a wiki link
-            const marks = $pos.marks();
-            const wikiLinkMark = marks.find((m) => m.type.name === 'wikiLink');
-            
-            if (wikiLinkMark && onWikiLinkClick) {
-              const pageName = wikiLinkMark.attrs.pageName;
-              if (pageName) {
-                event.preventDefault();
-                onWikiLinkClick(pageName);
-                return true;
+            try {
+              const { state } = view;
+              const { doc } = state;
+              if (pos < 0 || pos > doc.content.size) return false;
+              
+              const $pos = doc.resolve(pos);
+              
+              // Check if clicked on a wiki link
+              const marks = $pos.marks();
+              const wikiLinkMark = marks.find((m) => m.type.name === 'wikiLink');
+              
+              if (wikiLinkMark && onWikiLinkClick) {
+                const pageName = wikiLinkMark.attrs.pageName;
+                if (pageName) {
+                  event.preventDefault();
+                  onWikiLinkClick(pageName);
+                  return true;
+                }
               }
+              return false;
+            } catch (error) {
+              console.warn('WikiLink: Error handling click', error);
+              return false;
             }
-            return false;
           },
         },
       }),

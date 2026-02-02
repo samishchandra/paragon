@@ -78,10 +78,13 @@ export const SortableTable = Extension.create<SortableTableOptions>({
             return DecorationSet.create(doc, decorations);
           },
           handleClick(view, pos, event) {
-            const target = event.target as HTMLElement;
-            const headerCell = target.closest('th[data-sortable="true"]');
-            
-            if (!headerCell) return false;
+            try {
+              const target = event.target as HTMLElement;
+              if (!target) return false;
+              
+              const headerCell = target.closest('th[data-sortable="true"]');
+              
+              if (!headerCell) return false;
 
             const columnIndex = parseInt(headerCell.getAttribute('data-column-index') || '0');
             const currentDirection = headerCell.getAttribute('data-sort-direction');
@@ -155,6 +158,10 @@ export const SortableTable = Extension.create<SortableTableOptions>({
             view.dispatch(tr);
 
             return true;
+            } catch (error) {
+              console.warn('SortableTable: Error handling click', error);
+              return false;
+            }
           },
         },
       }),
