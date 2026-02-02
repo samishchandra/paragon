@@ -26,7 +26,7 @@ import { useCallback, useState, useEffect, useRef } from 'react';
  * DESIGN: Dark Mode Craftsman
  * Mobile-responsive floating toolbar
  * Touch-friendly buttons with proper sizing
- * Auto-positioning to stay within viewport
+ * Auto-positioning to stay within editor bounds
  */
 
 interface FloatingToolbarProps {
@@ -49,7 +49,7 @@ const ToolbarButton = ({ onMouseDown, isActive, disabled, children, title }: Too
     disabled={disabled}
     title={title}
     className={`
-      flex items-center justify-center w-9 h-9 sm:w-8 sm:h-8 rounded-md
+      flex items-center justify-center w-7 h-7 rounded-md flex-shrink-0
       transition-all duration-100 ease-out touch-manipulation
       ${isActive 
         ? 'bg-primary text-primary-foreground' 
@@ -63,7 +63,7 @@ const ToolbarButton = ({ onMouseDown, isActive, disabled, children, title }: Too
 );
 
 const Divider = () => (
-  <div className="w-px h-5 bg-border mx-0.5 hidden sm:block" />
+  <div className="w-px h-5 bg-border mx-0.5 flex-shrink-0" />
 );
 
 export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps) {
@@ -152,22 +152,27 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         // Get editor container bounds
         const editorRect = editor.view.dom.getBoundingClientRect();
         
-        // Calculate toolbar dimensions
-        const toolbarWidth = toolbarRef.current?.offsetWidth || 450;
-        const toolbarHeight = 45;
+        // Get actual toolbar width after render, or estimate
+        const toolbarWidth = toolbarRef.current?.offsetWidth || 500;
+        const toolbarHeight = 40;
         
-        // Calculate center position relative to viewport
-        let centerX = (start.left + end.left) / 2;
-        let topY = start.top - toolbarHeight - 10; // Position above selection
+        // Calculate center position of selection relative to editor
+        const selectionCenterX = ((start.left + end.left) / 2) - editorRect.left;
         
-        // Ensure toolbar stays within viewport horizontally
-        const minX = toolbarWidth / 2 + 10;
-        const maxX = window.innerWidth - toolbarWidth / 2 - 10;
-        centerX = Math.max(minX, Math.min(maxX, centerX));
+        // Calculate left position (toolbar is centered via transform, so we set the center point)
+        let left = selectionCenterX;
         
-        // Convert to position relative to editor
-        const left = centerX - editorRect.left;
-        const top = topY - editorRect.top;
+        // Constrain to editor bounds
+        // Left edge: toolbar center must be at least half toolbar width from left edge
+        const minLeft = toolbarWidth / 2 + 8;
+        // Right edge: toolbar center must be at least half toolbar width from right edge
+        const maxLeft = editorRect.width - toolbarWidth / 2 - 8;
+        
+        // Clamp the position
+        left = Math.max(minLeft, Math.min(maxLeft, left));
+        
+        // Calculate top position (above selection)
+        const top = start.top - editorRect.top - toolbarHeight - 10;
 
         // Add delay before showing toolbar (200ms)
         if (!isVisible) {
@@ -281,6 +286,8 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
     );
   }
 
+  const iconSize = 15;
+
   return (
     <div
       ref={toolbarRef}
@@ -294,7 +301,7 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         isActive={editor.isActive('paragraph') && !editor.isActive('heading') && !editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList') && !editor.isActive('blockquote') && !editor.isActive('codeBlock')}
         title="Paragraph"
       >
-        <Pilcrow size={18} className="sm:w-4 sm:h-4" />
+        <Pilcrow size={iconSize} />
       </ToolbarButton>
 
       {/* Headings */}
@@ -303,21 +310,21 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         isActive={editor.isActive('heading', { level: 1 })}
         title="Heading 1"
       >
-        <Heading1 size={18} className="sm:w-4 sm:h-4" />
+        <Heading1 size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 2 }).run())}
         isActive={editor.isActive('heading', { level: 2 })}
         title="Heading 2"
       >
-        <Heading2 size={18} className="sm:w-4 sm:h-4" />
+        <Heading2 size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 3 }).run())}
         isActive={editor.isActive('heading', { level: 3 })}
         title="Heading 3"
       >
-        <Heading3 size={18} className="sm:w-4 sm:h-4" />
+        <Heading3 size={iconSize} />
       </ToolbarButton>
 
       <Divider />
@@ -328,42 +335,42 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         isActive={editor.isActive('bold')}
         title="Bold (Ctrl+B)"
       >
-        <Bold size={18} className="sm:w-4 sm:h-4" />
+        <Bold size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleItalic().run())}
         isActive={editor.isActive('italic')}
         title="Italic (Ctrl+I)"
       >
-        <Italic size={18} className="sm:w-4 sm:h-4" />
+        <Italic size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleUnderline().run())}
         isActive={editor.isActive('underline')}
         title="Underline (Ctrl+U)"
       >
-        <Underline size={18} className="sm:w-4 sm:h-4" />
+        <Underline size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleStrike().run())}
         isActive={editor.isActive('strike')}
         title="Strikethrough"
       >
-        <Strikethrough size={18} className="sm:w-4 sm:h-4" />
+        <Strikethrough size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleCode().run())}
         isActive={editor.isActive('code')}
         title="Inline Code (Ctrl+E)"
       >
-        <Code size={18} className="sm:w-4 sm:h-4" />
+        <Code size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHighlight().run())}
         isActive={editor.isActive('highlight')}
         title="Highlight"
       >
-        <Highlighter size={18} className="sm:w-4 sm:h-4" />
+        <Highlighter size={iconSize} />
       </ToolbarButton>
 
       <ToolbarButton
@@ -371,7 +378,7 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         isActive={editor.isActive('link')}
         title="Link (Ctrl+K)"
       >
-        <Link size={18} className="sm:w-4 sm:h-4" />
+        <Link size={iconSize} />
       </ToolbarButton>
 
       <Divider />
@@ -382,35 +389,35 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         isActive={editor.isActive('blockquote')}
         title="Quote"
       >
-        <Quote size={18} className="sm:w-4 sm:h-4" />
+        <Quote size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBulletList().run())}
         isActive={editor.isActive('bulletList')}
         title="Bullet List"
       >
-        <List size={18} className="sm:w-4 sm:h-4" />
+        <List size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleOrderedList().run())}
         isActive={editor.isActive('orderedList')}
         title="Numbered List"
       >
-        <ListOrdered size={18} className="sm:w-4 sm:h-4" />
+        <ListOrdered size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleTaskList().run())}
         isActive={editor.isActive('taskList')}
         title="Task List"
       >
-        <CheckSquare size={18} className="sm:w-4 sm:h-4" />
+        <CheckSquare size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleCodeBlock().run())}
         isActive={editor.isActive('codeBlock')}
         title="Code Block"
       >
-        <FileCode size={18} className="sm:w-4 sm:h-4" />
+        <FileCode size={iconSize} />
       </ToolbarButton>
 
       <Divider />
@@ -421,21 +428,21 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         isActive={editor.isActive({ textAlign: 'left' })}
         title="Align Left"
       >
-        <AlignLeft size={18} className="sm:w-4 sm:h-4" />
+        <AlignLeft size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('center').run())}
         isActive={editor.isActive({ textAlign: 'center' })}
         title="Align Center"
       >
-        <AlignCenter size={18} className="sm:w-4 sm:h-4" />
+        <AlignCenter size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('right').run())}
         isActive={editor.isActive({ textAlign: 'right' })}
         title="Align Right"
       >
-        <AlignRight size={18} className="sm:w-4 sm:h-4" />
+        <AlignRight size={iconSize} />
       </ToolbarButton>
     </div>
   );
