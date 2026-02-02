@@ -100,14 +100,17 @@ export function FindReplace({ editor, isOpen, onClose }: FindReplaceProps) {
   useEffect(() => {
     if (!editor) return;
     
-    if (isOpen && searchQuery) {
+    // Check if the SearchHighlight extension is available
+    const hasSearchHighlight = typeof editor.commands.setSearchHighlight === 'function';
+    
+    if (isOpen && searchQuery && hasSearchHighlight) {
       editor.commands.setSearchHighlight({
         searchTerm: searchQuery,
         caseSensitive,
         useRegex,
         currentMatchIndex,
       });
-    } else {
+    } else if (hasSearchHighlight) {
       editor.commands.clearSearchHighlight();
     }
   }, [editor, isOpen, searchQuery, caseSensitive, useRegex, currentMatchIndex]);
@@ -115,7 +118,11 @@ export function FindReplace({ editor, isOpen, onClose }: FindReplaceProps) {
   // Clear highlighting when panel closes
   useEffect(() => {
     if (!isOpen && editor) {
-      editor.commands.clearSearchHighlight();
+      // Check if the SearchHighlight extension is available
+      const hasSearchHighlight = typeof editor.commands.clearSearchHighlight === 'function';
+      if (hasSearchHighlight) {
+        editor.commands.clearSearchHighlight();
+      }
     }
   }, [isOpen, editor]);
 
