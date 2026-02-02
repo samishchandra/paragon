@@ -23,6 +23,7 @@ import { ResizableImage } from './extensions/ResizableImage';
 import { DatePill } from './extensions/DatePill';
 import { SortableTable } from './extensions/SortableTable';
 import { MarkdownPaste } from './extensions/MarkdownPaste';
+import { TableRowDrag } from './extensions/TableRowDrag';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 
@@ -138,6 +139,9 @@ export function MarkdownEditor({
     }),
     MarkdownPaste.configure({
       enableMarkdownPaste: true,
+    }),
+    TableRowDrag.configure({
+      enableDrag: true,
     }),
   ], [placeholder]);
 

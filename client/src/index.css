@@ -601,6 +601,101 @@
     border-bottom: none !important;
   }
   
+  /* Table row drag-and-drop */
+  tr.table-row-draggable {
+    position: relative;
+  }
+  
+  tr.table-row-draggable td:first-child::before {
+    content: '⋮⋮';
+    position: absolute;
+    left: -1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    padding: 0.25rem;
+    letter-spacing: -2px;
+  }
+  
+  table:hover tr.table-row-draggable td:first-child::before {
+    opacity: 0.5;
+  }
+  
+  tr.table-row-draggable:hover td:first-child::before {
+    opacity: 1 !important;
+  }
+  
+  tr.table-row-draggable td:first-child::before:hover {
+    color: var(--primary);
+  }
+  
+  /* Drag handle element */
+  .table-row-drag-handle {
+    position: absolute;
+    left: -1.5rem;
+    top: 0;
+    bottom: 0;
+    width: 1.5rem;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  
+  table:hover .table-row-drag-handle {
+    opacity: 0.5;
+  }
+  
+  tr:hover .table-row-drag-handle {
+    opacity: 1;
+  }
+  
+  .table-row-drag-handle:hover {
+    color: var(--primary);
+  }
+  
+  .table-row-drag-handle:active {
+    cursor: grabbing;
+  }
+  
+  /* Dragging state */
+  tr.table-row-draggable.dragging {
+    opacity: 0.5;
+    background: var(--primary) !important;
+  }
+  
+  tr.table-row-draggable.dragging td {
+    background: oklch(0.3 0.1 220) !important;
+  }
+  
+  /* Drop target indicator */
+  tr.table-row-draggable.drop-target {
+    position: relative;
+  }
+  
+  tr.table-row-draggable.drop-target::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -2px;
+    height: 3px;
+    background: var(--primary);
+    z-index: 10;
+  }
+  
+  /* Ensure table has space for drag handles */
+  .ProseMirror table {
+    margin-left: 1.5rem;
+  }
+  
   /* Images */
   img {
     max-width: 100%;
