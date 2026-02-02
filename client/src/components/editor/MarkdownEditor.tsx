@@ -16,7 +16,7 @@ import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Typography from '@tiptap/extension-typography';
 import { CodeBlockWithFeatures } from './extensions/CodeBlockWithFeatures';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { LinkPopover } from './LinkPopover';
 import { LinkHoverTooltip } from './LinkHoverTooltip';
 import { FloatingToolbar } from './FloatingToolbar';
@@ -31,6 +31,7 @@ import { AutoSaveIndicator } from './AutoSaveIndicator';
 import { RecoveryBanner } from './RecoveryBanner';
 import { WikiLinkSafe } from './extensions/WikiLinkSafe';
 import { MarkdownPasteSafe } from './extensions/MarkdownPasteSafe';
+import { DragHandleOverlay } from './DragHandleOverlay';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -42,9 +43,19 @@ import { MarkdownPasteSafe } from './extensions/MarkdownPasteSafe';
 
 
 // Detect if we're on a mobile/touch device
+// Note: maxTouchPoints can be > 0 on desktop browsers with touch simulation
+// So we prioritize checking for actual touch events and screen width
 const isMobileDevice = () => {
   if (typeof window === 'undefined') return false;
-  return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768;
+  // Check for actual touch events first
+  const hasTouchEvents = 'ontouchstart' in window;
+  // Check for mobile user agent
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  // Check for small screen (typical mobile width)
+  const isSmallScreen = window.innerWidth < 768;
+  // Only consider it mobile if it has touch events AND (mobile UA OR small screen)
+  // This prevents desktop browsers with touch simulation from being detected as mobile
+  return (hasTouchEvents && (isMobileUA || isSmallScreen)) || (isMobileUA && isSmallScreen);
 };
 
 
@@ -91,7 +102,8 @@ export function MarkdownEditor({
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
   
-
+  // Ref for the editor content wrapper (for drag handle overlay)
+  const editorContentRef = useRef<HTMLDivElement>(null);
 
   // Build extensions array - conditionally include problematic extensions on mobile
   const extensions = useMemo(() => {
@@ -174,7 +186,7 @@ export function MarkdownEditor({
       }),
     ];
 
-    // Only add DatePill on desktop - it uses ReactNodeViewRenderer which can be problematic on mobile
+    // Only add DatePill on desktop
     if (!isMobile) {
       baseExtensions.push(
         DatePill.configure({
@@ -420,8 +432,11 @@ export function MarkdownEditor({
       )}
       
       {/* Main editor area */}
-      <div className="editor-content-wrapper">
+      <div className="editor-content-wrapper" ref={editorContentRef}>
         <EditorContent editor={editor} className="editor-content" />
+        
+        {/* Drag handle overlay for list items (desktop only) */}
+        {!isMobile && <DragHandleOverlay editor={editor} containerRef={editorContentRef} />}
         
         {/* Floating toolbar on text selection (desktop only) */}
         {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} />}

@@ -458,10 +458,43 @@
     100% { opacity: 1; transform: scale(1); }
   }
   
-  /* Strikethrough for checked task items */
+  /* Strikethrough for checked task items with smooth animation */
   ul[data-type="taskList"] li[data-checked="true"] > div {
     text-decoration: line-through;
     color: var(--muted-foreground);
+    animation: task-complete 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  @keyframes task-complete {
+    0% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    30% {
+      opacity: 0.7;
+      transform: translateX(4px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  /* Task item completion glow effect */
+  ul[data-type="taskList"] li[data-checked="true"] {
+    animation: task-item-glow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  @keyframes task-item-glow {
+    0% {
+      background: transparent;
+    }
+    30% {
+      background: oklch(0.7 0.15 220 / 0.15);
+    }
+    100% {
+      background: transparent;
+    }
   }
   
   /* Prevent nested unchecked task items from inheriting strikethrough from checked parent */
@@ -1236,31 +1269,57 @@ pre.with-line-numbers code .line::before {
 }
 
 
-/* Drag handle for list items */
-.drag-handle {
-  position: absolute;
-  left: -1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1rem;
-  height: 1rem;
+/* Drag handle overlay wrapper */
+.list-drag-handle-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
   cursor: grab;
   opacity: 0;
   transition: opacity 0.15s ease;
-  color: var(--muted-foreground);
-  border-radius: 4px;
 }
 
-.drag-handle:hover {
+.list-drag-handle-wrapper:hover {
+  opacity: 1 !important;
+}
+
+.list-drag-handle-wrapper.is-dragging {
+  opacity: 0.5;
+}
+
+.list-drag-handle-wrapper.drag-over {
+  opacity: 1;
+}
+
+/* Drag handle for list items */
+.list-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: grab;
+  color: var(--muted-foreground);
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  background: transparent;
+}
+
+.list-drag-handle:hover {
   background: var(--secondary);
   color: var(--foreground);
 }
 
-.drag-handle:active {
+.list-drag-handle:active {
   cursor: grabbing;
+  background: var(--accent);
+}
+
+.list-drag-handle svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* Show drag handle on list item hover */
@@ -1268,19 +1327,60 @@ pre.with-line-numbers code .line::before {
   position: relative;
 }
 
-.tiptap-editor li:hover > .drag-handle {
+/* Show drag handles when hovering over the editor content area */
+.editor-content-wrapper:hover .list-drag-handle-wrapper {
+  opacity: 0.4;
+}
+
+.editor-content-wrapper:hover .list-drag-handle-wrapper:hover {
   opacity: 1;
 }
 
-/* Dragging state */
-.tiptap-editor li.is-dragging {
-  opacity: 0.5;
+/* Dragging state for nodes */
+.ProseMirror-selectednode {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Drop cursor indicator */
+.ProseMirror-dropcursor {
+  border-left: 2px solid var(--primary) !important;
+}
+
+/* Dragging visual feedback for list items */
+.tiptap-editor li {
+  position: relative;
+  transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+.tiptap-editor li.ProseMirror-selectednode {
   background: var(--secondary);
   border-radius: 4px;
 }
 
+/* Custom drag and drop states */
+.tiptap-editor li.is-dragging {
+  opacity: 0.5;
+  background: var(--secondary);
+  border-radius: 4px;
+  transform: scale(0.98);
+}
+
 .tiptap-editor li.drag-over {
-  border-top: 2px solid var(--primary);
+  background: oklch(0.7 0.15 220 / 0.1);
+  border-radius: 4px;
+}
+
+.tiptap-editor li.drag-over::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 1px;
 }
 
 /* Date pill styles */
@@ -1922,9 +2022,10 @@ pre.with-line-numbers code .line::before {
 .editor-content-wrapper {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: visible;
   position: relative;
   min-height: 0;
+  padding-left: 2rem; /* Space for drag handles */
 }
 
 .editor-content {
