@@ -10,12 +10,12 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+// Using custom CodeBlockWithFeatures instead of CodeBlockLowlight
 import Underline from '@tiptap/extension-underline';
 import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Typography from '@tiptap/extension-typography';
-import { common, createLowlight } from 'lowlight';
+import { CodeBlockWithFeatures } from './extensions/CodeBlockWithFeatures';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LinkPopover } from './LinkPopover';
 import { LinkHoverTooltip } from './LinkHoverTooltip';
@@ -39,8 +39,7 @@ import { MarkdownPasteSafe } from './extensions/MarkdownPasteSafe';
  * Glassmorphic floating toolbar with backdrop blur
  */
 
-// Initialize lowlight with common languages
-const lowlight = createLowlight(common);
+
 
 // Detect if we're on a mobile/touch device
 const isMobileDevice = () => {
@@ -69,6 +68,8 @@ export interface MarkdownEditorProps {
   autoSaveDelay?: number;
   /** Show recovery banner when unsaved content is found (default: true) */
   showRecoveryBanner?: boolean;
+  /** Show floating toolbar on text selection (default: true) */
+  showFloatingToolbar?: boolean;
 }
 
 export function MarkdownEditor({
@@ -85,6 +86,7 @@ export function MarkdownEditor({
   autoSaveKey = 'manus-editor-content',
   autoSaveDelay = 1000,
   showRecoveryBanner = true,
+  showFloatingToolbar = true,
 }: MarkdownEditorProps) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
@@ -158,13 +160,7 @@ export function MarkdownEditor({
           class: 'task-item',
         },
       }),
-      CodeBlockLowlight.configure({
-        lowlight,
-        defaultLanguage: 'plaintext',
-        HTMLAttributes: {
-          class: 'code-block',
-        },
-      }),
+      CodeBlockWithFeatures,
       Underline,
       Subscript,
       Superscript,
@@ -428,7 +424,7 @@ export function MarkdownEditor({
         <EditorContent editor={editor} className="editor-content" />
         
         {/* Floating toolbar on text selection (desktop only) */}
-        {!isMobile && <FloatingToolbar editor={editor} />}
+        {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} />}
         
         {/* Slash commands */}
         <SlashCommands editor={editor} />

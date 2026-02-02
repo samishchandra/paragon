@@ -286,7 +286,7 @@
   
   /* Paragraphs */
   p {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
     line-height: 1.5;
   }
   
@@ -937,10 +937,14 @@
   margin: 0 4px;
 }
 
-/* Code block with line numbers */
+/* Code block with line numbers and copy button */
 .code-block-wrapper {
   position: relative;
   margin: 1rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--secondary);
 }
 
 .code-block-header {
@@ -948,21 +952,35 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 1rem;
-  background: var(--secondary);
-  border: 1px solid var(--border);
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
+  background: oklch(0.15 0.01 250);
+  border-bottom: 1px solid var(--border);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--muted-foreground);
 }
 
-.code-block-header .language {
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.code-block-language-select {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  outline: none;
+  font-family: var(--font-mono);
 }
 
-.code-block-header .copy-button {
+.code-block-language-select:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.code-block-language-select:focus {
+  border-color: var(--primary);
+}
+
+.code-block-copy-btn {
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -974,19 +992,58 @@
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.15s ease;
+  font-family: var(--font-mono);
 }
 
-.code-block-header .copy-button:hover {
+.code-block-copy-btn:hover {
   background: var(--accent);
   color: var(--foreground);
 }
 
-.code-block-header .copy-button.copied {
-  background: var(--callout-success);
-  border-color: var(--callout-success);
-  color: white;
+.code-block-content {
+  display: flex;
+  overflow-x: auto;
 }
 
+.code-block-line-numbers {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  background: oklch(0.12 0.01 250);
+  border-right: 1px solid var(--border);
+  user-select: none;
+  min-width: 3rem;
+  text-align: right;
+}
+
+.code-block-line-number {
+  padding: 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.5rem;
+  color: var(--muted-foreground);
+  opacity: 0.5;
+}
+
+.code-block-pre {
+  flex: 1;
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.code-block-pre code {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  color: var(--foreground);
+  background: transparent;
+}
+
+/* Legacy styles for backwards compatibility */
 pre.with-line-numbers {
   border-radius: 0 0 8px 8px;
   margin-top: 0;
