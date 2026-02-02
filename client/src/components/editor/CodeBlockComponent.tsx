@@ -1,44 +1,46 @@
 import { NodeViewContent, NodeViewWrapper, NodeViewProps } from '@tiptap/react';
 import { useState, useCallback } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, ChevronDown } from 'lucide-react';
 
 /*
  * DESIGN: Dark Mode Craftsman
- * Code block with syntax highlighting, line numbers, and copy button
- * GitHub Dark inspired syntax colors
+ * Code block with syntax highlighting and copy button
+ * Controls appear inside the code block on hover
+ * No line numbers by default for cleaner look
  */
 
-const LANGUAGE_LABELS: Record<string, string> = {
-  javascript: 'JavaScript',
-  typescript: 'TypeScript',
-  jsx: 'JSX',
-  tsx: 'TSX',
-  python: 'Python',
-  java: 'Java',
-  cpp: 'C++',
-  c: 'C',
-  csharp: 'C#',
-  go: 'Go',
-  rust: 'Rust',
-  ruby: 'Ruby',
-  php: 'PHP',
-  swift: 'Swift',
-  kotlin: 'Kotlin',
-  html: 'HTML',
-  css: 'CSS',
-  scss: 'SCSS',
-  json: 'JSON',
-  yaml: 'YAML',
-  markdown: 'Markdown',
-  sql: 'SQL',
-  bash: 'Bash',
-  shell: 'Shell',
-  plaintext: 'Plain Text',
-};
+const LANGUAGE_OPTIONS = [
+  { value: 'plaintext', label: 'Plain Text' },
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'typescript', label: 'TypeScript' },
+  { value: 'jsx', label: 'JSX' },
+  { value: 'tsx', label: 'TSX' },
+  { value: 'python', label: 'Python' },
+  { value: 'java', label: 'Java' },
+  { value: 'cpp', label: 'C++' },
+  { value: 'c', label: 'C' },
+  { value: 'csharp', label: 'C#' },
+  { value: 'go', label: 'Go' },
+  { value: 'rust', label: 'Rust' },
+  { value: 'ruby', label: 'Ruby' },
+  { value: 'php', label: 'PHP' },
+  { value: 'swift', label: 'Swift' },
+  { value: 'kotlin', label: 'Kotlin' },
+  { value: 'html', label: 'HTML' },
+  { value: 'css', label: 'CSS' },
+  { value: 'scss', label: 'SCSS' },
+  { value: 'json', label: 'JSON' },
+  { value: 'yaml', label: 'YAML' },
+  { value: 'markdown', label: 'Markdown' },
+  { value: 'sql', label: 'SQL' },
+  { value: 'bash', label: 'Bash' },
+  { value: 'shell', label: 'Shell' },
+];
 
 export function CodeBlockComponent({ node, updateAttributes }: NodeViewProps) {
   const [copied, setCopied] = useState(false);
   const language = node.attrs.language || 'plaintext';
+  const languageLabel = LANGUAGE_OPTIONS.find(opt => opt.value === language)?.label || 'Plain Text';
 
   const copyCode = useCallback(() => {
     const code = node.textContent;
@@ -49,39 +51,34 @@ export function CodeBlockComponent({ node, updateAttributes }: NodeViewProps) {
   }, [node.textContent]);
 
   return (
-    <NodeViewWrapper className="code-block-wrapper relative">
-      <div className="code-block-header">
-        <select
-          value={language}
-          onChange={(e) => updateAttributes({ language: e.target.value })}
-          className="bg-transparent border-none outline-none text-xs cursor-pointer"
-          contentEditable={false}
-        >
-          {Object.entries(LANGUAGE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+    <NodeViewWrapper className="code-block-wrapper">
+      {/* Controls overlay - appears on hover */}
+      <div className="code-block-controls" contentEditable={false}>
+        <div className="code-block-language-wrapper">
+          <select
+            value={language}
+            onChange={(e) => updateAttributes({ language: e.target.value })}
+            className="code-block-language-select"
+          >
+            {LANGUAGE_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={12} className="code-block-language-chevron" />
+        </div>
         <button
           onClick={copyCode}
-          className={`copy-button ${copied ? 'copied' : ''}`}
-          contentEditable={false}
+          className={`code-block-copy-btn ${copied ? 'copied' : ''}`}
+          title={copied ? 'Copied!' : 'Copy code'}
         >
-          {copied ? (
-            <>
-              <Check size={12} />
-              Copied!
-            </>
-          ) : (
-            <>
-              <Copy size={12} />
-              Copy
-            </>
-          )}
+          {copied ? <Check size={14} /> : <Copy size={14} />}
         </button>
       </div>
-      <pre className="with-line-numbers">
+      
+      {/* Code content - no line numbers */}
+      <pre className="code-block-pre">
         <code>
           <NodeViewContent />
         </code>

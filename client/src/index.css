@@ -141,26 +141,26 @@
 
 /* Light theme for modal testing */
 [data-theme="light"] {
-  --background: oklch(0.98 0.005 250);
+  --background: oklch(0.99 0 0);
   --foreground: oklch(0.15 0.01 250);
-  --card: oklch(1 0 0);
+  --card: oklch(0.98 0 0);
   --card-foreground: oklch(0.15 0.01 250);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.01 250);
-  --primary: oklch(0.55 0.18 220);
-  --primary-foreground: oklch(0.98 0.005 250);
-  --secondary: oklch(0.92 0.01 250);
+  --primary: oklch(0.5 0.18 220);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0 0);
   --secondary-foreground: oklch(0.25 0.02 250);
-  --muted: oklch(0.92 0.01 250);
+  --muted: oklch(0.95 0 0);
   --muted-foreground: oklch(0.45 0.02 250);
-  --accent: oklch(0.92 0.01 250);
+  --accent: oklch(0.95 0 0);
   --accent-foreground: oklch(0.15 0.01 250);
   --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.85 0.01 250);
-  --input: oklch(0.92 0.01 250);
-  --ring: oklch(0.55 0.18 220);
-  --editor-bg: oklch(0.98 0.005 250);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.95 0 0);
+  --ring: oklch(0.5 0.18 220);
+  --editor-bg: oklch(1 0 0);
   --editor-selection: oklch(0.55 0.08 220 / 0.2);
   --editor-cursor: oklch(0.55 0.18 220);
   --editor-line-number: oklch(0.6 0.02 250);
@@ -443,7 +443,7 @@
     display: flex;
     align-items: center;
     height: 1.5em; /* Match line-height to vertically center checkbox */
-    margin-top: -0.05em; /* Fine-tune vertical alignment with text - moved up */
+    margin-top: 0.15em; /* Fine-tune vertical alignment with text - moved down to align with text baseline */
   }
   
   ul[data-type="taskList"] li > label input[type="checkbox"] {
@@ -1021,98 +1021,115 @@
   background: var(--secondary);
 }
 
-.code-block-header {
+/* Controls overlay - positioned inside code block, top right */
+.code-block-controls {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 1rem;
-  background: oklch(0.15 0.01 250);
-  border-bottom: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+  pointer-events: none;
 }
 
-.code-block-language-select {
-  background: transparent;
+.code-block-wrapper:hover .code-block-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Language selector wrapper */
+.code-block-language-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: oklch(0.2 0.01 250 / 0.9);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.7rem;
-  color: var(--muted-foreground);
+  padding: 0.25rem 1.5rem 0.25rem 0.5rem;
   cursor: pointer;
-  outline: none;
-  font-family: var(--font-mono);
+  transition: all 0.15s ease;
 }
 
-.code-block-language-select:hover {
-  background: var(--accent);
-  color: var(--foreground);
-}
-
-.code-block-language-select:focus {
+.code-block-language-wrapper:hover {
+  background: oklch(0.25 0.01 250 / 0.95);
   border-color: var(--primary);
 }
 
+
+
+.code-block-language-chevron {
+  position: absolute;
+  right: 0.35rem;
+  pointer-events: none;
+  color: var(--muted-foreground);
+}
+
+.code-block-language-label {
+  position: absolute;
+  left: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  font-family: var(--font-mono);
+}
+
+.code-block-language-select {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* Copy button - icon only */
 .code-block-copy-btn {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
   border-radius: 4px;
-  background: transparent;
+  background: oklch(0.2 0.01 250 / 0.9);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   color: var(--muted-foreground);
-  font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.15s ease;
-  font-family: var(--font-mono);
 }
 
 .code-block-copy-btn:hover {
-  background: var(--accent);
+  background: oklch(0.25 0.01 250 / 0.95);
+  border-color: var(--primary);
   color: var(--foreground);
 }
 
-.code-block-content {
-  display: flex;
-  overflow-x: auto;
+.code-block-copy-btn.copied {
+  background: oklch(0.5 0.12 160 / 0.9);
+  border-color: oklch(0.5 0.12 160);
+  color: white;
 }
 
-.code-block-line-numbers {
-  display: flex;
-  flex-direction: column;
-  padding: 1rem 0;
-  background: oklch(0.12 0.01 250);
-  border-right: 1px solid var(--border);
-  user-select: none;
-  min-width: 3rem;
-  text-align: right;
-}
-
-.code-block-line-number {
-  padding: 0 0.75rem;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  line-height: 1.5rem;
-  color: var(--muted-foreground);
-  opacity: 0.5;
-}
-
+/* Code content - no line numbers by default */
 .code-block-pre {
-  flex: 1;
   margin: 0;
   padding: 1rem;
   overflow-x: auto;
   background: transparent;
   border: none;
-  border-radius: 0;
+  border-radius: 8px;
 }
 
 .code-block-pre code {
   font-family: var(--font-mono);
   font-size: 0.875rem;
-  line-height: 1.5rem;
+  line-height: 1.6;
   color: var(--foreground);
   background: transparent;
 }
@@ -1368,14 +1385,8 @@ pre.with-line-numbers code .line::before {
   position: relative;
 }
 
-/* Show drag handles when hovering over the editor content area */
-.editor-content-wrapper:hover .list-drag-handle-wrapper {
-  opacity: 0.4;
-}
-
-.editor-content-wrapper:hover .list-drag-handle-wrapper:hover {
-  opacity: 1;
-}
+/* Hide drag handles by default, show only when hovering over the specific list item */
+/* Drag handles are positioned absolutely relative to list items */
 
 /* Dragging state for nodes */
 .ProseMirror-selectednode {
@@ -2136,4 +2147,373 @@ pre.with-line-numbers code .line::before {
 .tiptap-editor ul[data-type="taskList"] li[data-checked="true"] > div > ul[data-type="taskList"] li[data-checked="false"] > div > p {
   text-decoration: none !important;
   color: var(--foreground) !important;
+}
+
+
+/* ============================================
+   LIGHT THEME COMPREHENSIVE FIXES
+   ============================================ */
+
+/* Light theme code block styling */
+[data-theme="light"] .code-block-wrapper {
+  background: oklch(0.96 0.005 250);
+  border-color: oklch(0.88 0.01 250);
+}
+
+[data-theme="light"] .code-block-controls {
+  background: transparent;
+}
+
+[data-theme="light"] .code-block-language-select {
+  background: oklch(1 0 0 / 0.95);
+  border-color: oklch(0.85 0.01 250);
+  color: oklch(0.25 0.02 250);
+}
+
+[data-theme="light"] .code-block-language-select:hover {
+  background: oklch(0.98 0.005 250);
+  border-color: oklch(0.55 0.18 220);
+}
+
+[data-theme="light"] .code-block-copy-btn {
+  background: oklch(1 0 0 / 0.95);
+  border-color: oklch(0.85 0.01 250);
+  color: oklch(0.45 0.02 250);
+}
+
+[data-theme="light"] .code-block-copy-btn:hover {
+  background: oklch(0.98 0.005 250);
+  border-color: oklch(0.55 0.18 220);
+  color: oklch(0.25 0.02 250);
+}
+
+[data-theme="light"] .code-block-copy-btn.copied {
+  background: oklch(0.5 0.12 160 / 0.9);
+  border-color: oklch(0.5 0.12 160);
+  color: white;
+}
+
+[data-theme="light"] .code-block-pre {
+  background: transparent;
+}
+
+[data-theme="light"] .code-block-pre code {
+  color: oklch(0.25 0.02 250);
+}
+
+/* Light theme syntax highlighting */
+[data-theme="light"] .hljs-keyword,
+[data-theme="light"] .hljs-selector-tag,
+[data-theme="light"] .hljs-built_in,
+[data-theme="light"] .hljs-name,
+[data-theme="light"] .hljs-tag {
+  color: oklch(0.5 0.2 320);
+}
+
+[data-theme="light"] .hljs-string,
+[data-theme="light"] .hljs-title,
+[data-theme="light"] .hljs-section,
+[data-theme="light"] .hljs-attribute,
+[data-theme="light"] .hljs-literal,
+[data-theme="light"] .hljs-template-tag,
+[data-theme="light"] .hljs-template-variable,
+[data-theme="light"] .hljs-type {
+  color: oklch(0.45 0.15 160);
+}
+
+[data-theme="light"] .hljs-number,
+[data-theme="light"] .hljs-symbol,
+[data-theme="light"] .hljs-bullet,
+[data-theme="light"] .hljs-link {
+  color: oklch(0.5 0.15 70);
+}
+
+[data-theme="light"] .hljs-comment,
+[data-theme="light"] .hljs-quote {
+  color: oklch(0.55 0.02 250);
+  font-style: italic;
+}
+
+[data-theme="light"] .hljs-function,
+[data-theme="light"] .hljs-class .hljs-title {
+  color: oklch(0.5 0.18 280);
+}
+
+[data-theme="light"] .hljs-variable,
+[data-theme="light"] .hljs-attr {
+  color: oklch(0.45 0.12 220);
+}
+
+/* Light theme drag handles */
+[data-theme="light"] .list-drag-handle {
+  color: oklch(0.55 0.02 250);
+}
+
+[data-theme="light"] .list-drag-handle:hover {
+  background: oklch(0.92 0.01 250);
+  color: oklch(0.25 0.02 250);
+}
+
+[data-theme="light"] .list-drag-handle:active {
+  background: oklch(0.88 0.01 250);
+}
+
+/* Light theme task list checkbox */
+[data-theme="light"] ul[data-type="taskList"] li > label input[type="checkbox"] {
+  border-color: oklch(0.65 0.02 250);
+}
+
+[data-theme="light"] ul[data-type="taskList"] li > label input[type="checkbox"]:hover {
+  border-color: oklch(0.55 0.18 220);
+  background: oklch(0.55 0.08 220 / 0.1);
+}
+
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: oklch(0.55 0.02 250);
+}
+
+/* Light theme blockquote */
+[data-theme="light"] .tiptap-editor blockquote {
+  border-left-color: oklch(0.75 0.02 250);
+  background: oklch(0.96 0.005 250);
+  color: oklch(0.35 0.02 250);
+}
+
+/* Light theme horizontal rule */
+[data-theme="light"] .tiptap-editor hr {
+  border-color: oklch(0.88 0.01 250);
+}
+
+/* Light theme inline code */
+[data-theme="light"] .tiptap-editor code:not(pre code) {
+  background: oklch(0.94 0.005 250);
+  color: oklch(0.45 0.15 25);
+}
+
+/* Light theme links */
+[data-theme="light"] .tiptap-editor a {
+  color: oklch(0.5 0.18 220);
+}
+
+[data-theme="light"] .tiptap-editor a:hover {
+  color: oklch(0.45 0.2 220);
+}
+
+/* Light theme table */
+[data-theme="light"] .tiptap-editor table {
+  border-color: oklch(0.88 0.01 250);
+}
+
+[data-theme="light"] .tiptap-editor th {
+  background: oklch(0.96 0.005 250);
+  border-color: oklch(0.88 0.01 250);
+  color: oklch(0.25 0.02 250);
+}
+
+[data-theme="light"] .tiptap-editor td {
+  border-color: oklch(0.88 0.01 250);
+}
+
+/* Light theme callouts */
+[data-theme="light"] .callout {
+  border-color: oklch(0.88 0.01 250);
+}
+
+[data-theme="light"] .callout.info {
+  background: oklch(0.95 0.03 220);
+  border-left-color: oklch(0.5 0.12 220);
+}
+
+[data-theme="light"] .callout.warning {
+  background: oklch(0.95 0.04 70);
+  border-left-color: oklch(0.6 0.15 70);
+}
+
+[data-theme="light"] .callout.error {
+  background: oklch(0.95 0.04 25);
+  border-left-color: oklch(0.5 0.15 25);
+}
+
+[data-theme="light"] .callout.success {
+  background: oklch(0.95 0.03 160);
+  border-left-color: oklch(0.5 0.12 160);
+}
+
+/* Light theme editor toolbar */
+[data-theme="light"] .editor-toolbar {
+  background: oklch(0.98 0.005 250);
+  border-color: oklch(0.88 0.01 250);
+}
+
+[data-theme="light"] .toolbar-button {
+  color: oklch(0.35 0.02 250);
+}
+
+[data-theme="light"] .toolbar-button:hover {
+  background: oklch(0.94 0.005 250);
+  color: oklch(0.2 0.02 250);
+}
+
+[data-theme="light"] .toolbar-button.active {
+  background: oklch(0.55 0.18 220);
+  color: white;
+}
+
+[data-theme="light"] .toolbar-divider {
+  background: oklch(0.88 0.01 250);
+}
+
+/* Light theme scrollbar */
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: oklch(0.8 0.01 250);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.7 0.01 250);
+}
+
+/* Light theme selection */
+[data-theme="light"] .ProseMirror ::selection {
+  background: oklch(0.55 0.08 220 / 0.25);
+}
+
+/* Light theme placeholder */
+[data-theme="light"] .ProseMirror p.is-editor-empty:first-child::before {
+  color: oklch(0.65 0.02 250);
+}
+
+/* Light theme editor footer */
+[data-theme="light"] .editor-footer {
+  background: oklch(0.98 0.005 250);
+  border-color: oklch(0.88 0.01 250);
+  color: oklch(0.45 0.02 250);
+}
+
+/* Light theme modal/dialog */
+[data-theme="light"] .editor-content-wrapper {
+  background: oklch(1 0 0);
+}
+
+/* Light theme mark/highlight */
+[data-theme="light"] .tiptap-editor mark {
+  background: oklch(0.9 0.12 90);
+  color: oklch(0.25 0.02 250);
+}
+
+
+/* ============================================
+   RECOVERY BANNER STYLES
+   ============================================ */
+
+/* Dark theme recovery banner (default) */
+.recovery-banner {
+  background: oklch(0.25 0.08 70 / 0.15);
+  border: 1px solid oklch(0.6 0.12 70 / 0.3);
+}
+
+.recovery-banner-icon {
+  color: oklch(0.7 0.15 70);
+}
+
+.recovery-banner-text {
+  color: oklch(0.85 0.05 70);
+}
+
+.recovery-banner-btn {
+  background: oklch(0.6 0.12 70 / 0.2);
+  border: 1px solid oklch(0.6 0.12 70 / 0.3);
+  color: oklch(0.8 0.1 70);
+}
+
+.recovery-banner-btn:hover {
+  background: oklch(0.6 0.12 70 / 0.3);
+}
+
+.recovery-banner-dismiss {
+  color: oklch(0.7 0.1 70 / 0.6);
+}
+
+.recovery-banner-dismiss:hover {
+  color: oklch(0.7 0.1 70);
+  background: oklch(0.6 0.12 70 / 0.2);
+}
+
+/* Light theme recovery banner */
+[data-theme="light"] .recovery-banner {
+  background: oklch(0.95 0.05 70);
+  border-color: oklch(0.75 0.12 70 / 0.5);
+}
+
+[data-theme="light"] .recovery-banner-icon {
+  color: oklch(0.55 0.15 70);
+}
+
+[data-theme="light"] .recovery-banner-text {
+  color: oklch(0.35 0.05 70);
+}
+
+[data-theme="light"] .recovery-banner-btn {
+  background: oklch(0.55 0.15 70 / 0.15);
+  border-color: oklch(0.55 0.15 70 / 0.4);
+  color: oklch(0.4 0.1 70);
+}
+
+[data-theme="light"] .recovery-banner-btn:hover {
+  background: oklch(0.55 0.15 70 / 0.25);
+}
+
+[data-theme="light"] .recovery-banner-dismiss {
+  color: oklch(0.55 0.1 70 / 0.6);
+}
+
+[data-theme="light"] .recovery-banner-dismiss:hover {
+  color: oklch(0.55 0.1 70);
+  background: oklch(0.55 0.15 70 / 0.15);
+}
+
+/* ============================================
+   LIGHT THEME MODAL HEADER FIXES
+   ============================================ */
+
+/* Light theme modal header background */
+[data-theme="light"] .border-border {
+  border-color: oklch(0.88 0.01 250);
+}
+
+[data-theme="light"] .bg-card\/50 {
+  background: oklch(0.98 0.005 250 / 0.5);
+}
+
+/* Light theme text colors in modal */
+[data-theme="light"] .text-foreground {
+  color: oklch(0.15 0.01 250);
+}
+
+[data-theme="light"] .text-muted-foreground {
+  color: oklch(0.45 0.02 250);
+}
+
+/* Light theme primary badge */
+[data-theme="light"] .bg-primary\/10 {
+  background: oklch(0.55 0.18 220 / 0.1);
+}
+
+[data-theme="light"] .text-primary {
+  color: oklch(0.45 0.18 220);
+}
+
+/* Light theme ghost button */
+[data-theme="light"] button[class*="ghost"]:hover {
+  background: oklch(0.92 0.01 250);
+}
+
+/* Light theme editor wrapper */
+[data-theme="light"] .editor-wrapper {
+  background: oklch(1 0 0);
+}
+
+/* Light theme code inline in tips */
+[data-theme="light"] code:not(pre code) {
+  background: oklch(0.94 0.005 250);
+  color: oklch(0.45 0.15 25);
 }
