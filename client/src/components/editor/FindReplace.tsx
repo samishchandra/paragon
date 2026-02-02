@@ -9,6 +9,7 @@ import {
   CaseSensitive,
   Regex,
   ReplaceAll,
+  WholeWord,
 } from 'lucide-react';
 
 /*
@@ -35,6 +36,7 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
   const [replaceQuery, setReplaceQuery] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [useRegex, setUseRegex] = useState(false);
+  const [wholeWord, setWholeWord] = useState(false);
   const [showReplace, setShowReplace] = useState(false);
   const [matches, setMatches] = useState<SearchMatch[]>([]);
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
@@ -62,7 +64,11 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
         searchPattern = new RegExp(searchQuery, caseSensitive ? 'g' : 'gi');
       } else {
         // Escape special regex characters for literal search
-        const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        let escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Add word boundaries if whole word matching is enabled
+        if (wholeWord) {
+          escaped = `\\b${escaped}\\b`;
+        }
         searchPattern = new RegExp(escaped, caseSensitive ? 'g' : 'gi');
       }
       setRegexError(null);
@@ -91,7 +97,7 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
     if (foundMatches.length > 0 && currentMatchIndex >= foundMatches.length) {
       setCurrentMatchIndex(0);
     }
-  }, [searchQuery, caseSensitive, useRegex, editor, currentMatchIndex]);
+  }, [searchQuery, caseSensitive, useRegex, wholeWord, editor, currentMatchIndex]);
 
   // Update matches when search parameters change
   useEffect(() => {
@@ -128,25 +134,24 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
     }
   }, [isOpen, editor]);
 
-  // Highlight current match in editor
+  // Scroll to current match in editor (without selecting text to avoid floating toolbar)
   useEffect(() => {
     if (matches.length > 0 && currentMatchIndex < matches.length) {
       const match = matches[currentMatchIndex];
       
-      // Only focus editor if user is navigating matches (clicked prev/next)
-      if (isNavigatingRef.current) {
-        editor.chain().focus().setTextSelection({ from: match.from, to: match.to }).run();
-        isNavigatingRef.current = false;
-      } else {
-        // Just set selection without stealing focus from search input
-        editor.chain().setTextSelection({ from: match.from, to: match.to }).run();
-      }
+      // Don't select text - just scroll to it
+      // The SearchHighlight extension will visually highlight the current match
       
       // Scroll to the match
       const domAtPos = editor.view.domAtPos(match.from);
       if (domAtPos.node) {
         const element = domAtPos.node.parentElement;
         element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      
+      // Reset navigation flag
+      if (isNavigatingRef.current) {
+        isNavigatingRef.current = false;
       }
     }
   }, [currentMatchIndex, matches, editor]);
@@ -222,6 +227,8 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
       } else {
         goToNextMatch();
       }
+      // Keep focus on search input after navigating
+      searchInputRef.current?.focus();
     } else if (e.key === 'Escape') {
       e.preventDefault();
       onClose();
@@ -288,6 +295,13 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
           title="Match case"
         >
           <CaseSensitive size={16} />
+        </button>
+        <button
+          onClick={() => setWholeWord((prev) => !prev)}
+          className={`find-replace-btn ${wholeWord ? 'active' : ''}`}
+          title="Match whole word"
+        >
+          <WholeWord size={16} />
         </button>
         <button
           onClick={() => setUseRegex((prev) => !prev)}
