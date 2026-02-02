@@ -305,13 +305,19 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
     return null;
   }
 
+  // Calculate safe position for mobile
+  const safePosition = {
+    top: position.top,
+    left: Math.min(position.left, typeof window !== 'undefined' ? window.innerWidth - 280 : position.left),
+  };
+
   return (
     <div
       ref={menuRef}
-      className="slash-command-menu fixed z-50"
+      className="slash-command-menu fixed z-50 max-h-[60vh] overflow-y-auto"
       style={{
-        top: position.top,
-        left: position.left,
+        top: safePosition.top,
+        left: Math.max(8, safePosition.left),
       }}
     >
       <div className="text-xs text-muted-foreground px-3 py-2 border-b border-border">
@@ -323,11 +329,12 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
           className={`slash-command-item ${index === selectedIndex ? 'is-selected' : ''}`}
           onClick={() => executeCommand(index)}
           onMouseEnter={() => setSelectedIndex(index)}
+          onTouchStart={() => setSelectedIndex(index)}
         >
-          <div className="icon">{cmd.icon}</div>
-          <div className="flex flex-col">
-            <span className="label">{cmd.title}</span>
-            <span className="text-xs text-muted-foreground">{cmd.description}</span>
+          <div className="icon flex-shrink-0">{cmd.icon}</div>
+          <div className="flex flex-col min-w-0">
+            <span className="label truncate">{cmd.title}</span>
+            <span className="text-xs text-muted-foreground truncate">{cmd.description}</span>
           </div>
         </div>
       ))}

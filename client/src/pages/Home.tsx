@@ -208,26 +208,27 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-primary" />
+        <div className="container py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <div>
-                <h1 className="text-lg font-semibold text-foreground">Manus Markdown Editor</h1>
-                <p className="text-xs text-muted-foreground">Drop-in editor for note-taking apps</p>
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">Manus Markdown Editor</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">Drop-in editor for note-taking apps</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="default" size="sm" className="gap-2">
+                  <Button variant="default" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
                     <Maximize2 className="w-4 h-4" />
-                    Try Full Screen
+                    <span className="hidden sm:inline">Try Full Screen</span>
+                    <span className="sm:hidden">Try</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-[95vw] w-[1200px] h-[90vh] p-0 gap-0 bg-background border-border overflow-hidden">
+                <DialogContent className="max-w-[98vw] sm:max-w-[95vw] w-full sm:w-[1200px] h-[95vh] sm:h-[90vh] p-0 gap-0 bg-background border-border overflow-hidden">
                   <DialogHeader className="px-6 py-4 border-b border-border bg-card/50 flex-shrink-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -258,7 +259,7 @@ export default function Home() {
                   </div>
                 </DialogContent>
               </Dialog>
-              <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+              <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full hidden sm:inline">
                 v1.0.0
               </span>
             </div>
@@ -267,21 +268,21 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-12 border-b border-border">
+      <section className="py-8 sm:py-12 border-b border-border">
         <div className="container">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-xs font-medium bg-primary/10 text-primary rounded-full">
+          <div className="max-w-3xl mx-auto text-center px-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 sm:mb-6 text-xs font-medium bg-primary/10 text-primary rounded-full">
               <Sparkles className="w-3 h-3" />
               Built with TipTap & React
             </div>
-            <h2 className="text-4xl font-bold text-foreground mb-4">
+            <h2 className="text-2xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">
               The Best Markdown Editor for Your App
             </h2>
-            <p className="text-lg text-muted-foreground mb-8">
+            <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-8">
               A professional, feature-rich markdown editor component designed as a drop-in for 
               note-taking applications like Taskmate, Momentum, and more.
             </p>
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
                   <Button size="lg" className="gap-2">
@@ -299,19 +300,19 @@ export default function Home() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-8 border-b border-border bg-card/30">
+      <section className="py-6 sm:py-8 border-b border-border bg-card/30">
         <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="p-4 rounded-lg bg-card border border-border hover:border-primary/50 transition-colors"
+                className="p-3 sm:p-4 rounded-lg bg-card border border-border hover:border-primary/50 transition-colors"
               >
-                <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center mb-3 text-primary">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-primary/10 flex items-center justify-center mb-2 sm:mb-3 text-primary">
                   {feature.icon}
                 </div>
-                <h3 className="font-medium text-foreground mb-1">{feature.title}</h3>
-                <p className="text-xs text-muted-foreground">{feature.description}</p>
+                <h3 className="text-sm sm:text-base font-medium text-foreground mb-1">{feature.title}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-2">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -319,20 +320,20 @@ export default function Home() {
       </section>
 
       {/* Editor Demo */}
-      <section id="demo" className="py-8">
+      <section id="demo" className="py-6 sm:py-8">
         <div className="container">
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Try the Editor</h3>
-              <p className="text-sm text-muted-foreground">
-                Start typing below. Use <kbd className="px-1.5 py-0.5 text-xs bg-secondary rounded">Ctrl+B</kbd> for bold, 
-                <kbd className="px-1.5 py-0.5 text-xs bg-secondary rounded mx-1">Ctrl+I</kbd> for italic, 
-                or type <kbd className="px-1.5 py-0.5 text-xs bg-secondary rounded">/</kbd> to open the command palette.
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-1 sm:mb-2">Try the Editor</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Start typing below. Use <kbd className="px-1 sm:px-1.5 py-0.5 text-xs bg-secondary rounded">Ctrl+B</kbd> for bold, 
+                <kbd className="px-1 sm:px-1.5 py-0.5 text-xs bg-secondary rounded mx-1">Ctrl+I</kbd> for italic, 
+                or type <kbd className="px-1 sm:px-1.5 py-0.5 text-xs bg-secondary rounded">/</kbd> for commands.
               </p>
             </div>
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button variant="outline" size="sm" className="gap-2 w-full sm:w-auto">
                   <Maximize2 className="w-4 h-4" />
                   Open Full Screen
                 </Button>
@@ -340,7 +341,7 @@ export default function Home() {
             </Dialog>
           </div>
           
-          <div className="h-[600px] rounded-lg overflow-hidden shadow-2xl shadow-black/20">
+          <div className="h-[400px] sm:h-[600px] rounded-lg overflow-hidden shadow-2xl shadow-black/20">
             <MarkdownEditor
               content={content}
               onChange={setContent}
@@ -354,10 +355,10 @@ export default function Home() {
       </section>
 
       {/* Usage Section */}
-      <section className="py-12 border-t border-border bg-card/30">
+      <section className="py-8 sm:py-12 border-t border-border bg-card/30">
         <div className="container">
           <div className="max-w-3xl mx-auto">
-            <h3 className="text-xl font-semibold text-foreground mb-4">Quick Start</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3 sm:mb-4">Quick Start</h3>
             <div className="bg-card border border-border rounded-lg overflow-hidden">
               <div className="px-4 py-2 bg-secondary/50 border-b border-border">
                 <span className="text-xs font-mono text-muted-foreground">Usage Example</span>
