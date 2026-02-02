@@ -32,6 +32,9 @@ import { SearchHighlight } from './extensions/SearchHighlight';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace } from './FindReplace';
+import { useAutoSave } from './hooks/useAutoSave';
+import { AutoSaveIndicator } from './AutoSaveIndicator';
+import { RecoveryBanner } from './RecoveryBanner';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -54,6 +57,12 @@ export interface MarkdownEditorProps {
   showToolbar?: boolean;
   showWordCount?: boolean;
   theme?: 'dark' | 'light';
+  /** Enable auto-save to localStorage (default: true) */
+  autoSave?: boolean;
+  /** Storage key for auto-save (default: 'manus-editor-content') */
+  autoSaveKey?: string;
+  /** Auto-save debounce delay in ms (default: 1000) */
+  autoSaveDelay?: number;
 }
 
 export function MarkdownEditor({
@@ -66,6 +75,9 @@ export function MarkdownEditor({
   className = '',
   showToolbar = true,
   showWordCount = true,
+  autoSave = true,
+  autoSaveKey = 'manus-editor-content',
+  autoSaveDelay = 1000,
 }: MarkdownEditorProps) {
   const extensions = useMemo(() => [
     StarterKit.configure({
@@ -221,6 +233,13 @@ export function MarkdownEditor({
   
   // State for find/replace panel
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
+
+  // Auto-save functionality
+  const autoSaveState = useAutoSave(editor, {
+    storageKey: autoSaveKey,
+    debounceMs: autoSaveDelay,
+    enabled: autoSave,
+  });
 
   // Handle keyboard shortcuts for markdown auto-detection
   useEffect(() => {
@@ -403,6 +422,14 @@ export function MarkdownEditor({
         onClose={() => setIsFindReplaceOpen(false)} 
       />
       
+      {/* Recovery Banner */}
+      {autoSave && autoSaveState.hasRecoverableContent && (
+        <RecoveryBanner
+          onRecover={() => autoSaveState.recover()}
+          onDismiss={() => autoSaveState.dismissRecovery()}
+        />
+      )}
+      
       {/* Top Toolbar */}
       {showToolbar && <EditorToolbar editor={editor} onCopyMarkdown={copyAsMarkdown} onOpenLinkPopover={() => setIsLinkPopoverOpen(true)} />}
       
@@ -438,6 +465,13 @@ export function MarkdownEditor({
         <div className="word-count">
           <span>{wordCount.words} words</span>
           <span>{wordCount.characters} characters</span>
+          {autoSave && (
+            <AutoSaveIndicator
+              status={autoSaveState.status}
+              lastSaved={autoSaveState.lastSaved}
+              className="ml-auto"
+            />
+          )}
         </div>
       )}
     </div>

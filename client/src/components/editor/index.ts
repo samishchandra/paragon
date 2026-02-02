@@ -16,3 +16,6 @@ export {
   nordTheme,
   type EditorTheme 
 } from './themes';
+export { useAutoSave, type AutoSaveOptions, type AutoSaveState, type AutoSaveReturn } from './hooks/useAutoSave';
+export { AutoSaveIndicator, type AutoSaveIndicatorProps } from './AutoSaveIndicator';
+export { RecoveryBanner, type RecoveryBannerProps } from './RecoveryBanner';
