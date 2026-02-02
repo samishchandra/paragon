@@ -402,8 +402,8 @@
   
   ul[data-type="taskList"] li > label input[type="checkbox"] {
     appearance: none;
-    width: 1rem;
-    height: 1rem;
+    width: 1.125rem;
+    height: 1.125rem;
     border: 2px solid var(--muted-foreground);
     border-radius: 50%;
     background: transparent;
