@@ -41,6 +41,7 @@ export function FindReplace({ editor, isOpen, onClose }: FindReplaceProps) {
   
   const searchInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
+  const isNavigatingRef = useRef(false);
 
   // Find all matches in the document
   const findMatches = useCallback(() => {
@@ -130,7 +131,15 @@ export function FindReplace({ editor, isOpen, onClose }: FindReplaceProps) {
   useEffect(() => {
     if (matches.length > 0 && currentMatchIndex < matches.length) {
       const match = matches[currentMatchIndex];
-      editor.chain().focus().setTextSelection({ from: match.from, to: match.to }).run();
+      
+      // Only focus editor if user is navigating matches (clicked prev/next)
+      if (isNavigatingRef.current) {
+        editor.chain().focus().setTextSelection({ from: match.from, to: match.to }).run();
+        isNavigatingRef.current = false;
+      } else {
+        // Just set selection without stealing focus from search input
+        editor.chain().setTextSelection({ from: match.from, to: match.to }).run();
+      }
       
       // Scroll to the match
       const domAtPos = editor.view.domAtPos(match.from);
@@ -152,12 +161,14 @@ export function FindReplace({ editor, isOpen, onClose }: FindReplaceProps) {
   // Navigate to next match
   const goToNextMatch = useCallback(() => {
     if (matches.length === 0) return;
+    isNavigatingRef.current = true;
     setCurrentMatchIndex((prev) => (prev + 1) % matches.length);
   }, [matches.length]);
 
   // Navigate to previous match
   const goToPrevMatch = useCallback(() => {
     if (matches.length === 0) return;
+    isNavigatingRef.current = true;
     setCurrentMatchIndex((prev) => (prev - 1 + matches.length) % matches.length);
   }, [matches.length]);
 
