@@ -1626,12 +1626,15 @@ pre.with-line-numbers code .line::before {
 }
 
 /* Search match highlight in editor */
-.ProseMirror .search-match {
-  background: oklch(0.7 0.2 90 / 0.4);
+.ProseMirror .search-highlight {
+  background: oklch(0.75 0.15 90 / 0.35);
   border-radius: 2px;
+  padding: 0 1px;
 }
 
-.ProseMirror .search-match-current {
-  background: oklch(0.7 0.2 90 / 0.7);
-  box-shadow: 0 0 0 2px oklch(0.7 0.2 90 / 0.5);
+.ProseMirror .search-highlight-current {
+  background: oklch(0.7 0.2 55 / 0.6);
+  border-radius: 2px;
+  padding: 0 1px;
+  box-shadow: 0 0 0 2px oklch(0.7 0.2 55 / 0.4);
 }

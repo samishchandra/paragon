@@ -28,6 +28,7 @@ import { MarkdownPaste } from './extensions/MarkdownPaste';
 import { TableRowDrag } from './extensions/TableRowDrag';
 import { WikiLink } from './extensions/WikiLink';
 import { LinkValidation } from './extensions/LinkValidation';
+import { SearchHighlight } from './extensions/SearchHighlight';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace } from './FindReplace';
@@ -156,6 +157,12 @@ export function MarkdownEditor({
     }),
     LinkValidation.configure({
       validateOnChange: true,
+    }),
+    SearchHighlight.configure({
+      searchTerm: '',
+      caseSensitive: false,
+      useRegex: false,
+      currentMatchIndex: 0,
     }),
   ], [placeholder]);
 

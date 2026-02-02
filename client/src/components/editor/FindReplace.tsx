@@ -96,6 +96,29 @@ export function FindReplace({ editor, isOpen, onClose }: FindReplaceProps) {
     findMatches();
   }, [findMatches]);
 
+  // Update search highlighting in the editor
+  useEffect(() => {
+    if (!editor) return;
+    
+    if (isOpen && searchQuery) {
+      editor.commands.setSearchHighlight({
+        searchTerm: searchQuery,
+        caseSensitive,
+        useRegex,
+        currentMatchIndex,
+      });
+    } else {
+      editor.commands.clearSearchHighlight();
+    }
+  }, [editor, isOpen, searchQuery, caseSensitive, useRegex, currentMatchIndex]);
+
+  // Clear highlighting when panel closes
+  useEffect(() => {
+    if (!isOpen && editor) {
+      editor.commands.clearSearchHighlight();
+    }
+  }, [isOpen, editor]);
+
   // Highlight current match in editor
   useEffect(() => {
     if (matches.length > 0 && currentMatchIndex < matches.length) {
