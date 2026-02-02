@@ -44,6 +44,17 @@ export interface AutoSaveReturn extends AutoSaveState {
 
 const RECOVERY_DISMISSED_KEY_SUFFIX = '-dismissed';
 
+// Simple hash function for quick content comparison (faster than full string compare)
+function simpleHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash;
+}
+
 export function useAutoSave(
   editor: Editor | null,
   options: AutoSaveOptions = {}
@@ -65,6 +76,7 @@ export function useAutoSave(
 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastContentRef = useRef<string>('');
+  const lastContentHashRef = useRef<number>(0);
 
   // Check for recoverable content on mount
   useEffect(() => {
@@ -101,8 +113,9 @@ export function useAutoSave(
     try {
       const content = editor.getHTML();
       
-      // Don't save if content hasn't changed
-      if (content === lastContentRef.current) {
+      // Don't save if content hasn't changed (use hash for faster comparison)
+      const contentHash = simpleHash(content);
+      if (contentHash === lastContentHashRef.current && content.length === lastContentRef.current.length) {
         setState(prev => ({ ...prev, status: 'saved' }));
         return;
       }
@@ -118,6 +131,7 @@ export function useAutoSave(
       localStorage.setItem(storageKey + '-timestamp', new Date().toISOString());
       
       lastContentRef.current = content;
+      lastContentHashRef.current = contentHash;
       
       setState(prev => ({
         ...prev,

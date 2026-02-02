@@ -27,6 +27,7 @@ import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace } from './FindReplace';
 import { useAutoSave } from './hooks/useAutoSave';
+import { useWordCount } from './hooks/useWordCount';
 import { AutoSaveIndicator } from './AutoSaveIndicator';
 import { RecoveryBanner } from './RecoveryBanner';
 import { WikiLinkSafe } from './extensions/WikiLinkSafe';
@@ -385,14 +386,12 @@ export function MarkdownEditor({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [editor, isMobile]);
 
-  // Word count calculation
-  const wordCount = useMemo(() => {
-    if (!editor) return { words: 0, characters: 0 };
-    const text = editor.getText();
-    const words = text.split(/\s+/).filter(word => word.length > 0).length;
-    const characters = text.length;
-    return { words, characters };
-  }, [editor?.getText()]);
+  // Word count calculation (debounced for performance with large documents)
+  const wordCount = useWordCount(editor, {
+    debounceMs: 500,
+    extendedStats: false,
+    enabled: showWordCount,
+  });
 
   if (!editor) {
     return (

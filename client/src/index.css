@@ -2067,10 +2067,23 @@ pre.with-line-numbers code .line::before {
   position: relative;
   min-height: 0;
   padding-left: 2rem; /* Space for drag handles */
+  
+  /* Performance optimizations for large documents */
+  scrollbar-gutter: stable; /* Prevent layout shift from scrollbar */
+  will-change: scroll-position; /* Hint for smooth scrolling */
+  
+  /* CSS containment for better rendering performance */
+  contain: layout style;
 }
 
 .editor-content {
   height: 100%;
+}
+
+/* Performance: Use content-visibility for off-screen content in large documents */
+.editor-content .ProseMirror > * {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 50px; /* Estimated height for off-screen elements */
 }
 
 .editor-content .ProseMirror {
