@@ -1,6 +1,8 @@
 import { MarkdownEditor } from '@/components/editor';
 import { useState } from 'react';
-import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles } from 'lucide-react';
+import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -111,6 +113,42 @@ greet('Developer');</code></pre>
 <p>Try typing <code>/</code> to open the command palette!</p>
 `;
 
+const MODAL_DEMO_CONTENT = `
+<h1>Start Writing Here</h1>
+<p>This is a <strong>focused writing environment</strong>. Try out all the features:</p>
+
+<h2>Quick Tips</h2>
+<ul>
+  <li>Type <code>/</code> to open the command palette</li>
+  <li>Use <code>Ctrl+B</code> for <strong>bold</strong></li>
+  <li>Use <code>Ctrl+I</code> for <em>italic</em></li>
+  <li>Select text to see the floating toolbar</li>
+</ul>
+
+<h2>Try These Features</h2>
+
+<h3>Task Lists</h3>
+<ul data-type="taskList">
+  <li data-type="taskItem" data-checked="false">Create a new heading</li>
+  <li data-type="taskItem" data-checked="false">Add a code block</li>
+  <li data-type="taskItem" data-checked="false">Insert a table</li>
+  <li data-type="taskItem" data-checked="false">Try a callout</li>
+</ul>
+
+<h3>Code Block</h3>
+<pre><code class="language-typescript">// Write your code here
+const editor = new MarkdownEditor({
+  theme: 'dark',
+  features: ['all']
+});
+
+editor.start();</code></pre>
+
+<blockquote>
+  <p>💡 <strong>Tip:</strong> Press <code>Escape</code> or click outside to close this modal.</p>
+</blockquote>
+`;
+
 const features = [
   {
     icon: <Zap className="w-5 h-5" />,
@@ -156,6 +194,8 @@ const features = [
 
 export default function Home() {
   const [content, setContent] = useState(DEMO_CONTENT);
+  const [modalContent, setModalContent] = useState(MODAL_DEMO_CONTENT);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -172,7 +212,45 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">Drop-in editor for note-taking apps</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="default" size="sm" className="gap-2">
+                    <Maximize2 className="w-4 h-4" />
+                    Try Full Screen
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] w-[1200px] h-[90vh] p-0 gap-0 bg-background border-border overflow-hidden">
+                  <DialogHeader className="px-6 py-4 border-b border-border bg-card/50 flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <FileText className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <DialogTitle className="text-base font-semibold">Manus Markdown Editor</DialogTitle>
+                          <p className="text-xs text-muted-foreground">Full-screen editing experience</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                          Focus Mode
+                        </span>
+                      </div>
+                    </div>
+                  </DialogHeader>
+                  <div className="flex-1 overflow-hidden" style={{ height: 'calc(90vh - 80px)' }}>
+                    <MarkdownEditor
+                      content={modalContent}
+                      onChange={setModalContent}
+                      placeholder="Start writing... Use '/' for commands"
+                      showToolbar={true}
+                      showWordCount={true}
+                      autofocus={true}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
               <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
                 v1.0.0
               </span>
@@ -196,6 +274,19 @@ export default function Home() {
               A professional, feature-rich markdown editor component designed as a drop-in for 
               note-taking applications like Taskmate, Momentum, and more.
             </p>
+            <div className="flex items-center justify-center gap-4">
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button size="lg" className="gap-2">
+                    <Maximize2 className="w-5 h-5" />
+                    Try the Editor
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+              <Button variant="outline" size="lg" asChild>
+                <a href="#demo">View Demo Below</a>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -221,15 +312,25 @@ export default function Home() {
       </section>
 
       {/* Editor Demo */}
-      <section className="py-8">
+      <section id="demo" className="py-8">
         <div className="container">
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold text-foreground mb-2">Try the Editor</h3>
-            <p className="text-sm text-muted-foreground">
-              Start typing below. Use <kbd className="px-1.5 py-0.5 text-xs bg-secondary rounded">Ctrl+B</kbd> for bold, 
-              <kbd className="px-1.5 py-0.5 text-xs bg-secondary rounded mx-1">Ctrl+I</kbd> for italic, 
-              or type <kbd className="px-1.5 py-0.5 text-xs bg-secondary rounded">/</kbd> to open the command palette.
-            </p>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Try the Editor</h3>
+              <p className="text-sm text-muted-foreground">
+                Start typing below. Use <kbd className="px-1.5 py-0.5 text-xs bg-secondary rounded">Ctrl+B</kbd> for bold, 
+                <kbd className="px-1.5 py-0.5 text-xs bg-secondary rounded mx-1">Ctrl+I</kbd> for italic, 
+                or type <kbd className="px-1.5 py-0.5 text-xs bg-secondary rounded">/</kbd> to open the command palette.
+              </p>
+            </div>
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Maximize2 className="w-4 h-4" />
+                  Open Full Screen
+                </Button>
+              </DialogTrigger>
+            </Dialog>
           </div>
           
           <div className="h-[600px] rounded-lg overflow-hidden shadow-2xl shadow-black/20">
