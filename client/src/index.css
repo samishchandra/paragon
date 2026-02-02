@@ -458,7 +458,21 @@
     100% { opacity: 1; transform: scale(1); }
   }
   
+  /* Strikethrough for checked task items */
   ul[data-type="taskList"] li[data-checked="true"] > div {
+    text-decoration: line-through;
+    color: var(--muted-foreground);
+  }
+  
+  /* Prevent nested unchecked task items from inheriting strikethrough from checked parent */
+  /* TipTap structure: li.task-item > (label + div + ul.taskList) - nested list is sibling to div */
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="false"] > div {
+    text-decoration: none !important;
+    color: var(--foreground) !important;
+  }
+  
+  /* Ensure nested checked items still show strikethrough */
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div {
     text-decoration: line-through;
     color: var(--muted-foreground);
   }
