@@ -21,6 +21,7 @@ interface FindReplaceProps {
   editor: Editor;
   isOpen: boolean;
   onClose: () => void;
+  focusTrigger?: number;
 }
 
 interface SearchMatch {
@@ -29,7 +30,7 @@ interface SearchMatch {
   text: string;
 }
 
-export function FindReplace({ editor, isOpen, onClose }: FindReplaceProps) {
+export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindReplaceProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [replaceQuery, setReplaceQuery] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(false);
@@ -150,13 +151,13 @@ export function FindReplace({ editor, isOpen, onClose }: FindReplaceProps) {
     }
   }, [currentMatchIndex, matches, editor]);
 
-  // Focus search input when opened
+  // Focus search input when opened or when focusTrigger changes
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
       searchInputRef.current.select();
     }
-  }, [isOpen]);
+  }, [isOpen, focusTrigger]);
 
   // Navigate to next match
   const goToNextMatch = useCallback(() => {

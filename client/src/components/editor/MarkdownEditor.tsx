@@ -242,6 +242,7 @@ export function MarkdownEditor({
   
   // State for find/replace panel
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
+  const [findReplaceFocusTrigger, setFindReplaceFocusTrigger] = useState(0);
 
   // Auto-save functionality
   const autoSaveState = useAutoSave(editor, {
@@ -269,6 +270,8 @@ export function MarkdownEditor({
       if (!isMobile && (event.metaKey || event.ctrlKey) && event.key === 'f') {
         event.preventDefault();
         setIsFindReplaceOpen(true);
+        // Always increment focus trigger to refocus search input even if already open
+        setFindReplaceFocusTrigger(prev => prev + 1);
         return;
       }
       
@@ -427,6 +430,7 @@ export function MarkdownEditor({
           editor={editor}
           isOpen={isFindReplaceOpen}
           onClose={() => setIsFindReplaceOpen(false)}
+          focusTrigger={findReplaceFocusTrigger}
         />
       )}
       
