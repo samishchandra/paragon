@@ -6,8 +6,8 @@ import Highlight from '@tiptap/extension-highlight';
 import Link from '@tiptap/extension-link';
 import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
-import { CustomTableCell } from './extensions/CustomTableCell';
-import { CustomTableHeader } from './extensions/CustomTableHeader';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
@@ -23,12 +23,6 @@ import { FloatingToolbar } from './FloatingToolbar';
 import { Callout } from './extensions/Callout';
 import { ResizableImage } from './extensions/ResizableImage';
 import { DatePill } from './extensions/DatePill';
-import { SortableTable } from './extensions/SortableTable';
-import { MarkdownPaste } from './extensions/MarkdownPaste';
-import { TableRowDrag } from './extensions/TableRowDrag';
-import { WikiLink } from './extensions/WikiLink';
-import { LinkValidation } from './extensions/LinkValidation';
-import { SearchHighlight } from './extensions/SearchHighlight';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace } from './FindReplace';
@@ -45,6 +39,12 @@ import { RecoveryBanner } from './RecoveryBanner';
 
 // Initialize lowlight with common languages
 const lowlight = createLowlight(common);
+
+// Detect if we're on a mobile/touch device
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768;
+};
 
 export interface MarkdownEditorProps {
   content?: string;
@@ -79,118 +79,112 @@ export function MarkdownEditor({
   autoSaveKey = 'manus-editor-content',
   autoSaveDelay = 1000,
 }: MarkdownEditorProps) {
-  const extensions = useMemo(() => [
-    StarterKit.configure({
-      heading: {
-        levels: [1, 2, 3, 4, 5, 6],
-      },
-      codeBlock: false, // We use CodeBlockLowlight instead
-      dropcursor: {
-        color: 'var(--primary)',
-        width: 2,
-      },
-      // Disable extensions that we configure separately to avoid duplicates
-      // This fixes mobile crash issues caused by duplicate extension registration
-      link: false, // We configure Link separately with custom options
-      underline: false, // Disable to avoid duplicate - we don't need separate config
-      bold: {
-        HTMLAttributes: {
-          class: 'font-bold',
+  // Check if mobile on mount
+  const [isMobile] = useState(() => isMobileDevice());
+
+  // Build extensions array - conditionally include problematic extensions on mobile
+  const extensions = useMemo(() => {
+    const baseExtensions = [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3, 4, 5, 6],
         },
-      },
-      italic: {
-        HTMLAttributes: {
-          class: 'italic',
+        codeBlock: false, // We use CodeBlockLowlight instead
+        dropcursor: {
+          color: 'var(--primary)',
+          width: 2,
         },
-      },
-    }),
-    Placeholder.configure({
-      placeholder,
-      emptyEditorClass: 'is-editor-empty',
-    }),
-    TextAlign.configure({
-      types: ['heading', 'paragraph'],
-    }),
-    Highlight.configure({
-      multicolor: true,
-    }),
-    Link.configure({
-      openOnClick: false,
-      autolink: true,
-      linkOnPaste: true,
-      HTMLAttributes: {
-        rel: 'noopener noreferrer',
-        target: '_blank',
-      },
-    }),
-    Table.configure({
-      resizable: true,
-      HTMLAttributes: {
-        class: 'editor-table',
-      },
-    }),
-    TableRow,
-    CustomTableCell,
-    CustomTableHeader,
-    TaskList.configure({
-      HTMLAttributes: {
-        class: 'task-list',
-      },
-    }),
-    TaskItem.configure({
-      nested: true,
-      HTMLAttributes: {
-        class: 'task-item',
-      },
-    }),
-    CodeBlockLowlight.configure({
-      lowlight,
-      defaultLanguage: 'plaintext',
-      HTMLAttributes: {
-        class: 'code-block',
-      },
-    }),
-    Underline,
-    Subscript,
-    Superscript,
-    Typography,
-    Callout,
-    ResizableImage.configure({
-      allowBase64: true,
-      HTMLAttributes: {
-        class: 'editor-image',
-      },
-    }),
-    DatePill.configure({
-      HTMLAttributes: {
-        class: 'date-pill',
-      },
-    }),
-    SortableTable.configure({
-      enableSorting: true,
-    }),
-    MarkdownPaste.configure({
-      enableMarkdownPaste: true,
-    }),
-    TableRowDrag.configure({
-      enableDrag: true,
-    }),
-    WikiLink.configure({
-      onWikiLinkClick: (pageName) => {
-        console.log('Wiki link clicked:', pageName);
-        // In a real app, this would navigate to the page or open it
-      },
-    }),
-    LinkValidation.configure({
-      validateOnChange: true,
-    }),
-    SearchHighlight.configure({
-      searchTerm: '',
-      caseSensitive: false,
-      useRegex: false,
-      currentMatchIndex: 0,
-    }),
-  ], [placeholder]);
+        // Disable extensions that we configure separately to avoid duplicates
+        link: false, // We configure Link separately with custom options
+        underline: false, // We add Underline separately
+        bold: {
+          HTMLAttributes: {
+            class: 'font-bold',
+          },
+        },
+        italic: {
+          HTMLAttributes: {
+            class: 'italic',
+          },
+        },
+      }),
+      Placeholder.configure({
+        placeholder,
+        emptyEditorClass: 'is-editor-empty',
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Highlight.configure({
+        multicolor: true,
+      }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          rel: 'noopener noreferrer',
+          target: '_blank',
+        },
+      }),
+      // Use standard table extensions for better mobile compatibility
+      Table.configure({
+        resizable: !isMobile, // Disable resize on mobile
+        HTMLAttributes: {
+          class: 'editor-table',
+        },
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      TaskList.configure({
+        HTMLAttributes: {
+          class: 'task-list',
+        },
+      }),
+      TaskItem.configure({
+        nested: true,
+        HTMLAttributes: {
+          class: 'task-item',
+        },
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        defaultLanguage: 'plaintext',
+        HTMLAttributes: {
+          class: 'code-block',
+        },
+      }),
+      Underline,
+      Subscript,
+      Superscript,
+      Typography,
+      Callout,
+      ResizableImage.configure({
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'editor-image',
+        },
+      }),
+    ];
+
+    // Only add DatePill on desktop - it uses ReactNodeViewRenderer which can be problematic on mobile
+    if (!isMobile) {
+      baseExtensions.push(
+        DatePill.configure({
+          HTMLAttributes: {
+            class: 'date-pill',
+          },
+        })
+      );
+    }
+
+    // Custom extensions that may cause issues on mobile are excluded
+    // TableRowDrag, SortableTable, WikiLink, MarkdownPaste, LinkValidation, SearchHighlight
+    // are all disabled to ensure mobile stability
+
+    return baseExtensions;
+  }, [placeholder, isMobile]);
 
   const editor = useEditor({
     extensions,
@@ -200,32 +194,6 @@ export function MarkdownEditor({
     editorProps: {
       attributes: {
         class: 'tiptap-editor outline-none min-h-full',
-      },
-      // Handle paste to convert markdown
-      handlePaste: (_view, event) => {
-        const text = event.clipboardData?.getData('text/plain');
-        if (text) {
-          // Check for markdown patterns and convert
-          const markdownPatterns = [
-            /^#{1,6}\s/, // Headings
-            /^\*\s|\-\s/, // Bullet lists
-            /^\d+\.\s/, // Ordered lists
-            /^\*\*.*\*\*/, // Bold
-            /^\*.*\*/, // Italic
-            /^```/, // Code blocks
-            /^\[.*\]\(.*\)/, // Links
-            /^>\s/, // Blockquotes
-            /^\* \[ \]|\* \[x\]/, // Task lists
-          ];
-          
-          const hasMarkdown = markdownPatterns.some(pattern => pattern.test(text));
-          
-          if (hasMarkdown) {
-            // Let TipTap handle markdown conversion
-            return false;
-          }
-        }
-        return false;
       },
     },
     onUpdate: ({ editor }) => {
@@ -268,15 +236,15 @@ export function MarkdownEditor({
         return;
       }
       
-      // Cmd/Ctrl+F for find/replace
-      if ((event.metaKey || event.ctrlKey) && event.key === 'f') {
+      // Cmd/Ctrl+F for find/replace (desktop only)
+      if (!isMobile && (event.metaKey || event.ctrlKey) && event.key === 'f') {
         event.preventDefault();
         setIsFindReplaceOpen(true);
         return;
       }
       
-      // Cmd/Ctrl+H for find/replace with replace panel open
-      if ((event.metaKey || event.ctrlKey) && event.key === 'h') {
+      // Cmd/Ctrl+H for find/replace with replace panel open (desktop only)
+      if (!isMobile && (event.metaKey || event.ctrlKey) && event.key === 'h') {
         event.preventDefault();
         setIsFindReplaceOpen(true);
         return;
@@ -284,108 +252,112 @@ export function MarkdownEditor({
 
       // Tab/Shift+Tab for list indentation
       if (event.key === 'Tab') {
-        const { state } = editor;
-        const { selection } = state;
-        const { $from } = selection;
-        
-        // Check if we're in a list item
-        const listItem = $from.node($from.depth);
-        const parentList = $from.node($from.depth - 1);
-        
-        if (listItem?.type.name === 'listItem' || listItem?.type.name === 'taskItem' || 
-            parentList?.type.name === 'bulletList' || parentList?.type.name === 'orderedList' || parentList?.type.name === 'taskList') {
-          event.preventDefault();
+        try {
+          const { state } = editor;
+          const { selection } = state;
+          const { $from } = selection;
           
-          if (event.shiftKey) {
-            // Shift+Tab: Outdent (lift list item)
-            editor.chain().focus().liftListItem('listItem').run() ||
-            editor.chain().focus().liftListItem('taskItem').run();
-          } else {
-            // Tab: Indent (sink list item)
-            editor.chain().focus().sinkListItem('listItem').run() ||
-            editor.chain().focus().sinkListItem('taskItem').run();
+          // Check if we're in a list item
+          const listItem = $from.node($from.depth);
+          const parentList = $from.node($from.depth - 1);
+          
+          if (listItem?.type.name === 'listItem' || listItem?.type.name === 'taskItem' || 
+              parentList?.type.name === 'bulletList' || parentList?.type.name === 'orderedList' || parentList?.type.name === 'taskList') {
+            event.preventDefault();
+            
+            if (event.shiftKey) {
+              // Shift+Tab: Outdent (lift list item)
+              editor.chain().focus().liftListItem('listItem').run() ||
+              editor.chain().focus().liftListItem('taskItem').run();
+            } else {
+              // Tab: Indent (sink list item)
+              editor.chain().focus().sinkListItem('listItem').run() ||
+              editor.chain().focus().sinkListItem('taskItem').run();
+            }
+            return;
           }
-          return;
+        } catch (error) {
+          console.warn('Tab handling error:', error);
         }
       }
       
       // Auto-detect markdown shortcuts on space
       if (event.key === ' ') {
-        const { state } = editor;
-        const { selection } = state;
-        const { $from } = selection;
-        const textBefore = $from.nodeBefore?.textContent || '';
-        
-        // Heading shortcuts
-        if (textBefore === '#') {
-          event.preventDefault();
-          editor.chain().focus().deleteRange({ from: $from.pos - 1, to: $from.pos }).setHeading({ level: 1 }).run();
-          return;
-        }
-        if (textBefore === '##') {
-          event.preventDefault();
-          editor.chain().focus().deleteRange({ from: $from.pos - 2, to: $from.pos }).setHeading({ level: 2 }).run();
-          return;
-        }
-        if (textBefore === '###') {
-          event.preventDefault();
-          editor.chain().focus().deleteRange({ from: $from.pos - 3, to: $from.pos }).setHeading({ level: 3 }).run();
-          return;
-        }
-        
-        // List shortcuts
-        if (textBefore === '-' || textBefore === '*') {
-          event.preventDefault();
-          editor.chain().focus().deleteRange({ from: $from.pos - 1, to: $from.pos }).toggleBulletList().run();
-          return;
-        }
-        if (textBefore === '1.') {
-          event.preventDefault();
-          editor.chain().focus().deleteRange({ from: $from.pos - 2, to: $from.pos }).toggleOrderedList().run();
-          return;
-        }
-        
-        // Task list shortcut
-        if (textBefore === '[]' || textBefore === '[ ]') {
-          event.preventDefault();
-          const len = textBefore.length;
-          editor.chain().focus().deleteRange({ from: $from.pos - len, to: $from.pos }).toggleTaskList().run();
-          return;
-        }
-        
-        // Blockquote shortcut
-        if (textBefore === '>') {
-          event.preventDefault();
-          editor.chain().focus().deleteRange({ from: $from.pos - 1, to: $from.pos }).toggleBlockquote().run();
-          return;
-        }
-        
-        // Horizontal rule shortcut
-        if (textBefore === '---' || textBefore === '***') {
-          event.preventDefault();
-          editor.chain().focus().deleteRange({ from: $from.pos - 3, to: $from.pos }).setHorizontalRule().run();
-          return;
-        }
-        
-        // Code block shortcut
-        if (textBefore === '```') {
-          event.preventDefault();
-          editor.chain().focus().deleteRange({ from: $from.pos - 3, to: $from.pos }).toggleCodeBlock().run();
-          return;
+        try {
+          const { state } = editor;
+          const { selection } = state;
+          const { $from } = selection;
+          const textBefore = $from.nodeBefore?.textContent || '';
+          
+          // Heading shortcuts
+          if (textBefore === '#') {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - 1, to: $from.pos }).setHeading({ level: 1 }).run();
+            return;
+          }
+          if (textBefore === '##') {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - 2, to: $from.pos }).setHeading({ level: 2 }).run();
+            return;
+          }
+          if (textBefore === '###') {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - 3, to: $from.pos }).setHeading({ level: 3 }).run();
+            return;
+          }
+          
+          // List shortcuts
+          if (textBefore === '-' || textBefore === '*') {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - 1, to: $from.pos }).toggleBulletList().run();
+            return;
+          }
+          
+          // Ordered list
+          if (/^\d+\.$/.test(textBefore)) {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - textBefore.length, to: $from.pos }).toggleOrderedList().run();
+            return;
+          }
+          
+          // Task list
+          if (textBefore === '[]' || textBefore === '[ ]') {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - textBefore.length, to: $from.pos }).toggleTaskList().run();
+            return;
+          }
+          
+          // Blockquote
+          if (textBefore === '>') {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - 1, to: $from.pos }).toggleBlockquote().run();
+            return;
+          }
+          
+          // Code block
+          if (textBefore === '```') {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - 3, to: $from.pos }).toggleCodeBlock().run();
+            return;
+          }
+          
+          // Horizontal rule
+          if (textBefore === '---' || textBefore === '***') {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - 3, to: $from.pos }).setHorizontalRule().run();
+            return;
+          }
+        } catch (error) {
+          console.warn('Space shortcut error:', error);
         }
       }
     };
 
-    // Add event listener to the editor DOM
-    const editorElement = editor.view.dom;
-    editorElement.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [editor, isMobile]);
 
-    return () => {
-      editorElement.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [editor]);
-
-  // Word and character count
+  // Word count calculation
   const wordCount = useMemo(() => {
     if (!editor) return { words: 0, characters: 0 };
     const text = editor.getText();
@@ -394,97 +366,80 @@ export function MarkdownEditor({
     return { words, characters };
   }, [editor?.getText()]);
 
-  // Copy content as markdown
-  const copyAsMarkdown = useCallback(() => {
-    if (!editor) return;
-    const html = editor.getHTML();
-    // Simple HTML to Markdown conversion for common elements
-    let markdown = html
-      .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n')
-      .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n')
-      .replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n\n')
-      .replace(/<h4[^>]*>(.*?)<\/h4>/gi, '#### $1\n\n')
-      .replace(/<h5[^>]*>(.*?)<\/h5>/gi, '##### $1\n\n')
-      .replace(/<h6[^>]*>(.*?)<\/h6>/gi, '###### $1\n\n')
-      .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**')
-      .replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*')
-      .replace(/<code[^>]*>(.*?)<\/code>/gi, '`$1`')
-      .replace(/<s[^>]*>(.*?)<\/s>/gi, '~~$1~~')
-      .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
-      .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gi, '> $1\n')
-      .replace(/<hr[^>]*>/gi, '---\n\n')
-      .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n')
-      .replace(/<br[^>]*>/gi, '\n')
-      .replace(/<[^>]+>/g, '');
-    
-    navigator.clipboard.writeText(markdown.trim());
-  }, [editor]);
-
   if (!editor) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse text-muted-foreground">Loading editor...</div>
+      <div className={`markdown-editor-container ${className}`}>
+        <div className="editor-loading">Loading editor...</div>
       </div>
     );
   }
 
   return (
-    <div className={`flex flex-col h-full bg-background rounded-lg border border-border overflow-hidden ${className}`}>
-      {/* Find/Replace Panel */}
-      <FindReplace 
-        editor={editor} 
-        isOpen={isFindReplaceOpen} 
-        onClose={() => setIsFindReplaceOpen(false)} 
-      />
-      
-      {/* Recovery Banner */}
+    <div className={`markdown-editor-container ${className}`}>
+      {/* Recovery banner for auto-saved content */}
       {autoSave && autoSaveState.hasRecoverableContent && (
         <RecoveryBanner
-          onRecover={() => autoSaveState.recover()}
-          onDismiss={() => autoSaveState.dismissRecovery()}
+          onRecover={() => {
+            autoSaveState.recover();
+          }}
+          onDismiss={autoSaveState.dismissRecovery}
         />
       )}
       
-      {/* Top Toolbar */}
-      {showToolbar && <EditorToolbar editor={editor} onCopyMarkdown={copyAsMarkdown} onOpenLinkPopover={() => setIsLinkPopoverOpen(true)} />}
-      
-      {/* Editor Content */}
-      <div className="flex-1 overflow-auto relative">
-        <EditorContent 
+      {/* Top toolbar */}
+      {showToolbar && (
+        <EditorToolbar 
           editor={editor} 
-          className="h-full"
+          onOpenLinkPopover={() => setIsLinkPopoverOpen(true)}
         />
+      )}
+      
+      {/* Find and replace panel (desktop only) */}
+      {!isMobile && (
+        <FindReplace
+          editor={editor}
+          isOpen={isFindReplaceOpen}
+          onClose={() => setIsFindReplaceOpen(false)}
+        />
+      )}
+      
+      {/* Main editor area */}
+      <div className="editor-content-wrapper">
+        <EditorContent editor={editor} className="editor-content" />
         
-        {/* Floating Toolbar on Selection */}
-        <FloatingToolbar editor={editor} />
+        {/* Floating toolbar on text selection (desktop only) */}
+        {!isMobile && <FloatingToolbar editor={editor} />}
         
-        {/* Slash Commands */}
+        {/* Slash commands */}
         <SlashCommands editor={editor} />
         
-        {/* Link Popover (Cmd+K) */}
-        <LinkPopover 
-          editor={editor} 
-          isOpen={isLinkPopoverOpen} 
-          onClose={() => setIsLinkPopoverOpen(false)} 
+        {/* Link popover */}
+        <LinkPopover
+          editor={editor}
+          isOpen={isLinkPopoverOpen}
+          onClose={() => setIsLinkPopoverOpen(false)}
         />
         
-        {/* Link Hover Tooltip */}
-        <LinkHoverTooltip 
-          editor={editor} 
-          onEditLink={() => setIsLinkPopoverOpen(true)} 
-        />
+        {/* Link hover tooltip (desktop only) */}
+        {!isMobile && (
+          <LinkHoverTooltip 
+            editor={editor} 
+            onEditLink={() => setIsLinkPopoverOpen(true)}
+          />
+        )}
       </div>
       
-      {/* Word Count Footer */}
+      {/* Footer with word count and auto-save status */}
       {showWordCount && (
-        <div className="word-count">
-          <span>{wordCount.words} words</span>
-          <span>{wordCount.characters} characters</span>
+        <div className="editor-footer">
+          <div className="word-count">
+            <span>{wordCount.words} words</span>
+            <span>{wordCount.characters} characters</span>
+          </div>
           {autoSave && (
-            <AutoSaveIndicator
-              status={autoSaveState.status}
+            <AutoSaveIndicator 
+              status={autoSaveState.status} 
               lastSaved={autoSaveState.lastSaved}
-              className="ml-auto"
             />
           )}
         </div>
