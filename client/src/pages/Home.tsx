@@ -1,6 +1,6 @@
 import { MarkdownEditor } from '@/components/editor';
 import { useState } from 'react';
-import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2 } from 'lucide-react';
+import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -203,6 +203,7 @@ export default function Home() {
   const [content, setContent] = useState(DEMO_CONTENT);
   const [modalContent, setModalContent] = useState(MODAL_DEMO_CONTENT);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTheme, setModalTheme] = useState<'dark' | 'light'>('dark');
 
   return (
     <div className="min-h-screen bg-background">
@@ -228,7 +229,7 @@ export default function Home() {
                     <span className="sm:hidden">Try</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-[98vw] sm:max-w-[95vw] w-full sm:w-[1200px] h-[95vh] sm:h-[90vh] p-0 gap-0 bg-background border-border overflow-hidden">
+                <DialogContent className={`max-w-[98vw] sm:max-w-[95vw] w-full sm:w-[1200px] h-[95vh] sm:h-[90vh] p-0 gap-0 border-border overflow-hidden ${modalTheme === 'light' ? 'bg-white' : 'bg-background'}`} data-theme={modalTheme}>
                   <DialogHeader className="px-6 py-4 border-b border-border bg-card/50 flex-shrink-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -241,6 +242,18 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setModalTheme(modalTheme === 'dark' ? 'light' : 'dark')}
+                          className="gap-1.5 h-8"
+                        >
+                          {modalTheme === 'dark' ? (
+                            <><Sun className="w-4 h-4" /> Light</>
+                          ) : (
+                            <><Moon className="w-4 h-4" /> Dark</>
+                          )}
+                        </Button>
                         <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
                           Focus Mode
                         </span>

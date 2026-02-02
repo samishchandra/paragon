@@ -139,6 +139,47 @@
   --syntax-variable: oklch(0.8 0.1 220);
 }
 
+/* Light theme for modal testing */
+[data-theme="light"] {
+  --background: oklch(0.98 0.005 250);
+  --foreground: oklch(0.15 0.01 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.01 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.01 250);
+  --primary: oklch(0.55 0.18 220);
+  --primary-foreground: oklch(0.98 0.005 250);
+  --secondary: oklch(0.92 0.01 250);
+  --secondary-foreground: oklch(0.25 0.02 250);
+  --muted: oklch(0.92 0.01 250);
+  --muted-foreground: oklch(0.45 0.02 250);
+  --accent: oklch(0.92 0.01 250);
+  --accent-foreground: oklch(0.15 0.01 250);
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.85 0.01 250);
+  --input: oklch(0.92 0.01 250);
+  --ring: oklch(0.55 0.18 220);
+  --editor-bg: oklch(0.98 0.005 250);
+  --editor-selection: oklch(0.55 0.08 220 / 0.2);
+  --editor-cursor: oklch(0.55 0.18 220);
+  --editor-line-number: oklch(0.6 0.02 250);
+  --editor-gutter: oklch(0.95 0.01 250);
+  --checkbox-checked: var(--primary);
+  --checkbox-checked-foreground: var(--primary-foreground);
+  --callout-info: oklch(0.5 0.12 220);
+  --callout-warning: oklch(0.6 0.15 70);
+  --callout-error: oklch(0.5 0.15 25);
+  --callout-success: oklch(0.5 0.12 160);
+  --callout-note: oklch(0.5 0.12 280);
+  --syntax-keyword: oklch(0.5 0.2 320);
+  --syntax-string: oklch(0.45 0.15 160);
+  --syntax-number: oklch(0.5 0.15 70);
+  --syntax-comment: oklch(0.55 0.02 250);
+  --syntax-function: oklch(0.5 0.18 280);
+  --syntax-variable: oklch(0.45 0.12 220);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -2060,4 +2101,26 @@ pre.with-line-numbers code .line::before {
   justify-content: center;
   height: 100%;
   color: var(--muted-foreground);
+}
+
+
+/* ==========================================================================
+   TASK LIST NESTED INDENTATION AND STRIKETHROUGH FIX
+   These rules are placed at the end to ensure they're not purged by Tailwind
+   and have higher specificity than nested rules
+   ========================================================================== */
+
+/* Nested task list container - reset margin/padding to align with bullet list */
+/* The nested task list is inside the parent task's div, so we need to pull it back */
+.tiptap-editor ul[data-type="taskList"] li > div > ul[data-type="taskList"] {
+  margin-left: -0.125rem !important;
+  padding-left: 0 !important;
+}
+
+/* Ensure nested unchecked tasks don't inherit strikethrough from checked parent */
+/* Target both the div and p elements to ensure text-decoration is reset */
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] > div > ul[data-type="taskList"] li[data-checked="false"] > div,
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] > div > ul[data-type="taskList"] li[data-checked="false"] > div > p {
+  text-decoration: none !important;
+  color: var(--foreground) !important;
 }
