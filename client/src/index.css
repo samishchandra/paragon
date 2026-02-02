@@ -369,7 +369,7 @@
     font-size: 0.875rem;
     line-height: 1.6;
     background: var(--card);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: 8px;
     padding: 1rem;
     margin: 1rem 0;
