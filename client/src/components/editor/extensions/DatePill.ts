@@ -1,8 +1,10 @@
 import { Node, mergeAttributes, InputRule } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import { DatePillComponent } from '../DatePillComponent';
 
 /*
  * DatePill Extension
- * Creates inline date pills with rounded corners
+ * Creates inline date pills with rounded corners and click-to-edit date picker
  * Useful for log and task-based notes
  */
 
@@ -25,7 +27,7 @@ declare module '@tiptap/core' {
   }
 }
 
-// Helper to format date for display
+// Helper to format date for display (used for HTML rendering)
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
   const today = new Date();
@@ -147,6 +149,11 @@ export const DatePill = Node.create<DatePillOptions>({
         displayDate,
       ],
     ];
+  },
+
+  // Use React component for interactive editing
+  addNodeView() {
+    return ReactNodeViewRenderer(DatePillComponent);
   },
 
   addCommands() {
