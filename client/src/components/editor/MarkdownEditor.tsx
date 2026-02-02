@@ -67,7 +67,8 @@ export interface MarkdownEditorProps {
   autoSaveKey?: string;
   /** Auto-save debounce delay in ms (default: 1000) */
   autoSaveDelay?: number;
-
+  /** Show recovery banner when unsaved content is found (default: true) */
+  showRecoveryBanner?: boolean;
 }
 
 export function MarkdownEditor({
@@ -83,7 +84,7 @@ export function MarkdownEditor({
   autoSave = true,
   autoSaveKey = 'manus-editor-content',
   autoSaveDelay = 1000,
-
+  showRecoveryBanner = true,
 }: MarkdownEditorProps) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
@@ -396,7 +397,7 @@ export function MarkdownEditor({
   return (
     <div className={`markdown-editor-container ${className}`}>
       {/* Recovery banner for auto-saved content */}
-      {autoSave && autoSaveState.hasRecoverableContent && (
+      {autoSave && showRecoveryBanner && autoSaveState.hasRecoverableContent && (
         <RecoveryBanner
           onRecover={() => {
             autoSaveState.recover();

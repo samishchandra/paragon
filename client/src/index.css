@@ -468,6 +468,23 @@
     padding: 0;
   }
   
+  /* Nested task lists - proper indentation and spacing */
+  ul[data-type="taskList"] ul[data-type="taskList"] {
+    margin: 0.25rem 0 0 1.5rem;
+    padding-left: 0;
+  }
+  
+  ul[data-type="taskList"] ul[data-type="taskList"] li {
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Nested task list within div content */
+  ul[data-type="taskList"] li > div > ul[data-type="taskList"] {
+    margin: 0.25rem 0 0 0;
+    padding-left: 1.5rem;
+  }
+  
   /* Horizontal rule - dotted gray per user preference */
   hr {
     border: none;
