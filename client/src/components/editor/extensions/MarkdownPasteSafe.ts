@@ -1,4 +1,5 @@
 import { Extension } from '@tiptap/core';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 
 export interface MarkdownPasteOptions {
   enableMarkdownPaste: boolean;
@@ -8,8 +9,8 @@ export interface MarkdownPasteOptions {
 function markdownToHtml(markdown: string): string {
   let html = markdown;
   
-  // Escape HTML entities first
-  html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Don't escape HTML entities - let TipTap handle it
+  // This allows the HTML tags we create to work properly
   
   // Headers (must be at start of line)
   html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
@@ -19,22 +20,36 @@ function markdownToHtml(markdown: string): string {
   html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
   html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
   
+  // Code blocks (fenced) - must come before inline formatting
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const language = lang || 'plaintext';
+    // Escape code content
+    const escapedCode = code.trim()
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    return `<pre><code class="language-${language}">${escapedCode}</code></pre>`;
+  });
+  
+  // Inline code - must come before other inline formatting
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  
   // Task lists (must come before regular lists)
-  html = html.replace(/^(\s*)-\s*\[x\]\s+(.+)$/gim, '$1<li data-type="taskItem" data-checked="true">$2</li>');
-  html = html.replace(/^(\s*)-\s*\[\s*\]\s+(.+)$/gim, '$1<li data-type="taskItem" data-checked="false">$2</li>');
-  html = html.replace(/^(\s*)\*\s*\[x\]\s+(.+)$/gim, '$1<li data-type="taskItem" data-checked="true">$2</li>');
-  html = html.replace(/^(\s*)\*\s*\[\s*\]\s+(.+)$/gim, '$1<li data-type="taskItem" data-checked="false">$2</li>');
+  html = html.replace(/^(\s*)-\s*\[x\]\s+(.+)$/gim, '$1<li data-type="taskItem" data-checked="true"><p>$2</p></li>');
+  html = html.replace(/^(\s*)-\s*\[\s*\]\s+(.+)$/gim, '$1<li data-type="taskItem" data-checked="false"><p>$2</p></li>');
+  html = html.replace(/^(\s*)\*\s*\[x\]\s+(.+)$/gim, '$1<li data-type="taskItem" data-checked="true"><p>$2</p></li>');
+  html = html.replace(/^(\s*)\*\s*\[\s*\]\s+(.+)$/gim, '$1<li data-type="taskItem" data-checked="false"><p>$2</p></li>');
   
   // Unordered lists
-  html = html.replace(/^(\s*)-\s+(.+)$/gm, '$1<li>$2</li>');
-  html = html.replace(/^(\s*)\*\s+(.+)$/gm, '$1<li>$2</li>');
+  html = html.replace(/^(\s*)-\s+(.+)$/gm, '$1<li><p>$2</p></li>');
+  html = html.replace(/^(\s*)\*\s+(?!\*\*)(.+)$/gm, '$1<li><p>$2</p></li>');
   
   // Ordered lists
-  html = html.replace(/^(\s*)\d+\.\s+(.+)$/gm, '$1<li>$2</li>');
+  html = html.replace(/^(\s*)\d+\.\s+(.+)$/gm, '$1<li><p>$2</p></li>');
   
   // Wrap consecutive li elements in ul/ol
-  html = html.replace(/(<li data-type="taskItem"[^>]*>.*?<\/li>\n?)+/g, '<ul data-type="taskList">$&</ul>');
-  html = html.replace(/(<li>.*?<\/li>\n?)+/g, '<ul>$&</ul>');
+  html = html.replace(/(<li data-type="taskItem"[^>]*>[\s\S]*?<\/li>\n?)+/g, '<ul data-type="taskList">$&</ul>');
+  html = html.replace(/(<li><p>[\s\S]*?<\/p><\/li>\n?)+/g, '<ul>$&</ul>');
   
   // Blockquotes
   html = html.replace(/^>\s+(.+)$/gm, '<blockquote><p>$1</p></blockquote>');
@@ -44,22 +59,13 @@ function markdownToHtml(markdown: string): string {
   html = html.replace(/^\*\*\*+$/gm, '<hr>');
   html = html.replace(/^___+$/gm, '<hr>');
   
-  // Code blocks (fenced)
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-    const language = lang || 'plaintext';
-    return `<pre><code class="language-${language}">${code.trim()}</code></pre>`;
-  });
-  
-  // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-  
   // Bold (must come before italic)
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
   
   // Italic
-  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+  html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+  html = html.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
   
   // Strikethrough
   html = html.replace(/~~([^~]+)~~/g, '<s>$1</s>');
@@ -69,9 +75,6 @@ function markdownToHtml(markdown: string): string {
   
   // Images
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
-  
-  // Auto-detect URLs
-  html = html.replace(/(?<!["\(])(https?:\/\/[^\s<]+)(?!["\)])/g, '<a href="$1">$1</a>');
   
   // Paragraphs - wrap lines that aren't already wrapped
   const lines = html.split('\n');
@@ -100,9 +103,7 @@ function looksLikeMarkdown(text: string): boolean {
   const markdownPatterns = [
     /^#{1,6}\s+/m,           // Headers
     /\*\*[^*]+\*\*/,         // Bold
-    /\*[^*]+\*/,             // Italic
     /__[^_]+__/,             // Bold (underscore)
-    /_[^_]+_/,               // Italic (underscore)
     /~~[^~]+~~/,             // Strikethrough
     /`[^`]+`/,               // Inline code
     /```[\s\S]*?```/,        // Code blocks
@@ -128,50 +129,64 @@ export const MarkdownPasteSafe = Extension.create<MarkdownPasteOptions>({
     };
   },
 
-  onCreate() {
-    if (!this.options.enableMarkdownPaste) return;
-
-    const handlePaste = (event: ClipboardEvent) => {
-      try {
-        const clipboardData = event.clipboardData;
-        if (!clipboardData) return;
-
-        // Get plain text from clipboard
-        const text = clipboardData.getData('text/plain');
-        if (!text) return;
-
-        // Check if it looks like markdown
-        if (!looksLikeMarkdown(text)) return;
-
-        // Prevent default paste
-        event.preventDefault();
-
-        // Convert markdown to HTML
-        const html = markdownToHtml(text);
-        
-        // Insert the converted HTML
-        this.editor.commands.insertContent(html, {
-          parseOptions: {
-            preserveWhitespace: false,
-          },
-        });
-      } catch (error) {
-        console.warn('MarkdownPasteSafe: Error handling paste', error);
-      }
-    };
-
-    // Add event listener to the editor DOM element
-    this.editor.view.dom.addEventListener('paste', handlePaste as EventListener);
-    
-    // Store cleanup function
-    (this as any)._pasteHandler = handlePaste;
-  },
-
-  onDestroy() {
-    const handlePaste = (this as any)._pasteHandler;
-    if (handlePaste) {
-      this.editor.view.dom.removeEventListener('paste', handlePaste as EventListener);
+  addProseMirrorPlugins() {
+    if (!this.options.enableMarkdownPaste) {
+      return [];
     }
+
+    const editor = this.editor;
+
+    return [
+      new Plugin({
+        key: new PluginKey('markdownPaste'),
+        props: {
+          handlePaste(view, event, slice) {
+            try {
+              const clipboardData = event.clipboardData;
+              if (!clipboardData) return false;
+
+              // Check if there's HTML content - if so, let the default handler deal with it
+              const htmlContent = clipboardData.getData('text/html');
+              if (htmlContent && htmlContent.trim()) {
+                // HTML content exists, let default paste handle it
+                return false;
+              }
+
+              // Get plain text from clipboard
+              const text = clipboardData.getData('text/plain');
+              if (!text) return false;
+
+              // Check if it looks like markdown
+              if (!looksLikeMarkdown(text)) {
+                return false;
+              }
+
+              // Prevent default paste
+              event.preventDefault();
+
+              // Convert markdown to HTML
+              const html = markdownToHtml(text);
+              
+              console.log('MarkdownPasteSafe: Converting markdown to HTML');
+              console.log('Input:', text.substring(0, 100) + '...');
+              console.log('Output:', html.substring(0, 200) + '...');
+
+              // Insert the converted HTML using TipTap's insertContent
+              editor.commands.insertContent(html, {
+                parseOptions: {
+                  preserveWhitespace: false,
+                },
+              });
+
+              return true;
+            } catch (error) {
+              console.warn('MarkdownPasteSafe: Error handling paste', error);
+              return false;
+            }
+          },
+        },
+      }),
+    ];
   },
 });
 
