@@ -1774,3 +1774,55 @@ pre.with-line-numbers code .line::before {
     padding: 0.25rem 0.625rem;
   }
 }
+
+/* Editor Container Styles - Scrollable content */
+.markdown-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--editor-bg);
+}
+
+.editor-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 0;
+}
+
+.editor-content {
+  height: 100%;
+}
+
+.editor-content .ProseMirror {
+  min-height: 100%;
+  padding: 2rem;
+}
+
+.editor-footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.word-count {
+  display: flex;
+  gap: 1rem;
+}
+
+.editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--muted-foreground);
+}
