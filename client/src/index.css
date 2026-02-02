@@ -374,6 +374,7 @@
   
   li > ul, li > ol {
     margin: 0.25rem 0 0 0;
+    padding-left: 1.25rem; /* Consistent nested indentation */
   }
   
   li > p {
@@ -470,8 +471,8 @@
   
   /* Nested task lists - proper indentation and spacing */
   ul[data-type="taskList"] ul[data-type="taskList"] {
-    margin: 0.25rem 0 0 1.5rem;
-    padding-left: 0;
+    margin: 0.25rem 0 0 0;
+    padding-left: 1.25rem; /* Match unordered list nested indentation */
   }
   
   ul[data-type="taskList"] ul[data-type="taskList"] li {
@@ -482,7 +483,7 @@
   /* Nested task list within div content */
   ul[data-type="taskList"] li > div > ul[data-type="taskList"] {
     margin: 0.25rem 0 0 0;
-    padding-left: 1.5rem;
+    padding-left: 1.25rem; /* Match unordered list nested indentation */
   }
   
   /* Horizontal rule - dotted gray per user preference */
