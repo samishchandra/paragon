@@ -29,6 +29,8 @@ import { FindReplace } from './FindReplace';
 import { useAutoSave } from './hooks/useAutoSave';
 import { AutoSaveIndicator } from './AutoSaveIndicator';
 import { RecoveryBanner } from './RecoveryBanner';
+import { WikiLinkSafe } from './extensions/WikiLinkSafe';
+import { MarkdownPasteSafe } from './extensions/MarkdownPasteSafe';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -84,7 +86,8 @@ export function MarkdownEditor({
 
   // Build extensions array - conditionally include problematic extensions on mobile
   const extensions = useMemo(() => {
-    const baseExtensions = [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const baseExtensions: any[] = [
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3, 4, 5, 6],
@@ -179,9 +182,19 @@ export function MarkdownEditor({
       );
     }
 
-    // Custom extensions that may cause issues on mobile are excluded
-    // TableRowDrag, SortableTable, WikiLink, MarkdownPaste, LinkValidation, SearchHighlight
-    // are all disabled to ensure mobile stability
+    // Add mobile-safe versions of WikiLink and MarkdownPaste
+    // These use simpler approaches that work on both desktop and mobile
+    baseExtensions.push(
+      WikiLinkSafe.configure({
+        onWikiLinkClick: (pageName) => {
+          console.log('WikiLink clicked:', pageName);
+          // You can customize this callback to navigate to the linked page
+        },
+      }),
+      MarkdownPasteSafe.configure({
+        enableMarkdownPaste: true,
+      })
+    );
 
     return baseExtensions;
   }, [placeholder, isMobile]);
