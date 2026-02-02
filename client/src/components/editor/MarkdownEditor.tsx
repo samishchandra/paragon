@@ -16,7 +16,9 @@ import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Typography from '@tiptap/extension-typography';
 import { common, createLowlight } from 'lowlight';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { LinkPopover } from './LinkPopover';
+import { LinkHoverTooltip } from './LinkHoverTooltip';
 import { FloatingToolbar } from './FloatingToolbar';
 import { Callout } from './extensions/Callout';
 import { ResizableImage } from './extensions/ResizableImage';
@@ -193,11 +195,21 @@ export function MarkdownEditor({
     },
   });
 
+  // State for link popover
+  const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
+
   // Handle keyboard shortcuts for markdown auto-detection
   useEffect(() => {
     if (!editor) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Cmd/Ctrl+K for link popover
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsLinkPopoverOpen(true);
+        return;
+      }
+
       // Tab/Shift+Tab for list indentation
       if (event.key === 'Tab') {
         const { state } = editor;
@@ -361,6 +373,19 @@ export function MarkdownEditor({
         
         {/* Slash Commands */}
         <SlashCommands editor={editor} />
+        
+        {/* Link Popover (Cmd+K) */}
+        <LinkPopover 
+          editor={editor} 
+          isOpen={isLinkPopoverOpen} 
+          onClose={() => setIsLinkPopoverOpen(false)} 
+        />
+        
+        {/* Link Hover Tooltip */}
+        <LinkHoverTooltip 
+          editor={editor} 
+          onEditLink={() => setIsLinkPopoverOpen(true)} 
+        />
       </div>
       
       {/* Word Count Footer */}

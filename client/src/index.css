@@ -1267,3 +1267,152 @@ pre.with-line-numbers code .line::before {
 .date-pill:active {
   transform: translateY(0);
 }
+
+
+/* Link Popover Styles */
+.link-popover {
+  background: oklch(0.18 0.015 220 / 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.35 0.02 220);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.4);
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.link-popover-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.link-popover-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: oklch(0.14 0.01 220);
+  border: 1px solid oklch(0.3 0.02 220);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.15s ease;
+}
+
+.link-popover-input-wrapper:focus-within {
+  border-color: var(--primary);
+}
+
+.link-popover-icon {
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.link-popover-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.link-popover-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.link-popover-hint {
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  text-align: center;
+  padding-top: 0.25rem;
+}
+
+/* Link Hover Tooltip Styles */
+.link-hover-tooltip {
+  background: oklch(0.18 0.015 220 / 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.35 0.02 220);
+  border-radius: 0.375rem;
+  padding: 0.25rem;
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.3);
+  min-width: 180px;
+  max-width: 320px;
+}
+
+.link-hover-tooltip-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.link-hover-tooltip-edit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  min-width: 0;
+}
+
+.link-hover-tooltip-edit:hover {
+  background: oklch(0.25 0.02 220);
+}
+
+.link-hover-tooltip-url {
+  font-size: 0.8rem;
+  color: var(--primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-hover-tooltip-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding-left: 0.25rem;
+  border-left: 1px solid oklch(0.3 0.02 220);
+}
+
+.link-hover-tooltip-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.25rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.link-hover-tooltip-btn:hover {
+  background: oklch(0.25 0.02 220);
+  color: var(--foreground);
+}
+
+.link-hover-tooltip-btn-danger:hover {
+  background: oklch(0.35 0.15 25);
+  color: oklch(0.7 0.2 25);
+}
+
+/* Link styling in editor */
+.ProseMirror a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.ProseMirror a:hover {
+  color: oklch(0.75 0.15 220);
+}
