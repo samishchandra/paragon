@@ -35,6 +35,8 @@ import {
   Plus,
   Trash2,
   ToggleLeft,
+  Palette,
+  X,
 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import {
@@ -43,6 +45,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -375,6 +380,52 @@ export function EditorToolbar({ editor, onCopyMarkdown, className = '' }: Editor
           >
             <Table size={16} className="mr-2" /> Split Cell
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/* Cell Background Color Submenu */}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger disabled={!editor.isActive('table')}>
+              <Palette size={16} className="mr-2" /> Cell Background
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="w-48">
+              <div className="p-2">
+                <div className="text-xs text-muted-foreground mb-2">Quick Colors</div>
+                <div className="grid grid-cols-6 gap-1 mb-2">
+                  {[
+                    { color: '#ef4444', name: 'Red' },
+                    { color: '#f97316', name: 'Orange' },
+                    { color: '#eab308', name: 'Yellow' },
+                    { color: '#22c55e', name: 'Green' },
+                    { color: '#3b82f6', name: 'Blue' },
+                    { color: '#8b5cf6', name: 'Purple' },
+                    { color: '#ec4899', name: 'Pink' },
+                    { color: '#14b8a6', name: 'Teal' },
+                    { color: '#6366f1', name: 'Indigo' },
+                    { color: '#64748b', name: 'Slate' },
+                    { color: '#1e293b', name: 'Dark' },
+                    { color: '#f1f5f9', name: 'Light' },
+                  ].map(({ color, name }) => (
+                    <button
+                      key={color}
+                      onClick={() => editor.chain().focus().setCellBackground(color).run()}
+                      className="w-6 h-6 rounded border border-border hover:scale-110 transition-transform"
+                      style={{ backgroundColor: color }}
+                      title={name}
+                    />
+                  ))}
+                </div>
+                <div className="text-xs text-muted-foreground mb-1">Custom Color</div>
+                <input
+                  type="color"
+                  onChange={(e) => editor.chain().focus().setCellBackground(e.target.value).run()}
+                  className="w-full h-8 rounded cursor-pointer"
+                />
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => editor.chain().focus().unsetCellBackground().run()}>
+                <X size={16} className="mr-2" /> Remove Background
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
           <DropdownMenuSeparator />
           <DropdownMenuItem 
             onClick={() => editor.chain().focus().deleteTable().run()}

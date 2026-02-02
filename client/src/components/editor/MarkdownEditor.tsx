@@ -6,8 +6,8 @@ import Highlight from '@tiptap/extension-highlight';
 import Link from '@tiptap/extension-link';
 import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
-import TableCell from '@tiptap/extension-table-cell';
-import TableHeader from '@tiptap/extension-table-header';
+import { CustomTableCell } from './extensions/CustomTableCell';
+import { CustomTableHeader } from './extensions/CustomTableHeader';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
@@ -21,6 +21,7 @@ import { FloatingToolbar } from './FloatingToolbar';
 import { Callout } from './extensions/Callout';
 import { ResizableImage } from './extensions/ResizableImage';
 import { DatePill } from './extensions/DatePill';
+import { SortableTable } from './extensions/SortableTable';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 
@@ -95,8 +96,8 @@ export function MarkdownEditor({
       },
     }),
     TableRow,
-    TableCell,
-    TableHeader,
+    CustomTableCell,
+    CustomTableHeader,
     TaskList.configure({
       HTMLAttributes: {
         class: 'task-list',
@@ -130,6 +131,9 @@ export function MarkdownEditor({
       HTMLAttributes: {
         class: 'date-pill',
       },
+    }),
+    SortableTable.configure({
+      enableSorting: true,
     }),
   ], [placeholder]);
 

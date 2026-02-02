@@ -527,6 +527,58 @@
     opacity: 1;
   }
   
+  /* Sortable table headers */
+  th.sortable-header,
+  th[data-sortable="true"] {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 1.5rem;
+    transition: background-color 0.15s ease;
+  }
+  
+  th.sortable-header:hover,
+  th[data-sortable="true"]:hover {
+    background: oklch(0.26 0.025 220);
+  }
+  
+  th.sortable-header::after,
+  th[data-sortable="true"]::after {
+    content: '';
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    opacity: 0.3;
+    transition: opacity 0.15s ease;
+  }
+  
+  th.sortable-header:hover::after,
+  th[data-sortable="true"]:hover::after {
+    opacity: 0.6;
+    border-bottom: 5px solid var(--foreground);
+  }
+  
+  /* Sorted ascending */
+  th.sorted-asc::after,
+  th[data-sort-direction="asc"]::after {
+    opacity: 1 !important;
+    border-bottom: 5px solid var(--primary) !important;
+    border-top: none !important;
+  }
+  
+  /* Sorted descending */
+  th.sorted-desc::after,
+  th[data-sort-direction="desc"]::after {
+    opacity: 1 !important;
+    border-top: 5px solid var(--primary) !important;
+    border-bottom: none !important;
+  }
+  
   /* Images */
   img {
     max-width: 100%;
