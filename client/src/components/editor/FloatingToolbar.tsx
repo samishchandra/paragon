@@ -159,14 +159,15 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         // Calculate center position of selection relative to editor
         const selectionCenterX = ((start.left + end.left) / 2) - editorRect.left;
         
-        // Calculate left position (toolbar is centered via transform, so we set the center point)
-        let left = selectionCenterX;
+        // Calculate left position (we'll use left-aligned positioning, not center transform)
+        // Start with selection center minus half toolbar width
+        let left = selectionCenterX - toolbarWidth / 2;
         
         // Constrain to editor bounds
-        // Left edge: toolbar center must be at least half toolbar width from left edge
-        const minLeft = toolbarWidth / 2 + 8;
-        // Right edge: toolbar center must be at least half toolbar width from right edge
-        const maxLeft = editorRect.width - toolbarWidth / 2 - 8;
+        // Left edge: minimum 8px from left
+        const minLeft = 8;
+        // Right edge: toolbar right edge must be at least 8px from right edge
+        const maxLeft = editorRect.width - toolbarWidth - 8;
         
         // Clamp the position
         left = Math.max(minLeft, Math.min(maxLeft, left));
@@ -225,7 +226,7 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
       <div
         ref={toolbarRef}
         className={`floating-toolbar absolute z-50 ${className}`}
-        style={{ top: position.top, left: position.left, transform: 'translateX(-50%)' }}
+        style={{ top: position.top, left: position.left }}
         onMouseDown={handleToolbarMouseDown}
       >
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 px-2 w-[280px] sm:w-auto">
@@ -292,7 +293,7 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
     <div
       ref={toolbarRef}
       className={`floating-toolbar absolute z-50 ${className}`}
-      style={{ top: position.top, left: position.left, transform: 'translateX(-50%)' }}
+      style={{ top: position.top, left: position.left }}
       onMouseDown={handleToolbarMouseDown}
     >
       {/* Paragraph style - convert to normal paragraph */}
