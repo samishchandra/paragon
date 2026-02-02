@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { FloatingToolbar } from './FloatingToolbar';
 import { Callout } from './extensions/Callout';
 import { ResizableImage } from './extensions/ResizableImage';
+import { DatePill } from './extensions/DatePill';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 
@@ -125,6 +126,11 @@ export function MarkdownEditor({
         class: 'editor-image',
       },
     }),
+    DatePill.configure({
+      HTMLAttributes: {
+        class: 'date-pill',
+      },
+    }),
   ], [placeholder]);
 
   const editor = useEditor({
@@ -180,6 +186,33 @@ export function MarkdownEditor({
     if (!editor) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Tab/Shift+Tab for list indentation
+      if (event.key === 'Tab') {
+        const { state } = editor;
+        const { selection } = state;
+        const { $from } = selection;
+        
+        // Check if we're in a list item
+        const listItem = $from.node($from.depth);
+        const parentList = $from.node($from.depth - 1);
+        
+        if (listItem?.type.name === 'listItem' || listItem?.type.name === 'taskItem' || 
+            parentList?.type.name === 'bulletList' || parentList?.type.name === 'orderedList' || parentList?.type.name === 'taskList') {
+          event.preventDefault();
+          
+          if (event.shiftKey) {
+            // Shift+Tab: Outdent (lift list item)
+            editor.chain().focus().liftListItem('listItem').run() ||
+            editor.chain().focus().liftListItem('taskItem').run();
+          } else {
+            // Tab: Indent (sink list item)
+            editor.chain().focus().sinkListItem('listItem').run() ||
+            editor.chain().focus().sinkListItem('taskItem').run();
+          }
+          return;
+        }
+      }
+      
       // Auto-detect markdown shortcuts on space
       if (event.key === ' ') {
         const { state } = editor;

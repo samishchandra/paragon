@@ -18,6 +18,7 @@ import {
   CheckCircle,
   FileText,
   Type,
+  Calendar,
 } from 'lucide-react';
 
 /*
@@ -162,6 +163,13 @@ const commands: CommandItem[] = [
     icon: <FileText size={18} className="text-purple-400" />,
     command: (editor) => editor.chain().focus().toggleCallout({ type: 'note' }).run(),
     keywords: ['memo', 'remember'],
+  },
+  {
+    title: 'Date',
+    description: 'Insert a date pill (today)',
+    icon: <Calendar size={18} className="text-cyan-400" />,
+    command: (editor) => editor.chain().focus().insertDatePill().run(),
+    keywords: ['date', 'today', 'calendar', 'time', 'schedule'],
   },
 ];
 

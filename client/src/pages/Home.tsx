@@ -110,7 +110,14 @@ greet('Developer');</code></pre>
 
 <hr>
 
-<p>Try typing <code>/</code> to open the command palette!</p>
+<h2>Date Pills</h2>
+<p>Insert date pills for task tracking. Type <code>@today</code>, <code>@tomorrow</code>, or <code>@Jan15</code> followed by a space:</p>
+<p>Meeting scheduled for <span data-type="date-pill" data-date="${new Date().toISOString().split('T')[0]}" class="date-pill date-today"><span class="date-icon">📅</span><span class="date-text">Today</span></span></p>
+<p>Deadline: <span data-type="date-pill" data-date="${(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; })()}" class="date-pill date-upcoming"><span class="date-icon">📅</span><span class="date-text">Tomorrow</span></span></p>
+
+<hr>
+
+<p>Try typing <code>/</code> to open the command palette, or <code>@today</code> to insert a date!</p>
 `;
 
 const MODAL_DEMO_CONTENT = `
