@@ -183,7 +183,7 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
           showTimeoutRef.current = setTimeout(() => {
             setPosition({ top: Math.max(10, top), left });
             setIsVisible(true);
-          }, 200);
+          }, 50);
         } else {
           // Already visible, update position immediately
           setPosition({ top: Math.max(10, top), left });
