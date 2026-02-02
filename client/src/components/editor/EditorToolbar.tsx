@@ -63,15 +63,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
  * Touch-friendly buttons with proper sizing
  */
 
-type LineSpacing = 'compact' | 'normal' | 'relaxed';
-
 interface EditorToolbarProps {
   editor: Editor;
   onCopyMarkdown?: () => void;
   onOpenLinkPopover?: () => void;
   className?: string;
-  lineSpacing?: LineSpacing;
-  onLineSpacingChange?: (spacing: LineSpacing) => void;
 }
 
 interface ToolbarButtonProps {
@@ -119,7 +115,7 @@ const Divider = () => (
   <div className="w-px h-6 bg-border mx-0.5 hidden sm:block" />
 );
 
-export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '', lineSpacing = 'normal', onLineSpacingChange }: EditorToolbarProps) {
+export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '' }: EditorToolbarProps) {
   const [imageUrl, setImageUrl] = useState('');
   const [showImageInput, setShowImageInput] = useState(false);
 
@@ -604,39 +600,6 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
           </div>
         </div>
       )}
-
-      {/* Line Spacing Settings */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-9 sm:h-8 px-2 gap-1 shrink-0">
-            <AlignHorizontalDistributeCenter size={18} className="sm:w-4 sm:h-4" />
-            <span className="text-xs hidden md:inline capitalize">{lineSpacing}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem 
-            onClick={() => onLineSpacingChange?.('compact')}
-            className={lineSpacing === 'compact' ? 'bg-accent' : ''}
-          >
-            <span className="mr-2">Compact</span>
-            {lineSpacing === 'compact' && <span className="ml-auto text-primary">✓</span>}
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={() => onLineSpacingChange?.('normal')}
-            className={lineSpacing === 'normal' ? 'bg-accent' : ''}
-          >
-            <span className="mr-2">Normal</span>
-            {lineSpacing === 'normal' && <span className="ml-auto text-primary">✓</span>}
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={() => onLineSpacingChange?.('relaxed')}
-            className={lineSpacing === 'relaxed' ? 'bg-accent' : ''}
-          >
-            <span className="mr-2">Relaxed</span>
-            {lineSpacing === 'relaxed' && <span className="ml-auto text-primary">✓</span>}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
 
       {/* Spacer */}
       <div className="flex-1 min-w-2" />
