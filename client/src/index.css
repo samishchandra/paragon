@@ -164,68 +164,76 @@
 [data-theme="light"] {
   /* Base layers - Things light mode */
   --background: #ffffff;
-  --foreground: #222222;
+  --foreground: #9a9a9a;
   
   /* Card/elevated surfaces */
-  --card: #f6f7f8;
-  --card-foreground: #222222;
+  --card: #fafafa;
+  --card-foreground: #333333;
   
   /* Popover/floating elements */
   --popover: #ffffff;
-  --popover-foreground: #222222;
+  --popover-foreground: #333333;
   
-  /* Primary - Things blue (darker for light mode) */
-  --primary: #086ddd;
+  /* Primary - Things blue */
+  --primary: #2e80f2;
   --primary-foreground: #ffffff;
   
   /* Secondary */
-  --secondary: #f0f0f0;
-  --secondary-foreground: #5a5a5a;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #666666;
   
   /* Muted */
-  --muted: #ebedf0;
-  --muted-foreground: #707070;
+  --muted: #f5f5f5;
+  --muted-foreground: #9a9a9a;
   
   /* Accent */
-  --accent: #f0f0f0;
-  --accent-foreground: #222222;
+  --accent: #f5f5f5;
+  --accent-foreground: #333333;
   
   /* Destructive */
-  --destructive: #e4374b;
+  --destructive: #e04674;
   --destructive-foreground: #ffffff;
   
   /* Borders and inputs */
-  --border: #ebedf0;
-  --input: #f6f7f8;
-  --ring: #086ddd;
+  --border: #e8e8e8;
+  --input: #f5f5f5;
+  --ring: #2e80f2;
+  
+  /* Heading colors - Light mode (matching reference) */
+  --h1-color: #2e80f2;
+  --h2-color: #2e80f2;
+  --h3-color: #4eb57c;
+  --h4-color: #3eb4bf;
+  --h5-color: #e87d3e;
+  --h6-color: #9a9a9a;
   
   /* Editor specific */
   --editor-bg: #ffffff;
-  --editor-selection: rgba(8, 109, 221, 0.15);
-  --editor-cursor: #086ddd;
-  --editor-line-number: #ababab;
-  --editor-gutter: #f6f7f8;
+  --editor-selection: rgba(46, 128, 242, 0.15);
+  --editor-cursor: #2e80f2;
+  --editor-line-number: #cccccc;
+  --editor-gutter: #fafafa;
   
   /* Task list checkbox */
-  --checkbox-checked: var(--primary);
-  --checkbox-checked-foreground: var(--primary-foreground);
+  --checkbox-checked: #2e80f2;
+  --checkbox-checked-foreground: #ffffff;
   
   /* Callout colors - light mode */
-  --callout-info: #086ddd;
-  --callout-warning: #bd8e37;
-  --callout-error: #e4374b;
-  --callout-success: #0cb54f;
-  --callout-note: #876be0;
+  --callout-info: #2e80f2;
+  --callout-warning: #e5b567;
+  --callout-error: #e04674;
+  --callout-success: #4eb57c;
+  --callout-note: #9e86c8;
   
-  /* Syntax highlighting - Atom One Light */
+  /* Syntax highlighting - Light mode */
   --syntax-keyword: #a625a4;
   --syntax-string: #4ea24c;
   --syntax-number: #986800;
-  --syntax-comment: #ababab;
-  --syntax-function: #3d74f6;
+  --syntax-comment: #cccccc;
+  --syntax-function: #2e80f2;
   --syntax-variable: #e75545;
-  --syntax-type: #e35649;
-  --syntax-operator: #0084bc;
+  --syntax-type: #e87d3e;
+  --syntax-operator: #3eb4bf;
 }
 
 @layer base {
@@ -2274,8 +2282,8 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme code block styling - clean, elegant */
 [data-theme="light"] .code-block-wrapper {
-  background: oklch(0.97 0.002 250);
-  border-color: oklch(0.90 0.01 250);
+  background: #faf8f5;
+  border-color: #f0ede8;
 }
 
 [data-theme="light"] .code-block-language-label {
@@ -2373,25 +2381,32 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme task list checkbox */
 [data-theme="light"] ul[data-type="taskList"] li > label input[type="checkbox"] {
-  border-color: oklch(0.65 0.02 250);
+  border-color: #cccccc;
+  border-radius: 50%;
 }
 
 [data-theme="light"] ul[data-type="taskList"] li > label input[type="checkbox"]:hover {
-  border-color: oklch(0.55 0.18 220);
-  background: oklch(0.55 0.08 220 / 0.1);
+  border-color: #2e80f2;
+  background: rgba(46, 128, 242, 0.1);
+}
+
+[data-theme="light"] ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+  background: #2e80f2;
+  border-color: #2e80f2;
 }
 
 [data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div {
-  color: oklch(0.5 0.02 250);
+  color: #9a9a9a;
   text-decoration: line-through;
-  text-decoration-color: oklch(0.65 0.02 250);
+  text-decoration-color: #cccccc;
 }
 
 /* Light theme blockquote */
 [data-theme="light"] .tiptap-editor blockquote {
-  border-left-color: oklch(0.75 0.02 250);
-  background: oklch(0.96 0.005 250);
-  color: oklch(0.35 0.02 250);
+  border-left-color: var(--things-pelorous, #3eb4bf);
+  background: transparent;
+  color: var(--things-pelorous, #3eb4bf);
+  font-style: italic;
 }
 
 /* Light theme horizontal rule */
@@ -2401,8 +2416,9 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme inline code */
 [data-theme="light"] .tiptap-editor code:not(pre code) {
-  background: oklch(0.94 0.005 250);
-  color: oklch(0.45 0.15 25);
+  background: #fdf2f2;
+  color: #e04674;
+  border: 1px solid #fce8e8;
 }
 
 /* Light theme links */
