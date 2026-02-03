@@ -2721,9 +2721,9 @@ pre.with-line-numbers code .line::before {
   transition: transform 0.2s ease;
 }
 
-/* Expanded state - chevron points down, slightly visible by default */
+/* Expanded state - chevron points down, visible by default */
 .collapsible-heading-chevron.expanded {
-  opacity: 0.15;
+  opacity: 0.35;
   transition: opacity 0.15s ease;
 }
 
@@ -2732,8 +2732,9 @@ pre.with-line-numbers code .line::before {
 }
 
 /* Show expanded chevron more prominently on heading hover */
-.collapsible-heading.is-expanded:hover .collapsible-heading-chevron.expanded {
-  opacity: 0.7;
+.collapsible-heading.is-expanded:hover .collapsible-heading-chevron.expanded,
+.collapsible-heading:hover .collapsible-heading-chevron.expanded {
+  opacity: 0.85;
 }
 
 /* Full opacity when hovering the chevron itself */
