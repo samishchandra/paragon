@@ -1,17 +1,13 @@
 import { useEffect, useState, useCallback, useRef, useMemo, memo } from 'react';
 import { Editor } from '@tiptap/react';
-import { Node as ProseMirrorNode, Slice, Fragment } from '@tiptap/pm/model';
 import { throttle } from './utils/performance';
 
 /**
- * DragHandleOverlay Component (Performance Optimized)
+ * DragHandleOverlay Component
  * 
  * Renders drag handles as an overlay on top of list items.
- * Handles show only on hover over the specific list item.
- * Uses throttled position updates and viewport-based virtualization.
- * 
- * IMPORTANT: List items are treated as atomic blocks - they cannot be split
- * and can only be dropped before or after other list items, not inside them.
+ * Uses mouse events (not native drag/drop) to avoid text insertion bugs.
+ * List items are treated as atomic blocks that can only be reordered.
  */
 
 interface DragHandleOverlayProps {
@@ -25,18 +21,15 @@ interface ListItemPosition {
   left: number;
   height: number;
   pos: number;
+  nodeSize: number;
   nodeType: string;
   element: Element;
-  parentListPos: number; // Position of the parent list
-  depth: number; // Nesting depth
 }
 
-interface DropIndicator {
+interface DropTarget {
+  pos: number;
+  insertBefore: boolean;
   top: number;
-  left: number;
-  width: number;
-  position: 'before' | 'after';
-  targetId: string;
 }
 
 // Memoized SVG icon for the drag handle (6-dot grip pattern)
@@ -52,26 +45,21 @@ const DragHandleIcon = memo(() => (
 ));
 DragHandleIcon.displayName = 'DragHandleIcon';
 
-// Maximum number of list items to render handles for (performance limit)
 const MAX_VISIBLE_HANDLES = 100;
-
-// Throttle delay for position updates (ms)
 const POSITION_UPDATE_THROTTLE = 100;
 
 export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayProps) {
   const [listItems, setListItems] = useState<ListItemPosition[]>([]);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dropIndicator, setDropIndicator] = useState<DropIndicator | null>(null);
-  const dragDataRef = useRef<{ 
-    pos: number; 
-    nodeType: string; 
-    nodeSize: number;
-    parentListPos: number;
-  } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
+  
+  const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const draggedItemRef = useRef<ListItemPosition | null>(null);
   const lastItemCountRef = useRef<number>(0);
 
-  // Update list item positions with performance optimizations
+  // Update list item positions
   const updatePositions = useCallback(() => {
     if (!containerRef.current || !editor || editor.isDestroyed) return;
 
@@ -84,10 +72,8 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
     const proseMirror = container.querySelector('.ProseMirror');
     if (!proseMirror) return;
 
-    // Get all list items from the DOM
     const listItemElements = proseMirror.querySelectorAll('li');
     
-    // Early exit if no list items
     if (listItemElements.length === 0) {
       if (lastItemCountRef.current !== 0) {
         setListItems([]);
@@ -96,61 +82,35 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
       return;
     }
 
-    // Map DOM elements to ProseMirror positions
     const { state } = editor;
     let domIndex = 0;
     let visibleCount = 0;
 
-    // Calculate viewport bounds with buffer for smooth scrolling
     const viewportTop = scrollTop - viewportHeight;
     const viewportBottom = scrollTop + viewportHeight * 2;
 
-    // Track parent list positions for each item
-    const parentStack: { pos: number; depth: number }[] = [];
-
     state.doc.descendants((node, pos) => {
-      // Track list containers
-      if (node.type.name === 'bulletList' || node.type.name === 'orderedList' || node.type.name === 'taskList') {
-        const depth = parentStack.length;
-        parentStack.push({ pos, depth });
-      }
-
       if (node.type.name === 'listItem' || node.type.name === 'taskItem') {
         const domElement = listItemElements[domIndex];
         if (domElement) {
           const rect = domElement.getBoundingClientRect();
           const itemTop = rect.top - containerRect.top + scrollTop;
           
-          // Find the parent list position
-          let parentListPos = 0;
-          let depth = 0;
-          for (let i = parentStack.length - 1; i >= 0; i--) {
-            const parentInfo = parentStack[i];
-            if (parentInfo.pos < pos) {
-              parentListPos = parentInfo.pos;
-              depth = parentInfo.depth;
-              break;
-            }
-          }
-          
-          // Only include items within or near the viewport (virtualization)
           if (itemTop >= viewportTop && itemTop <= viewportBottom) {
             items.push({
-              id: `item-${pos}`,
+              id: `item-${domIndex}`, // Use DOM index, not position
               top: itemTop,
               left: rect.left - containerRect.left,
               height: rect.height,
               pos,
+              nodeSize: node.nodeSize,
               nodeType: node.type.name,
               element: domElement,
-              parentListPos,
-              depth,
             });
             visibleCount++;
             
-            // Limit number of handles for very large documents
             if (visibleCount >= MAX_VISIBLE_HANDLES) {
-              return false; // Stop traversal
+              return false;
             }
           }
         }
@@ -158,7 +118,6 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
       }
     });
 
-    // Only update state if items changed
     if (items.length !== lastItemCountRef.current || 
         (items.length > 0 && items[0].top !== listItems[0]?.top)) {
       setListItems(items);
@@ -166,7 +125,6 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
     }
   }, [editor, containerRef, listItems]);
 
-  // Create throttled version of updatePositions
   const throttledUpdatePositions = useMemo(
     () => throttle(updatePositions, POSITION_UPDATE_THROTTLE),
     [updatePositions]
@@ -182,17 +140,12 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
 
     editor.on('update', handleUpdate);
     editor.on('selectionUpdate', handleUpdate);
-
-    // Initial update (immediate, not throttled)
     requestAnimationFrame(updatePositions);
 
-    // Update on scroll (throttled)
     const container = containerRef.current;
     if (container) {
       container.addEventListener('scroll', handleUpdate, { passive: true });
     }
-
-    // Update on window resize (throttled)
     window.addEventListener('resize', handleUpdate, { passive: true });
 
     return () => {
@@ -205,22 +158,20 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
     };
   }, [editor, throttledUpdatePositions, updatePositions, containerRef]);
 
-  // Track mouse position to detect hover on list items
+  // Track mouse position for hover
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (draggingId) return; // Don't update hover during drag
+      if (isDragging) return;
       
       const containerRect = container.getBoundingClientRect();
       const mouseY = e.clientY - containerRect.top + container.scrollTop;
       const mouseX = e.clientX - containerRect.left;
       
-      // Find which list item the mouse is over (with some left margin for the handle)
       let foundItem: string | null = null;
       for (const item of listItems) {
-        // Check if mouse is within the item's vertical bounds and near the left edge
         if (mouseY >= item.top && mouseY <= item.top + item.height && mouseX < item.left + 50) {
           foundItem = item.id;
           break;
@@ -233,7 +184,7 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
     };
 
     const handleMouseLeave = () => {
-      if (!draggingId) {
+      if (!isDragging) {
         setHoveredItemId(null);
       }
     };
@@ -245,177 +196,169 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
       container.removeEventListener('mousemove', handleMouseMove);
       container.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [containerRef, listItems, hoveredItemId, draggingId]);
+  }, [containerRef, listItems, hoveredItemId, isDragging]);
 
-  // Handle drag start
-  const handleDragStart = useCallback((e: React.DragEvent, item: ListItemPosition) => {
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', item.id);
-    
-    // Get the node and its full size for proper movement
-    const node = editor?.state.doc.nodeAt(item.pos);
-    if (node) {
-      dragDataRef.current = { 
-        pos: item.pos, 
-        nodeType: item.nodeType, 
-        nodeSize: node.nodeSize,
-        parentListPos: item.parentListPos,
-      };
-    }
-    
-    setDraggingId(item.id);
-    
-    // Add visual feedback to the dragged element
-    setTimeout(() => {
-      item.element.classList.add('is-dragging');
-    }, 0);
-  }, [editor]);
-
-  // Handle drag end
-  const handleDragEnd = useCallback(() => {
-    // Remove dragging class from all elements
-    listItems.forEach(item => {
-      item.element.classList.remove('is-dragging', 'drag-over-before', 'drag-over-after');
-    });
-    
-    setDraggingId(null);
-    setDropIndicator(null);
-    dragDataRef.current = null;
-  }, [listItems]);
-
-  // Calculate drop position (before or after target item)
-  const calculateDropPosition = useCallback((e: React.DragEvent, targetItem: ListItemPosition): 'before' | 'after' => {
-    const container = containerRef.current;
-    if (!container) return 'after';
-    
-    const containerRect = container.getBoundingClientRect();
-    const mouseY = e.clientY - containerRect.top + container.scrollTop;
-    const itemMiddle = targetItem.top + targetItem.height / 2;
-    
-    return mouseY < itemMiddle ? 'before' : 'after';
-  }, [containerRef]);
-
-  // Handle drag over - show drop indicator
-  const handleDragOver = useCallback((e: React.DragEvent, item: ListItemPosition) => {
+  // Handle mouse down on drag handle - start potential drag
+  const handleMouseDown = useCallback((e: React.MouseEvent, item: ListItemPosition) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.stopPropagation();
     
-    // Don't allow dropping on the same item
-    if (item.id === draggingId) {
-      setDropIndicator(null);
-      return;
-    }
+    dragStartPosRef.current = { x: e.clientX, y: e.clientY };
+    draggedItemRef.current = item;
+    setDraggedItemId(item.id);
     
-    const position = calculateDropPosition(e, item);
-    
-    // Update drop indicator
-    const indicatorTop = position === 'before' ? item.top - 2 : item.top + item.height - 2;
-    
-    setDropIndicator({
-      top: indicatorTop,
-      left: item.left - 10,
-      width: 300,
-      position,
-      targetId: item.id,
-    });
-    
-    // Update visual feedback on the target element
-    listItems.forEach(listItem => {
-      listItem.element.classList.remove('drag-over-before', 'drag-over-after');
-    });
-    
-    if (position === 'before') {
-      item.element.classList.add('drag-over-before');
-    } else {
-      item.element.classList.add('drag-over-after');
-    }
-  }, [draggingId, calculateDropPosition, listItems]);
-
-  // Handle drag leave
-  const handleDragLeave = useCallback((item: ListItemPosition) => {
-    item.element.classList.remove('drag-over-before', 'drag-over-after');
+    // Add dragging class
+    item.element.classList.add('is-dragging');
   }, []);
 
-  // Handle drop - reorder list items as atomic blocks
-  const handleDrop = useCallback((e: React.DragEvent, targetItem: ListItemPosition) => {
-    e.preventDefault();
-    
-    // Remove visual feedback
-    listItems.forEach(item => {
-      item.element.classList.remove('is-dragging', 'drag-over-before', 'drag-over-after');
-    });
-    
-    if (!editor || editor.isDestroyed || !dragDataRef.current) {
-      handleDragEnd();
-      return;
-    }
-    
-    const { pos: fromPos, nodeSize } = dragDataRef.current;
-    const targetPos = targetItem.pos;
-    
-    // Don't move to the same position
-    if (fromPos === targetPos) {
-      handleDragEnd();
-      return;
-    }
-
-    const dropPosition = calculateDropPosition(e, targetItem);
-
-    try {
-      const { state, view } = editor;
-      const { tr } = state;
+  // Handle global mouse move for dragging
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!dragStartPosRef.current || !draggedItemRef.current) return;
       
-      // Get the node to move from the current document state
-      const nodeToMove = state.doc.nodeAt(fromPos);
-      const targetNode = state.doc.nodeAt(targetPos);
+      const container = containerRef.current;
+      if (!container) return;
       
-      if (!nodeToMove || !targetNode) {
-        console.error('Could not find nodes at positions', fromPos, targetPos);
-        handleDragEnd();
+      // Check if we've moved enough to start dragging
+      const dx = e.clientX - dragStartPosRef.current.x;
+      const dy = e.clientY - dragStartPosRef.current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance > 5 && !isDragging) {
+        setIsDragging(true);
+      }
+      
+      if (!isDragging && distance <= 5) return;
+      
+      // Calculate drop target
+      const containerRect = container.getBoundingClientRect();
+      const mouseY = e.clientY - containerRect.top + container.scrollTop;
+      
+      let newDropTarget: DropTarget | null = null;
+      const draggedItem = draggedItemRef.current;
+      
+      for (const item of listItems) {
+        if (item.id === draggedItem.id) continue;
+        
+        const itemMiddle = item.top + item.height / 2;
+        
+        if (mouseY < itemMiddle && mouseY >= item.top - 20) {
+          // Drop before this item
+          newDropTarget = {
+            pos: item.pos,
+            insertBefore: true,
+            top: item.top,
+          };
+          break;
+        } else if (mouseY >= itemMiddle && mouseY <= item.top + item.height + 20) {
+          // Drop after this item
+          newDropTarget = {
+            pos: item.pos,
+            insertBefore: false,
+            top: item.top + item.height,
+          };
+        }
+      }
+      
+      setDropTarget(newDropTarget);
+    };
+
+    const handleGlobalMouseUp = () => {
+      if (!draggedItemRef.current || !editor || editor.isDestroyed) {
+        cleanup();
         return;
       }
-
-      // Calculate source range (the full node including its content)
-      const fromEnd = fromPos + nodeToMove.nodeSize;
       
-      // Calculate target position
-      let insertPos: number;
-      if (dropPosition === 'before') {
-        insertPos = targetPos;
-      } else {
-        insertPos = targetPos + targetNode.nodeSize;
+      if (isDragging && dropTarget) {
+        // Perform the move
+        const sourceItem = draggedItemRef.current;
+        const sourcePos = sourceItem.pos;
+        const sourceSize = sourceItem.nodeSize;
+        
+        try {
+          const { state, view } = editor;
+          const { tr } = state;
+          
+          // Get the source node
+          const sourceNode = state.doc.nodeAt(sourcePos);
+          if (!sourceNode) {
+            console.error('Source node not found');
+            cleanup();
+            return;
+          }
+          
+          // Get the target node to determine insert position
+          const targetNode = state.doc.nodeAt(dropTarget.pos);
+          if (!targetNode) {
+            console.error('Target node not found');
+            cleanup();
+            return;
+          }
+          
+          // Calculate insert position
+          let insertPos: number;
+          if (dropTarget.insertBefore) {
+            insertPos = dropTarget.pos;
+          } else {
+            insertPos = dropTarget.pos + targetNode.nodeSize;
+          }
+          
+          // Don't move if dropping at same position
+          if (insertPos === sourcePos || insertPos === sourcePos + sourceSize) {
+            cleanup();
+            return;
+          }
+          
+          // Get the content to move using slice
+          const sourceEnd = sourcePos + sourceSize;
+          const slice = state.doc.slice(sourcePos, sourceEnd);
+          
+          // Perform the move in a single transaction
+          if (sourcePos < insertPos) {
+            // Moving down: delete first, then insert at adjusted position
+            const adjustedInsertPos = insertPos - sourceSize;
+            tr.delete(sourcePos, sourceEnd);
+            tr.insert(adjustedInsertPos, slice.content);
+          } else {
+            // Moving up: insert first, then delete at adjusted position
+            tr.insert(insertPos, slice.content);
+            const adjustedSourcePos = sourcePos + slice.content.size;
+            tr.delete(adjustedSourcePos, adjustedSourcePos + sourceSize);
+          }
+          
+          view.dispatch(tr);
+        } catch (error) {
+          console.error('Move error:', error);
+        }
       }
-
-      // Create a slice containing just the node to move
-      const slice = state.doc.slice(fromPos, fromEnd);
       
-      // Perform the move using a single transaction
-      // We need to handle the position adjustment carefully
-      if (fromPos < insertPos) {
-        // Moving forward (down in the document)
-        // First delete the source, then insert at adjusted position
-        const adjustedInsertPos = insertPos - nodeToMove.nodeSize;
-        tr.delete(fromPos, fromEnd);
-        tr.insert(adjustedInsertPos, slice.content);
-      } else {
-        // Moving backward (up in the document)
-        // First insert at target, then delete from adjusted source position
-        tr.insert(insertPos, slice.content);
-        const adjustedFromPos = fromPos + slice.content.size;
-        tr.delete(adjustedFromPos, adjustedFromPos + nodeToMove.nodeSize);
-      }
+      cleanup();
+    };
 
-      // Apply the transaction
-      view.dispatch(tr);
+    const cleanup = () => {
+      // Remove dragging class from all items
+      listItems.forEach(item => {
+        item.element.classList.remove('is-dragging');
+      });
       
-    } catch (error) {
-      console.error('Drop error:', error);
+      dragStartPosRef.current = null;
+      draggedItemRef.current = null;
+      setIsDragging(false);
+      setDraggedItemId(null);
+      setDropTarget(null);
+    };
+
+    if (draggedItemId) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
     }
 
-    handleDragEnd();
-  }, [editor, handleDragEnd, listItems, calculateDropPosition]);
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [draggedItemId, isDragging, dropTarget, listItems, editor, containerRef]);
 
-  // Don't render if no editor or no items
   if (!editor || editor.isDestroyed || listItems.length === 0) return null;
 
   return (
@@ -433,51 +376,43 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
       }}
     >
       {/* Drop indicator line */}
-      {dropIndicator && (
+      {isDragging && dropTarget && (
         <div
           className="drop-indicator"
           style={{
             position: 'absolute',
-            top: dropIndicator.top,
-            left: dropIndicator.left,
-            width: dropIndicator.width,
+            top: dropTarget.top - 2,
+            left: listItems[0]?.left - 10 || 0,
+            width: 300,
             height: 3,
             backgroundColor: 'var(--primary)',
             borderRadius: 2,
             pointerEvents: 'none',
             zIndex: 10,
-            boxShadow: '0 0 4px var(--primary)',
+            boxShadow: '0 0 8px var(--primary)',
           }}
         />
       )}
       
       {listItems.map((item) => {
         const isHovered = hoveredItemId === item.id;
-        const isDragging = draggingId === item.id;
-        const isVisible = isHovered || isDragging || draggingId !== null;
+        const isBeingDragged = draggedItemId === item.id;
+        const isVisible = isHovered || isBeingDragged || isDragging;
         
         return (
           <div
             key={item.id}
-            className={`list-drag-handle-wrapper ${isDragging ? 'is-dragging' : ''}`}
+            className={`list-drag-handle-wrapper ${isBeingDragged ? 'is-dragging' : ''}`}
             style={{
               position: 'absolute',
               top: item.top + 2,
               left: item.left - 28,
               pointerEvents: 'auto',
-              opacity: isVisible ? (isHovered ? 1 : 0.4) : 0,
-              transition: 'opacity 0.15s ease',
+              opacity: isVisible ? (isHovered || isBeingDragged ? 1 : 0.4) : 0,
+              transition: isDragging ? 'none' : 'opacity 0.15s ease',
+              cursor: isDragging ? 'grabbing' : 'grab',
             }}
-            draggable
-            onDragStart={(e) => handleDragStart(e, item)}
-            onDragEnd={handleDragEnd}
-            onDragOver={(e) => handleDragOver(e, item)}
-            onDragLeave={() => handleDragLeave(item)}
-            onDrop={(e) => handleDrop(e, item)}
-            onMouseEnter={() => setHoveredItemId(item.id)}
-            onMouseLeave={() => {
-              if (!draggingId) setHoveredItemId(null);
-            }}
+            onMouseDown={(e) => handleMouseDown(e, item)}
           >
             <div className="list-drag-handle">
               <DragHandleIcon />
