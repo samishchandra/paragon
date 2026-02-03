@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo, memo } from 'react';
 import { Editor } from '@tiptap/react';
+import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { throttle } from './utils/performance';
 
 /**
@@ -8,6 +9,9 @@ import { throttle } from './utils/performance';
  * Renders drag handles as an overlay on top of list items.
  * Handles show only on hover over the specific list item.
  * Uses throttled position updates and viewport-based virtualization.
+ * 
+ * IMPORTANT: List items are treated as atomic blocks - they cannot be split
+ * and can only be dropped before or after other list items, not inside them.
  */
 
 interface DragHandleOverlayProps {
@@ -23,6 +27,16 @@ interface ListItemPosition {
   pos: number;
   nodeType: string;
   element: Element;
+  parentListPos: number; // Position of the parent list
+  depth: number; // Nesting depth
+}
+
+interface DropIndicator {
+  top: number;
+  left: number;
+  width: number;
+  position: 'before' | 'after';
+  targetId: string;
 }
 
 // Memoized SVG icon for the drag handle (6-dot grip pattern)
@@ -48,8 +62,14 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
   const [listItems, setListItems] = useState<ListItemPosition[]>([]);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const dragDataRef = useRef<{ pos: number; nodeType: string; nodeSize: number } | null>(null);
+  const [dropIndicator, setDropIndicator] = useState<DropIndicator | null>(null);
+  const dragDataRef = useRef<{ 
+    pos: number; 
+    nodeType: string; 
+    nodeSize: number;
+    node: ProseMirrorNode;
+    parentListPos: number;
+  } | null>(null);
   const lastItemCountRef = useRef<number>(0);
 
   // Update list item positions with performance optimizations
@@ -86,12 +106,33 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
     const viewportTop = scrollTop - viewportHeight;
     const viewportBottom = scrollTop + viewportHeight * 2;
 
-    state.doc.descendants((node, pos) => {
+    // Track parent list positions for each item
+    const parentStack: { pos: number; depth: number }[] = [];
+
+    state.doc.descendants((node, pos, parent) => {
+      // Track list containers
+      if (node.type.name === 'bulletList' || node.type.name === 'orderedList' || node.type.name === 'taskList') {
+        const depth = parentStack.length;
+        parentStack.push({ pos, depth });
+      }
+
       if (node.type.name === 'listItem' || node.type.name === 'taskItem') {
         const domElement = listItemElements[domIndex];
         if (domElement) {
           const rect = domElement.getBoundingClientRect();
           const itemTop = rect.top - containerRect.top + scrollTop;
+          
+          // Find the parent list position
+          let parentListPos = 0;
+          let depth = 0;
+          for (let i = parentStack.length - 1; i >= 0; i--) {
+            const parentInfo = parentStack[i];
+            if (parentInfo.pos < pos) {
+              parentListPos = parentInfo.pos;
+              depth = parentInfo.depth;
+              break;
+            }
+          }
           
           // Only include items within or near the viewport (virtualization)
           if (itemTop >= viewportTop && itemTop <= viewportBottom) {
@@ -103,6 +144,8 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
               pos,
               nodeType: node.type.name,
               element: domElement,
+              parentListPos,
+              depth,
             });
             visibleCount++;
             
@@ -210,10 +253,16 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', item.id);
     
-    // Get the node size for proper deletion
+    // Get the node and its full size for proper movement
     const node = editor?.state.doc.nodeAt(item.pos);
     if (node) {
-      dragDataRef.current = { pos: item.pos, nodeType: item.nodeType, nodeSize: node.nodeSize };
+      dragDataRef.current = { 
+        pos: item.pos, 
+        nodeType: item.nodeType, 
+        nodeSize: node.nodeSize,
+        node: node,
+        parentListPos: item.parentListPos,
+      };
     }
     
     setDraggingId(item.id);
@@ -228,39 +277,74 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
   const handleDragEnd = useCallback(() => {
     // Remove dragging class from all elements
     listItems.forEach(item => {
-      item.element.classList.remove('is-dragging');
+      item.element.classList.remove('is-dragging', 'drag-over-before', 'drag-over-after');
     });
     
     setDraggingId(null);
-    setDragOverId(null);
+    setDropIndicator(null);
     dragDataRef.current = null;
   }, [listItems]);
 
-  // Handle drag over
+  // Calculate drop position (before or after target item)
+  const calculateDropPosition = useCallback((e: React.DragEvent, targetItem: ListItemPosition): 'before' | 'after' => {
+    const container = containerRef.current;
+    if (!container) return 'after';
+    
+    const containerRect = container.getBoundingClientRect();
+    const mouseY = e.clientY - containerRect.top + container.scrollTop;
+    const itemMiddle = targetItem.top + targetItem.height / 2;
+    
+    return mouseY < itemMiddle ? 'before' : 'after';
+  }, [containerRef]);
+
+  // Handle drag over - show drop indicator
   const handleDragOver = useCallback((e: React.DragEvent, item: ListItemPosition) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     
-    if (item.id !== draggingId) {
-      setDragOverId(item.id);
-      // Add visual feedback
-      item.element.classList.add('drag-over');
+    // Don't allow dropping on the same item
+    if (item.id === draggingId) {
+      setDropIndicator(null);
+      return;
     }
-  }, [draggingId]);
+    
+    const position = calculateDropPosition(e, item);
+    
+    // Update drop indicator
+    const indicatorTop = position === 'before' ? item.top - 2 : item.top + item.height - 2;
+    
+    setDropIndicator({
+      top: indicatorTop,
+      left: item.left - 10,
+      width: 300,
+      position,
+      targetId: item.id,
+    });
+    
+    // Update visual feedback on the target element
+    listItems.forEach(listItem => {
+      listItem.element.classList.remove('drag-over-before', 'drag-over-after');
+    });
+    
+    if (position === 'before') {
+      item.element.classList.add('drag-over-before');
+    } else {
+      item.element.classList.add('drag-over-after');
+    }
+  }, [draggingId, calculateDropPosition, listItems]);
 
   // Handle drag leave
   const handleDragLeave = useCallback((item: ListItemPosition) => {
-    item.element.classList.remove('drag-over');
-    setDragOverId(null);
+    item.element.classList.remove('drag-over-before', 'drag-over-after');
   }, []);
 
-  // Handle drop - reorder list items
+  // Handle drop - reorder list items as atomic blocks
   const handleDrop = useCallback((e: React.DragEvent, targetItem: ListItemPosition) => {
     e.preventDefault();
     
     // Remove visual feedback
     listItems.forEach(item => {
-      item.element.classList.remove('is-dragging', 'drag-over');
+      item.element.classList.remove('is-dragging', 'drag-over-before', 'drag-over-after');
     });
     
     if (!editor || editor.isDestroyed || !dragDataRef.current) {
@@ -268,7 +352,7 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
       return;
     }
     
-    const { pos: fromPos, nodeSize } = dragDataRef.current;
+    const { pos: fromPos, nodeSize, node: draggedNode } = dragDataRef.current;
     const targetPos = targetItem.pos;
     
     // Don't move to the same position
@@ -277,16 +361,28 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
       return;
     }
 
+    const dropPosition = calculateDropPosition(e, targetItem);
+
     try {
       const { state } = editor;
-      const fromNode = state.doc.nodeAt(fromPos);
+      const targetNode = state.doc.nodeAt(targetPos);
       
-      if (!fromNode) {
+      if (!draggedNode || !targetNode) {
         handleDragEnd();
         return;
       }
 
-      // Use a chain of commands for atomic operation
+      // Calculate the actual insertion position
+      // For 'before': insert at targetPos
+      // For 'after': insert at targetPos + targetNode.nodeSize
+      let insertPos: number;
+      if (dropPosition === 'before') {
+        insertPos = targetPos;
+      } else {
+        insertPos = targetPos + targetNode.nodeSize;
+      }
+
+      // Use a transaction to move the entire node atomically
       editor.chain()
         .focus()
         .command(({ tr, dispatch }) => {
@@ -294,19 +390,22 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
           
           const fromEnd = fromPos + nodeSize;
           
-          // Create a copy of the node to move
-          const nodeToMove = fromNode.copy(fromNode.content);
+          // Create a deep copy of the node to preserve all content
+          const nodeToMove = draggedNode.copy(draggedNode.content);
           
-          if (targetPos > fromPos) {
-            // Moving down: insert first, then delete
-            // Adjust target position since we'll delete content before it
-            const adjustedTargetPos = targetPos - nodeSize;
+          // Determine the order of operations based on positions
+          if (insertPos > fromPos) {
+            // Moving down: We need to adjust the insert position after deletion
+            // Delete first, then insert at adjusted position
+            const adjustedInsertPos = insertPos - nodeSize;
             tr.delete(fromPos, fromEnd);
-            tr.insert(adjustedTargetPos, nodeToMove);
+            tr.insert(adjustedInsertPos, nodeToMove);
           } else {
-            // Moving up: delete first, then insert
-            tr.delete(fromPos, fromEnd);
-            tr.insert(targetPos, nodeToMove);
+            // Moving up: Insert first, then delete at adjusted position
+            tr.insert(insertPos, nodeToMove);
+            // After insertion, the original node position shifts by the size of inserted node
+            const adjustedFromPos = fromPos + nodeSize;
+            tr.delete(adjustedFromPos, adjustedFromPos + nodeSize);
           }
           
           return true;
@@ -317,7 +416,7 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
     }
 
     handleDragEnd();
-  }, [editor, handleDragEnd, listItems]);
+  }, [editor, handleDragEnd, listItems, calculateDropPosition]);
 
   // Don't render if no editor or no items
   if (!editor || editor.isDestroyed || listItems.length === 0) return null;
@@ -336,22 +435,40 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
         contain: 'layout style',
       }}
     >
+      {/* Drop indicator line */}
+      {dropIndicator && (
+        <div
+          className="drop-indicator"
+          style={{
+            position: 'absolute',
+            top: dropIndicator.top,
+            left: dropIndicator.left,
+            width: dropIndicator.width,
+            height: 3,
+            backgroundColor: 'var(--primary)',
+            borderRadius: 2,
+            pointerEvents: 'none',
+            zIndex: 10,
+            boxShadow: '0 0 4px var(--primary)',
+          }}
+        />
+      )}
+      
       {listItems.map((item) => {
         const isHovered = hoveredItemId === item.id;
         const isDragging = draggingId === item.id;
-        const isDragOver = dragOverId === item.id;
-        const isVisible = isHovered || isDragging || isDragOver || draggingId !== null;
+        const isVisible = isHovered || isDragging || draggingId !== null;
         
         return (
           <div
             key={item.id}
-            className={`list-drag-handle-wrapper ${isDragging ? 'is-dragging' : ''} ${isDragOver ? 'drag-over' : ''}`}
+            className={`list-drag-handle-wrapper ${isDragging ? 'is-dragging' : ''}`}
             style={{
               position: 'absolute',
               top: item.top + 2,
               left: item.left - 28,
               pointerEvents: 'auto',
-              opacity: isVisible ? (isHovered || isDragOver ? 1 : 0.4) : 0,
+              opacity: isVisible ? (isHovered ? 1 : 0.4) : 0,
               transition: 'opacity 0.15s ease',
             }}
             draggable

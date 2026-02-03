@@ -1415,20 +1415,40 @@ pre.with-line-numbers code .line::before {
   transform: scale(0.98);
 }
 
-.tiptap-editor li.drag-over {
-  background: oklch(0.7 0.15 220 / 0.1);
-  border-radius: 4px;
+/* Drop indicator - before position */
+.tiptap-editor li.drag-over-before {
+  position: relative;
 }
 
-.tiptap-editor li.drag-over::before {
+.tiptap-editor li.drag-over-before::before {
   content: '';
   position: absolute;
-  left: 0;
+  left: -10px;
   right: 0;
-  top: 0;
-  height: 2px;
+  top: -2px;
+  height: 3px;
   background: var(--primary);
-  border-radius: 1px;
+  border-radius: 2px;
+  box-shadow: 0 0 6px var(--primary);
+  z-index: 10;
+}
+
+/* Drop indicator - after position */
+.tiptap-editor li.drag-over-after {
+  position: relative;
+}
+
+.tiptap-editor li.drag-over-after::after {
+  content: '';
+  position: absolute;
+  left: -10px;
+  right: 0;
+  bottom: -2px;
+  height: 3px;
+  background: var(--primary);
+  border-radius: 2px;
+  box-shadow: 0 0 6px var(--primary);
+  z-index: 10;
 }
 
 /* Date pill styles */
