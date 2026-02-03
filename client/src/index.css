@@ -2539,3 +2539,133 @@ pre.with-line-numbers code .line::before {
   border-color: oklch(0.82 0.01 250);
   color: oklch(0.25 0.02 250);
 }
+
+
+/* ==========================================
+   Collapsible Headings
+   ========================================== */
+
+/* Collapsible heading wrapper */
+.collapsible-heading {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Chevron button - inline flex item */
+.collapsible-heading-chevron {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--muted-foreground);
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.2s ease;
+  padding: 0;
+  margin-top: 0.15em;
+}
+
+.collapsible-heading-chevron:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-color: var(--accent);
+}
+
+.collapsible-heading-chevron svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+}
+
+/* Expanded state - chevron points down, show only on hover */
+.collapsible-heading-chevron.expanded {
+  opacity: 0;
+}
+
+.collapsible-heading-chevron.expanded svg {
+  transform: rotate(0deg);
+}
+
+/* Show chevron on heading hover when expanded */
+.collapsible-heading.is-expanded:hover .collapsible-heading-chevron.expanded,
+.collapsible-heading.is-expanded .collapsible-heading-chevron.expanded:hover {
+  opacity: 1;
+}
+
+/* Also show chevron when hovering near the left edge of the heading */
+.ProseMirror h1.collapsible-heading:hover .collapsible-heading-chevron.expanded,
+.ProseMirror h2.collapsible-heading:hover .collapsible-heading-chevron.expanded,
+.ProseMirror h3.collapsible-heading:hover .collapsible-heading-chevron.expanded,
+.ProseMirror h4.collapsible-heading:hover .collapsible-heading-chevron.expanded,
+.ProseMirror h5.collapsible-heading:hover .collapsible-heading-chevron.expanded,
+.ProseMirror h6.collapsible-heading:hover .collapsible-heading-chevron.expanded {
+  opacity: 1;
+}
+
+/* Show chevron with low opacity by default for better discoverability */
+.collapsible-heading-chevron.expanded {
+  opacity: 0.15;
+}
+
+/* Full opacity on hover */
+.collapsible-heading-chevron.expanded:hover {
+  opacity: 1 !important;
+}
+
+/* Collapsed state - chevron points right, always visible */
+.collapsible-heading-chevron.collapsed {
+  opacity: 1;
+}
+
+.collapsible-heading-chevron.collapsed svg {
+  transform: rotate(-90deg);
+}
+
+/* Hidden content when collapsed */
+.collapsible-heading-hidden {
+  display: none !important;
+}
+
+/* Adjust chevron size for different heading sizes */
+.ProseMirror h1.collapsible-heading .collapsible-heading-chevron {
+  width: 24px;
+  height: 24px;
+}
+
+.ProseMirror h2.collapsible-heading .collapsible-heading-chevron {
+  width: 22px;
+  height: 22px;
+}
+
+.ProseMirror h3.collapsible-heading .collapsible-heading-chevron {
+  width: 20px;
+  height: 20px;
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .collapsible-heading-chevron {
+  color: oklch(0.45 0.02 250);
+  border-color: oklch(0.85 0.01 250);
+}
+
+[data-theme="light"] .collapsible-heading-chevron:hover {
+  background: oklch(0.92 0.01 250);
+  color: oklch(0.25 0.02 250);
+  border-color: oklch(0.75 0.01 250);
+}
+
+/* Ensure editor content doesn't clip chevrons */
+.ProseMirror {
+  overflow: visible !important;
+}
+
+.editor-content {
+  overflow: visible !important;
+}

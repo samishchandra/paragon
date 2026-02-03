@@ -33,6 +33,7 @@ import { RecoveryBanner } from './RecoveryBanner';
 import { WikiLinkSafe } from './extensions/WikiLinkSafe';
 import { MarkdownPasteSafe } from './extensions/MarkdownPasteSafe';
 import { DragHandleOverlay } from './DragHandleOverlay';
+import { CollapsibleHeading } from './extensions/CollapsibleHeading';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -179,6 +180,9 @@ export function MarkdownEditor({
       Superscript,
       Typography,
       Callout,
+      CollapsibleHeading.configure({
+        levels: [1, 2, 3],
+      }),
       ResizableImage.configure({
         allowBase64: true,
         HTMLAttributes: {
