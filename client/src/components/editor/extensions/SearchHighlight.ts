@@ -47,24 +47,28 @@ export const SearchHighlight = Extension.create<SearchHighlightOptions, SearchHi
 
   addCommands() {
     return {
-      setSearchHighlight: (options: Partial<SearchHighlightOptions>) => ({ editor }) => {
+      setSearchHighlight: (options: Partial<SearchHighlightOptions>) => ({ editor, tr, dispatch }) => {
         this.storage.searchTerm = options.searchTerm ?? this.storage.searchTerm;
         this.storage.caseSensitive = options.caseSensitive ?? this.storage.caseSensitive;
         this.storage.useRegex = options.useRegex ?? this.storage.useRegex;
         this.storage.currentMatchIndex = options.currentMatchIndex ?? this.storage.currentMatchIndex;
         
-        // Force view update
-        editor.view.dispatch(editor.state.tr);
+        // Use setMeta to trigger plugin state update without modifying document
+        if (dispatch) {
+          dispatch(tr.setMeta(searchHighlightPluginKey, { update: true }));
+        }
         return true;
       },
-      clearSearchHighlight: () => ({ editor }) => {
+      clearSearchHighlight: () => ({ editor, tr, dispatch }) => {
         this.storage.searchTerm = '';
         this.storage.caseSensitive = false;
         this.storage.useRegex = false;
         this.storage.currentMatchIndex = 0;
         
-        // Force view update
-        editor.view.dispatch(editor.state.tr);
+        // Use setMeta to trigger plugin state update without modifying document
+        if (dispatch) {
+          dispatch(tr.setMeta(searchHighlightPluginKey, { update: true }));
+        }
         return true;
       },
     };
@@ -83,8 +87,18 @@ export const SearchHighlight = Extension.create<SearchHighlightOptions, SearchHi
           apply(tr, oldDecorations, oldState, newState) {
             const { searchTerm, caseSensitive, useRegex, currentMatchIndex } = storage;
 
+            // Check if we need to update (either document changed or meta was set)
+            const meta = tr.getMeta(searchHighlightPluginKey);
+            const docChanged = tr.docChanged;
+            
+            // If no search term, return empty
             if (!searchTerm) {
               return DecorationSet.empty;
+            }
+
+            // If document didn't change and no meta update, map old decorations
+            if (!docChanged && !meta) {
+              return oldDecorations.map(tr.mapping, newState.doc);
             }
 
             const decorations: Decoration[] = [];

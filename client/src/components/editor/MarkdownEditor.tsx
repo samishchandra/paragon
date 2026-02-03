@@ -35,6 +35,7 @@ import { MarkdownPasteSafe } from './extensions/MarkdownPasteSafe';
 import { DragHandleOverlay } from './DragHandleOverlay';
 import { CollapsibleHeading } from './extensions/CollapsibleHeading';
 import { MarkdownLinkInputRule } from './extensions/MarkdownLinkInputRule';
+import { SearchHighlight } from './extensions/SearchHighlight';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -185,6 +186,7 @@ export function MarkdownEditor({
         levels: [1, 2, 3],
       }),
       MarkdownLinkInputRule,
+      SearchHighlight,
       ResizableImage.configure({
         allowBase64: true,
         HTMLAttributes: {
