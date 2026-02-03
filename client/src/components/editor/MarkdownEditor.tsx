@@ -36,6 +36,7 @@ import { DragHandleOverlay } from './DragHandleOverlay';
 import { CollapsibleHeading } from './extensions/CollapsibleHeading';
 import { MarkdownLinkInputRule } from './extensions/MarkdownLinkInputRule';
 import { SearchHighlight } from './extensions/SearchHighlight';
+import { TabIndent } from './extensions/TabIndent';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -187,6 +188,7 @@ export function MarkdownEditor({
       }),
       MarkdownLinkInputRule,
       SearchHighlight,
+      TabIndent,
       ResizableImage.configure({
         allowBase64: true,
         HTMLAttributes: {
@@ -224,6 +226,11 @@ export function MarkdownEditor({
   }, [placeholder, isMobile]);
 
   const editor = useEditor({
+    // @ts-ignore - Expose editor globally for debugging
+    onCreate: ({ editor }) => {
+      (window as any).__tiptapEditor = editor;
+      console.log('TipTap editor created and exposed globally as window.__tiptapEditor');
+    },
     extensions,
     content,
     editable,
@@ -232,6 +239,7 @@ export function MarkdownEditor({
       attributes: {
         class: 'tiptap-editor outline-none min-h-full',
       },
+
     },
     onUpdate: ({ editor }) => {
       if (onChange) {
@@ -267,7 +275,7 @@ export function MarkdownEditor({
       // Skip if editor is destroyed
       if (editor.isDestroyed) return;
       
-      // Cmd/Ctrl+K for link popover
+// Cmd/Ctrl+K for link popover
       if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
         event.preventDefault();
         setIsLinkPopoverOpen(true);
@@ -290,102 +298,6 @@ export function MarkdownEditor({
         return;
       }
 
-      // Tab/Shift+Tab for list indentation and multi-line text indentation
-      if (event.key === 'Tab') {
-        // Only handle Tab if the editor is focused
-        if (!editor.isFocused) return;
-        
-        try {
-          const { state } = editor;
-          const { selection } = state;
-          const { $from, $to, empty } = selection;
-          
-          // Check if we're in a list item
-          const listItem = $from.node($from.depth);
-          const parentList = $from.node($from.depth - 1);
-          
-          if (listItem?.type.name === 'listItem' || listItem?.type.name === 'taskItem' || 
-              parentList?.type.name === 'bulletList' || parentList?.type.name === 'orderedList' || parentList?.type.name === 'taskList') {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            if (event.shiftKey) {
-              // Shift+Tab: Outdent (lift list item)
-              editor.chain().focus().liftListItem('listItem').run() ||
-              editor.chain().focus().liftListItem('taskItem').run();
-            } else {
-              // Tab: Indent (sink list item)
-              editor.chain().focus().sinkListItem('listItem').run() ||
-              editor.chain().focus().sinkListItem('taskItem').run();
-            }
-            return;
-          }
-          
-          // Multi-line selection indentation (for non-list content)
-          // Check if selection spans multiple lines/blocks
-          if (!empty && $from.pos !== $to.pos) {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            const { doc, tr } = state;
-            const indent = '    '; // 4 spaces for indentation
-            let modified = false;
-            let offset = 0; // Track position offset as we modify the document
-            
-            // Find all text blocks in the selection
-            doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
-              // Only process text blocks (paragraphs, headings, etc.)
-              if (node.isTextblock) {
-                const nodeStart = pos + 1 + offset; // Position after the opening tag, adjusted for offset
-                
-                if (event.shiftKey) {
-                  // Shift+Tab: Remove indentation
-                  const text = node.textContent;
-                  if (text.startsWith(indent)) {
-                    // Remove 4 spaces
-                    tr.delete(nodeStart, nodeStart + indent.length);
-                    offset -= indent.length;
-                    modified = true;
-                  } else if (text.startsWith('\t')) {
-                    // Remove tab character
-                    tr.delete(nodeStart, nodeStart + 1);
-                    offset -= 1;
-                    modified = true;
-                  } else if (text.match(/^\s+/)) {
-                    // Remove leading whitespace (up to 4 spaces)
-                    const match = text.match(/^\s{1,4}/);
-                    if (match) {
-                      tr.delete(nodeStart, nodeStart + match[0].length);
-                      offset -= match[0].length;
-                      modified = true;
-                    }
-                  }
-                } else {
-                  // Tab: Add indentation
-                  tr.insertText(indent, nodeStart);
-                  offset += indent.length;
-                  modified = true;
-                }
-              }
-            });
-            
-            if (modified) {
-              editor.view.dispatch(tr);
-            }
-            return;
-          }
-          
-          // Single cursor in editor - insert tab spaces instead of moving focus
-          if (empty) {
-            event.preventDefault();
-            event.stopPropagation();
-            editor.chain().focus().insertContent('    ').run();
-            return;
-          }
-        } catch (error) {
-          console.warn('Tab handling error:', error);
-        }
-      }
       
       // Auto-detect markdown shortcuts on space
       if (event.key === ' ') {
@@ -459,11 +371,12 @@ export function MarkdownEditor({
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    // Use capture: true to intercept Tab key before browser default behavior
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [editor, isMobile]);
 
-  // Word count calculation (debounced for performance with large documents)
+// Word count calculation (debounced for performance with large documents)
   const wordCount = useWordCount(editor, {
     debounceMs: 500,
     extendedStats: false,

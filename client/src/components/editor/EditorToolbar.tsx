@@ -42,6 +42,8 @@ import {
   ListIcon,
   AlignHorizontalDistributeCenter,
   PlusCircle,
+  IndentIncrease,
+  IndentDecrease,
 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import {
@@ -306,6 +308,35 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
         >
           <Code2 size={16} />
         </ToolbarButton>
+        <Divider />
+        <ToolbarButton
+          onClick={() => {
+            // Check if in task list or regular list and indent accordingly
+            if (editor.isActive('taskList')) {
+              editor.chain().focus().sinkListItem('taskItem').run();
+            } else if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+              editor.chain().focus().sinkListItem('listItem').run();
+            }
+          }}
+          disabled={!editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList')}
+          tooltip="Indent (Tab)"
+        >
+          <IndentIncrease size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => {
+            // Check if in task list or regular list and outdent accordingly
+            if (editor.isActive('taskList')) {
+              editor.chain().focus().liftListItem('taskItem').run();
+            } else if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+              editor.chain().focus().liftListItem('listItem').run();
+            }
+          }}
+          disabled={!editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList')}
+          tooltip="Outdent (Shift+Tab)"
+        >
+          <IndentDecrease size={16} />
+        </ToolbarButton>
       </div>
 
       {/* Mobile: Lists dropdown */}
@@ -330,6 +361,31 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => editor.chain().focus().toggleCodeBlock().run()}>
             <Code2 size={16} className="mr-2" /> Code Block
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => {
+              if (editor.isActive('taskList')) {
+                editor.chain().focus().sinkListItem('taskItem').run();
+              } else if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+                editor.chain().focus().sinkListItem('listItem').run();
+              }
+            }}
+            disabled={!editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList')}
+          >
+            <IndentIncrease size={16} className="mr-2" /> Indent
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => {
+              if (editor.isActive('taskList')) {
+                editor.chain().focus().liftListItem('taskItem').run();
+              } else if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+                editor.chain().focus().liftListItem('listItem').run();
+              }
+            }}
+            disabled={!editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList')}
+          >
+            <IndentDecrease size={16} className="mr-2" /> Outdent
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
