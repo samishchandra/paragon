@@ -242,13 +242,11 @@ export function MarkdownEditor({
 
     },
     onUpdate: ({ editor }) => {
-      if (onChange) {
-        // Get content as HTML (can be converted to markdown on the consumer side)
+      // Only call getHTML once for performance
+      if (onChange || onHTMLChange) {
         const html = editor.getHTML();
-        onChange(html);
-      }
-      if (onHTMLChange) {
-        onHTMLChange(editor.getHTML());
+        onChange?.(html);
+        onHTMLChange?.(html);
       }
     },
   });
