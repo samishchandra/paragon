@@ -2723,7 +2723,7 @@ pre.with-line-numbers code .line::before {
 
 /* Expanded state - chevron points down, visible by default */
 .collapsible-heading-chevron.expanded {
-  opacity: 0.35;
+  opacity: 0.6;
   transition: opacity 0.15s ease;
 }
 
