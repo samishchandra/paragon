@@ -2548,28 +2548,27 @@ pre.with-line-numbers code .line::before {
 /* Collapsible heading wrapper */
 .collapsible-heading {
   position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
 }
 
-/* Chevron button - inline flex item */
+/* Chevron button - positioned in left margin */
 .collapsible-heading-chevron {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  position: absolute;
+  left: -28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 4px;
   cursor: pointer;
   color: var(--muted-foreground);
   opacity: 0;
   transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.2s ease;
   padding: 0;
-  margin-top: 0.15em;
 }
 
 .collapsible-heading-chevron:hover {
@@ -2579,8 +2578,8 @@ pre.with-line-numbers code .line::before {
 }
 
 .collapsible-heading-chevron svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   transition: transform 0.2s ease;
 }
 
@@ -2633,20 +2632,35 @@ pre.with-line-numbers code .line::before {
   display: none !important;
 }
 
-/* Adjust chevron size for different heading sizes */
+/* Adjust chevron size and position for different heading sizes */
+/* For H1 - larger heading, position chevron to align with first line center */
 .ProseMirror h1.collapsible-heading .collapsible-heading-chevron {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
+  top: 0.4em;
 }
 
+/* For H2 */
 .ProseMirror h2.collapsible-heading .collapsible-heading-chevron {
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
+  top: 0.35em;
 }
 
+/* For H3 */
 .ProseMirror h3.collapsible-heading .collapsible-heading-chevron {
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
+  top: 0.3em;
+}
+
+/* For H4, H5, H6 */
+.ProseMirror h4.collapsible-heading .collapsible-heading-chevron,
+.ProseMirror h5.collapsible-heading .collapsible-heading-chevron,
+.ProseMirror h6.collapsible-heading .collapsible-heading-chevron {
+  width: 12px;
+  height: 12px;
+  top: 0.25em;
 }
 
 /* Light theme adjustments */
