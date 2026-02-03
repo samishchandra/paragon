@@ -2666,90 +2666,101 @@ pre.with-line-numbers code .line::before {
 
 
 /* ==========================================
-   Collapsible Headings
+   Collapsible Headings - Taskmate Style
    ========================================== */
+
+/* 
+ * Chevron positioning strategy:
+ * - Chevrons are positioned in a left gutter/margin area
+ * - All text content remains left-aligned at the same position
+ * - Chevrons appear on hover for expanded headings
+ * - Chevrons are always visible for collapsed headings
+ */
+
+/* Chevron wrapper - positioned absolutely in the left margin */
+.collapsible-heading-chevron-wrapper {
+  position: absolute;
+  left: -28px;
+  top: 0;
+  width: 24px;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0.15em;
+  pointer-events: auto;
+  user-select: none;
+}
 
 /* Collapsible heading wrapper */
 .collapsible-heading {
   position: relative;
-  /* Extend the hover area to include the left margin where chevron is positioned */
-  margin-left: 0;
-  padding-left: 0;
 }
 
-/* Create a pseudo-element to extend hover area into the left margin */
-.collapsible-heading::before {
-  content: '';
-  position: absolute;
-  left: -35px;
-  top: 0;
-  bottom: 0;
-  width: 35px;
-  pointer-events: auto;
-}
-
-/* Chevron button - positioned in left margin */
+/* Chevron button */
 .collapsible-heading-chevron {
-  position: absolute;
-  left: -28px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  color: oklch(0.7 0.1 250);
-  height: 20px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  width: 18px;
+  height: 18px;
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
-  color: var(--muted-foreground);
+  color: oklch(0.5 0.02 250);
   opacity: 0;
-  transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.2s ease;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .collapsible-heading-chevron:hover {
-  background: var(--accent);
-  color: var(--accent-foreground);
-  border-color: var(--accent);
+  background: oklch(0.25 0.02 250);
+  color: oklch(0.75 0.05 250);
+}
+
+.collapsible-heading-chevron:focus {
+  outline: none;
 }
 
 .collapsible-heading-chevron svg {
-  width: 12px;
-  height: 12px;
-  transition: transform 0.2s ease;
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  stroke-width: 2.5;
 }
 
-/* Expanded state - chevron points down, visible by default */
+/* Expanded state - chevron points down, hidden by default, show on hover */
 .collapsible-heading-chevron.expanded {
-  opacity: 1;
-  transition: opacity 0.15s ease;
+  opacity: 0;
 }
 
 .collapsible-heading-chevron.expanded svg {
-  transform: rotate(0deg);
+  transform: rotate(90deg);
 }
 
-/* Show expanded chevron more prominently on heading hover */
-.collapsible-heading.is-expanded:hover .collapsible-heading-chevron.expanded,
+/* Show expanded chevron on heading hover */
 .collapsible-heading:hover .collapsible-heading-chevron.expanded {
-  opacity: 0.85;
+  opacity: 0.6;
 }
 
-/* Full opacity when hovering the chevron itself */
 .collapsible-heading-chevron.expanded:hover {
   opacity: 1 !important;
 }
 
-/* Collapsed state - chevron points right, always visible */
+/* Collapsed state - chevron points right, ALWAYS visible */
 .collapsible-heading-chevron.collapsed {
-  opacity: 1;
+  opacity: 1 !important;
+  color: oklch(0.55 0.05 250);
 }
 
 .collapsible-heading-chevron.collapsed svg {
-  transform: rotate(-90deg);
+  transform: rotate(0deg);
+}
+
+.collapsible-heading-chevron.collapsed:hover {
+  background: oklch(0.25 0.02 250);
+  color: oklch(0.8 0.08 250);
 }
 
 /* Hidden content when collapsed */
@@ -2757,47 +2768,86 @@ pre.with-line-numbers code .line::before {
   display: none !important;
 }
 
-/* Adjust chevron size and position for different heading sizes */
-/* For H1 - larger heading, position chevron to align with first line center */
-.ProseMirror h1.collapsible-heading .collapsible-heading-chevron {
-  width: 18px;
-  height: 18px;
-  top: 0.4em;
+/* Adjust chevron wrapper position for different heading sizes */
+.ProseMirror h1.collapsible-heading .collapsible-heading-chevron-wrapper {
+  padding-top: 0.25em;
 }
 
-/* For H2 */
-.ProseMirror h2.collapsible-heading .collapsible-heading-chevron {
+.ProseMirror h1.collapsible-heading .collapsible-heading-chevron {
+  width: 20px;
+  height: 20px;
+}
+
+.ProseMirror h1.collapsible-heading .collapsible-heading-chevron svg {
   width: 16px;
   height: 16px;
-  top: 0.35em;
 }
 
-/* For H3 */
-.ProseMirror h3.collapsible-heading .collapsible-heading-chevron {
+.ProseMirror h2.collapsible-heading .collapsible-heading-chevron-wrapper {
+  padding-top: 0.2em;
+}
+
+.ProseMirror h2.collapsible-heading .collapsible-heading-chevron {
+  width: 18px;
+  height: 18px;
+}
+
+.ProseMirror h2.collapsible-heading .collapsible-heading-chevron svg {
   width: 14px;
   height: 14px;
-  top: 0.3em;
 }
 
-/* For H4, H5, H6 */
+.ProseMirror h3.collapsible-heading .collapsible-heading-chevron-wrapper {
+  padding-top: 0.15em;
+}
+
+.ProseMirror h3.collapsible-heading .collapsible-heading-chevron {
+  width: 16px;
+  height: 16px;
+}
+
+.ProseMirror h3.collapsible-heading .collapsible-heading-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ProseMirror h4.collapsible-heading .collapsible-heading-chevron-wrapper,
+.ProseMirror h5.collapsible-heading .collapsible-heading-chevron-wrapper,
+.ProseMirror h6.collapsible-heading .collapsible-heading-chevron-wrapper {
+  padding-top: 0.1em;
+}
+
 .ProseMirror h4.collapsible-heading .collapsible-heading-chevron,
 .ProseMirror h5.collapsible-heading .collapsible-heading-chevron,
 .ProseMirror h6.collapsible-heading .collapsible-heading-chevron {
-  width: 12px;
-  height: 12px;
-  top: 0.25em;
+  width: 14px;
+  height: 14px;
+}
+
+.ProseMirror h4.collapsible-heading .collapsible-heading-chevron svg,
+.ProseMirror h5.collapsible-heading .collapsible-heading-chevron svg,
+.ProseMirror h6.collapsible-heading .collapsible-heading-chevron svg {
+  width: 10px;
+  height: 10px;
 }
 
 /* Light theme adjustments */
 [data-theme="light"] .collapsible-heading-chevron {
-  color: oklch(0.45 0.02 250);
-  border-color: oklch(0.85 0.01 250);
+  color: oklch(0.5 0.02 250);
 }
 
 [data-theme="light"] .collapsible-heading-chevron:hover {
   background: oklch(0.92 0.01 250);
-  color: oklch(0.25 0.02 250);
-  border-color: oklch(0.75 0.01 250);
+  color: oklch(0.3 0.02 250);
+}
+
+[data-theme="light"] .collapsible-heading-chevron.collapsed {
+  color: oklch(0.45 0.05 250);
+}
+
+[data-theme="light"] .collapsible-heading-chevron.collapsed:hover {
+  background: oklch(0.92 0.01 250);
+  color: oklch(0.25 0.05 250);
 }
 
 /* Ensure editor content doesn't clip chevrons */
