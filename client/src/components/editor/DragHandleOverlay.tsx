@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo, memo } from 'react';
 import { Editor } from '@tiptap/react';
+import { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { throttle } from './utils/performance';
 
 /**
@@ -8,6 +9,9 @@ import { throttle } from './utils/performance';
  * Renders drag handles as an overlay on top of list items.
  * Uses mouse events (not native drag/drop) to avoid text insertion bugs.
  * List items are treated as atomic blocks that can only be reordered.
+ * 
+ * Key fix: Uses node.copy() to create a deep clone of the entire node,
+ * ensuring all content (including nested lists) moves together.
  */
 
 interface DragHandleOverlayProps {
@@ -24,12 +28,13 @@ interface ListItemPosition {
   nodeSize: number;
   nodeType: string;
   element: Element;
+  domIndex: number;
 }
 
 interface DropTarget {
-  pos: number;
+  targetItem: ListItemPosition;
   insertBefore: boolean;
-  top: number;
+  indicatorTop: number;
 }
 
 // Memoized SVG icon for the drag handle (6-dot grip pattern)
@@ -47,6 +52,93 @@ DragHandleIcon.displayName = 'DragHandleIcon';
 
 const MAX_VISIBLE_HANDLES = 100;
 const POSITION_UPDATE_THROTTLE = 100;
+
+/**
+ * Safely move a list item from one position to another.
+ * This function ensures the entire node (including nested content) moves as one unit.
+ */
+function moveListItem(
+  editor: Editor,
+  sourcePos: number,
+  targetPos: number,
+  insertBefore: boolean
+): boolean {
+  const { state, view } = editor;
+  const { doc, tr } = state;
+  
+  // Get the source node
+  const sourceNode = doc.nodeAt(sourcePos);
+  if (!sourceNode) {
+    console.error('Source node not found at position', sourcePos);
+    return false;
+  }
+  
+  // Get the target node
+  const targetNode = doc.nodeAt(targetPos);
+  if (!targetNode) {
+    console.error('Target node not found at position', targetPos);
+    return false;
+  }
+  
+  const sourceEnd = sourcePos + sourceNode.nodeSize;
+  
+  // Calculate the actual insert position
+  let insertPos: number;
+  if (insertBefore) {
+    insertPos = targetPos;
+  } else {
+    insertPos = targetPos + targetNode.nodeSize;
+  }
+  
+  // Don't move if we're dropping at the same position
+  if (insertPos === sourcePos || insertPos === sourceEnd) {
+    return false;
+  }
+  
+  // Check if we're trying to drop within the source node itself
+  if (insertPos > sourcePos && insertPos < sourceEnd) {
+    return false;
+  }
+  
+  try {
+    // Create a deep copy of the source node
+    // This ensures all nested content is preserved
+    const nodeCopy = sourceNode.copy(sourceNode.content);
+    
+    // Determine if we're moving up or down
+    const movingDown = sourcePos < insertPos;
+    
+    if (movingDown) {
+      // When moving down:
+      // 1. First insert the copy at the target position
+      // 2. Then delete the original (position doesn't shift because insert is after)
+      const adjustedInsertPos = insertPos - sourceNode.nodeSize;
+      
+      // Delete the source first
+      tr.delete(sourcePos, sourceEnd);
+      // Insert at adjusted position (since we deleted before it)
+      tr.insert(adjustedInsertPos, nodeCopy);
+    } else {
+      // When moving up:
+      // 1. First insert the copy at the target position
+      // 2. Then delete the original (which has shifted by the inserted size)
+      
+      // Insert the copy first
+      tr.insert(insertPos, nodeCopy);
+      // Delete the original (now shifted by the size of the inserted node)
+      const adjustedSourcePos = sourcePos + sourceNode.nodeSize;
+      const adjustedSourceEnd = adjustedSourcePos + sourceNode.nodeSize;
+      tr.delete(adjustedSourcePos, adjustedSourceEnd);
+    }
+    
+    // Dispatch the transaction
+    view.dispatch(tr);
+    return true;
+  } catch (error) {
+    console.error('Error moving list item:', error);
+    return false;
+  }
+}
 
 export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayProps) {
   const [listItems, setListItems] = useState<ListItemPosition[]>([]);
@@ -98,7 +190,7 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
           
           if (itemTop >= viewportTop && itemTop <= viewportBottom) {
             items.push({
-              id: `item-${domIndex}`, // Use DOM index, not position
+              id: `item-${domIndex}`,
               top: itemTop,
               left: rect.left - containerRect.left,
               height: rect.height,
@@ -106,6 +198,7 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
               nodeSize: node.nodeSize,
               nodeType: node.type.name,
               element: domElement,
+              domIndex,
             });
             visibleCount++;
             
@@ -237,25 +330,52 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
       let newDropTarget: DropTarget | null = null;
       const draggedItem = draggedItemRef.current;
       
-      for (const item of listItems) {
+      // Find the closest item to drop near
+      for (let i = 0; i < listItems.length; i++) {
+        const item = listItems[i];
+        
+        // Skip the dragged item itself
         if (item.id === draggedItem.id) continue;
         
         const itemMiddle = item.top + item.height / 2;
         
-        if (mouseY < itemMiddle && mouseY >= item.top - 20) {
-          // Drop before this item
-          newDropTarget = {
-            pos: item.pos,
-            insertBefore: true,
-            top: item.top,
-          };
+        // Check if mouse is within range of this item
+        if (mouseY >= item.top - 10 && mouseY <= item.top + item.height + 10) {
+          if (mouseY < itemMiddle) {
+            // Drop before this item
+            newDropTarget = {
+              targetItem: item,
+              insertBefore: true,
+              indicatorTop: item.top,
+            };
+          } else {
+            // Drop after this item
+            newDropTarget = {
+              targetItem: item,
+              insertBefore: false,
+              indicatorTop: item.top + item.height,
+            };
+          }
           break;
-        } else if (mouseY >= itemMiddle && mouseY <= item.top + item.height + 20) {
-          // Drop after this item
+        }
+      }
+      
+      // If no target found, check if we're above the first item or below the last
+      if (!newDropTarget && listItems.length > 0) {
+        const firstItem = listItems.find(item => item.id !== draggedItem.id);
+        const lastItem = [...listItems].reverse().find(item => item.id !== draggedItem.id);
+        
+        if (firstItem && mouseY < firstItem.top) {
           newDropTarget = {
-            pos: item.pos,
+            targetItem: firstItem,
+            insertBefore: true,
+            indicatorTop: firstItem.top,
+          };
+        } else if (lastItem && mouseY > lastItem.top + lastItem.height) {
+          newDropTarget = {
+            targetItem: lastItem,
             insertBefore: false,
-            top: item.top + item.height,
+            indicatorTop: lastItem.top + lastItem.height,
           };
         }
       }
@@ -270,65 +390,18 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
       }
       
       if (isDragging && dropTarget) {
-        // Perform the move
         const sourceItem = draggedItemRef.current;
-        const sourcePos = sourceItem.pos;
-        const sourceSize = sourceItem.nodeSize;
         
-        try {
-          const { state, view } = editor;
-          const { tr } = state;
-          
-          // Get the source node
-          const sourceNode = state.doc.nodeAt(sourcePos);
-          if (!sourceNode) {
-            console.error('Source node not found');
-            cleanup();
-            return;
-          }
-          
-          // Get the target node to determine insert position
-          const targetNode = state.doc.nodeAt(dropTarget.pos);
-          if (!targetNode) {
-            console.error('Target node not found');
-            cleanup();
-            return;
-          }
-          
-          // Calculate insert position
-          let insertPos: number;
-          if (dropTarget.insertBefore) {
-            insertPos = dropTarget.pos;
-          } else {
-            insertPos = dropTarget.pos + targetNode.nodeSize;
-          }
-          
-          // Don't move if dropping at same position
-          if (insertPos === sourcePos || insertPos === sourcePos + sourceSize) {
-            cleanup();
-            return;
-          }
-          
-          // Get the content to move using slice
-          const sourceEnd = sourcePos + sourceSize;
-          const slice = state.doc.slice(sourcePos, sourceEnd);
-          
-          // Perform the move in a single transaction
-          if (sourcePos < insertPos) {
-            // Moving down: delete first, then insert at adjusted position
-            const adjustedInsertPos = insertPos - sourceSize;
-            tr.delete(sourcePos, sourceEnd);
-            tr.insert(adjustedInsertPos, slice.content);
-          } else {
-            // Moving up: insert first, then delete at adjusted position
-            tr.insert(insertPos, slice.content);
-            const adjustedSourcePos = sourcePos + slice.content.size;
-            tr.delete(adjustedSourcePos, adjustedSourcePos + sourceSize);
-          }
-          
-          view.dispatch(tr);
-        } catch (error) {
-          console.error('Move error:', error);
+        // Perform the move using our robust function
+        const success = moveListItem(
+          editor,
+          sourceItem.pos,
+          dropTarget.targetItem.pos,
+          dropTarget.insertBefore
+        );
+        
+        if (!success) {
+          console.log('Move was not performed (same position or invalid)');
         }
       }
       
@@ -381,7 +454,7 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
           className="drop-indicator"
           style={{
             position: 'absolute',
-            top: dropTarget.top - 2,
+            top: dropTarget.indicatorTop - 2,
             left: listItems[0]?.left - 10 || 0,
             width: 300,
             height: 3,
