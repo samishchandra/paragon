@@ -32,7 +32,7 @@ import { AutoSaveIndicator } from './AutoSaveIndicator';
 import { RecoveryBanner } from './RecoveryBanner';
 import { WikiLinkSafe } from './extensions/WikiLinkSafe';
 import { MarkdownPasteSafe } from './extensions/MarkdownPasteSafe';
-import { DragHandleOverlay } from './DragHandleOverlay';
+// DragHandleOverlay removed - drag and reorder functionality disabled
 import { CollapsibleHeading } from './extensions/CollapsibleHeading';
 import { MarkdownLinkInputRule } from './extensions/MarkdownLinkInputRule';
 import { SearchHighlight } from './extensions/SearchHighlight';
@@ -465,8 +465,7 @@ export function MarkdownEditor({
       <div className="editor-content-wrapper" ref={editorContentRef}>
         <EditorContent editor={editor} className="editor-content" />
         
-        {/* Drag handle overlay for list items (desktop only) */}
-        {!isMobile && <DragHandleOverlay editor={editor} containerRef={editorContentRef} />}
+        {/* Drag handle overlay removed - drag and reorder functionality disabled */}
         
         {/* Floating toolbar on text selection (desktop only) */}
         {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} />}
