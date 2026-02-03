@@ -203,7 +203,7 @@ export default function Home() {
   const [content, setContent] = useState(DEMO_CONTENT);
   const [modalContent, setModalContent] = useState(MODAL_DEMO_CONTENT);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalTheme, setModalTheme] = useState<'dark' | 'light'>('dark');
+  const [modalTheme, setModalTheme] = useState<'dark' | 'light'>('light');
 
   return (
     <div className="min-h-screen bg-background">

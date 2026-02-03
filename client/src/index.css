@@ -55,7 +55,7 @@
 }
 
 :root {
-  /* Things Theme - Dark Mode */
+  /* Things Theme - Light Mode (Default) */
   --radius: 0.5rem;
   
   /* Things theme colors */
@@ -69,7 +69,100 @@
   --things-purple: #9e86c8;
   --things-gray: #72777d;
   
-  /* Heading colors */
+  /* Heading colors - Light mode */
+  --h1-color: #2e80f2;
+  --h2-color: #2e80f2;
+  --h3-color: #4eb57c;
+  --h4-color: #3eb4bf;
+  --h5-color: #e87d3e;
+  --h6-color: #9a9a9a;
+  
+  /* Base layers - Things light mode */
+  --background: #ffffff;
+  --foreground: #333333;
+  
+  /* Card/elevated surfaces */
+  --card: #fafafa;
+  --card-foreground: #333333;
+  
+  /* Popover/floating elements */
+  --popover: #ffffff;
+  --popover-foreground: #333333;
+  
+  /* Primary - Things blue */
+  --primary: #2e80f2;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary */
+  --secondary: #f5f5f5;
+  --secondary-foreground: #666666;
+  
+  /* Muted */
+  --muted: #f5f5f5;
+  --muted-foreground: #9a9a9a;
+  
+  /* Accent */
+  --accent: #f5f5f5;
+  --accent-foreground: #333333;
+  
+  /* Destructive */
+  --destructive: #e04674;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders and inputs */
+  --border: #e8e8e8;
+  --input: #f5f5f5;
+  --ring: #2e80f2;
+  
+  /* Charts */
+  --chart-1: #2e80f2;
+  --chart-2: #4eb57c;
+  --chart-3: #9e86c8;
+  --chart-4: #e87d3e;
+  --chart-5: #ff82b2;
+  
+  /* Sidebar */
+  --sidebar: #fafafa;
+  --sidebar-foreground: #333333;
+  --sidebar-primary: #2e80f2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #333333;
+  --sidebar-border: #e8e8e8;
+  --sidebar-ring: #2e80f2;
+  
+  /* Editor specific */
+  --editor-bg: #ffffff;
+  --editor-selection: rgba(46, 128, 242, 0.15);
+  --editor-cursor: #2e80f2;
+  --editor-line-number: #cccccc;
+  --editor-gutter: #fafafa;
+  
+  /* Task list checkbox */
+  --checkbox-checked: var(--primary);
+  --checkbox-checked-foreground: var(--primary-foreground);
+  
+  /* Callout colors */
+  --callout-info: #2e80f2;
+  --callout-warning: #e5b567;
+  --callout-error: #e04674;
+  --callout-success: #4eb57c;
+  --callout-note: #9e86c8;
+  
+  /* Syntax highlighting - Light mode */
+  --syntax-keyword: #a625a4;
+  --syntax-string: #4ea24c;
+  --syntax-number: #986800;
+  --syntax-comment: #a0a0a0;
+  --syntax-function: #2e80f2;
+  --syntax-variable: #e75545;
+  --syntax-type: #e87d3e;
+  --syntax-operator: #3eb4bf;
+}
+
+/* Things Theme - Dark Mode */
+.dark {
+  /* Heading colors - Dark mode */
   --h1-color: var(--things-blue);
   --h2-color: var(--things-blue);
   --h3-color: var(--things-purple);
@@ -114,13 +207,6 @@
   --input: #2c313c;
   --ring: #2e80f2;
   
-  /* Charts */
-  --chart-1: #2e80f2;
-  --chart-2: #4eb57c;
-  --chart-3: #9e86c8;
-  --chart-4: #e87d3e;
-  --chart-5: #ff82b2;
-  
   /* Sidebar */
   --sidebar: #181c20;
   --sidebar-foreground: #dadada;
@@ -139,10 +225,10 @@
   --editor-gutter: #181c20;
   
   /* Task list checkbox */
-  --checkbox-checked: var(--primary);
-  --checkbox-checked-foreground: var(--primary-foreground);
+  --checkbox-checked: #2e80f2;
+  --checkbox-checked-foreground: #ffffff;
   
-  /* Callout colors */
+  /* Callout colors - dark mode */
   --callout-info: #2e80f2;
   --callout-warning: #e5b567;
   --callout-error: #e04674;
@@ -158,82 +244,6 @@
   --syntax-variable: #e06c75;
   --syntax-type: #e5c07b;
   --syntax-operator: #56b6c2;
-}
-
-/* Things Theme - Light Mode */
-[data-theme="light"] {
-  /* Base layers - Things light mode */
-  --background: #ffffff;
-  --foreground: #9a9a9a;
-  
-  /* Card/elevated surfaces */
-  --card: #fafafa;
-  --card-foreground: #333333;
-  
-  /* Popover/floating elements */
-  --popover: #ffffff;
-  --popover-foreground: #333333;
-  
-  /* Primary - Things blue */
-  --primary: #2e80f2;
-  --primary-foreground: #ffffff;
-  
-  /* Secondary */
-  --secondary: #f5f5f5;
-  --secondary-foreground: #666666;
-  
-  /* Muted */
-  --muted: #f5f5f5;
-  --muted-foreground: #9a9a9a;
-  
-  /* Accent */
-  --accent: #f5f5f5;
-  --accent-foreground: #333333;
-  
-  /* Destructive */
-  --destructive: #e04674;
-  --destructive-foreground: #ffffff;
-  
-  /* Borders and inputs */
-  --border: #e8e8e8;
-  --input: #f5f5f5;
-  --ring: #2e80f2;
-  
-  /* Heading colors - Light mode (matching reference) */
-  --h1-color: #2e80f2;
-  --h2-color: #2e80f2;
-  --h3-color: #4eb57c;
-  --h4-color: #3eb4bf;
-  --h5-color: #e87d3e;
-  --h6-color: #9a9a9a;
-  
-  /* Editor specific */
-  --editor-bg: #ffffff;
-  --editor-selection: rgba(46, 128, 242, 0.15);
-  --editor-cursor: #2e80f2;
-  --editor-line-number: #cccccc;
-  --editor-gutter: #fafafa;
-  
-  /* Task list checkbox */
-  --checkbox-checked: #2e80f2;
-  --checkbox-checked-foreground: #ffffff;
-  
-  /* Callout colors - light mode */
-  --callout-info: #2e80f2;
-  --callout-warning: #e5b567;
-  --callout-error: #e04674;
-  --callout-success: #4eb57c;
-  --callout-note: #9e86c8;
-  
-  /* Syntax highlighting - Light mode */
-  --syntax-keyword: #a625a4;
-  --syntax-string: #4ea24c;
-  --syntax-number: #986800;
-  --syntax-comment: #cccccc;
-  --syntax-function: #2e80f2;
-  --syntax-variable: #e75545;
-  --syntax-type: #e87d3e;
-  --syntax-operator: #3eb4bf;
 }
 
 @layer base {
