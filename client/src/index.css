@@ -2691,37 +2691,22 @@ pre.with-line-numbers code .line::before {
   transition: transform 0.2s ease;
 }
 
-/* Expanded state - chevron points down, show only on hover */
+/* Expanded state - chevron points down, hidden by default */
 .collapsible-heading-chevron.expanded {
   opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .collapsible-heading-chevron.expanded svg {
   transform: rotate(0deg);
 }
 
-/* Show chevron on heading hover when expanded */
-.collapsible-heading.is-expanded:hover .collapsible-heading-chevron.expanded,
-.collapsible-heading.is-expanded .collapsible-heading-chevron.expanded:hover {
-  opacity: 1;
+/* Show expanded chevron only on heading hover */
+.collapsible-heading.is-expanded:hover .collapsible-heading-chevron.expanded {
+  opacity: 0.6;
 }
 
-/* Also show chevron when hovering near the left edge of the heading */
-.ProseMirror h1.collapsible-heading:hover .collapsible-heading-chevron.expanded,
-.ProseMirror h2.collapsible-heading:hover .collapsible-heading-chevron.expanded,
-.ProseMirror h3.collapsible-heading:hover .collapsible-heading-chevron.expanded,
-.ProseMirror h4.collapsible-heading:hover .collapsible-heading-chevron.expanded,
-.ProseMirror h5.collapsible-heading:hover .collapsible-heading-chevron.expanded,
-.ProseMirror h6.collapsible-heading:hover .collapsible-heading-chevron.expanded {
-  opacity: 1;
-}
-
-/* Show chevron with low opacity by default for better discoverability */
-.collapsible-heading-chevron.expanded {
-  opacity: 0.15;
-}
-
-/* Full opacity on hover */
+/* Full opacity when hovering the chevron itself */
 .collapsible-heading-chevron.expanded:hover {
   opacity: 1 !important;
 }
