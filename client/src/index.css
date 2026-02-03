@@ -2695,6 +2695,7 @@ pre.with-line-numbers code .line::before {
   top: 50%;
   transform: translateY(-50%);
   width: 20px;
+  color: oklch(0.7 0.1 250);
   height: 20px;
   display: inline-flex;
   align-items: center;
@@ -2723,7 +2724,7 @@ pre.with-line-numbers code .line::before {
 
 /* Expanded state - chevron points down, visible by default */
 .collapsible-heading-chevron.expanded {
-  opacity: 0.6;
+  opacity: 1;
   transition: opacity 0.15s ease;
 }
 
