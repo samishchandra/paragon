@@ -4,11 +4,11 @@
 @custom-variant dark (&:is(.dark *));
 
 /* 
- * DESIGN: Dark Mode Craftsman
- * Inspired by VS Code, Obsidian, and premium developer tools
- * Multi-layer dark theme with depth through layering
- * Glassmorphic elements with backdrop blur
- * Vibrant cyan accent for interactive elements
+ * DESIGN: Things Theme
+ * Inspired by the Obsidian Things theme by @colineckert
+ * Clean, elegant design with colored headings
+ * Blue accent color with proper dark/light modes
+ * System fonts with JetBrains Mono for code
  */
 
 @theme inline {
@@ -55,129 +55,177 @@
 }
 
 :root {
-  /* Dark Mode Craftsman - GitHub Dark inspired palette */
+  /* Things Theme - Dark Mode */
   --radius: 0.5rem;
   
-  /* Base layers - depth through darkness */
-  --background: oklch(0.13 0.01 250);
-  --foreground: oklch(0.93 0.01 250);
+  /* Things theme colors */
+  --things-blue: #2e80f2;
+  --things-pink: #ff82b2;
+  --things-green: #4eb57c;
+  --things-pelorous: #3eb4bf;
+  --things-yellow: #e5b567;
+  --things-orange: #e87d3e;
+  --things-red: #e04674;
+  --things-purple: #9e86c8;
+  --things-gray: #72777d;
+  
+  /* Heading colors */
+  --h1-color: var(--things-blue);
+  --h2-color: var(--things-blue);
+  --h3-color: var(--things-purple);
+  --h4-color: var(--things-blue);
+  --h5-color: var(--things-yellow);
+  --h6-color: var(--muted-foreground);
+  
+  /* Base layers - Things dark mode */
+  --background: #1c2127;
+  --foreground: #dadada;
   
   /* Card/elevated surfaces */
-  --card: oklch(0.17 0.01 250);
-  --card-foreground: oklch(0.93 0.01 250);
+  --card: #282c34;
+  --card-foreground: #dadada;
   
   /* Popover/floating elements */
-  --popover: oklch(0.19 0.015 250);
-  --popover-foreground: oklch(0.93 0.01 250);
+  --popover: #2c313c;
+  --popover-foreground: #dadada;
   
-  /* Primary - Vibrant cyan */
-  --primary: oklch(0.7 0.15 220);
-  --primary-foreground: oklch(0.13 0.01 250);
+  /* Primary - Things blue */
+  --primary: #2e80f2;
+  --primary-foreground: #ffffff;
   
   /* Secondary */
-  --secondary: oklch(0.22 0.01 250);
-  --secondary-foreground: oklch(0.75 0.02 250);
+  --secondary: #35393e;
+  --secondary-foreground: #bababa;
   
   /* Muted */
-  --muted: oklch(0.25 0.01 250);
-  --muted-foreground: oklch(0.6 0.02 250);
+  --muted: #3f3f3f;
+  --muted-foreground: #999999;
   
   /* Accent */
-  --accent: oklch(0.22 0.01 250);
-  --accent-foreground: oklch(0.93 0.01 250);
+  --accent: #35393e;
+  --accent-foreground: #dadada;
   
   /* Destructive */
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.98 0 0);
+  --destructive: #e04674;
+  --destructive-foreground: #ffffff;
   
   /* Borders and inputs */
-  --border: oklch(0.28 0.01 250);
-  --input: oklch(0.22 0.01 250);
-  --ring: oklch(0.7 0.15 220);
+  --border: #35393e;
+  --input: #2c313c;
+  --ring: #2e80f2;
   
   /* Charts */
-  --chart-1: oklch(0.7 0.15 220);
-  --chart-2: oklch(0.65 0.18 160);
-  --chart-3: oklch(0.6 0.2 280);
-  --chart-4: oklch(0.7 0.18 30);
-  --chart-5: oklch(0.65 0.15 320);
+  --chart-1: #2e80f2;
+  --chart-2: #4eb57c;
+  --chart-3: #9e86c8;
+  --chart-4: #e87d3e;
+  --chart-5: #ff82b2;
   
   /* Sidebar */
-  --sidebar: oklch(0.15 0.01 250);
-  --sidebar-foreground: oklch(0.93 0.01 250);
-  --sidebar-primary: oklch(0.7 0.15 220);
-  --sidebar-primary-foreground: oklch(0.13 0.01 250);
-  --sidebar-accent: oklch(0.22 0.01 250);
-  --sidebar-accent-foreground: oklch(0.93 0.01 250);
-  --sidebar-border: oklch(0.28 0.01 250);
-  --sidebar-ring: oklch(0.7 0.15 220);
+  --sidebar: #181c20;
+  --sidebar-foreground: #dadada;
+  --sidebar-primary: #2e80f2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #35393e;
+  --sidebar-accent-foreground: #dadada;
+  --sidebar-border: #35393e;
+  --sidebar-ring: #2e80f2;
   
   /* Editor specific */
-  --editor-bg: oklch(0.13 0.01 250);
-  --editor-selection: oklch(0.35 0.08 220 / 0.4);
-  --editor-cursor: oklch(0.7 0.15 220);
-  --editor-line-number: oklch(0.45 0.02 250);
-  --editor-gutter: oklch(0.15 0.01 250);
+  --editor-bg: #1c2127;
+  --editor-selection: rgba(46, 128, 242, 0.25);
+  --editor-cursor: #2e80f2;
+  --editor-line-number: #666666;
+  --editor-gutter: #181c20;
   
   /* Task list checkbox */
   --checkbox-checked: var(--primary);
   --checkbox-checked-foreground: var(--primary-foreground);
   
-  /* Callout colors - muted jewel tones */
-  --callout-info: oklch(0.5 0.12 220);
-  --callout-warning: oklch(0.6 0.15 70);
-  --callout-error: oklch(0.5 0.15 25);
-  --callout-success: oklch(0.5 0.12 160);
-  --callout-note: oklch(0.5 0.12 280);
+  /* Callout colors */
+  --callout-info: #2e80f2;
+  --callout-warning: #e5b567;
+  --callout-error: #e04674;
+  --callout-success: #4eb57c;
+  --callout-note: #9e86c8;
   
-  /* Syntax highlighting */
-  --syntax-keyword: oklch(0.7 0.18 320);
-  --syntax-string: oklch(0.7 0.12 160);
-  --syntax-number: oklch(0.75 0.12 70);
-  --syntax-comment: oklch(0.5 0.02 250);
-  --syntax-function: oklch(0.75 0.15 280);
-  --syntax-variable: oklch(0.8 0.1 220);
+  /* Syntax highlighting - Atom One Dark */
+  --syntax-keyword: #c678dd;
+  --syntax-string: #98c379;
+  --syntax-number: #d19a66;
+  --syntax-comment: #5c6370;
+  --syntax-function: #61afef;
+  --syntax-variable: #e06c75;
+  --syntax-type: #e5c07b;
+  --syntax-operator: #56b6c2;
 }
 
-/* Light theme for modal testing */
+/* Things Theme - Light Mode */
 [data-theme="light"] {
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.12 0.01 250);
-  --card: oklch(0.98 0 0);
-  --card-foreground: oklch(0.12 0.01 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.12 0.01 250);
-  --primary: oklch(0.45 0.18 220);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.92 0.01 250);
-  --secondary-foreground: oklch(0.2 0.02 250);
-  --muted: oklch(0.94 0.005 250);
-  --muted-foreground: oklch(0.35 0.02 250);
-  --accent: oklch(0.92 0.01 250);
-  --accent-foreground: oklch(0.12 0.01 250);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.88 0 0);
-  --input: oklch(0.95 0 0);
-  --ring: oklch(0.5 0.18 220);
-  --editor-bg: oklch(1 0 0);
-  --editor-selection: oklch(0.55 0.08 220 / 0.2);
-  --editor-cursor: oklch(0.55 0.18 220);
-  --editor-line-number: oklch(0.6 0.02 250);
-  --editor-gutter: oklch(0.95 0.01 250);
+  /* Base layers - Things light mode */
+  --background: #ffffff;
+  --foreground: #222222;
+  
+  /* Card/elevated surfaces */
+  --card: #f6f7f8;
+  --card-foreground: #222222;
+  
+  /* Popover/floating elements */
+  --popover: #ffffff;
+  --popover-foreground: #222222;
+  
+  /* Primary - Things blue (darker for light mode) */
+  --primary: #086ddd;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary */
+  --secondary: #f0f0f0;
+  --secondary-foreground: #5a5a5a;
+  
+  /* Muted */
+  --muted: #ebedf0;
+  --muted-foreground: #707070;
+  
+  /* Accent */
+  --accent: #f0f0f0;
+  --accent-foreground: #222222;
+  
+  /* Destructive */
+  --destructive: #e4374b;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders and inputs */
+  --border: #ebedf0;
+  --input: #f6f7f8;
+  --ring: #086ddd;
+  
+  /* Editor specific */
+  --editor-bg: #ffffff;
+  --editor-selection: rgba(8, 109, 221, 0.15);
+  --editor-cursor: #086ddd;
+  --editor-line-number: #ababab;
+  --editor-gutter: #f6f7f8;
+  
+  /* Task list checkbox */
   --checkbox-checked: var(--primary);
   --checkbox-checked-foreground: var(--primary-foreground);
-  --callout-info: oklch(0.5 0.12 220);
-  --callout-warning: oklch(0.6 0.15 70);
-  --callout-error: oklch(0.5 0.15 25);
-  --callout-success: oklch(0.5 0.12 160);
-  --callout-note: oklch(0.5 0.12 280);
-  --syntax-keyword: oklch(0.5 0.2 320);
-  --syntax-string: oklch(0.45 0.15 160);
-  --syntax-number: oklch(0.5 0.15 70);
-  --syntax-comment: oklch(0.55 0.02 250);
-  --syntax-function: oklch(0.5 0.18 280);
-  --syntax-variable: oklch(0.45 0.12 220);
+  
+  /* Callout colors - light mode */
+  --callout-info: #086ddd;
+  --callout-warning: #bd8e37;
+  --callout-error: #e4374b;
+  --callout-success: #0cb54f;
+  --callout-note: #876be0;
+  
+  /* Syntax highlighting - Atom One Light */
+  --syntax-keyword: #a625a4;
+  --syntax-string: #4ea24c;
+  --syntax-number: #986800;
+  --syntax-comment: #ababab;
+  --syntax-function: #3d74f6;
+  --syntax-variable: #e75545;
+  --syntax-type: #e35649;
+  --syntax-operator: #0084bc;
 }
 
 @layer base {
@@ -289,14 +337,14 @@
     height: 0;
   }
   
-  /* Headings */
+  /* Headings - Things theme colored headings */
   h1 {
     font-size: 2.25rem;
     font-weight: 700;
     line-height: 1.2;
     margin-top: 2rem;
     margin-bottom: 1rem;
-    color: var(--foreground);
+    color: var(--h1-color);
   }
   
   h2 {
@@ -305,7 +353,7 @@
     line-height: 1.3;
     margin-top: 1.75rem;
     margin-bottom: 0.75rem;
-    color: var(--foreground);
+    color: var(--h2-color);
   }
   
   h3 {
@@ -314,16 +362,34 @@
     line-height: 1.4;
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
-    color: var(--foreground);
+    color: var(--h3-color);
   }
   
-  h4, h5, h6 {
+  h4 {
     font-size: 1.125rem;
     font-weight: 600;
     line-height: 1.4;
     margin-top: 1.25rem;
     margin-bottom: 0.5rem;
-    color: var(--foreground);
+    color: var(--h4-color);
+  }
+  
+  h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: var(--h5-color);
+  }
+  
+  h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: var(--h6-color);
   }
   
   /* Paragraphs */
@@ -354,14 +420,14 @@
     font-style: italic;
   }
   
-  /* Inline code */
+  /* Inline code - Things theme styling */
   code {
     font-family: var(--font-mono);
     font-size: 0.875em;
     background: var(--secondary);
     padding: 0.2em 0.4em;
     border-radius: 4px;
-    color: oklch(0.85 0.08 220);
+    color: var(--syntax-variable);
   }
   
   /* Code blocks */
@@ -385,12 +451,12 @@
     color: var(--foreground);
   }
   
-  /* Blockquotes */
+  /* Blockquotes - Things theme pelorous color */
   blockquote {
-    border-left: 3px solid var(--primary);
+    border-left: 3px solid var(--things-pelorous, #3eb4bf);
     padding-left: 1rem;
     margin: 1rem 0;
-    color: var(--muted-foreground);
+    color: var(--things-pelorous, #3eb4bf);
     font-style: italic;
   }
   
@@ -459,7 +525,7 @@
     width: 1.125rem;
     height: 1.125rem;
     border: 2px solid var(--muted-foreground);
-    border-radius: 50%;
+    border-radius: 30%; /* Things theme checkbox radius */
     background: transparent;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -469,7 +535,7 @@
   
   ul[data-type="taskList"] li > label input[type="checkbox"]:hover {
     border-color: var(--primary);
-    background: oklch(0.7 0.15 220 / 0.1);
+    background: rgba(46, 128, 242, 0.1);
     transform: scale(1.1);
   }
   
@@ -1156,13 +1222,16 @@ pre.with-line-numbers code .line::before {
   user-select: none;
 }
 
-/* Syntax highlighting - GitHub Dark inspired */
+/* Syntax highlighting - Atom One Dark */
 .hljs-keyword,
 .hljs-selector-tag,
-.hljs-built_in,
+.hljs-built_in {
+  color: var(--syntax-keyword);
+}
+
 .hljs-name,
 .hljs-tag {
-  color: oklch(0.7 0.18 320);
+  color: var(--syntax-variable);
 }
 
 .hljs-string,
@@ -1172,9 +1241,12 @@ pre.with-line-numbers code .line::before {
 .hljs-literal,
 .hljs-template-tag,
 .hljs-template-variable,
-.hljs-type,
 .hljs-addition {
-  color: oklch(0.7 0.12 160);
+  color: var(--syntax-string);
+}
+
+.hljs-type {
+  color: var(--syntax-type);
 }
 
 .hljs-number,
@@ -1182,21 +1254,29 @@ pre.with-line-numbers code .line::before {
 .hljs-bullet,
 .hljs-link,
 .hljs-meta,
-.hljs-selector-id,
-.hljs-title.function_ {
-  color: oklch(0.75 0.15 280);
+.hljs-selector-id {
+  color: var(--syntax-number);
+}
+
+.hljs-title.function_,
+.hljs-function {
+  color: var(--syntax-function);
 }
 
 .hljs-comment,
 .hljs-quote,
 .hljs-deletion {
-  color: oklch(0.5 0.02 250);
+  color: var(--syntax-comment);
   font-style: italic;
 }
 
 .hljs-variable,
 .hljs-attr {
-  color: oklch(0.8 0.1 220);
+  color: var(--syntax-variable);
+}
+
+.hljs-operator {
+  color: var(--syntax-operator);
 }
 
 .hljs-emphasis {
