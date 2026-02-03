@@ -2238,6 +2238,7 @@ pre.with-line-numbers code .line::before {
 .editor-content .ProseMirror {
   min-height: 100%;
   padding: 2rem;
+  padding-left: 3rem; /* Extra space for collapsible heading chevrons in left gutter */
 }
 
 .editor-footer {
@@ -2772,9 +2773,9 @@ pre.with-line-numbers code .line::before {
   stroke-width: 2.5;
 }
 
-/* Expanded state - chevron points down, hidden by default, show on hover */
+/* Expanded state - chevron points down, slightly visible by default, more visible on hover */
 .collapsible-heading-chevron.expanded {
-  opacity: 0;
+  opacity: 0.3;
 }
 
 .collapsible-heading-chevron.expanded svg {
@@ -2783,7 +2784,7 @@ pre.with-line-numbers code .line::before {
 
 /* Show expanded chevron on heading hover */
 .collapsible-heading:hover .collapsible-heading-chevron.expanded {
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .collapsible-heading-chevron.expanded:hover {
