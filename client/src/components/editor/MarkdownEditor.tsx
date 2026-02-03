@@ -290,12 +290,15 @@ export function MarkdownEditor({
         return;
       }
 
-      // Tab/Shift+Tab for list indentation
+      // Tab/Shift+Tab for list indentation and multi-line text indentation
       if (event.key === 'Tab') {
+        // Only handle Tab if the editor is focused
+        if (!editor.isFocused) return;
+        
         try {
           const { state } = editor;
           const { selection } = state;
-          const { $from } = selection;
+          const { $from, $to, empty } = selection;
           
           // Check if we're in a list item
           const listItem = $from.node($from.depth);
@@ -304,6 +307,7 @@ export function MarkdownEditor({
           if (listItem?.type.name === 'listItem' || listItem?.type.name === 'taskItem' || 
               parentList?.type.name === 'bulletList' || parentList?.type.name === 'orderedList' || parentList?.type.name === 'taskList') {
             event.preventDefault();
+            event.stopPropagation();
             
             if (event.shiftKey) {
               // Shift+Tab: Outdent (lift list item)
@@ -314,6 +318,68 @@ export function MarkdownEditor({
               editor.chain().focus().sinkListItem('listItem').run() ||
               editor.chain().focus().sinkListItem('taskItem').run();
             }
+            return;
+          }
+          
+          // Multi-line selection indentation (for non-list content)
+          // Check if selection spans multiple lines/blocks
+          if (!empty && $from.pos !== $to.pos) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const { doc, tr } = state;
+            const indent = '    '; // 4 spaces for indentation
+            let modified = false;
+            let offset = 0; // Track position offset as we modify the document
+            
+            // Find all text blocks in the selection
+            doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
+              // Only process text blocks (paragraphs, headings, etc.)
+              if (node.isTextblock) {
+                const nodeStart = pos + 1 + offset; // Position after the opening tag, adjusted for offset
+                
+                if (event.shiftKey) {
+                  // Shift+Tab: Remove indentation
+                  const text = node.textContent;
+                  if (text.startsWith(indent)) {
+                    // Remove 4 spaces
+                    tr.delete(nodeStart, nodeStart + indent.length);
+                    offset -= indent.length;
+                    modified = true;
+                  } else if (text.startsWith('\t')) {
+                    // Remove tab character
+                    tr.delete(nodeStart, nodeStart + 1);
+                    offset -= 1;
+                    modified = true;
+                  } else if (text.match(/^\s+/)) {
+                    // Remove leading whitespace (up to 4 spaces)
+                    const match = text.match(/^\s{1,4}/);
+                    if (match) {
+                      tr.delete(nodeStart, nodeStart + match[0].length);
+                      offset -= match[0].length;
+                      modified = true;
+                    }
+                  }
+                } else {
+                  // Tab: Add indentation
+                  tr.insertText(indent, nodeStart);
+                  offset += indent.length;
+                  modified = true;
+                }
+              }
+            });
+            
+            if (modified) {
+              editor.view.dispatch(tr);
+            }
+            return;
+          }
+          
+          // Single cursor in editor - insert tab spaces instead of moving focus
+          if (empty) {
+            event.preventDefault();
+            event.stopPropagation();
+            editor.chain().focus().insertContent('    ').run();
             return;
           }
         } catch (error) {
