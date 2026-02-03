@@ -273,6 +273,7 @@
   min-height: 100%;
   padding: 2rem;
   outline: none;
+  caret-color: var(--editor-cursor);
   
   /* Selection styling */
   ::selection {
@@ -436,6 +437,13 @@
     margin: 0;
     padding: 0;
     line-height: 1.5;
+  }
+  
+  /* Ensure cursor is visible in empty task items */
+  ul[data-type="taskList"] li > div {
+    min-height: 1.5em;
+    flex: 1;
+    min-width: 0;
   }
   
   ul[data-type="taskList"] li > label {

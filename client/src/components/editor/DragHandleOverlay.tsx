@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo, memo } from 'react';
 import { Editor } from '@tiptap/react';
-import { Node as ProseMirrorNode } from '@tiptap/pm/model';
+import { Node as ProseMirrorNode, Slice, Fragment } from '@tiptap/pm/model';
 import { throttle } from './utils/performance';
 
 /**
@@ -67,7 +67,6 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
     pos: number; 
     nodeType: string; 
     nodeSize: number;
-    node: ProseMirrorNode;
     parentListPos: number;
   } | null>(null);
   const lastItemCountRef = useRef<number>(0);
@@ -109,7 +108,7 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
     // Track parent list positions for each item
     const parentStack: { pos: number; depth: number }[] = [];
 
-    state.doc.descendants((node, pos, parent) => {
+    state.doc.descendants((node, pos) => {
       // Track list containers
       if (node.type.name === 'bulletList' || node.type.name === 'orderedList' || node.type.name === 'taskList') {
         const depth = parentStack.length;
@@ -260,7 +259,6 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
         pos: item.pos, 
         nodeType: item.nodeType, 
         nodeSize: node.nodeSize,
-        node: node,
         parentListPos: item.parentListPos,
       };
     }
@@ -352,7 +350,7 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
       return;
     }
     
-    const { pos: fromPos, nodeSize, node: draggedNode } = dragDataRef.current;
+    const { pos: fromPos, nodeSize } = dragDataRef.current;
     const targetPos = targetItem.pos;
     
     // Don't move to the same position
@@ -364,17 +362,23 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
     const dropPosition = calculateDropPosition(e, targetItem);
 
     try {
-      const { state } = editor;
+      const { state, view } = editor;
+      const { tr } = state;
+      
+      // Get the node to move from the current document state
+      const nodeToMove = state.doc.nodeAt(fromPos);
       const targetNode = state.doc.nodeAt(targetPos);
       
-      if (!draggedNode || !targetNode) {
+      if (!nodeToMove || !targetNode) {
+        console.error('Could not find nodes at positions', fromPos, targetPos);
         handleDragEnd();
         return;
       }
 
-      // Calculate the actual insertion position
-      // For 'before': insert at targetPos
-      // For 'after': insert at targetPos + targetNode.nodeSize
+      // Calculate source range (the full node including its content)
+      const fromEnd = fromPos + nodeToMove.nodeSize;
+      
+      // Calculate target position
       let insertPos: number;
       if (dropPosition === 'before') {
         insertPos = targetPos;
@@ -382,35 +386,28 @@ export function DragHandleOverlay({ editor, containerRef }: DragHandleOverlayPro
         insertPos = targetPos + targetNode.nodeSize;
       }
 
-      // Use a transaction to move the entire node atomically
-      editor.chain()
-        .focus()
-        .command(({ tr, dispatch }) => {
-          if (!dispatch) return false;
-          
-          const fromEnd = fromPos + nodeSize;
-          
-          // Create a deep copy of the node to preserve all content
-          const nodeToMove = draggedNode.copy(draggedNode.content);
-          
-          // Determine the order of operations based on positions
-          if (insertPos > fromPos) {
-            // Moving down: We need to adjust the insert position after deletion
-            // Delete first, then insert at adjusted position
-            const adjustedInsertPos = insertPos - nodeSize;
-            tr.delete(fromPos, fromEnd);
-            tr.insert(adjustedInsertPos, nodeToMove);
-          } else {
-            // Moving up: Insert first, then delete at adjusted position
-            tr.insert(insertPos, nodeToMove);
-            // After insertion, the original node position shifts by the size of inserted node
-            const adjustedFromPos = fromPos + nodeSize;
-            tr.delete(adjustedFromPos, adjustedFromPos + nodeSize);
-          }
-          
-          return true;
-        })
-        .run();
+      // Create a slice containing just the node to move
+      const slice = state.doc.slice(fromPos, fromEnd);
+      
+      // Perform the move using a single transaction
+      // We need to handle the position adjustment carefully
+      if (fromPos < insertPos) {
+        // Moving forward (down in the document)
+        // First delete the source, then insert at adjusted position
+        const adjustedInsertPos = insertPos - nodeToMove.nodeSize;
+        tr.delete(fromPos, fromEnd);
+        tr.insert(adjustedInsertPos, slice.content);
+      } else {
+        // Moving backward (up in the document)
+        // First insert at target, then delete from adjusted source position
+        tr.insert(insertPos, slice.content);
+        const adjustedFromPos = fromPos + slice.content.size;
+        tr.delete(adjustedFromPos, adjustedFromPos + nodeToMove.nodeSize);
+      }
+
+      // Apply the transaction
+      view.dispatch(tr);
+      
     } catch (error) {
       console.error('Drop error:', error);
     }
