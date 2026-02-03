@@ -2672,6 +2672,20 @@ pre.with-line-numbers code .line::before {
 /* Collapsible heading wrapper */
 .collapsible-heading {
   position: relative;
+  /* Extend the hover area to include the left margin where chevron is positioned */
+  margin-left: 0;
+  padding-left: 0;
+}
+
+/* Create a pseudo-element to extend hover area into the left margin */
+.collapsible-heading::before {
+  content: '';
+  position: absolute;
+  left: -35px;
+  top: 0;
+  bottom: 0;
+  width: 35px;
+  pointer-events: auto;
 }
 
 /* Chevron button - positioned in left margin */
@@ -2707,9 +2721,9 @@ pre.with-line-numbers code .line::before {
   transition: transform 0.2s ease;
 }
 
-/* Expanded state - chevron points down, hidden by default */
+/* Expanded state - chevron points down, slightly visible by default */
 .collapsible-heading-chevron.expanded {
-  opacity: 0;
+  opacity: 0.15;
   transition: opacity 0.15s ease;
 }
 
@@ -2717,9 +2731,9 @@ pre.with-line-numbers code .line::before {
   transform: rotate(0deg);
 }
 
-/* Show expanded chevron only on heading hover */
+/* Show expanded chevron more prominently on heading hover */
 .collapsible-heading.is-expanded:hover .collapsible-heading-chevron.expanded {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 /* Full opacity when hovering the chevron itself */

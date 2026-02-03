@@ -400,6 +400,46 @@ export function MarkdownEditor({
     enabled: showWordCount,
   });
 
+  // Add hover detection for collapsible heading chevrons using event delegation
+  useEffect(() => {
+    const container = editorContentRef.current;
+    if (!container) return;
+
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const heading = target.closest('.collapsible-heading.is-expanded');
+      if (heading) {
+        const chevron = heading.querySelector('.collapsible-heading-chevron.expanded') as HTMLElement;
+        if (chevron) {
+          chevron.style.opacity = '0.6';
+        }
+      }
+    };
+
+    const handleMouseOut = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const heading = target.closest('.collapsible-heading.is-expanded');
+      if (heading) {
+        // Check if we're leaving the heading entirely
+        const relatedTarget = e.relatedTarget as HTMLElement;
+        if (!heading.contains(relatedTarget)) {
+          const chevron = heading.querySelector('.collapsible-heading-chevron.expanded') as HTMLElement;
+          if (chevron) {
+            chevron.style.opacity = '0';
+          }
+        }
+      }
+    };
+
+    container.addEventListener('mouseover', handleMouseOver);
+    container.addEventListener('mouseout', handleMouseOut);
+
+    return () => {
+      container.removeEventListener('mouseover', handleMouseOver);
+      container.removeEventListener('mouseout', handleMouseOut);
+    };
+  }, []);
+
   if (!editor) {
     return (
       <div className={`markdown-editor-container ${className}`}>

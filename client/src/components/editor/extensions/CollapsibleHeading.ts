@@ -137,6 +137,26 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
                   button.setAttribute('contenteditable', 'false');
                   button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
                   button.title = isCollapsed ? 'Click to expand' : 'Click to collapse';
+                  
+                  // Add hover detection via JavaScript for expanded chevrons
+                  if (!isCollapsed) {
+                    // Find the parent heading element after the widget is inserted
+                    setTimeout(() => {
+                      const heading = button.closest('.collapsible-heading');
+                      if (heading && !heading.hasAttribute('data-hover-listener')) {
+                        heading.setAttribute('data-hover-listener', 'true');
+                        heading.addEventListener('mouseenter', () => {
+                          const chevron = heading.querySelector('.collapsible-heading-chevron.expanded') as HTMLElement;
+                          if (chevron) chevron.style.opacity = '0.6';
+                        });
+                        heading.addEventListener('mouseleave', () => {
+                          const chevron = heading.querySelector('.collapsible-heading-chevron.expanded') as HTMLElement;
+                          if (chevron) chevron.style.opacity = '0';
+                        });
+                      }
+                    }, 0);
+                  }
+                  
                   return button;
                 }, { side: -1, key: `chevron-${headingId}` });
                 
