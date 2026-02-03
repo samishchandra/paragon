@@ -484,8 +484,14 @@
   
   li {
     margin: 0;
+    margin-bottom: 0.35rem; /* Add spacing between list items for better readability with inline code */
     padding: 0;
-    line-height: 1.5;
+    line-height: 1.6; /* Slightly increased line height */
+  }
+  
+  /* Remove bottom margin from last list item */
+  li:last-child {
+    margin-bottom: 0;
   }
   
   li > ul, li > ol {
@@ -509,8 +515,14 @@
     align-items: flex-start;
     gap: 0.5rem;
     margin: 0;
+    margin-bottom: 0.35rem; /* Add spacing between task items for better readability with inline code */
     padding: 0;
-    line-height: 1.5;
+    line-height: 1.6; /* Slightly increased line height */
+  }
+  
+  /* Remove bottom margin from last task item */
+  ul[data-type="taskList"] li:last-child {
+    margin-bottom: 0;
   }
   
   /* Ensure cursor is visible in empty task items */
