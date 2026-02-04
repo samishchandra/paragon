@@ -2943,3 +2943,123 @@ pre.with-line-numbers code .line::before {
 .editor-content {
   overflow: visible !important;
 }
+
+
+/* ============================================
+   Image Drop Zone Styles
+   ============================================ */
+
+.image-drop-zone {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(0.97 0.01 220 / 0.95);
+  border: 3px dashed var(--primary);
+  border-radius: 8px;
+  pointer-events: none;
+  animation: dropzone-fade-in 0.15s ease-out;
+}
+
+.dark .image-drop-zone {
+  background: oklch(0.15 0.02 220 / 0.95);
+}
+
+@keyframes dropzone-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.image-drop-zone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.image-drop-zone-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  animation: dropzone-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes dropzone-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 oklch(0.6 0.2 250 / 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 15px oklch(0.6 0.2 250 / 0);
+  }
+}
+
+.image-drop-zone-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.image-drop-zone-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.image-drop-zone-subtitle {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+/* Image upload toast notification styles */
+.image-upload-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.15);
+}
+
+.image-upload-toast-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--primary);
+}
+
+.image-upload-toast-icon.error {
+  color: var(--destructive);
+}
+
+.image-upload-toast-icon.success {
+  color: oklch(0.6 0.2 145);
+}
+
+.image-upload-toast-message {
+  font-size: 0.875rem;
+  color: var(--foreground);
+}
+
+/* Editor content wrapper needs relative positioning for drop zone */
+.editor-content-wrapper {
+  position: relative;
+}

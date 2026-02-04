@@ -251,8 +251,8 @@ const features = [
   },
   {
     icon: <Image className="w-5 h-5" />,
-    title: 'Resizable Images',
-    description: 'Drag to resize inline images',
+    title: 'Image Upload',
+    description: 'Drag-drop or paste images directly',
   },
   {
     icon: <Palette className="w-5 h-5" />,
@@ -516,6 +516,18 @@ function MyApp() {
                       <td className="px-4 py-2 text-muted-foreground">boolean</td>
                       <td className="px-4 py-2 text-muted-foreground">false</td>
                       <td className="px-4 py-2 text-muted-foreground">Auto-focus on mount</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">maxImageSize</td>
+                      <td className="px-4 py-2 text-muted-foreground">number</td>
+                      <td className="px-4 py-2 text-muted-foreground">5MB</td>
+                      <td className="px-4 py-2 text-muted-foreground">Max image upload size</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">onImageUploadError</td>
+                      <td className="px-4 py-2 text-muted-foreground">function</td>
+                      <td className="px-4 py-2 text-muted-foreground">-</td>
+                      <td className="px-4 py-2 text-muted-foreground">Callback on upload error</td>
                     </tr>
                   </tbody>
                 </table>

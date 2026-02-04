@@ -37,6 +37,8 @@ import { CollapsibleHeading } from './extensions/CollapsibleHeading';
 import { MarkdownLinkInputRule } from './extensions/MarkdownLinkInputRule';
 import { SearchHighlight } from './extensions/SearchHighlight';
 import { TabIndent } from './extensions/TabIndent';
+import { ImageUpload } from './extensions/ImageUpload';
+import { ImageDropZone } from './ImageDropZone';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -86,6 +88,14 @@ export interface MarkdownEditorProps {
   showRecoveryBanner?: boolean;
   /** Show floating toolbar on text selection (default: true) */
   showFloatingToolbar?: boolean;
+  /** Maximum image file size in bytes (default: 5MB) */
+  maxImageSize?: number;
+  /** Callback when image upload starts */
+  onImageUploadStart?: () => void;
+  /** Callback when image upload completes */
+  onImageUploadComplete?: () => void;
+  /** Callback when image upload fails */
+  onImageUploadError?: (error: string) => void;
 }
 
 export function MarkdownEditor({
@@ -103,6 +113,10 @@ export function MarkdownEditor({
   autoSaveDelay = 1000,
   showRecoveryBanner = true,
   showFloatingToolbar = true,
+  maxImageSize = 5 * 1024 * 1024,
+  onImageUploadStart,
+  onImageUploadComplete,
+  onImageUploadError,
 }: MarkdownEditorProps) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
@@ -219,11 +233,18 @@ export function MarkdownEditor({
       }),
       MarkdownPasteSafe.configure({
         enableMarkdownPaste: true,
+      }),
+      // Image upload via drag-and-drop and paste
+      ImageUpload.configure({
+        maxFileSize: maxImageSize,
+        onUploadStart: onImageUploadStart,
+        onUploadComplete: onImageUploadComplete,
+        onUploadError: onImageUploadError,
       })
     );
 
     return baseExtensions;
-  }, [placeholder, isMobile]);
+  }, [placeholder, isMobile, maxImageSize, onImageUploadStart, onImageUploadComplete, onImageUploadError]);
 
   const editor = useEditor({
     // @ts-ignore - Expose editor globally for debugging
@@ -423,6 +444,9 @@ export function MarkdownEditor({
       {/* Main editor area */}
       <div className="editor-content-wrapper" ref={editorContentRef}>
         <EditorContent editor={editor} className="editor-content" />
+        
+        {/* Image drop zone overlay */}
+        <ImageDropZone containerRef={editorContentRef} enabled={editable} />
         
         {/* Drag handle overlay removed - drag and reorder functionality disabled */}
         
