@@ -2206,8 +2206,8 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme code block styling - clean, elegant */
 [data-theme="light"] .code-block-wrapper {
-  background: #faf8f5;
-  border-color: #f0ede8;
+  background: oklch(0.98 0.005 250);
+  border: 1px solid oklch(0.92 0.01 250);
 }
 
 [data-theme="light"] .code-block-language-label {
@@ -2376,6 +2376,15 @@ pre.with-line-numbers code .line::before {
 
 [data-theme="light"] .tiptap-editor td {
   border-color: oklch(0.88 0.01 250);
+}
+
+[data-theme="light"] .tiptap-editor tbody tr:hover td {
+  background: oklch(0.97 0.005 250);
+}
+
+[data-theme="light"] .tiptap-editor th.sortable-header:hover,
+[data-theme="light"] .tiptap-editor th[data-sortable="true"]:hover {
+  background: oklch(0.94 0.01 250);
 }
 
 /* Light theme callouts */
@@ -2597,6 +2606,64 @@ pre.with-line-numbers code .line::before {
   color: oklch(0.25 0.02 250);
 }
 
+/* Light theme link popover */
+[data-theme="light"] .link-popover {
+  background: oklch(1 0 0 / 0.98);
+  border: 1px solid oklch(0.88 0.01 250);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.12);
+}
+
+[data-theme="light"] .link-popover-input-wrapper {
+  background: oklch(0.97 0.005 250);
+  border: 1px solid oklch(0.88 0.01 250);
+}
+
+/* Light theme link hover tooltip */
+[data-theme="light"] .link-hover-tooltip {
+  background: oklch(1 0 0 / 0.98);
+  border: 1px solid oklch(0.88 0.01 250);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.1);
+}
+
+[data-theme="light"] .link-hover-tooltip-edit:hover {
+  background: oklch(0.95 0.01 250);
+}
+
+[data-theme="light"] .link-hover-tooltip-actions {
+  border-left: 1px solid oklch(0.88 0.01 250);
+}
+
+[data-theme="light"] .link-hover-tooltip-btn:hover {
+  background: oklch(0.95 0.01 250);
+}
+
+[data-theme="light"] .link-hover-tooltip-btn-danger:hover {
+  background: oklch(0.95 0.1 25);
+  color: oklch(0.5 0.2 25);
+}
+
+/* Light theme slash command menu */
+[data-theme="light"] .slash-command-menu {
+  box-shadow: 0 4px 20px oklch(0 0 0 / 0.1);
+}
+
+/* Light theme date picker popup */
+[data-theme="light"] .date-picker-popup {
+  box-shadow: 0 4px 20px oklch(0 0 0 / 0.1);
+}
+
+/* Light theme floating toolbar */
+[data-theme="light"] .floating-toolbar {
+  background: oklch(1 0 0 / 0.98);
+  border: 1px solid oklch(0.88 0.01 250);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.1);
+}
+
+/* Light theme glass effect */
+[data-theme="light"] .glass {
+  background: oklch(1 0 0 / 0.85);
+  border: 1px solid oklch(0.88 0.01 250 / 0.5);
+}
 
 /* ==========================================
    Collapsible Headings - Taskmate Style
