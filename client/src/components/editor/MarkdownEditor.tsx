@@ -572,7 +572,6 @@ export function MarkdownEditor({
                 title="Visual Editor"
               >
                 <Eye />
-                <span className="hidden sm:inline">Visual</span>
               </button>
               <button
                 onClick={() => handleModeSwitch('markdown')}
@@ -580,7 +579,6 @@ export function MarkdownEditor({
                 title="Raw Markdown"
               >
                 <FileText />
-                <span className="hidden sm:inline">Markdown</span>
               </button>
             </div>
           )}
