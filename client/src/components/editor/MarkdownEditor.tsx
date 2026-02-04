@@ -40,9 +40,10 @@ import { TabIndent } from './extensions/TabIndent';
 import { ImageUpload } from './extensions/ImageUpload';
 import { ImageDropZone } from './ImageDropZone';
 import { ImageEditPopover } from './ImageEditPopover';
-import { RawMarkdownEditor } from './RawMarkdownEditor';
+import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
 import { FileText, Eye } from 'lucide-react';
 import TurndownService from 'turndown';
+import { gfm, tables, strikethrough, taskListItems } from 'turndown-plugin-gfm';
 import { marked } from 'marked';
 
 /*
@@ -331,12 +332,10 @@ export function MarkdownEditor({
       strongDelimiter: '**',
     });
     
-    // Add custom rules for better markdown output
-    td.addRule('strikethrough', {
-      filter: ['del', 's'] as const,
-      replacement: (content) => `~~${content}~~`,
-    });
+    // Use GFM plugin for tables, strikethrough, and task lists
+    td.use(gfm);
     
+    // Add custom rules for better markdown output
     td.addRule('highlight', {
       filter: (node) => node.nodeName === 'MARK',
       replacement: (content) => `==${content}==`,
@@ -352,6 +351,45 @@ export function MarkdownEditor({
         const checked = checkbox?.hasAttribute('checked') || (checkbox as HTMLInputElement)?.checked;
         return `- [${checked ? 'x' : ' '}] ${content.trim()}\n`;
       },
+    });
+    
+    // Custom table rule to handle TipTap's table structure
+    td.addRule('table', {
+      filter: 'table',
+      replacement: function(content, node) {
+        const table = node as HTMLTableElement;
+        const rows = Array.from(table.querySelectorAll('tr'));
+        if (rows.length === 0) return '';
+        
+        const result: string[] = [];
+        
+        rows.forEach((row, rowIndex) => {
+          const cells = Array.from(row.querySelectorAll('th, td'));
+          const cellContents = cells.map(cell => {
+            // Get text content, handling nested p tags
+            const text = cell.textContent?.trim() || '';
+            return text.replace(/\|/g, '\\|'); // Escape pipes
+          });
+          
+          result.push('| ' + cellContents.join(' | ') + ' |');
+          
+          // Add separator after header row
+          if (rowIndex === 0) {
+            const separator = cells.map(() => '---').join(' | ');
+            result.push('| ' + separator + ' |');
+          }
+        });
+        
+        return '\n\n' + result.join('\n') + '\n\n';
+      }
+    });
+    
+    // Skip th and td since they're handled by the table rule
+    td.addRule('tableCell', {
+      filter: ['th', 'td'],
+      replacement: function(content) {
+        return content;
+      }
     });
     
     return td;
@@ -615,7 +653,7 @@ export function MarkdownEditor({
             )}
           </>
         ) : (
-          <RawMarkdownEditor
+          <SyntaxHighlightedMarkdown
             content={rawMarkdown}
             onChange={handleRawMarkdownChange}
             placeholder="Write your markdown here..."

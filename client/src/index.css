@@ -3575,3 +3575,275 @@ pre.with-line-numbers code .line::before {
   background: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
+
+
+/* ===== Syntax Highlighted Markdown Editor ===== */
+.syntax-highlighted-editor {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.syntax-highlight-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16px;
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: hidden;
+  color: transparent;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.syntax-textarea {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+  padding: 16px;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--foreground);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  resize: none;
+  outline: none;
+  caret-color: var(--primary);
+  -webkit-text-fill-color: transparent;
+}
+
+.syntax-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px oklch(from var(--primary) l c h / 0.2);
+}
+
+.syntax-textarea::placeholder {
+  color: transparent;
+}
+
+/* Syntax highlighting colors - Dark theme */
+.syntax-highlight-overlay .md-placeholder {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.syntax-highlight-overlay .md-text {
+  color: var(--foreground);
+}
+
+.syntax-highlight-overlay .md-heading {
+  font-weight: 700;
+}
+
+.syntax-highlight-overlay .md-h1 {
+  color: #e06c75;
+  font-size: 1.1em;
+}
+
+.syntax-highlight-overlay .md-h2 {
+  color: #e5c07b;
+  font-size: 1.05em;
+}
+
+.syntax-highlight-overlay .md-h3 {
+  color: #98c379;
+}
+
+.syntax-highlight-overlay .md-h4 {
+  color: #56b6c2;
+}
+
+.syntax-highlight-overlay .md-h5 {
+  color: #61afef;
+}
+
+.syntax-highlight-overlay .md-h6 {
+  color: #c678dd;
+}
+
+.syntax-highlight-overlay .md-bold {
+  color: #e5c07b;
+  font-weight: 700;
+}
+
+.syntax-highlight-overlay .md-italic {
+  color: #c678dd;
+  font-style: italic;
+}
+
+.syntax-highlight-overlay .md-bold-italic {
+  color: #e06c75;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.syntax-highlight-overlay .md-strikethrough {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+.syntax-highlight-overlay .md-code-inline {
+  color: #98c379;
+  background: oklch(from var(--foreground) l c h / 0.1);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
+.syntax-highlight-overlay .md-code-block {
+  color: #abb2bf;
+  background: oklch(from var(--foreground) l c h / 0.05);
+}
+
+.syntax-highlight-overlay .md-code-lang {
+  color: #61afef;
+  font-style: italic;
+}
+
+.syntax-highlight-overlay .md-link {
+  color: #61afef;
+}
+
+.syntax-highlight-overlay .md-image {
+  color: #c678dd;
+}
+
+.syntax-highlight-overlay .md-list-bullet,
+.syntax-highlight-overlay .md-list-number {
+  color: #e5c07b;
+}
+
+.syntax-highlight-overlay .md-task {
+  color: #56b6c2;
+}
+
+.syntax-highlight-overlay .md-task-checked {
+  color: #98c379;
+}
+
+.syntax-highlight-overlay .md-blockquote {
+  color: #5c6370;
+  font-style: italic;
+  border-left: 3px solid #5c6370;
+  padding-left: 8px;
+  margin-left: 0;
+}
+
+.syntax-highlight-overlay .md-hr {
+  color: #5c6370;
+}
+
+.syntax-highlight-overlay .md-table-header {
+  color: #e5c07b;
+  font-weight: 600;
+}
+
+.syntax-highlight-overlay .md-table-separator {
+  color: #5c6370;
+}
+
+.syntax-highlight-overlay .md-table-cell {
+  color: var(--foreground);
+}
+
+/* Light theme overrides */
+:root:not(.dark) .syntax-highlight-overlay .md-h1 {
+  color: #c41a16;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-h2 {
+  color: #c46210;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-h3 {
+  color: #2e7d32;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-h4 {
+  color: #0277bd;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-h5 {
+  color: #1565c0;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-h6 {
+  color: #7b1fa2;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-bold {
+  color: #c46210;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-italic {
+  color: #7b1fa2;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-bold-italic {
+  color: #c41a16;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-code-inline {
+  color: #2e7d32;
+  background: oklch(from var(--foreground) l c h / 0.08);
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-code-block {
+  color: #333;
+  background: oklch(from var(--foreground) l c h / 0.05);
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-code-lang {
+  color: #1565c0;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-link {
+  color: #1565c0;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-image {
+  color: #7b1fa2;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-list-bullet,
+:root:not(.dark) .syntax-highlight-overlay .md-list-number {
+  color: #c46210;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-task {
+  color: #0277bd;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-task-checked {
+  color: #2e7d32;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-blockquote {
+  color: #666;
+  border-left-color: #999;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-hr {
+  color: #999;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-table-header {
+  color: #c46210;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-table-separator {
+  color: #999;
+}
