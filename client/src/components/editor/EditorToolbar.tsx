@@ -530,8 +530,10 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
                   <div className="text-xs text-muted-foreground mb-1">Custom Color</div>
                   <input
                     type="color"
+                    defaultValue="#3b82f6"
                     onChange={(e) => editor.chain().focus().setCellBackground(e.target.value).run()}
-                    className="w-full h-8 rounded cursor-pointer"
+                    className="w-full h-8 rounded cursor-pointer border border-border"
+                    style={{ backgroundColor: 'transparent' }}
                   />
                 </div>
                 <DropdownMenuSeparator />
