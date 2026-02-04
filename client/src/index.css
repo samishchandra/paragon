@@ -2682,7 +2682,10 @@ pre.with-line-numbers code .line::before {
   display: inline-flex;
   align-items: center;
   margin-left: 6px;
-  vertical-align: middle;
+  /* Vertically center-align to the last row of header text */
+  vertical-align: baseline;
+  position: relative;
+  top: -0.1em;
   pointer-events: auto;
   user-select: none;
 }
@@ -2701,11 +2704,16 @@ pre.with-line-numbers code .line::before {
   height: 18px;
   background: transparent;
   border: none;
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
   color: oklch(0.5 0.02 250);
   opacity: 0;
-  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  /* Smooth transitions for all properties including transform */
+  transition: 
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+    background-color 0.15s ease, 
+    color 0.15s ease,
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
   flex-shrink: 0;
 }
@@ -2722,7 +2730,8 @@ pre.with-line-numbers code .line::before {
 .collapsible-heading-chevron svg {
   width: 14px;
   height: 14px;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Smooth rotation animation for expand/collapse */
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   stroke-width: 2.5;
 }
 
@@ -2737,7 +2746,7 @@ pre.with-line-numbers code .line::before {
 
 /* Show expanded chevron on heading hover */
 .collapsible-heading:hover .collapsible-heading-chevron.expanded {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .collapsible-heading-chevron.expanded:hover {
@@ -2747,7 +2756,7 @@ pre.with-line-numbers code .line::before {
 /* Collapsed state - chevron points right, ALWAYS visible */
 .collapsible-heading-chevron.collapsed {
   opacity: 1 !important;
-  color: oklch(0.55 0.05 250);
+  color: oklch(0.6 0.08 220);
 }
 
 .collapsible-heading-chevron.collapsed svg {
@@ -2756,7 +2765,7 @@ pre.with-line-numbers code .line::before {
 
 .collapsible-heading-chevron.collapsed:hover {
   background: oklch(0.25 0.02 250);
-  color: oklch(0.8 0.08 250);
+  color: oklch(0.8 0.1 220);
 }
 
 /* Hidden content when collapsed */
@@ -2811,21 +2820,25 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme adjustments */
 [data-theme="light"] .collapsible-heading-chevron {
-  color: oklch(0.5 0.02 250);
+  color: oklch(0.55 0.02 250);
 }
 
 [data-theme="light"] .collapsible-heading-chevron:hover {
-  background: oklch(0.92 0.01 250);
-  color: oklch(0.3 0.02 250);
+  background: oklch(0.94 0.01 250);
+  color: oklch(0.35 0.02 250);
+}
+
+[data-theme="light"] .collapsible-heading:hover .collapsible-heading-chevron.expanded {
+  opacity: 0.6;
 }
 
 [data-theme="light"] .collapsible-heading-chevron.collapsed {
-  color: oklch(0.45 0.05 250);
+  color: oklch(0.45 0.08 220);
 }
 
 [data-theme="light"] .collapsible-heading-chevron.collapsed:hover {
-  background: oklch(0.92 0.01 250);
-  color: oklch(0.25 0.05 250);
+  background: oklch(0.94 0.01 250);
+  color: oklch(0.35 0.1 220);
 }
 
 /* Ensure editor content doesn't clip chevrons */
