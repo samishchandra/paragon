@@ -135,9 +135,9 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         justify-content: center;
         box-shadow: 0 2px 4px oklch(0 0 0 / 0.2);
       `;
-      // Add diagonal resize SVG icon (se-resize arrows)
+      // Add diagonal resize SVG icon (se-resize arrows) - rotated 90 degrees
       resizeHandle.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(90deg);">
           <polyline points="15 3 21 3 21 9"></polyline>
           <polyline points="9 21 3 21 3 15"></polyline>
           <line x1="21" y1="3" x2="14" y2="10"></line>
