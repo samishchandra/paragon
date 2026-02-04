@@ -2513,35 +2513,35 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme recovery banner */
 [data-theme="light"] .recovery-banner {
-  background: oklch(0.95 0.05 70);
-  border-color: oklch(0.75 0.12 70 / 0.5);
+  background: oklch(0.97 0.02 80);
+  border: 1px solid oklch(0.75 0.12 70);
 }
 
 [data-theme="light"] .recovery-banner-icon {
-  color: oklch(0.55 0.15 70);
+  color: oklch(0.6 0.18 70);
 }
 
 [data-theme="light"] .recovery-banner-text {
-  color: oklch(0.35 0.05 70);
+  color: oklch(0.3 0.02 70);
 }
 
 [data-theme="light"] .recovery-banner-btn {
-  background: oklch(0.55 0.15 70 / 0.15);
-  border-color: oklch(0.55 0.15 70 / 0.4);
-  color: oklch(0.4 0.1 70);
+  background: oklch(0.6 0.15 70);
+  border: 1px solid oklch(0.55 0.15 70);
+  color: white;
 }
 
 [data-theme="light"] .recovery-banner-btn:hover {
-  background: oklch(0.55 0.15 70 / 0.25);
+  background: oklch(0.55 0.15 70);
 }
 
 [data-theme="light"] .recovery-banner-dismiss {
-  color: oklch(0.55 0.1 70 / 0.6);
+  color: oklch(0.45 0.08 70);
 }
 
 [data-theme="light"] .recovery-banner-dismiss:hover {
-  color: oklch(0.55 0.1 70);
-  background: oklch(0.55 0.15 70 / 0.15);
+  color: oklch(0.35 0.1 70);
+  background: oklch(0.9 0.03 70);
 }
 
 /* ============================================
