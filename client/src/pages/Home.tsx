@@ -122,20 +122,71 @@ greet('Developer');</code></pre>
 
 const MODAL_DEMO_CONTENT = `
 <h1>Start Writing Here</h1>
-<p>This is a <strong>focused writing environment</strong>. Try out all the features:</p>
+<p>This is a <strong>focused writing environment</strong> designed for distraction-free writing. The editor supports rich text formatting, tables, images, code blocks, and much more. Try out all the features below!</p>
 
 <h2>Quick Tips</h2>
+<p>Getting started is easy. Here are some helpful shortcuts and features to boost your productivity:</p>
 <ul>
-  <li>Type <code>/</code> to open the command palette</li>
-  <li>Use <code>Ctrl+B</code> for <strong>bold</strong></li>
-  <li>Use <code>Ctrl+I</code> for <em>italic</em></li>
-  <li>Select text to see the floating toolbar</li>
+  <li>Type <code>/</code> to open the command palette for quick actions</li>
+  <li>Use <code>Ctrl+B</code> for <strong>bold</strong> and <code>Ctrl+I</code> for <em>italic</em></li>
+  <li>Select text to see the floating toolbar with formatting options</li>
+  <li>Press <code>Tab</code> to indent list items and <code>Shift+Tab</code> to outdent</li>
 </ul>
 
-<h2>Try These Features</h2>
+<h2>Rich Content Examples</h2>
+
+<h3>Paragraph Text</h3>
+<p>The Manus Markdown Editor is built with <strong>TipTap</strong> and <strong>React</strong>, providing a seamless editing experience. It supports all standard markdown features while offering a <em>WYSIWYG interface</em> that makes writing intuitive and enjoyable.</p>
+<p>Whether you're writing documentation, taking notes, or drafting blog posts, this editor adapts to your workflow. The clean interface keeps you focused on what matters most: <mark>your content</mark>.</p>
+
+<h3>Data Table</h3>
+<p>Tables are fully supported with resizable columns and sortable headers:</p>
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Status</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Rich Text</td>
+      <td>✅ Complete</td>
+      <td>Bold, italic, underline, strikethrough, highlight</td>
+    </tr>
+    <tr>
+      <td>Tables</td>
+      <td>✅ Complete</td>
+      <td>Resizable columns, sortable headers, row drag</td>
+    </tr>
+    <tr>
+      <td>Images</td>
+      <td>✅ Complete</td>
+      <td>Drag to resize, alignment options</td>
+    </tr>
+    <tr>
+      <td>Code Blocks</td>
+      <td>✅ Complete</td>
+      <td>20+ languages with syntax highlighting</td>
+    </tr>
+    <tr>
+      <td>Task Lists</td>
+      <td>✅ Complete</td>
+      <td>Interactive checkboxes with nesting</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Images</h3>
+<p>Images can be inserted and resized by dragging the corners:</p>
+<img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80" alt="Writing workspace with laptop and coffee" width="600" />
+<p><em>A clean workspace inspires great writing. Photo from Unsplash.</em></p>
 
 <h3>Task Lists</h3>
 <ul data-type="taskList">
+  <li data-type="taskItem" data-checked="true">Set up the editor environment</li>
+  <li data-type="taskItem" data-checked="true">Learn the keyboard shortcuts</li>
   <li data-type="taskItem" data-checked="false">Create a new heading</li>
   <li data-type="taskItem" data-checked="false">Add a code block</li>
   <li data-type="taskItem" data-checked="false">Insert a table</li>
@@ -143,17 +194,33 @@ const MODAL_DEMO_CONTENT = `
 </ul>
 
 <h3>Code Block</h3>
-<pre><code class="language-typescript">// Write your code here
-const editor = new MarkdownEditor({
-  theme: 'dark',
-  features: ['all']
-});
+<pre><code class="language-typescript">// Example: Using the Manus Markdown Editor
+import { MarkdownEditor } from '@manus/editor';
 
-editor.start();</code></pre>
+function App() {
+  const [content, setContent] = useState('');
+  
+  return (
+    <MarkdownEditor
+      content={content}
+      onChange={setContent}
+      placeholder="Start writing..."
+      showToolbar={true}
+      showWordCount={true}
+    />
+  );
+}
 
+export default App;</code></pre>
+
+<h3>Callout</h3>
 <blockquote>
-  <p>💡 <strong>Tip:</strong> Press <code>Escape</code> or click outside to close this modal.</p>
+  <p>💡 <strong>Pro Tip:</strong> Press <code>Escape</code> or click outside to close this modal. Your content is automatically saved to local storage, so you won't lose your work!</p>
 </blockquote>
+
+<hr>
+
+<p>Start editing above to see the editor in action. Happy writing! ✨</p>
 `;
 
 const features = [
