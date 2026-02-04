@@ -7,9 +7,6 @@ import {
   Code,
   Link,
   Highlighter,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
   Heading1,
   Heading2,
   Heading3,
@@ -431,55 +428,7 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         <FileCode size={iconSize} />
       </ToolbarButton>
 
-      <Divider />
 
-      {/* Alignment */}
-      <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => {
-          // Check if an image is selected by looking at the node at selection
-          const { selection } = editor.state;
-          const node = editor.state.doc.nodeAt(selection.from);
-          if (node?.type.name === 'resizableImage') {
-            editor.chain().focus().updateAttributes('resizableImage', { align: 'left' }).run();
-          } else {
-            editor.chain().focus().setTextAlign('left').run();
-          }
-        })}
-        isActive={editor.isActive({ textAlign: 'left' }) || editor.isActive('resizableImage', { align: 'left' })}
-        title="Align Left"
-      >
-        <AlignLeft size={iconSize} />
-      </ToolbarButton>
-      <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => {
-          const { selection } = editor.state;
-          const node = editor.state.doc.nodeAt(selection.from);
-          if (node?.type.name === 'resizableImage') {
-            editor.chain().focus().updateAttributes('resizableImage', { align: 'center' }).run();
-          } else {
-            editor.chain().focus().setTextAlign('center').run();
-          }
-        })}
-        isActive={editor.isActive({ textAlign: 'center' }) || editor.isActive('resizableImage', { align: 'center' })}
-        title="Align Center"
-      >
-        <AlignCenter size={iconSize} />
-      </ToolbarButton>
-      <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => {
-          const { selection } = editor.state;
-          const node = editor.state.doc.nodeAt(selection.from);
-          if (node?.type.name === 'resizableImage') {
-            editor.chain().focus().updateAttributes('resizableImage', { align: 'right' }).run();
-          } else {
-            editor.chain().focus().setTextAlign('right').run();
-          }
-        })}
-        isActive={editor.isActive({ textAlign: 'right' }) || editor.isActive('resizableImage', { align: 'right' })}
-        title="Align Right"
-      >
-        <AlignRight size={iconSize} />
-      </ToolbarButton>
     </div>
   );
 }
