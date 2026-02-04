@@ -2707,8 +2707,8 @@ pre.with-line-numbers code .line::before {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  /* Gray icon color */
-  color: oklch(0.55 0 0);
+  /* Grayish icon color - more visible */
+  color: oklch(0.6 0.01 240);
   opacity: 0;
   /* Smooth transitions for all properties */
   transition: 
@@ -2720,9 +2720,9 @@ pre.with-line-numbers code .line::before {
 }
 
 .collapsible-heading-chevron:hover {
-  background: oklch(0.92 0 0);
-  /* Darker gray on hover */
-  color: oklch(0.4 0 0);
+  background: oklch(0.94 0.01 240);
+  /* Darker grayish on hover */
+  color: oklch(0.45 0.02 240);
 }
 
 .collapsible-heading-chevron:focus {
@@ -2758,8 +2758,8 @@ pre.with-line-numbers code .line::before {
 /* Collapsed state - chevron points right, ALWAYS visible */
 .collapsible-heading-chevron.collapsed {
   opacity: 1 !important;
-  /* Gray icon color */
-  color: oklch(0.5 0 0);
+  /* Grayish icon color */
+  color: oklch(0.55 0.01 240);
 }
 
 .collapsible-heading-chevron.collapsed svg {
@@ -2768,8 +2768,8 @@ pre.with-line-numbers code .line::before {
 
 .collapsible-heading-chevron.collapsed:hover {
   /* Show background on hover */
-  background: oklch(0.92 0 0);
-  color: oklch(0.35 0 0);
+  background: oklch(0.94 0.01 240);
+  color: oklch(0.4 0.02 240);
 }
 
 /* Hidden content when collapsed */
@@ -2826,13 +2826,13 @@ pre.with-line-numbers code .line::before {
 [data-theme="light"] .collapsible-heading-chevron {
   /* Transparent background by default, only show on hover */
   background: transparent;
-  /* Gray icon color */
-  color: oklch(0.55 0 0);
+  /* Grayish icon color - more visible */
+  color: oklch(0.6 0.01 240);
 }
 
 [data-theme="light"] .collapsible-heading-chevron:hover {
-  background: oklch(0.92 0 0);
-  color: oklch(0.4 0 0);
+  background: oklch(0.94 0.01 240);
+  color: oklch(0.45 0.02 240);
 }
 
 [data-theme="light"] .collapsible-heading:hover .collapsible-heading-chevron.expanded {
@@ -2840,14 +2840,14 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-theme="light"] .collapsible-heading-chevron.collapsed {
-  /* Gray icon color */
-  color: oklch(0.5 0 0);
+  /* Grayish icon color */
+  color: oklch(0.55 0.01 240);
 }
 
 [data-theme="light"] .collapsible-heading-chevron.collapsed:hover {
   /* Show background on hover */
-  background: oklch(0.92 0 0);
-  color: oklch(0.35 0 0);
+  background: oklch(0.94 0.01 240);
+  color: oklch(0.4 0.02 240);
 }
 
 /* Ensure editor content doesn't clip chevrons */
