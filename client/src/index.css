@@ -3063,3 +3063,192 @@ pre.with-line-numbers code .line::before {
 .editor-content-wrapper {
   position: relative;
 }
+
+
+/* ============================================
+   Image Edit Popover Styles
+   ============================================ */
+
+.image-edit-popover {
+  width: 320px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.2), 0 2px 8px oklch(0 0 0 / 0.1);
+  overflow: hidden;
+  animation: popover-fade-in 0.15s ease-out;
+}
+
+@keyframes popover-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.image-edit-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: oklch(from var(--card) l c h / 0.8);
+}
+
+.image-edit-popover-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.image-edit-popover-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.image-edit-popover-close:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.image-edit-popover-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.image-edit-popover-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.image-edit-popover-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.image-edit-popover-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.image-edit-popover-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px oklch(from var(--primary) l c h / 0.2);
+}
+
+.image-edit-popover-input::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.6;
+}
+
+.image-edit-popover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border);
+  background: oklch(from var(--card) l c h / 0.5);
+}
+
+.image-edit-popover-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.image-edit-popover-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.image-edit-popover-btn-cancel {
+  background: transparent;
+  color: var(--muted-foreground);
+}
+
+.image-edit-popover-btn-cancel:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.image-edit-popover-btn-save {
+  background: var(--primary);
+  color: white;
+}
+
+.image-edit-popover-btn-save:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.image-edit-popover-btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.image-edit-popover-btn-delete {
+  padding: 0.5rem;
+  background: transparent;
+  color: var(--muted-foreground);
+}
+
+.image-edit-popover-btn-delete:hover {
+  background: oklch(0.95 0.03 25);
+  color: var(--destructive);
+}
+
+.dark .image-edit-popover-btn-delete:hover {
+  background: oklch(0.25 0.05 25);
+}
+
+/* Image selected state in editor */
+.ProseMirror .image-resizer.selected {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.ProseMirror .image-resizer img {
+  cursor: pointer;
+}
+
+.ProseMirror .image-resizer img:hover {
+  opacity: 0.95;
+}

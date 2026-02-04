@@ -4,12 +4,14 @@ import { mergeAttributes } from '@tiptap/core';
 export interface ResizableImageOptions {
   HTMLAttributes: Record<string, unknown>;
   allowBase64: boolean;
+  onImageClick?: (attrs: { src: string; alt: string; pos: number; rect: DOMRect }) => void;
 }
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     resizableImage: {
       setImage: (options: { src: string; alt?: string; title?: string; width?: number }) => ReturnType;
+      updateImage: (options: { src?: string; alt?: string; width?: number }) => ReturnType;
     };
   }
 }
@@ -22,6 +24,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       allowBase64: true,
+      onImageClick: undefined,
     };
   },
 
@@ -66,6 +69,17 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           'data-align': attributes.align,
         }),
       },
+    };
+  },
+
+  addCommands() {
+    return {
+      ...this.parent?.(),
+      updateImage:
+        (options) =>
+        ({ commands }) => {
+          return commands.updateAttributes('resizableImage', options);
+        },
     };
   },
 
@@ -117,16 +131,55 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         opacity: 0;
         transition: opacity 0.15s ease;
       `;
+
+      // Edit hint overlay
+      const editHint = document.createElement('div');
+      editHint.classList.add('image-edit-hint');
+      editHint.style.cssText = `
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 500;
+        color: white;
+        background: oklch(0 0 0 / 0.6);
+        border-radius: 4px;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        pointer-events: none;
+      `;
+      editHint.textContent = 'Double-click to edit';
       
       container.appendChild(img);
       container.appendChild(resizeHandle);
+      container.appendChild(editHint);
       
-      // Show handle on hover
+      // Show handle and hint on hover
       container.addEventListener('mouseenter', () => {
         resizeHandle.style.opacity = '1';
+        editHint.style.opacity = '1';
       });
       container.addEventListener('mouseleave', () => {
         resizeHandle.style.opacity = '0';
+        editHint.style.opacity = '0';
+      });
+
+      // Double-click to edit image
+      img.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const pos = typeof getPos === 'function' ? getPos() : null;
+        if (pos !== null && pos !== undefined && this.options.onImageClick) {
+          const rect = img.getBoundingClientRect();
+          this.options.onImageClick({
+            src: node.attrs.src,
+            alt: node.attrs.alt || '',
+            pos,
+            rect,
+          });
+        }
       });
       
       // Resize logic

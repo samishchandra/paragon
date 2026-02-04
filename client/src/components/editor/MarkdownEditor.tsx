@@ -39,6 +39,7 @@ import { SearchHighlight } from './extensions/SearchHighlight';
 import { TabIndent } from './extensions/TabIndent';
 import { ImageUpload } from './extensions/ImageUpload';
 import { ImageDropZone } from './ImageDropZone';
+import { ImageEditPopover } from './ImageEditPopover';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -208,6 +209,15 @@ export function MarkdownEditor({
         HTMLAttributes: {
           class: 'editor-image',
         },
+        onImageClick: (attrs) => {
+          setImageEditState({
+            isOpen: true,
+            src: attrs.src,
+            alt: attrs.alt,
+            pos: attrs.pos,
+            position: { x: attrs.rect.left + attrs.rect.width / 2, y: attrs.rect.bottom },
+          });
+        },
       }),
     ];
 
@@ -274,6 +284,15 @@ export function MarkdownEditor({
 
   // State for link popover
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
+  
+  // State for image edit popover
+  const [imageEditState, setImageEditState] = useState<{
+    isOpen: boolean;
+    src: string;
+    alt: string;
+    pos: number;
+    position: { x: number; y: number };
+  } | null>(null);
   
   // State for find/replace panel
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
@@ -468,6 +487,29 @@ export function MarkdownEditor({
           <LinkHoverTooltip 
             editor={editor} 
             onEditLink={() => setIsLinkPopoverOpen(true)}
+          />
+        )}
+        
+        {/* Image edit popover */}
+        {imageEditState?.isOpen && (
+          <ImageEditPopover
+            src={imageEditState.src}
+            alt={imageEditState.alt}
+            position={imageEditState.position}
+            onSave={(newSrc, newAlt) => {
+              // Update the image at the stored position
+              editor.chain().focus().setNodeSelection(imageEditState.pos).updateAttributes('resizableImage', {
+                src: newSrc,
+                alt: newAlt,
+              }).run();
+              setImageEditState(null);
+            }}
+            onDelete={() => {
+              // Delete the image at the stored position
+              editor.chain().focus().setNodeSelection(imageEditState.pos).deleteSelection().run();
+              setImageEditState(null);
+            }}
+            onClose={() => setImageEditState(null)}
           />
         )}
       </div>
