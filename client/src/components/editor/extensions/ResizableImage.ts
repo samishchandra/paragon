@@ -11,7 +11,8 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     resizableImage: {
       setImage: (options: { src: string; alt?: string; title?: string; width?: number }) => ReturnType;
-      updateImage: (options: { src?: string; alt?: string; width?: number }) => ReturnType;
+      updateImage: (options: { src?: string; alt?: string; width?: number; align?: string }) => ReturnType;
+      setImageAlign: (align: 'left' | 'center' | 'right') => ReturnType;
     };
   }
 }
@@ -72,6 +73,17 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
     };
   },
 
+  parseHTML() {
+    return [
+      {
+        tag: 'img[src]',
+      },
+      {
+        tag: 'figure.image-resizer img[src]',
+      },
+    ];
+  },
+
   addCommands() {
     return {
       ...this.parent?.(),
@@ -79,6 +91,11 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         (options) =>
         ({ commands }) => {
           return commands.updateAttributes('resizableImage', options);
+        },
+      setImageAlign:
+        (align) =>
+        ({ commands }) => {
+          return commands.updateAttributes('resizableImage', { align });
         },
     };
   },
@@ -108,6 +125,17 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
     return ({ node, editor, getPos }) => {
       const container = document.createElement('figure');
       container.classList.add('image-resizer');
+      
+      // Apply alignment style
+      const applyAlignment = (align: string) => {
+        const alignStyle = {
+          left: 'margin-right: auto; margin-left: 0;',
+          center: 'margin-left: auto; margin-right: auto;',
+          right: 'margin-left: auto; margin-right: 0;',
+        }[align] || 'margin-left: auto; margin-right: auto;';
+        container.style.cssText = `display: block; position: relative; width: fit-content; ${alignStyle}`;
+      };
+      applyAlignment(node.attrs.align || 'center');
       
       const img = document.createElement('img');
       img.src = node.attrs.src;
@@ -239,6 +267,8 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           if (updatedNode.attrs.width) {
             img.style.width = `${updatedNode.attrs.width}px`;
           }
+          // Update alignment
+          applyAlignment(updatedNode.attrs.align || 'center');
           return true;
         },
         destroy: () => {

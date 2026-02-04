@@ -395,22 +395,47 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
       {/* Alignment - Visible on large screens, dropdown on smaller */}
       <div className="hidden lg:flex items-center gap-0.5">
         <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          isActive={editor.isActive({ textAlign: 'left' })}
+          onClick={() => {
+            // Check if an image is selected by looking at the node at selection
+            const { selection } = editor.state;
+            const node = editor.state.doc.nodeAt(selection.from);
+            if (node?.type.name === 'resizableImage') {
+              editor.chain().focus().updateAttributes('resizableImage', { align: 'left' }).run();
+            } else {
+              editor.chain().focus().setTextAlign('left').run();
+            }
+          }}
+          isActive={editor.isActive({ textAlign: 'left' }) || editor.isActive('resizableImage', { align: 'left' })}
           tooltip="Align Left"
         >
           <AlignLeft size={16} />
         </ToolbarButton>
         <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          isActive={editor.isActive({ textAlign: 'center' })}
+          onClick={() => {
+            const { selection } = editor.state;
+            const node = editor.state.doc.nodeAt(selection.from);
+            if (node?.type.name === 'resizableImage') {
+              editor.chain().focus().updateAttributes('resizableImage', { align: 'center' }).run();
+            } else {
+              editor.chain().focus().setTextAlign('center').run();
+            }
+          }}
+          isActive={editor.isActive({ textAlign: 'center' }) || editor.isActive('resizableImage', { align: 'center' })}
           tooltip="Align Center"
         >
           <AlignCenter size={16} />
         </ToolbarButton>
         <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          isActive={editor.isActive({ textAlign: 'right' })}
+          onClick={() => {
+            const { selection } = editor.state;
+            const node = editor.state.doc.nodeAt(selection.from);
+            if (node?.type.name === 'resizableImage') {
+              editor.chain().focus().updateAttributes('resizableImage', { align: 'right' }).run();
+            } else {
+              editor.chain().focus().setTextAlign('right').run();
+            }
+          }}
+          isActive={editor.isActive({ textAlign: 'right' }) || editor.isActive('resizableImage', { align: 'right' })}
           tooltip="Align Right"
         >
           <AlignRight size={16} />
@@ -432,13 +457,37 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('left').run()}>
+          <DropdownMenuItem onClick={() => {
+            const { selection } = editor.state;
+            const node = editor.state.doc.nodeAt(selection.from);
+            if (node?.type.name === 'resizableImage') {
+              editor.chain().focus().updateAttributes('resizableImage', { align: 'left' }).run();
+            } else {
+              editor.chain().focus().setTextAlign('left').run();
+            }
+          }}>
             <AlignLeft size={16} className="mr-2" /> Align Left
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('center').run()}>
+          <DropdownMenuItem onClick={() => {
+            const { selection } = editor.state;
+            const node = editor.state.doc.nodeAt(selection.from);
+            if (node?.type.name === 'resizableImage') {
+              editor.chain().focus().updateAttributes('resizableImage', { align: 'center' }).run();
+            } else {
+              editor.chain().focus().setTextAlign('center').run();
+            }
+          }}>
             <AlignCenter size={16} className="mr-2" /> Align Center
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('right').run()}>
+          <DropdownMenuItem onClick={() => {
+            const { selection } = editor.state;
+            const node = editor.state.doc.nodeAt(selection.from);
+            if (node?.type.name === 'resizableImage') {
+              editor.chain().focus().updateAttributes('resizableImage', { align: 'right' }).run();
+            } else {
+              editor.chain().focus().setTextAlign('right').run();
+            }
+          }}>
             <AlignRight size={16} className="mr-2" /> Align Right
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('justify').run()}>
