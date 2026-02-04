@@ -219,8 +219,8 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
                 );
                 
                 // Add widget decoration for the chevron button
-                // Position it inside the heading (pos + 1) so it's positioned relative to the heading
-                const chevronWidget = Decoration.widget(pos + 1, () => {
+                // Position it at the end of the heading text (pos + node.nodeSize - 1) so it appears after the text
+                const chevronWidget = Decoration.widget(pos + node.nodeSize - 1, () => {
                   const wrapper = document.createElement('span');
                   wrapper.className = 'collapsible-heading-chevron-wrapper';
                   wrapper.setAttribute('contenteditable', 'false');
@@ -254,7 +254,7 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
                   
                   wrapper.appendChild(button);
                   return wrapper;
-                }, { side: -1, key: `chevron-${headingId}` });
+                }, { side: 1, key: `chevron-${headingId}` });
                 
                 decorations.push(chevronWidget);
               } else if (node.isBlock && isHidden(pos)) {

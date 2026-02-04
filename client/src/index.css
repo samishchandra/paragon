@@ -2121,7 +2121,6 @@ pre.with-line-numbers code .line::before {
   overflow-x: visible;
   position: relative;
   min-height: 0;
-  padding-left: 1rem;
   
   /* Performance optimizations for large documents */
   scrollbar-gutter: stable; /* Prevent layout shift from scrollbar */
@@ -2144,7 +2143,6 @@ pre.with-line-numbers code .line::before {
 .editor-content .ProseMirror {
   min-height: 100%;
   padding: 2rem;
-  padding-left: 3rem; /* Extra space for collapsible heading chevrons in left gutter */
 }
 
 .editor-footer {
@@ -2612,16 +2610,12 @@ pre.with-line-numbers code .line::before {
  * - Chevrons are always visible for collapsed headings
  */
 
-/* Chevron wrapper - positioned absolutely in the left margin */
+/* Chevron wrapper - positioned inline after the header text */
 .collapsible-heading-chevron-wrapper {
-  position: absolute;
-  left: -28px;
-  top: 0;
-  width: 24px;
-  height: 100%;
-  display: flex;
-  align-items: flex-start;
-  padding-top: 0.15em;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  vertical-align: middle;
   pointer-events: auto;
   user-select: none;
 }
@@ -2665,9 +2659,9 @@ pre.with-line-numbers code .line::before {
   stroke-width: 2.5;
 }
 
-/* Expanded state - chevron points down, slightly visible by default, more visible on hover */
+/* Expanded state - chevron points down, hidden by default, visible on hover */
 .collapsible-heading-chevron.expanded {
-  opacity: 0.3;
+  opacity: 0;
 }
 
 .collapsible-heading-chevron.expanded svg {
@@ -2676,7 +2670,7 @@ pre.with-line-numbers code .line::before {
 
 /* Show expanded chevron on heading hover */
 .collapsible-heading:hover .collapsible-heading-chevron.expanded {
-  opacity: 0.8;
+  opacity: 0.6;
 }
 
 .collapsible-heading-chevron.expanded:hover {
@@ -2703,11 +2697,7 @@ pre.with-line-numbers code .line::before {
   display: none !important;
 }
 
-/* Adjust chevron wrapper position for different heading sizes */
-.ProseMirror h1.collapsible-heading .collapsible-heading-chevron-wrapper {
-  padding-top: 0.25em;
-}
-
+/* Adjust chevron size for different heading sizes */
 .ProseMirror h1.collapsible-heading .collapsible-heading-chevron {
   width: 20px;
   height: 20px;
@@ -2716,10 +2706,6 @@ pre.with-line-numbers code .line::before {
 .ProseMirror h1.collapsible-heading .collapsible-heading-chevron svg {
   width: 16px;
   height: 16px;
-}
-
-.ProseMirror h2.collapsible-heading .collapsible-heading-chevron-wrapper {
-  padding-top: 0.2em;
 }
 
 .ProseMirror h2.collapsible-heading .collapsible-heading-chevron {
@@ -2732,10 +2718,6 @@ pre.with-line-numbers code .line::before {
   height: 14px;
 }
 
-.ProseMirror h3.collapsible-heading .collapsible-heading-chevron-wrapper {
-  padding-top: 0.15em;
-}
-
 .ProseMirror h3.collapsible-heading .collapsible-heading-chevron {
   width: 16px;
   height: 16px;
@@ -2744,12 +2726,6 @@ pre.with-line-numbers code .line::before {
 .ProseMirror h3.collapsible-heading .collapsible-heading-chevron svg {
   width: 12px;
   height: 12px;
-}
-
-.ProseMirror h4.collapsible-heading .collapsible-heading-chevron-wrapper,
-.ProseMirror h5.collapsible-heading .collapsible-heading-chevron-wrapper,
-.ProseMirror h6.collapsible-heading .collapsible-heading-chevron-wrapper {
-  padding-top: 0.1em;
 }
 
 .ProseMirror h4.collapsible-heading .collapsible-heading-chevron,
