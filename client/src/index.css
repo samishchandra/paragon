@@ -1144,6 +1144,12 @@
   margin: 1rem 0;
   border-radius: 6px;
   overflow: visible;
+  border: 1px solid oklch(0.92 0.01 250);
+  background: oklch(0.98 0.005 250);
+}
+
+/* Dark theme code block */
+.dark .code-block-wrapper {
   border: 1px solid var(--border);
   background: oklch(0.15 0.01 250);
 }
@@ -1182,10 +1188,14 @@
 
 .code-block-language-label {
   font-size: 0.8rem;
-  color: var(--muted-foreground);
+  color: oklch(0.45 0.02 250);
   pointer-events: none;
   font-family: var(--font-sans);
   white-space: nowrap;
+}
+
+.dark .code-block-language-label {
+  color: var(--muted-foreground);
 }
 
 .code-block-language-select {
@@ -1199,6 +1209,10 @@
 }
 
 .code-block-language-wrapper:hover .code-block-language-label {
+  color: oklch(0.25 0.02 250);
+}
+
+.dark .code-block-language-wrapper:hover .code-block-language-label {
   color: var(--foreground);
 }
 
@@ -1217,13 +1231,23 @@
   border-radius: 4px;
   background: transparent;
   border: 1px solid transparent;
-  color: var(--muted-foreground);
+  color: oklch(0.45 0.02 250);
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 }
 
+.dark .code-block-copy-btn {
+  color: var(--muted-foreground);
+}
+
 .code-block-copy-btn:hover {
+  background: oklch(0.92 0.005 250);
+  border-color: oklch(0.85 0.01 250);
+  color: oklch(0.25 0.02 250);
+}
+
+.dark .code-block-copy-btn:hover {
   background: var(--secondary);
   border-color: var(--border);
   color: var(--foreground);
@@ -1249,8 +1273,12 @@
   font-family: var(--font-mono);
   font-size: 0.875rem;
   line-height: 1.6;
-  color: var(--foreground);
+  color: oklch(0.25 0.02 250);
   background: transparent;
+}
+
+.dark .code-block-pre code {
+  color: var(--foreground);
 }
 
 /* Legacy styles for backwards compatibility */
@@ -1271,16 +1299,16 @@ pre.with-line-numbers code .line::before {
   user-select: none;
 }
 
-/* Syntax highlighting - Atom One Dark */
+/* Syntax highlighting - Light theme (default) */
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-built_in {
-  color: var(--syntax-keyword);
+  color: oklch(0.5 0.2 320);
 }
 
 .hljs-name,
 .hljs-tag {
-  color: var(--syntax-variable);
+  color: oklch(0.5 0.2 320);
 }
 
 .hljs-string,
@@ -1291,11 +1319,11 @@ pre.with-line-numbers code .line::before {
 .hljs-template-tag,
 .hljs-template-variable,
 .hljs-addition {
-  color: var(--syntax-string);
+  color: oklch(0.45 0.15 160);
 }
 
 .hljs-type {
-  color: var(--syntax-type);
+  color: oklch(0.45 0.15 160);
 }
 
 .hljs-number,
@@ -1304,27 +1332,84 @@ pre.with-line-numbers code .line::before {
 .hljs-link,
 .hljs-meta,
 .hljs-selector-id {
-  color: var(--syntax-number);
+  color: oklch(0.5 0.15 70);
 }
 
 .hljs-title.function_,
 .hljs-function {
-  color: var(--syntax-function);
+  color: oklch(0.5 0.18 280);
 }
 
 .hljs-comment,
 .hljs-quote,
 .hljs-deletion {
-  color: var(--syntax-comment);
+  color: oklch(0.55 0.02 250);
   font-style: italic;
 }
 
 .hljs-variable,
 .hljs-attr {
-  color: var(--syntax-variable);
+  color: oklch(0.45 0.12 220);
 }
 
 .hljs-operator {
+  color: oklch(0.4 0.05 250);
+}
+
+/* Syntax highlighting - Dark theme */
+.dark .hljs-keyword,
+.dark .hljs-selector-tag,
+.dark .hljs-built_in {
+  color: var(--syntax-keyword);
+}
+
+.dark .hljs-name,
+.dark .hljs-tag {
+  color: var(--syntax-variable);
+}
+
+.dark .hljs-string,
+.dark .hljs-title,
+.dark .hljs-section,
+.dark .hljs-attribute,
+.dark .hljs-literal,
+.dark .hljs-template-tag,
+.dark .hljs-template-variable,
+.dark .hljs-addition {
+  color: var(--syntax-string);
+}
+
+.dark .hljs-type {
+  color: var(--syntax-type);
+}
+
+.dark .hljs-number,
+.dark .hljs-symbol,
+.dark .hljs-bullet,
+.dark .hljs-link,
+.dark .hljs-meta,
+.dark .hljs-selector-id {
+  color: var(--syntax-number);
+}
+
+.dark .hljs-title.function_,
+.dark .hljs-function {
+  color: var(--syntax-function);
+}
+
+.dark .hljs-comment,
+.dark .hljs-quote,
+.dark .hljs-deletion {
+  color: var(--syntax-comment);
+  font-style: italic;
+}
+
+.dark .hljs-variable,
+.dark .hljs-attr {
+  color: var(--syntax-variable);
+}
+
+.dark .hljs-operator {
   color: var(--syntax-operator);
 }
 
