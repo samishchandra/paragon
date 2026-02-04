@@ -242,11 +242,25 @@ export function useAutoSave(
     try {
       const content = localStorage.getItem(storageKey);
       if (content && editor && !editor.isDestroyed) {
-        editor.commands.setContent(content);
-        lastContentRef.current = content;
+        // Use requestAnimationFrame to prevent UI blocking
+        // and allow the browser to update before heavy operation
         setState(prev => ({ ...prev, hasRecoverableContent: false }));
-        localStorage.removeItem(storageKey + RECOVERY_DISMISSED_KEY_SUFFIX);
-        onRecover?.(content);
+        
+        // Use setTimeout to defer the heavy setContent operation
+        // This prevents the UI from hanging
+        setTimeout(() => {
+          if (editor && !editor.isDestroyed) {
+            try {
+              editor.commands.setContent(content);
+              lastContentRef.current = content;
+              localStorage.removeItem(storageKey + RECOVERY_DISMISSED_KEY_SUFFIX);
+              onRecover?.(content);
+            } catch (err) {
+              console.warn('useAutoSave: Error setting content during recovery', err);
+            }
+          }
+        }, 0);
+        
         return content;
       }
       return null;
