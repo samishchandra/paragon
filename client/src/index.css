@@ -142,6 +142,15 @@
   --checkbox-checked: var(--primary);
   --checkbox-checked-foreground: var(--primary-foreground);
   
+  /* Table colors - Light mode */
+  --table-header-bg: #f0f4f8;
+  --table-header-text: #1a202c;
+  --table-cell-bg: #ffffff;
+  --table-cell-text: #333333;
+  --table-row-odd: #ffffff;
+  --table-row-even: #f8fafc;
+  --table-row-hover: #edf2f7;
+  
   /* Callout colors */
   --callout-info: #2e80f2;
   --callout-warning: #e5b567;
@@ -227,6 +236,15 @@
   /* Task list checkbox */
   --checkbox-checked: #2e80f2;
   --checkbox-checked-foreground: #ffffff;
+  
+  /* Table colors - Dark mode */
+  --table-header-bg: #1e2430;
+  --table-header-text: #e2e8f0;
+  --table-cell-bg: #282c34;
+  --table-cell-text: #dadada;
+  --table-row-odd: #282c34;
+  --table-row-even: #2d323c;
+  --table-row-hover: #353b47;
   
   /* Callout colors - dark mode */
   --callout-info: #2e80f2;
@@ -722,9 +740,9 @@
   th,
   td[data-header="true"],
   .table-header-cell {
-    background: oklch(0.18 0.02 220);
+    background: var(--table-header-bg, oklch(0.18 0.02 220));
     font-weight: 600;
-    color: oklch(0.9 0.01 220);
+    color: var(--table-header-text, oklch(0.9 0.01 220));
     font-size: 0.8125rem;
     text-transform: none;
     letter-spacing: 0;
@@ -733,37 +751,37 @@
   /* First row as header (default behavior) */
   thead th,
   tr:first-child th {
-    background: oklch(0.18 0.02 220);
+    background: var(--table-header-bg, oklch(0.18 0.02 220));
     font-weight: 600;
-    color: oklch(0.9 0.01 220);
+    color: var(--table-header-text, oklch(0.9 0.01 220));
     border-bottom: 2px solid var(--primary);
   }
   
   /* First column as header */
   td:first-child[data-column-header="true"],
   .column-header {
-    background: oklch(0.16 0.015 220);
+    background: var(--table-header-bg, oklch(0.16 0.015 220));
     font-weight: 600;
-    color: oklch(0.9 0.01 220);
+    color: var(--table-header-text, oklch(0.9 0.01 220));
   }
   
   td {
-    background: var(--card);
-    color: var(--foreground);
+    background: var(--table-cell-bg, var(--card));
+    color: var(--table-cell-text, var(--foreground));
   }
   
   /* Alternating row colors for better readability */
   tbody tr:nth-child(odd) td {
-    background: var(--card);
+    background: var(--table-row-odd, var(--card));
   }
   
   tbody tr:nth-child(even) td {
-    background: oklch(0.22 0.01 220);
+    background: var(--table-row-even, oklch(0.22 0.01 220));
   }
   
   /* Subtle hover effect */
   tbody tr:hover td:not([data-column-header="true"]):not(.column-header) {
-    background: oklch(0.25 0.02 220);
+    background: var(--table-row-hover, oklch(0.25 0.02 220));
   }
   
   /* Selected cells */
@@ -2461,38 +2479,47 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme table */
 [data-theme="light"] .tiptap-editor table {
-  border-color: oklch(0.85 0.01 250);
+  border-color: #e2e8f0;
 }
 
-[data-theme="light"] .tiptap-editor th {
-  background: oklch(0.92 0.01 220);
-  border-color: oklch(0.85 0.01 250);
-  color: oklch(0.2 0.02 250);
+[data-theme="light"] .tiptap-editor th,
+[data-theme="light"] .tiptap-editor td[data-header="true"],
+[data-theme="light"] .tiptap-editor .table-header-cell {
+  background: var(--table-header-bg) !important;
+  border-color: #e2e8f0;
+  color: var(--table-header-text) !important;
   font-weight: 600;
 }
 
+[data-theme="light"] .tiptap-editor thead th,
+[data-theme="light"] .tiptap-editor tr:first-child th {
+  background: var(--table-header-bg) !important;
+  color: var(--table-header-text) !important;
+  border-bottom: 2px solid var(--primary);
+}
+
 [data-theme="light"] .tiptap-editor td {
-  border-color: oklch(0.85 0.01 250);
-  background: oklch(1 0 0);
-  color: oklch(0.2 0.02 250);
+  border-color: #e2e8f0;
+  background: var(--table-cell-bg) !important;
+  color: var(--table-cell-text) !important;
 }
 
 /* Light theme alternating rows */
 [data-theme="light"] .tiptap-editor tbody tr:nth-child(odd) td {
-  background: oklch(1 0 0);
+  background: var(--table-row-odd) !important;
 }
 
 [data-theme="light"] .tiptap-editor tbody tr:nth-child(even) td {
-  background: oklch(0.97 0.005 250);
+  background: var(--table-row-even) !important;
 }
 
 [data-theme="light"] .tiptap-editor tbody tr:hover td {
-  background: oklch(0.94 0.02 220);
+  background: var(--table-row-hover) !important;
 }
 
 [data-theme="light"] .tiptap-editor th.sortable-header:hover,
 [data-theme="light"] .tiptap-editor th[data-sortable="true"]:hover {
-  background: oklch(0.88 0.02 220);
+  background: #e2e8f0 !important;
 }
 
 /* Light theme callouts */
