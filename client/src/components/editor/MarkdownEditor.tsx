@@ -40,6 +40,10 @@ import { TabIndent } from './extensions/TabIndent';
 import { ImageUpload } from './extensions/ImageUpload';
 import { ImageDropZone } from './ImageDropZone';
 import { ImageEditPopover } from './ImageEditPopover';
+import { RawMarkdownEditor } from './RawMarkdownEditor';
+import { FileText, Eye } from 'lucide-react';
+import TurndownService from 'turndown';
+import { marked } from 'marked';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -97,6 +101,10 @@ export interface MarkdownEditorProps {
   onImageUploadComplete?: () => void;
   /** Callback when image upload fails */
   onImageUploadError?: (error: string) => void;
+  /** Show mode toggle to switch between WYSIWYG and raw markdown (default: true) */
+  showModeToggle?: boolean;
+  /** Callback when raw markdown content changes */
+  onMarkdownChange?: (markdown: string) => void;
 }
 
 export function MarkdownEditor({
@@ -118,9 +126,17 @@ export function MarkdownEditor({
   onImageUploadStart,
   onImageUploadComplete,
   onImageUploadError,
+  showModeToggle = true,
+  onMarkdownChange,
 }: MarkdownEditorProps) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
+  
+  // Editor mode: 'wysiwyg' or 'markdown'
+  const [editorMode, setEditorMode] = useState<'wysiwyg' | 'markdown'>('wysiwyg');
+  
+  // Raw markdown content for markdown mode
+  const [rawMarkdown, setRawMarkdown] = useState('');
   
   // Ref for the editor content wrapper (for drag handle overlay)
   const editorContentRef = useRef<HTMLDivElement>(null);
@@ -305,6 +321,66 @@ export function MarkdownEditor({
     enabled: autoSave,
   });
 
+  // Create TurndownService for HTML to Markdown conversion
+  const turndownService = useMemo(() => {
+    const td = new TurndownService({
+      headingStyle: 'atx',
+      codeBlockStyle: 'fenced',
+      bulletListMarker: '-',
+      emDelimiter: '*',
+      strongDelimiter: '**',
+    });
+    
+    // Add custom rules for better markdown output
+    td.addRule('strikethrough', {
+      filter: ['del', 's'] as const,
+      replacement: (content) => `~~${content}~~`,
+    });
+    
+    td.addRule('highlight', {
+      filter: (node) => node.nodeName === 'MARK',
+      replacement: (content) => `==${content}==`,
+    });
+    
+    td.addRule('taskListItem', {
+      filter: (node) => {
+        return node.nodeName === 'LI' && 
+               node.getAttribute('data-type') === 'taskItem';
+      },
+      replacement: (content, node) => {
+        const checkbox = (node as HTMLElement).querySelector('input[type="checkbox"]');
+        const checked = checkbox?.hasAttribute('checked') || (checkbox as HTMLInputElement)?.checked;
+        return `- [${checked ? 'x' : ' '}] ${content.trim()}\n`;
+      },
+    });
+    
+    return td;
+  }, []);
+
+  // Handle mode switching
+  const handleModeSwitch = useCallback((newMode: 'wysiwyg' | 'markdown') => {
+    if (!editor) return;
+    
+    if (newMode === 'markdown' && editorMode === 'wysiwyg') {
+      // Convert HTML to Markdown
+      const html = editor.getHTML();
+      const markdown = turndownService.turndown(html);
+      setRawMarkdown(markdown);
+    } else if (newMode === 'wysiwyg' && editorMode === 'markdown') {
+      // Convert Markdown back to HTML and set in editor using marked
+      const html = marked.parse(rawMarkdown, { async: false }) as string;
+      editor.commands.setContent(html);
+    }
+    
+    setEditorMode(newMode);
+  }, [editor, editorMode, rawMarkdown, turndownService]);
+
+  // Handle raw markdown changes
+  const handleRawMarkdownChange = useCallback((markdown: string) => {
+    setRawMarkdown(markdown);
+    onMarkdownChange?.(markdown);
+  }, [onMarkdownChange]);
+
   // Handle keyboard shortcuts for markdown auto-detection
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
@@ -442,12 +518,35 @@ export function MarkdownEditor({
         />
       )}
       
-      {/* Top toolbar */}
+      {/* Top toolbar with mode toggle */}
       {showToolbar && (
-        <EditorToolbar 
-          editor={editor} 
-          onOpenLinkPopover={() => setIsLinkPopoverOpen(true)}
-        />
+        <div className="flex items-center border-b border-border bg-card/50">
+          <EditorToolbar 
+            editor={editor} 
+            onOpenLinkPopover={() => setIsLinkPopoverOpen(true)}
+            className="flex-1 border-b-0"
+          />
+          {showModeToggle && (
+            <div className="editor-mode-toggle mr-2 sm:mr-3">
+              <button
+                onClick={() => handleModeSwitch('wysiwyg')}
+                className={`editor-mode-toggle-btn ${editorMode === 'wysiwyg' ? 'active' : ''}`}
+                title="Visual Editor"
+              >
+                <Eye />
+                <span className="hidden sm:inline">Visual</span>
+              </button>
+              <button
+                onClick={() => handleModeSwitch('markdown')}
+                className={`editor-mode-toggle-btn ${editorMode === 'markdown' ? 'active' : ''}`}
+                title="Raw Markdown"
+              >
+                <FileText />
+                <span className="hidden sm:inline">Markdown</span>
+              </button>
+            </div>
+          )}
+        </div>
       )}
       
       {/* Find and replace panel (desktop only) */}
@@ -462,54 +561,66 @@ export function MarkdownEditor({
       
       {/* Main editor area */}
       <div className="editor-content-wrapper" ref={editorContentRef}>
-        <EditorContent editor={editor} className="editor-content" />
-        
-        {/* Image drop zone overlay */}
-        <ImageDropZone containerRef={editorContentRef} enabled={editable} />
-        
-        {/* Drag handle overlay removed - drag and reorder functionality disabled */}
-        
-        {/* Floating toolbar on text selection (desktop only) */}
-        {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} />}
-        
-        {/* Slash commands */}
-        <SlashCommands editor={editor} />
-        
-        {/* Link popover */}
-        <LinkPopover
-          editor={editor}
-          isOpen={isLinkPopoverOpen}
-          onClose={() => setIsLinkPopoverOpen(false)}
-        />
-        
-        {/* Link hover tooltip (desktop only) */}
-        {!isMobile && (
-          <LinkHoverTooltip 
-            editor={editor} 
-            onEditLink={() => setIsLinkPopoverOpen(true)}
-          />
-        )}
-        
-        {/* Image edit popover */}
-        {imageEditState?.isOpen && (
-          <ImageEditPopover
-            src={imageEditState.src}
-            alt={imageEditState.alt}
-            position={imageEditState.position}
-            onSave={(newSrc, newAlt) => {
-              // Update the image at the stored position
-              editor.chain().focus().setNodeSelection(imageEditState.pos).updateAttributes('resizableImage', {
-                src: newSrc,
-                alt: newAlt,
-              }).run();
-              setImageEditState(null);
-            }}
-            onDelete={() => {
-              // Delete the image at the stored position
-              editor.chain().focus().setNodeSelection(imageEditState.pos).deleteSelection().run();
-              setImageEditState(null);
-            }}
-            onClose={() => setImageEditState(null)}
+        {editorMode === 'wysiwyg' ? (
+          <>
+            <EditorContent editor={editor} className="editor-content" />
+            
+            {/* Image drop zone overlay */}
+            <ImageDropZone containerRef={editorContentRef} enabled={editable} />
+            
+            {/* Drag handle overlay removed - drag and reorder functionality disabled */}
+            
+            {/* Floating toolbar on text selection (desktop only) */}
+            {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} />}
+            
+            {/* Slash commands */}
+            <SlashCommands editor={editor} />
+            
+            {/* Link popover */}
+            <LinkPopover
+              editor={editor}
+              isOpen={isLinkPopoverOpen}
+              onClose={() => setIsLinkPopoverOpen(false)}
+            />
+            
+            {/* Link hover tooltip (desktop only) */}
+            {!isMobile && (
+              <LinkHoverTooltip 
+                editor={editor} 
+                onEditLink={() => setIsLinkPopoverOpen(true)}
+              />
+            )}
+            
+            {/* Image edit popover */}
+            {imageEditState?.isOpen && (
+              <ImageEditPopover
+                src={imageEditState.src}
+                alt={imageEditState.alt}
+                position={imageEditState.position}
+                onSave={(newSrc, newAlt) => {
+                  // Update the image at the stored position
+                  editor.chain().focus().setNodeSelection(imageEditState.pos).updateAttributes('resizableImage', {
+                    src: newSrc,
+                    alt: newAlt,
+                  }).run();
+                  setImageEditState(null);
+                }}
+                onDelete={() => {
+                  // Delete the image at the stored position
+                  editor.chain().focus().setNodeSelection(imageEditState.pos).deleteSelection().run();
+                  setImageEditState(null);
+                }}
+                onClose={() => setImageEditState(null)}
+              />
+            )}
+          </>
+        ) : (
+          <RawMarkdownEditor
+            content={rawMarkdown}
+            onChange={handleRawMarkdownChange}
+            placeholder="Write your markdown here..."
+            editable={editable}
+            autofocus
           />
         )}
       </div>
