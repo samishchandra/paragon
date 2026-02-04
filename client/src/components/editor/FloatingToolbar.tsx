@@ -121,8 +121,13 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         const { selection } = editor.state;
         const { empty, from, to } = selection;
 
-        // Hide if selection is empty or in code block
-        if (empty || editor.isActive('codeBlock')) {
+        // Hide if selection is empty or in code block (but show for image node selections)
+        // Check for NodeSelection (when an image is selected)
+        const isNodeSelection = 'node' in selection && (selection as any).node;
+        const selectedNode = isNodeSelection ? (selection as any).node : editor.state.doc.nodeAt(from);
+        const isImageSelected = selectedNode?.type?.name === 'resizableImage';
+        
+        if ((empty && !isImageSelected) || editor.isActive('codeBlock')) {
           // Clear any pending show timeout
           if (showTimeoutRef.current) {
             clearTimeout(showTimeoutRef.current);
@@ -152,29 +157,33 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         // Get editor container bounds
         const editorRect = editor.view.dom.getBoundingClientRect();
         
+        // Get the editor-content-wrapper for proper positioning
+        const wrapper = editor.view.dom.closest('.editor-content-wrapper');
+        const wrapperRect = wrapper?.getBoundingClientRect() || editorRect;
+        
         // Get actual toolbar dimensions after render, or estimate
         const toolbarWidth = toolbarRef.current?.offsetWidth || 500;
         // Use actual height for multi-row support, with fallback
         const toolbarHeight = toolbarRef.current?.offsetHeight || 40;
         
-        // Calculate center position of selection relative to editor
-        const selectionCenterX = ((start.left + end.left) / 2) - editorRect.left;
+        // Calculate center position of selection relative to wrapper
+        const selectionCenterX = ((start.left + end.left) / 2) - wrapperRect.left;
         
         // Calculate left position (we'll use left-aligned positioning, not center transform)
         // Start with selection center minus half toolbar width
         let left = selectionCenterX - toolbarWidth / 2;
         
-        // Constrain to editor bounds
+        // Constrain to wrapper bounds
         // Left edge: minimum 8px from left
         const minLeft = 8;
         // Right edge: toolbar right edge must be at least 8px from right edge
-        const maxLeft = editorRect.width - toolbarWidth - 8;
+        const maxLeft = wrapperRect.width - toolbarWidth - 8;
         
         // Clamp the position
         left = Math.max(minLeft, Math.min(maxLeft, left));
         
-        // Calculate top position (above selection)
-        const top = start.top - editorRect.top - toolbarHeight - 10;
+        // Calculate top position (above selection, relative to wrapper)
+        const top = start.top - wrapperRect.top - toolbarHeight - 10;
 
         // Add delay before showing toolbar (200ms)
         if (!isVisible) {
@@ -426,22 +435,47 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
 
       {/* Alignment */}
       <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('left').run())}
-        isActive={editor.isActive({ textAlign: 'left' })}
+        onMouseDown={(e) => executeCommand(e, () => {
+          // Check if an image is selected by looking at the node at selection
+          const { selection } = editor.state;
+          const node = editor.state.doc.nodeAt(selection.from);
+          if (node?.type.name === 'resizableImage') {
+            editor.chain().focus().updateAttributes('resizableImage', { align: 'left' }).run();
+          } else {
+            editor.chain().focus().setTextAlign('left').run();
+          }
+        })}
+        isActive={editor.isActive({ textAlign: 'left' }) || editor.isActive('resizableImage', { align: 'left' })}
         title="Align Left"
       >
         <AlignLeft size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('center').run())}
-        isActive={editor.isActive({ textAlign: 'center' })}
+        onMouseDown={(e) => executeCommand(e, () => {
+          const { selection } = editor.state;
+          const node = editor.state.doc.nodeAt(selection.from);
+          if (node?.type.name === 'resizableImage') {
+            editor.chain().focus().updateAttributes('resizableImage', { align: 'center' }).run();
+          } else {
+            editor.chain().focus().setTextAlign('center').run();
+          }
+        })}
+        isActive={editor.isActive({ textAlign: 'center' }) || editor.isActive('resizableImage', { align: 'center' })}
         title="Align Center"
       >
         <AlignCenter size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setTextAlign('right').run())}
-        isActive={editor.isActive({ textAlign: 'right' })}
+        onMouseDown={(e) => executeCommand(e, () => {
+          const { selection } = editor.state;
+          const node = editor.state.doc.nodeAt(selection.from);
+          if (node?.type.name === 'resizableImage') {
+            editor.chain().focus().updateAttributes('resizableImage', { align: 'right' }).run();
+          } else {
+            editor.chain().focus().setTextAlign('right').run();
+          }
+        })}
+        isActive={editor.isActive({ textAlign: 'right' }) || editor.isActive('resizableImage', { align: 'right' })}
         title="Align Right"
       >
         <AlignRight size={iconSize} />
