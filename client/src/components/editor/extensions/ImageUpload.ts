@@ -11,6 +11,18 @@ export interface ImageUploadOptions {
    */
   allowedMimeTypes: string[];
   /**
+   * Enable image compression (default: true)
+   */
+  enableCompression: boolean;
+  /**
+   * Maximum width for compressed images (default: 1200px)
+   */
+  maxCompressedWidth: number;
+  /**
+   * JPEG quality for compression (0-1, default: 0.8)
+   */
+  compressionQuality: number;
+  /**
    * Callback when upload starts
    */
   onUploadStart?: () => void;
@@ -67,6 +79,71 @@ function getImageDimensions(dataUrl: string): Promise<{ width: number; height: n
 }
 
 /**
+ * Compress an image file using canvas
+ * Returns a compressed data URL
+ */
+async function compressImage(
+  file: File,
+  maxWidth: number,
+  quality: number
+): Promise<{ dataUrl: string; width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.src = e.target?.result as string;
+    };
+
+    reader.onerror = () => reject(new Error('Failed to read file'));
+
+    img.onload = () => {
+      // Calculate new dimensions
+      let width = img.width;
+      let height = img.height;
+
+      // Only resize if image is larger than maxWidth
+      if (width > maxWidth) {
+        const ratio = maxWidth / width;
+        width = maxWidth;
+        height = Math.round(height * ratio);
+      }
+
+      // Create canvas for compression
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+
+      // Draw image with high quality
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Determine output format
+      // Use JPEG for photos (better compression), PNG for images with transparency
+      const isTransparent = file.type === 'image/png' || file.type === 'image/gif';
+      const outputType = isTransparent ? 'image/png' : 'image/jpeg';
+      const outputQuality = isTransparent ? undefined : quality;
+
+      // Convert to data URL
+      const dataUrl = canvas.toDataURL(outputType, outputQuality);
+
+      resolve({ dataUrl, width, height });
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
  * Process and insert an image file into the editor
  */
 async function processAndInsertImage(
@@ -91,15 +168,31 @@ async function processAndInsertImage(
   try {
     options.onUploadStart?.();
 
-    // Convert to base64
-    const dataUrl = await fileToBase64(file);
+    let dataUrl: string;
+    let displayWidth: number;
 
-    // Get image dimensions for proper sizing
-    const dimensions = await getImageDimensions(dataUrl);
+    // Check if compression is enabled and file is compressible
+    const isCompressible = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
     
-    // Calculate a reasonable display width (max 600px, preserve aspect ratio)
-    const maxWidth = 600;
-    const displayWidth = Math.min(dimensions.width, maxWidth);
+    if (options.enableCompression && isCompressible) {
+      // Compress the image
+      const compressed = await compressImage(
+        file,
+        options.maxCompressedWidth,
+        options.compressionQuality
+      );
+      dataUrl = compressed.dataUrl;
+      
+      // Calculate display width (max 600px for editor display)
+      const maxDisplayWidth = 600;
+      displayWidth = Math.min(compressed.width, maxDisplayWidth);
+    } else {
+      // No compression - use original
+      dataUrl = await fileToBase64(file);
+      const dimensions = await getImageDimensions(dataUrl);
+      const maxDisplayWidth = 600;
+      displayWidth = Math.min(dimensions.width, maxDisplayWidth);
+    }
 
     // Insert the image using the resizableImage command
     editor.chain().focus().setImage({
@@ -159,6 +252,9 @@ export const ImageUpload = Extension.create<ImageUploadOptions>({
         'image/webp',
         'image/svg+xml',
       ],
+      enableCompression: true, // Enable compression by default
+      maxCompressedWidth: 1200, // Max width for compressed images
+      compressionQuality: 0.8, // JPEG quality (0-1)
       onUploadStart: undefined,
       onUploadComplete: undefined,
       onUploadError: undefined,

@@ -1,5 +1,6 @@
 import { Editor, Extension } from '@tiptap/react';
 import { useEffect, useState, useCallback, useRef } from 'react';
+import ImageURLDialog from './ImageURLDialog';
 import {
   Heading1,
   Heading2,
@@ -38,6 +39,7 @@ interface CommandItem {
   icon: React.ReactNode;
   command: (editor: Editor) => void;
   keywords?: string[];
+  isImageCommand?: boolean;
 }
 
 const commands: CommandItem[] = [
@@ -111,17 +113,17 @@ const commands: CommandItem[] = [
     command: (editor) => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
     keywords: ['grid', 'spreadsheet'],
   },
+  // Image command is handled separately with a dialog
   {
     title: 'Image',
     description: 'Insert an image from URL',
     icon: <Image size={18} />,
-    command: (editor) => {
-      const url = window.prompt('Enter image URL:');
-      if (url) {
-        editor.chain().focus().setImage({ src: url }).run();
-      }
+    command: () => {
+      // This is a placeholder - actual insertion is handled by the dialog
+      // The command will be intercepted in SlashCommands component
     },
     keywords: ['picture', 'photo', 'img'],
+    isImageCommand: true,
   },
   {
     title: 'Divider',
@@ -191,6 +193,8 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [imageDialogPosition, setImageDialogPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
 
   const filteredCommands = commands.filter((cmd) => {
@@ -217,12 +221,27 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
         editor.chain().focus().deleteRange({ from: deleteFrom, to: $from.pos }).run();
       }
       
-      command.command(editor);
+      // Handle image command specially with dialog
+      if (command.isImageCommand) {
+        const coords = editor.view.coordsAtPos($from.pos);
+        setImageDialogPosition({
+          top: coords.bottom + 8,
+          left: coords.left,
+        });
+        setShowImageDialog(true);
+      } else {
+        command.command(editor);
+      }
+      
       setIsOpen(false);
       setQuery('');
       setSelectedIndex(0);
     }
   }, [editor, filteredCommands]);
+
+  const handleImageInsert = useCallback((url: string, alt: string) => {
+    editor.chain().focus().setImage({ src: url, alt }).run();
+  }, [editor]);
 
   useEffect(() => {
     if (!editor) return;
@@ -300,6 +319,18 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
       setSelectedIndex(Math.max(0, filteredCommands.length - 1));
     }
   }, [filteredCommands.length, selectedIndex]);
+
+  // Show image dialog even when menu is closed
+  if (showImageDialog) {
+    return (
+      <ImageURLDialog
+        isOpen={showImageDialog}
+        onClose={() => setShowImageDialog(false)}
+        onInsert={handleImageInsert}
+        position={imageDialogPosition}
+      />
+    );
+  }
 
   if (!isOpen || filteredCommands.length === 0) {
     return null;

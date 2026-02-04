@@ -116,20 +116,33 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         img.style.width = `${node.attrs.width}px`;
       }
       
-      // Resize handle
+      // Resize handle with diagonal resize icon
       const resizeHandle = document.createElement('div');
       resizeHandle.classList.add('resize-handle');
       resizeHandle.style.cssText = `
         position: absolute;
         bottom: 4px;
         right: 4px;
-        width: 12px;
-        height: 12px;
+        width: 20px;
+        height: 20px;
         background: var(--primary);
-        border-radius: 2px;
+        border-radius: 4px;
         cursor: se-resize;
         opacity: 0;
         transition: opacity 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px oklch(0 0 0 / 0.2);
+      `;
+      // Add diagonal resize SVG icon (se-resize arrows)
+      resizeHandle.innerHTML = `
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <polyline points="9 21 3 21 3 15"></polyline>
+          <line x1="21" y1="3" x2="14" y2="10"></line>
+          <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
       `;
 
       // Edit hint overlay
