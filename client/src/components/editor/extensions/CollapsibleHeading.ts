@@ -220,7 +220,25 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
                 
                 // Add widget decoration for the chevron button
                 // Position it at the end of the heading text (pos + node.nodeSize - 1) so it appears after the text
-                const chevronWidget = Decoration.widget(pos + node.nodeSize - 1, () => {
+                const chevronWidget = Decoration.widget(pos + node.nodeSize - 1, (view, getPos) => {
+                  // Check if an existing chevron button exists and update it instead of recreating
+                  const existingButton = document.querySelector(`button.collapsible-heading-chevron[data-heading-id="${headingId}"]`) as HTMLButtonElement | null;
+                  
+                  if (existingButton) {
+                    // Update existing button's class for smooth animation
+                    const wasCollapsed = existingButton.classList.contains('collapsed');
+                    if (wasCollapsed !== isCollapsed) {
+                      existingButton.classList.remove('collapsed', 'expanded');
+                      existingButton.classList.add(isCollapsed ? 'collapsed' : 'expanded');
+                      existingButton.title = isCollapsed ? 'Click to expand' : 'Click to collapse';
+                    }
+                    // Return the existing wrapper to preserve it
+                    const existingWrapper = existingButton.parentElement;
+                    if (existingWrapper) {
+                      return existingWrapper;
+                    }
+                  }
+                  
                   const wrapper = document.createElement('span');
                   wrapper.className = 'collapsible-heading-chevron-wrapper';
                   wrapper.setAttribute('contenteditable', 'false');
@@ -239,6 +257,12 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
                   button.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    
+                    // Toggle the class immediately for animation
+                    const wasCollapsed = button.classList.contains('collapsed');
+                    button.classList.remove('collapsed', 'expanded');
+                    button.classList.add(wasCollapsed ? 'expanded' : 'collapsed');
+                    button.title = wasCollapsed ? 'Click to collapse' : 'Click to expand';
                     
                     if (storage.collapsedHeadings.has(headingId)) {
                       storage.collapsedHeadings.delete(headingId);
