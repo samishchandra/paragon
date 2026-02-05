@@ -151,21 +151,22 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         position: absolute;
         bottom: 4px;
         right: 4px;
-        width: 20px;
-        height: 20px;
-        background: var(--primary);
-        border-radius: 4px;
+        width: 24px;
+        height: 24px;
+        background: oklch(0.98 0 0 / 0.95);
+        border: 1px solid oklch(0.85 0 0);
+        border-radius: 6px;
         cursor: se-resize;
         opacity: 0;
         transition: opacity 0.15s ease;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 4px oklch(0 0 0 / 0.2);
+        box-shadow: 0 2px 8px oklch(0 0 0 / 0.15);
       `;
       // Add diagonal resize SVG icon (se-resize arrows) - rotated 90 degrees
       resizeHandle.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(90deg);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.4 0 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(90deg);">
           <polyline points="15 3 21 3 21 9"></polyline>
           <polyline points="9 21 3 21 3 15"></polyline>
           <line x1="21" y1="3" x2="14" y2="10"></line>
