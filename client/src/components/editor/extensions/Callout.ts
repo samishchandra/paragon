@@ -13,6 +13,7 @@ declare module '@tiptap/core' {
       setCallout: (attributes?: { type?: CalloutType }) => ReturnType;
       toggleCallout: (attributes?: { type?: CalloutType }) => ReturnType;
       unsetCallout: () => ReturnType;
+      insertCallout: (attributes?: { type?: CalloutType }) => ReturnType;
     };
   }
 }
@@ -82,6 +83,19 @@ export const Callout = Node.create<CalloutOptions>({
         () =>
         ({ commands }: { commands: { lift: (name: string) => boolean } }) => {
           return commands.lift(this.name);
+        },
+      insertCallout:
+        (attributes?: { type?: CalloutType }) =>
+        ({ chain }: { chain: () => ReturnType<typeof import('@tiptap/core').Editor.prototype.chain> }) => {
+          const type = attributes?.type || 'info';
+          return chain()
+            .insertContent({
+              type: this.name,
+              attrs: { type },
+              content: [{ type: 'paragraph' }],
+            })
+            .focus()
+            .run();
         },
     };
   },

@@ -129,7 +129,7 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
   }, [editor]);
 
   const addCallout = useCallback((type: 'info' | 'warning' | 'error' | 'success' | 'note') => {
-    editor.chain().focus().toggleCallout({ type }).run();
+    editor.chain().focus().insertCallout({ type }).run();
   }, [editor]);
 
   return (

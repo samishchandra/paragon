@@ -1337,6 +1337,37 @@
   padding: 0;
 }
 
+/* Ensure cursor is visible in empty callouts */
+.callout p,
+.callout h1,
+.callout h2,
+.callout h3,
+.callout h4,
+.callout h5,
+.callout h6 {
+  min-height: 1.5em;
+  caret-color: var(--foreground);
+  flex: 1;
+  width: 100%;
+}
+
+.callout p:empty::before,
+.callout h1:empty::before,
+.callout h2:empty::before,
+.callout h3:empty::before,
+.callout h4:empty::before,
+.callout h5:empty::before,
+.callout h6:empty::before {
+  content: '';
+  display: inline-block;
+}
+
+/* Ensure callout content takes full width */
+.callout > * {
+  flex: 1;
+  min-width: 0;
+}
+
 .callout-info {
   border-color: var(--callout-info);
   background: oklch(0.5 0.12 220 / 0.1);
