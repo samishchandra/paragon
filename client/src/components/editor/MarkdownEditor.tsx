@@ -7,6 +7,7 @@ import Link from '@tiptap/extension-link';
 import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import { TableCellWithMenu, TableHeaderWithMenu } from './extensions/TableCellWithMenu';
+import { TableSorting } from './extensions/TableSorting';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 // Using custom CodeBlockWithFeatures instead of CodeBlockLowlight
@@ -201,6 +202,7 @@ export function MarkdownEditor({
       TableRow,
       TableCellWithMenu,
       TableHeaderWithMenu,
+      TableSorting,
       TaskList.configure({
         HTMLAttributes: {
           class: 'task-list',

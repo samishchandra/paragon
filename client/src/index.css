@@ -1080,6 +1080,71 @@
     border-bottom: none !important;
   }
   
+  /* Table sort indicator widget */
+  .table-sort-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+    width: 14px;
+    height: 14px;
+    font-size: 10px;
+    color: hsl(var(--muted-foreground));
+    opacity: 0.4;
+    cursor: pointer;
+    user-select: none;
+    vertical-align: middle;
+    transition: opacity 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  }
+  
+  .table-sort-indicator:hover {
+    opacity: 1 !important;
+    color: hsl(var(--primary)) !important;
+    transform: scale(1.1);
+  }
+  
+  .table-sort-indicator.active {
+    opacity: 1;
+    color: hsl(var(--primary));
+  }
+  
+  /* Make header cells clickable for sorting */
+  .ProseMirror th {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  
+  .ProseMirror th:hover {
+    background: oklch(0.22 0.025 220) !important;
+  }
+  
+  .ProseMirror th:hover .table-sort-indicator {
+    opacity: 0.8;
+  }
+  
+  /* Table sort toast animation */
+  @keyframes sortToastIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+  
+  @keyframes sortToastOut {
+    from {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-10px);
+    }
+  }
+  
   /* Table row drag-and-drop */
   tr.table-row-draggable {
     position: relative;
