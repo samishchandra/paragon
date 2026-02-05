@@ -35,6 +35,7 @@ import { MarkdownPasteSafe } from './extensions/MarkdownPasteSafe';
 // DragHandleOverlay removed - drag and reorder functionality disabled
 import { CollapsibleHeading } from './extensions/CollapsibleHeading';
 import { MarkdownLinkInputRule } from './extensions/MarkdownLinkInputRule';
+import { CalloutInputRule } from './extensions/CalloutInputRule';
 import { SearchHighlight } from './extensions/SearchHighlight';
 import { TabIndent } from './extensions/TabIndent';
 import { ImageUpload } from './extensions/ImageUpload';
@@ -220,6 +221,7 @@ export function MarkdownEditor({
       Superscript,
       Typography,
       Callout,
+      CalloutInputRule,
       CollapsibleHeading.configure({
         levels: [1, 2, 3],
       }),
@@ -416,6 +418,20 @@ export function MarkdownEditor({
       }
     });
     
+    // Custom callout rule to convert callouts to markdown code block syntax
+    // e.g., ```info\ncontent\n```
+    td.addRule('callout', {
+      filter: (node) => {
+        return node.nodeName === 'DIV' && node.hasAttribute('data-callout');
+      },
+      replacement: (content, node) => {
+        const calloutType = (node as HTMLElement).getAttribute('data-type') || 'info';
+        // Clean up the content - remove leading/trailing whitespace and normalize newlines
+        const cleanContent = content.trim().replace(/\n{3,}/g, '\n\n');
+        return `\n\n\`\`\`${calloutType}\n${cleanContent}\n\`\`\`\n\n`;
+      },
+    });
+    
     return td;
   }, []);
 
@@ -433,7 +449,23 @@ export function MarkdownEditor({
       // Convert Markdown back to HTML and set in editor using marked
       // Use queueMicrotask to avoid flushSync error when ReactNodeViewRenderer is used
       // This defers the setContent call to after React's render cycle completes
-      const html = marked.parse(rawMarkdownRef.current, { async: false }) as string;
+      
+      // First, convert callout code blocks to callout HTML before parsing
+      // Matches ```info, ```warning, ```error, ```success, ```note code blocks
+      const calloutTypes = ['info', 'warning', 'error', 'success', 'note'];
+      let processedMarkdown = rawMarkdownRef.current;
+      
+      // Replace callout code blocks with callout HTML
+      calloutTypes.forEach(type => {
+        const regex = new RegExp(`\`\`\`${type}\\s*\\n([\\s\\S]*?)\`\`\``, 'g');
+        processedMarkdown = processedMarkdown.replace(regex, (match, content) => {
+          // Convert the content inside the callout using marked
+          const innerHtml = marked.parse(content.trim(), { async: false }) as string;
+          return `<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`;
+        });
+      });
+      
+      const html = marked.parse(processedMarkdown, { async: false }) as string;
       queueMicrotask(() => {
         if (!editor.isDestroyed) {
           editor.commands.setContent(html);
