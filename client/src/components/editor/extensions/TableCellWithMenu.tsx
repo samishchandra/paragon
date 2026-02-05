@@ -6,6 +6,9 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 const tableCellMenuPluginKey = new PluginKey('tableCellMenu');
 let eventDelegationSetup = false;
 
+// Cache for decorations to avoid unnecessary rebuilds
+let cachedMenuDecorations: DecorationSet | null = null;
+
 function setupEventDelegation() {
   if (eventDelegationSetup) return;
   eventDelegationSetup = true;
@@ -38,64 +41,83 @@ function createTableCellMenuPlugin(editor: any) {
   
   return new Plugin({
     key: tableCellMenuPluginKey,
+    state: {
+      init() {
+        return DecorationSet.empty;
+      },
+      apply(tr, oldState, _oldEditorState, newEditorState) {
+        // Only rebuild decorations if document structure changed
+        if (!tr.docChanged && cachedMenuDecorations) {
+          // Map existing decorations to new positions
+          return cachedMenuDecorations.map(tr.mapping, tr.doc);
+        }
+        
+        // Rebuild decorations
+        cachedMenuDecorations = buildMenuDecorations(newEditorState.doc, editor);
+        return cachedMenuDecorations;
+      },
+    },
     props: {
       decorations(state) {
-        const { doc } = state;
-        const decorations: Decoration[] = [];
-        
-        doc.descendants((node, pos) => {
-          if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
-            const widget = Decoration.widget(pos + 1, (view) => {
-              const wrapper = document.createElement('div');
-              wrapper.className = 'table-cell-menu-wrapper ProseMirror-widget';
-              wrapper.setAttribute('contenteditable', 'false');
-              wrapper.style.cssText = 'position:absolute;top:2px;right:2px;z-index:50;pointer-events:auto;';
-              
-              const button = document.createElement('button');
-              button.className = 'table-cell-menu-btn';
-              button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>';
-              button.title = 'Table options';
-              button.type = 'button';
-              
-              const isDark = document.documentElement.classList.contains('dark');
-              const bgColor = isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)';
-              const borderColor = isDark ? 'rgba(60,60,60,0.5)' : 'rgba(200,200,200,0.5)';
-              const textColor = isDark ? '#999' : '#666';
-              const hoverBgColor = isDark ? '#2a2a2a' : '#f5f5f5';
-              
-              button.style.cssText = 'width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:4px;cursor:pointer;opacity:0.15;transition:opacity 0.15s ease,background-color 0.15s ease,transform 0.1s ease;color:' + textColor + ';pointer-events:auto;padding:0;';
-              
-              button.addEventListener('mouseenter', () => {
-                button.style.opacity = '1';
-                button.style.background = hoverBgColor;
-                button.style.transform = 'scale(1.05)';
-              });
-              button.addEventListener('mouseleave', () => {
-                const dropdown = document.querySelector('.table-cell-menu-dropdown');
-                button.style.background = bgColor;
-                button.style.transform = 'scale(1)';
-              });
-              
-              button.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const buttonRect = button.getBoundingClientRect();
-                editor.chain().focus().setTextSelection(pos + 1).run();
-                showTableMenu(e, editor, pos, buttonRect);
-              });
-              
-              wrapper.appendChild(button);
-              return wrapper;
-            }, { side: -1 });
-            
-            decorations.push(widget);
-          }
-        });
-        
-        return DecorationSet.create(doc, decorations);
+        return this.getState(state);
       },
     },
   });
+}
+
+function buildMenuDecorations(doc: any, editor: any): DecorationSet {
+  const decorations: Decoration[] = [];
+  
+  doc.descendants((node: any, pos: number) => {
+    if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+      const widget = Decoration.widget(pos + 1, (view) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-cell-menu-wrapper ProseMirror-widget';
+        wrapper.setAttribute('contenteditable', 'false');
+        wrapper.style.cssText = 'position:absolute;top:2px;right:2px;z-index:50;pointer-events:auto;';
+        
+        const button = document.createElement('button');
+        button.className = 'table-cell-menu-btn';
+        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>';
+        button.title = 'Table options';
+        button.type = 'button';
+        
+        const isDark = document.documentElement.classList.contains('dark');
+        const bgColor = isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)';
+        const borderColor = isDark ? 'rgba(60,60,60,0.5)' : 'rgba(200,200,200,0.5)';
+        const textColor = isDark ? '#999' : '#666';
+        const hoverBgColor = isDark ? '#2a2a2a' : '#f5f5f5';
+        
+        button.style.cssText = 'width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:4px;cursor:pointer;opacity:0.15;transition:opacity 0.15s ease,background-color 0.15s ease,transform 0.1s ease;color:' + textColor + ';pointer-events:auto;padding:0;';
+        
+        button.addEventListener('mouseenter', () => {
+          button.style.opacity = '1';
+          button.style.background = hoverBgColor;
+          button.style.transform = 'scale(1.05)';
+        });
+        button.addEventListener('mouseleave', () => {
+          const dropdown = document.querySelector('.table-cell-menu-dropdown');
+          button.style.background = bgColor;
+          button.style.transform = 'scale(1)';
+        });
+        
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const buttonRect = button.getBoundingClientRect();
+          editor.chain().focus().setTextSelection(pos + 1).run();
+          showTableMenu(e, editor, pos, buttonRect);
+        });
+        
+        wrapper.appendChild(button);
+        return wrapper;
+      }, { side: -1, key: 'menu-' + pos });
+      
+      decorations.push(widget);
+    }
+  });
+  
+  return DecorationSet.create(doc, decorations);
 }
 
 function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: DOMRect) {
