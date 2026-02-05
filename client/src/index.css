@@ -859,6 +859,99 @@
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
+    position: relative;
+  }
+  
+  /* Table cell menu button */
+  .table-cell-menu-button {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+    z-index: 10;
+    color: var(--muted-foreground);
+  }
+  
+  .ProseMirror td:hover .table-cell-menu-button,
+  .ProseMirror th:hover .table-cell-menu-button,
+  td[data-node-view-wrapper]:hover .table-cell-menu-button,
+  th[data-node-view-wrapper]:hover .table-cell-menu-button,
+  .table-cell-menu-button:focus {
+    opacity: 1;
+  }
+  
+  .table-cell-menu-button:hover {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+  
+  /* Table cell menu dropdown */
+  .table-cell-menu-dropdown {
+    position: fixed !important;
+    /* Position is set via inline styles */
+    min-width: 180px;
+    background: var(--popover);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 9999 !important;
+    padding: 4px;
+    animation: table-menu-fade-in 0.15s ease;
+  }
+  
+  @keyframes table-menu-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .table-cell-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: var(--popover-foreground);
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+    text-align: left;
+  }
+  
+  .table-cell-menu-item:hover {
+    background: var(--accent);
+  }
+  
+  .table-cell-menu-item.destructive {
+    color: var(--destructive);
+  }
+  
+  .table-cell-menu-item.destructive:hover {
+    background: oklch(0.35 0.1 25 / 0.2);
+  }
+  
+  .table-cell-menu-separator {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
   }
   
   /* Sortable table headers */

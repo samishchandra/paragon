@@ -6,8 +6,7 @@ import Highlight from '@tiptap/extension-highlight';
 import Link from '@tiptap/extension-link';
 import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
-import TableCell from '@tiptap/extension-table-cell';
-import TableHeader from '@tiptap/extension-table-header';
+import { TableCellWithMenu, TableHeaderWithMenu } from './extensions/TableCellWithMenu';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 // Using custom CodeBlockWithFeatures instead of CodeBlockLowlight
@@ -196,8 +195,8 @@ export function MarkdownEditor({
         },
       }),
       TableRow,
-      TableCell,
-      TableHeader,
+      TableCellWithMenu,
+      TableHeaderWithMenu,
       TaskList.configure({
         HTMLAttributes: {
           class: 'task-list',
