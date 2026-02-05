@@ -137,7 +137,7 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   const borderColor = isDark ? '#3a3a3a' : '#e5e5e5';
   const textColor = isDark ? '#e5e5e5' : '#333333';
   
-  dropdown.style.cssText = 'position:fixed;top:' + viewportTop + 'px;left:' + viewportLeft + 'px;z-index:99999;display:flex;flex-direction:column;gap:2px;min-width:170px;max-width:220px;width:auto;padding:6px;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.15),0 2px 6px rgba(0,0,0,0.1);color:' + textColor + ';font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;';
+  dropdown.style.cssText = 'position:fixed;top:' + viewportTop + 'px;left:' + viewportLeft + 'px;z-index:99999;display:flex;flex-direction:column;gap:2px;min-width:170px;max-width:220px;width:auto;padding:6px;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.15),0 2px 6px rgba(0,0,0,0.1);color:' + textColor + ';font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;pointer-events:auto;';
   
   const menuItems = [
     { label: 'Insert Column Left', icon: 'col-left', action: () => editor.chain().focus().setTextSelection(pos + 1).addColumnBefore().run() },
@@ -176,7 +176,7 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
       const menuButton = document.createElement('button');
       menuButton.type = 'button';
       const itemTextColor = item.destructive ? destructiveColor : textColor;
-      menuButton.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;font-size:13px;font-weight:450;color:' + itemTextColor + ';background:transparent;border:none;border-radius:5px;cursor:pointer;text-align:left;transition:background 0.15s ease;';
+      menuButton.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;font-size:13px;font-weight:450;color:' + itemTextColor + ';background:transparent;border:none;border-radius:5px;cursor:pointer;text-align:left;transition:background 0.15s ease;pointer-events:auto;';
       const iconHtml = icons[item.icon || ''] || '';
       const iconSpanColor = item.destructive ? destructiveColor : iconColor;
       menuButton.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;width:16px;height:16px;flex-shrink:0;color:' + iconSpanColor + ';">' + iconHtml + '</span><span style="flex:1;white-space:nowrap;">' + item.label + '</span>';

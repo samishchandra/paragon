@@ -928,6 +928,11 @@
     flex-direction: column !important;
     gap: 1px !important;
     animation: tcm-fade-in 0.15s ease;
+    pointer-events: auto !important;
+  }
+  
+  .table-cell-menu-dropdown * {
+    pointer-events: auto !important;
   }
   
   @keyframes tcm-fade-in {
