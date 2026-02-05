@@ -14,6 +14,7 @@ declare module '@tiptap/core' {
       toggleCallout: (attributes?: { type?: CalloutType }) => ReturnType;
       unsetCallout: () => ReturnType;
       insertCallout: (attributes?: { type?: CalloutType }) => ReturnType;
+      updateCalloutType: (type: CalloutType) => ReturnType;
     };
   }
 }

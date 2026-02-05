@@ -20,7 +20,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { LinkPopover } from './LinkPopover';
 import { LinkHoverTooltip } from './LinkHoverTooltip';
 import { FloatingToolbar } from './FloatingToolbar';
-import { Callout } from './extensions/Callout';
+import { CalloutWithMenu } from './extensions/CalloutWithMenu';
 import { ResizableImage } from './extensions/ResizableImage';
 import { DatePill } from './extensions/DatePill';
 import { SlashCommands } from './SlashCommands';
@@ -220,7 +220,7 @@ export function MarkdownEditor({
       Subscript,
       Superscript,
       Typography,
-      Callout,
+      CalloutWithMenu,
       CalloutInputRule,
       CollapsibleHeading.configure({
         levels: [1, 2, 3],
