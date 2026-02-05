@@ -680,39 +680,241 @@ The editor uses a "Things Theme" inspired by the Obsidian Things theme, featurin
 
 ```typescript
 interface MarkdownEditorProps {
+  // === CONTENT PROPS ===
   /** Initial HTML content */
   content?: string;
-  
-  /** Callback when content changes */
-  onChange?: (html: string) => void;
-  
-  /** Placeholder text when empty */
+  /** Callback when content changes (HTML) */
+  onChange?: (content: string) => void;
+  /** Callback when HTML content changes (alias for onChange) */
+  onHTMLChange?: (html: string) => void;
+  /** Callback when raw markdown content changes */
+  onMarkdownChange?: (markdown: string) => void;
+  /** Placeholder text when editor is empty */
   placeholder?: string;
   
-  /** Show top toolbar */
+  // === EDITOR STATE PROPS ===
+  /** Whether the editor is editable (default: true) */
+  editable?: boolean;
+  /** Whether to autofocus the editor on mount (default: false) */
+  autofocus?: boolean;
+  /** Initial editor mode (default: 'wysiwyg') */
+  initialMode?: 'wysiwyg' | 'markdown';
+  /** Enable spellcheck (default: true) */
+  spellCheck?: boolean;
+  
+  // === UI VISIBILITY PROPS ===
+  /** Show top toolbar (default: true) */
   showToolbar?: boolean;
-  
-  /** Show word count in footer */
+  /** Show word count in footer (default: true) */
   showWordCount?: boolean;
+  /** Show mode toggle to switch between WYSIWYG and raw markdown (default: true) */
+  showModeToggle?: boolean;
+  /** Show floating toolbar on text selection (default: true) */
+  showFloatingToolbar?: boolean;
+  /** Show recovery banner when unsaved content is found (default: true) */
+  showRecoveryBanner?: boolean;
   
-  /** Enable auto-save */
-  enableAutoSave?: boolean;
-  
-  /** Auto-save storage key */
+  // === AUTO-SAVE PROPS ===
+  /** Enable auto-save to localStorage (default: true) */
+  autoSave?: boolean;
+  /** Storage key for auto-save (default: 'manus-editor-content') */
   autoSaveKey?: string;
+  /** Auto-save debounce delay in ms (default: 1000) */
+  autoSaveDelay?: number;
   
+  // === LAYOUT PROPS ===
   /** Additional CSS classes */
   className?: string;
+  /** Minimum height of the editor (default: '200px') */
+  minHeight?: string;
+  /** Maximum height of the editor (default: none) */
+  maxHeight?: string;
   
-  /** Editor height */
-  height?: string;
+  // === IMAGE PROPS ===
+  /** Maximum image file size in bytes (default: 5MB) */
+  maxImageSize?: number;
+  /** Callback when image upload starts */
+  onImageUploadStart?: () => void;
+  /** Callback when image upload completes */
+  onImageUploadComplete?: () => void;
+  /** Callback when image upload fails */
+  onImageUploadError?: (error: string) => void;
   
-  /** Read-only mode */
-  readOnly?: boolean;
+  // === EVENT CALLBACKS ===
+  /** Callback when editor mode changes */
+  onModeChange?: (mode: 'wysiwyg' | 'markdown') => void;
+  /** Callback when editor is ready with the editor instance */
+  onReady?: (editor: Editor) => void;
+  /** Callback when editor is focused */
+  onFocus?: () => void;
+  /** Callback when editor loses focus */
+  onBlur?: () => void;
+  /** Callback when selection changes */
+  onSelectionChange?: (selection: { from: number; to: number; empty: boolean }) => void;
+  /** Callback when editor is destroyed */
+  onDestroy?: () => void;
+  /** Callback when content is saved (auto-save or manual) */
+  onSave?: (content: string) => void;
+  /** Callback when content is recovered from storage */
+  onRecover?: (content: string) => void;
+  /** Callback when a wiki link is clicked */
+  onWikiLinkClick?: (pageName: string) => void;
+  /** Callback when a link is clicked (return false to prevent default) */
+  onLinkClick?: (url: string, event: MouseEvent) => boolean | void;
+  
+  // === CONTROLLED COMPONENTS ===
+  /** Show find/replace panel (default: false) - controlled mode */
+  findReplaceOpen?: boolean;
+  /** Callback when find/replace panel state changes */
+  onFindReplaceChange?: (isOpen: boolean) => void;
+  
+  // === CUSTOM RENDER PROPS ===
+  /** Custom toolbar render function - allows replacing or extending toolbar */
+  renderToolbar?: (editor: Editor, defaultToolbar: React.ReactNode) => React.ReactNode;
+  /** Custom footer render function - allows replacing or extending footer */
+  renderFooter?: (wordCount: { words: number; characters: number }, autoSaveStatus: string, defaultFooter: React.ReactNode) => React.ReactNode;
+  
+  // === FEATURE CONFIGURATION ===
+  /** Heading levels to enable (default: [1, 2, 3, 4, 5, 6]) */
+  headingLevels?: (1 | 2 | 3 | 4 | 5 | 6)[];
+  /** Collapsible heading levels (default: [1, 2, 3]) */
+  collapsibleHeadingLevels?: (1 | 2 | 3 | 4 | 5 | 6)[];
+  /** Disable specific features */
+  disabledFeatures?: {
+    tables?: boolean;
+    images?: boolean;
+    codeBlocks?: boolean;
+    taskLists?: boolean;
+    callouts?: boolean;
+    datePills?: boolean;
+    wikiLinks?: boolean;
+    collapsibleHeadings?: boolean;
+    slashCommands?: boolean;
+    markdownPaste?: boolean;
+    dragAndDrop?: boolean;
+  };
 }
 ```
 
-### 9.2 Usage Example
+### 9.2 MarkdownEditorRef (Imperative Handle)
+
+The editor exposes an imperative handle via React ref for programmatic control:
+
+```typescript
+interface MarkdownEditorRef {
+  // === CONTENT METHODS ===
+  /** Get the underlying TipTap editor instance */
+  getEditor: () => Editor | null;
+  /** Get the current HTML content */
+  getHTML: () => string;
+  /** Get the current markdown content */
+  getMarkdown: () => string;
+  /** Get plain text content */
+  getText: () => string;
+  /** Set content (HTML string) */
+  setContent: (content: string) => void;
+  /** Clear all content */
+  clearContent: () => void;
+  /** Insert content at cursor position */
+  insertContent: (content: string) => void;
+  /** Get selection text */
+  getSelectedText: () => string;
+  
+  // === FOCUS METHODS ===
+  /** Focus the editor */
+  focus: (position?: 'start' | 'end' | 'all' | number | boolean) => void;
+  /** Blur the editor */
+  blur: () => void;
+  /** Check if editor is empty */
+  isEmpty: () => boolean;
+  /** Check if editor is focused */
+  isFocused: () => boolean;
+  
+  // === MODE METHODS ===
+  /** Get current editor mode */
+  getMode: () => 'wysiwyg' | 'markdown';
+  /** Set editor mode */
+  setMode: (mode: 'wysiwyg' | 'markdown') => void;
+  /** Toggle between modes */
+  toggleMode: () => 'wysiwyg' | 'markdown';
+  
+  // === STATISTICS ===
+  /** Get word count stats */
+  getWordCount: () => { words: number; characters: number; charactersWithSpaces: number };
+  
+  // === HISTORY METHODS ===
+  /** Undo last action */
+  undo: () => void;
+  /** Redo last undone action */
+  redo: () => void;
+  /** Check if can undo */
+  canUndo: () => boolean;
+  /** Check if can redo */
+  canRedo: () => boolean;
+  
+  // === INSERT METHODS ===
+  /** Insert image at cursor position */
+  insertImage: (src: string, alt?: string) => void;
+  /** Insert table at cursor position */
+  insertTable: (rows?: number, cols?: number) => void;
+  /** Insert code block at cursor position */
+  insertCodeBlock: (language?: string) => void;
+  /** Insert callout at cursor position */
+  insertCallout: (type?: 'info' | 'warning' | 'error' | 'success' | 'note') => void;
+  /** Insert horizontal rule at cursor position */
+  insertHorizontalRule: () => void;
+  
+  // === FORMATTING METHODS ===
+  /** Toggle bold on selection */
+  toggleBold: () => void;
+  /** Toggle italic on selection */
+  toggleItalic: () => void;
+  /** Toggle underline on selection */
+  toggleUnderline: () => void;
+  /** Toggle strikethrough on selection */
+  toggleStrike: () => void;
+  /** Toggle code on selection */
+  toggleCode: () => void;
+  /** Toggle highlight on selection */
+  toggleHighlight: () => void;
+  /** Set heading level (1-6) or 0 for paragraph */
+  setHeading: (level: 0 | 1 | 2 | 3 | 4 | 5 | 6) => void;
+  /** Toggle bullet list */
+  toggleBulletList: () => void;
+  /** Toggle numbered list */
+  toggleOrderedList: () => void;
+  /** Toggle task list */
+  toggleTaskList: () => void;
+  /** Toggle blockquote */
+  toggleBlockquote: () => void;
+  
+  // === LINK METHODS ===
+  /** Set link on selection */
+  setLink: (url: string) => void;
+  /** Remove link from selection */
+  unsetLink: () => void;
+  
+  // === PANEL METHODS ===
+  /** Open find/replace panel */
+  openFindReplace: () => void;
+  /** Close find/replace panel */
+  closeFindReplace: () => void;
+  
+  // === SAVE METHODS ===
+  /** Trigger manual save */
+  save: () => void;
+  /** Clear saved content from storage */
+  clearSavedContent: () => void;
+  
+  // === STATE METHODS ===
+  /** Check if editor is editable */
+  isEditable: () => boolean;
+  /** Set editable state */
+  setEditable: (editable: boolean) => void;
+}
+```
+
+### 9.3 Basic Usage Example
 
 ```tsx
 import { MarkdownEditor } from '@/components/editor';
@@ -728,26 +930,142 @@ function App() {
       placeholder="Type something..."
       showToolbar={true}
       showWordCount={true}
-      enableAutoSave={true}
+      autoSave={true}
       autoSaveKey="my-document"
-      height="500px"
+      minHeight="500px"
     />
   );
 }
 ```
 
-### 9.3 Editor Commands
+### 9.4 Advanced Usage with Ref
+
+```tsx
+import { MarkdownEditor, MarkdownEditorRef } from '@/components/editor';
+import { useRef } from 'react';
+
+function App() {
+  const editorRef = useRef<MarkdownEditorRef>(null);
+
+  const handleGetMarkdown = () => {
+    const markdown = editorRef.current?.getMarkdown();
+    console.log('Markdown:', markdown);
+  };
+
+  const handleInsertTable = () => {
+    editorRef.current?.insertTable(3, 4);
+  };
+
+  const handleToggleMode = () => {
+    const newMode = editorRef.current?.toggleMode();
+    console.log('New mode:', newMode);
+  };
+
+  return (
+    <div>
+      <div className="toolbar">
+        <button onClick={handleGetMarkdown}>Get Markdown</button>
+        <button onClick={handleInsertTable}>Insert Table</button>
+        <button onClick={handleToggleMode}>Toggle Mode</button>
+      </div>
+      <MarkdownEditor
+        ref={editorRef}
+        onReady={(editor) => console.log('Editor ready:', editor)}
+        onModeChange={(mode) => console.log('Mode changed:', mode)}
+        onSelectionChange={(sel) => console.log('Selection:', sel)}
+      />
+    </div>
+  );
+}
+```
+
+### 9.5 Custom Toolbar Example
+
+```tsx
+import { MarkdownEditor } from '@/components/editor';
+
+function App() {
+  return (
+    <MarkdownEditor
+      renderToolbar={(editor, defaultToolbar) => (
+        <div className="custom-toolbar">
+          {defaultToolbar}
+          <button onClick={() => editor.chain().focus().toggleBold().run()}>
+            Custom Bold
+          </button>
+        </div>
+      )}
+    />
+  );
+}
+```
+
+### 9.6 Disabled Features Example
+
+```tsx
+import { MarkdownEditor } from '@/components/editor';
+
+function SimpleEditor() {
+  return (
+    <MarkdownEditor
+      disabledFeatures={{
+        tables: true,
+        codeBlocks: true,
+        callouts: true,
+        datePills: true,
+        wikiLinks: true,
+        collapsibleHeadings: true,
+      }}
+      showModeToggle={false}
+      showFloatingToolbar={false}
+    />
+  );
+}
+```
+
+### 9.7 Global API (window.__manusEditorModeAPI)
+
+The editor also exposes a global API for external scripts:
+
+```typescript
+interface ManusEditorModeAPI {
+  getMode: () => 'wysiwyg' | 'markdown';
+  setMode: (mode: 'wysiwyg' | 'markdown') => void;
+  toggleMode: () => 'wysiwyg' | 'markdown';
+  switchToVisual: () => void;
+  switchToMarkdown: () => void;
+  isVisualMode: () => boolean;
+  isMarkdownMode: () => boolean;
+  getRawMarkdown: () => string | null;
+  onModeChange: (callback: (mode: 'wysiwyg' | 'markdown') => void) => () => void;
+}
+
+// Usage
+window.__manusEditorModeAPI.toggleMode();
+window.__manusEditorModeAPI.onModeChange((mode) => console.log('Mode:', mode));
+```
+
+### 9.8 Editor Commands (TipTap)
 
 The editor instance provides access to TipTap commands:
 
 ```typescript
-// Access via ref or editor context
+// Access via ref
+const editor = editorRef.current?.getEditor();
+
+// Formatting
 editor.chain().focus().toggleBold().run();
 editor.chain().focus().setHeading({ level: 1 }).run();
-editor.chain().focus().insertTable({ rows: 3, cols: 3 }).run();
+
+// Insertions
+editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
 editor.chain().focus().setImage({ src: 'url', alt: 'text' }).run();
-editor.chain().focus().toggleCallout({ type: 'info' }).run();
+editor.commands.insertCallout({ type: 'info' });
 editor.chain().focus().insertDatePill().run();
+
+// Selection
+editor.chain().focus().selectAll().run();
+editor.chain().focus().setTextSelection({ from: 0, to: 10 }).run();
 ```
 
 ---

@@ -16,7 +16,7 @@ import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Typography from '@tiptap/extension-typography';
 import { CodeBlockWithFeatures } from './extensions/CodeBlockWithFeatures';
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { LinkPopover } from './LinkPopover';
 import { LinkHoverTooltip } from './LinkHoverTooltip';
 import { FloatingToolbar } from './FloatingToolbar';
@@ -44,8 +44,9 @@ import { ImageEditPopover } from './ImageEditPopover';
 import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
 import { FileText, Eye } from 'lucide-react';
 import TurndownService from 'turndown';
-import { gfm, tables, strikethrough, taskListItems } from 'turndown-plugin-gfm';
+import { gfm } from 'turndown-plugin-gfm';
 import { marked } from 'marked';
+import type { Editor } from '@tiptap/react';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -72,18 +73,122 @@ const isMobileDevice = () => {
   return (hasTouchEvents && (isMobileUA || isSmallScreen)) || (isMobileUA && isSmallScreen);
 };
 
-
+/**
+ * Editor ref handle - methods exposed via ref for external control
+ */
+export interface MarkdownEditorRef {
+  /** Get the underlying TipTap editor instance */
+  getEditor: () => Editor | null;
+  /** Get the current HTML content */
+  getHTML: () => string;
+  /** Get the current markdown content */
+  getMarkdown: () => string;
+  /** Get plain text content */
+  getText: () => string;
+  /** Set content (HTML string) */
+  setContent: (content: string) => void;
+  /** Clear all content */
+  clearContent: () => void;
+  /** Focus the editor */
+  focus: (position?: 'start' | 'end' | 'all' | number | boolean) => void;
+  /** Blur the editor */
+  blur: () => void;
+  /** Check if editor is empty */
+  isEmpty: () => boolean;
+  /** Check if editor is focused */
+  isFocused: () => boolean;
+  /** Get current editor mode */
+  getMode: () => 'wysiwyg' | 'markdown';
+  /** Set editor mode */
+  setMode: (mode: 'wysiwyg' | 'markdown') => void;
+  /** Toggle between modes */
+  toggleMode: () => 'wysiwyg' | 'markdown';
+  /** Get word count stats */
+  getWordCount: () => { words: number; characters: number; charactersWithSpaces: number };
+  /** Undo last action */
+  undo: () => void;
+  /** Redo last undone action */
+  redo: () => void;
+  /** Check if can undo */
+  canUndo: () => boolean;
+  /** Check if can redo */
+  canRedo: () => boolean;
+  /** Insert content at cursor position */
+  insertContent: (content: string) => void;
+  /** Insert image at cursor position */
+  insertImage: (src: string, alt?: string) => void;
+  /** Insert table at cursor position */
+  insertTable: (rows?: number, cols?: number) => void;
+  /** Insert code block at cursor position */
+  insertCodeBlock: (language?: string) => void;
+  /** Insert callout at cursor position */
+  insertCallout: (type?: 'info' | 'warning' | 'error' | 'success' | 'note') => void;
+  /** Insert horizontal rule at cursor position */
+  insertHorizontalRule: () => void;
+  /** Toggle bold on selection */
+  toggleBold: () => void;
+  /** Toggle italic on selection */
+  toggleItalic: () => void;
+  /** Toggle underline on selection */
+  toggleUnderline: () => void;
+  /** Toggle strikethrough on selection */
+  toggleStrike: () => void;
+  /** Toggle code on selection */
+  toggleCode: () => void;
+  /** Toggle highlight on selection */
+  toggleHighlight: () => void;
+  /** Set heading level (1-6) or 0 for paragraph */
+  setHeading: (level: 0 | 1 | 2 | 3 | 4 | 5 | 6) => void;
+  /** Toggle bullet list */
+  toggleBulletList: () => void;
+  /** Toggle numbered list */
+  toggleOrderedList: () => void;
+  /** Toggle task list */
+  toggleTaskList: () => void;
+  /** Toggle blockquote */
+  toggleBlockquote: () => void;
+  /** Set link on selection */
+  setLink: (url: string) => void;
+  /** Remove link from selection */
+  unsetLink: () => void;
+  /** Open find/replace panel */
+  openFindReplace: () => void;
+  /** Close find/replace panel */
+  closeFindReplace: () => void;
+  /** Trigger manual save */
+  save: () => void;
+  /** Clear saved content from storage */
+  clearSavedContent: () => void;
+  /** Get selection text */
+  getSelectedText: () => string;
+  /** Check if editor is editable */
+  isEditable: () => boolean;
+  /** Set editable state */
+  setEditable: (editable: boolean) => void;
+}
 
 export interface MarkdownEditorProps {
+  /** Initial HTML content */
   content?: string;
+  /** Callback when content changes (HTML) */
   onChange?: (content: string) => void;
+  /** Callback when HTML content changes (alias for onChange) */
   onHTMLChange?: (html: string) => void;
+  /** Callback when raw markdown content changes */
+  onMarkdownChange?: (markdown: string) => void;
+  /** Placeholder text when editor is empty */
   placeholder?: string;
+  /** Whether the editor is editable */
   editable?: boolean;
+  /** Whether to autofocus the editor on mount */
   autofocus?: boolean;
+  /** Additional CSS classes */
   className?: string;
+  /** Show top toolbar (default: true) */
   showToolbar?: boolean;
+  /** Show word count in footer (default: true) */
   showWordCount?: boolean;
+  /** Theme mode - will be deprecated, use CSS variables instead */
   theme?: 'dark' | 'light';
   /** Enable auto-save to localStorage (default: true) */
   autoSave?: boolean;
@@ -105,14 +210,70 @@ export interface MarkdownEditorProps {
   onImageUploadError?: (error: string) => void;
   /** Show mode toggle to switch between WYSIWYG and raw markdown (default: true) */
   showModeToggle?: boolean;
-  /** Callback when raw markdown content changes */
-  onMarkdownChange?: (markdown: string) => void;
+  
+  // === NEW PROPS FOR EXTERNAL INTEGRATION ===
+  
+  /** Initial editor mode (default: 'wysiwyg') */
+  initialMode?: 'wysiwyg' | 'markdown';
+  /** Callback when editor mode changes */
+  onModeChange?: (mode: 'wysiwyg' | 'markdown') => void;
+  /** Callback when editor is ready with the editor instance */
+  onReady?: (editor: Editor) => void;
+  /** Callback when editor is focused */
+  onFocus?: () => void;
+  /** Callback when editor loses focus */
+  onBlur?: () => void;
+  /** Callback when selection changes */
+  onSelectionChange?: (selection: { from: number; to: number; empty: boolean }) => void;
+  /** Callback when editor is destroyed */
+  onDestroy?: () => void;
+  /** Callback when content is saved (auto-save or manual) */
+  onSave?: (content: string) => void;
+  /** Callback when content is recovered from storage */
+  onRecover?: (content: string) => void;
+  /** Callback when a wiki link is clicked */
+  onWikiLinkClick?: (pageName: string) => void;
+  /** Callback when a link is clicked (return false to prevent default) */
+  onLinkClick?: (url: string, event: MouseEvent) => boolean | void;
+  /** Show find/replace panel (default: false) - controlled mode */
+  findReplaceOpen?: boolean;
+  /** Callback when find/replace panel state changes */
+  onFindReplaceChange?: (isOpen: boolean) => void;
+  /** Custom toolbar render function - allows replacing or extending toolbar */
+  renderToolbar?: (editor: Editor, defaultToolbar: React.ReactNode) => React.ReactNode;
+  /** Custom footer render function - allows replacing or extending footer */
+  renderFooter?: (wordCount: { words: number; characters: number }, autoSaveStatus: string, defaultFooter: React.ReactNode) => React.ReactNode;
+  /** Disable specific features */
+  disabledFeatures?: {
+    tables?: boolean;
+    images?: boolean;
+    codeBlocks?: boolean;
+    taskLists?: boolean;
+    callouts?: boolean;
+    datePills?: boolean;
+    wikiLinks?: boolean;
+    collapsibleHeadings?: boolean;
+    slashCommands?: boolean;
+    markdownPaste?: boolean;
+    dragAndDrop?: boolean;
+  };
+  /** Minimum height of the editor (default: '200px') */
+  minHeight?: string;
+  /** Maximum height of the editor (default: none) */
+  maxHeight?: string;
+  /** Enable spellcheck (default: true) */
+  spellCheck?: boolean;
+  /** Heading levels to enable (default: [1, 2, 3, 4, 5, 6]) */
+  headingLevels?: (1 | 2 | 3 | 4 | 5 | 6)[];
+  /** Collapsible heading levels (default: [1, 2, 3]) */
+  collapsibleHeadingLevels?: (1 | 2 | 3 | 4 | 5 | 6)[];
 }
 
-export function MarkdownEditor({
+export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(function MarkdownEditor({
   content = '',
   onChange,
   onHTMLChange,
+  onMarkdownChange,
   placeholder = 'Start writing... Use "/" for commands',
   editable = true,
   autofocus = false,
@@ -129,19 +290,40 @@ export function MarkdownEditor({
   onImageUploadComplete,
   onImageUploadError,
   showModeToggle = true,
-  onMarkdownChange,
-}: MarkdownEditorProps) {
+  // New props
+  initialMode = 'wysiwyg',
+  onModeChange,
+  onReady,
+  onFocus,
+  onBlur,
+  onSelectionChange,
+  onDestroy,
+  onSave,
+  onRecover,
+  onWikiLinkClick,
+  onLinkClick,
+  findReplaceOpen,
+  onFindReplaceChange,
+  renderToolbar,
+  renderFooter,
+  disabledFeatures = {},
+  minHeight = '200px',
+  maxHeight,
+  spellCheck = true,
+  headingLevels = [1, 2, 3, 4, 5, 6],
+  collapsibleHeadingLevels = [1, 2, 3],
+}, ref) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
   
   // Editor mode: 'wysiwyg' or 'markdown'
-  const [editorMode, setEditorMode] = useState<'wysiwyg' | 'markdown'>('wysiwyg');
+  const [editorMode, setEditorMode] = useState<'wysiwyg' | 'markdown'>(initialMode);
   
   // Raw markdown content for markdown mode
   const [rawMarkdown, setRawMarkdown] = useState('');
   
   // Refs to track current values for the API (avoids closure issues)
-  const editorModeRef = useRef<'wysiwyg' | 'markdown'>('wysiwyg');
+  const editorModeRef = useRef<'wysiwyg' | 'markdown'>(initialMode);
   const rawMarkdownRef = useRef<string>('');
   
   // Ref for the editor content wrapper (for drag handle overlay)
@@ -153,7 +335,7 @@ export function MarkdownEditor({
     const baseExtensions: any[] = [
       StarterKit.configure({
         heading: {
-          levels: [1, 2, 3, 4, 5, 6],
+          levels: headingLevels,
         },
         codeBlock: false, // We use CodeBlockLowlight instead
         dropcursor: {
@@ -193,60 +375,96 @@ export function MarkdownEditor({
           target: '_blank',
         },
       }),
-      // Use standard table extensions for better mobile compatibility
-      Table.configure({
-        resizable: !isMobile, // Disable resize on mobile
-        HTMLAttributes: {
-          class: 'editor-table',
-        },
-      }),
-      TableRow,
-      TableCellWithMenu,
-      TableHeaderWithMenu,
-      TableSorting,
-      TaskList.configure({
-        HTMLAttributes: {
-          class: 'task-list',
-        },
-      }),
-      TaskItem.configure({
-        nested: true,
-        HTMLAttributes: {
-          class: 'task-item',
-        },
-      }),
-      CodeBlockWithFeatures,
       Underline,
       Subscript,
       Superscript,
       Typography,
-      CalloutWithMenu,
-      CalloutInputRule,
-      CollapsibleHeading.configure({
-        levels: [1, 2, 3],
-      }),
       MarkdownLinkInputRule,
       SearchHighlight,
       TabIndent,
-      ResizableImage.configure({
-        allowBase64: true,
-        HTMLAttributes: {
-          class: 'editor-image',
-        },
-        onImageClick: (attrs) => {
-          setImageEditState({
-            isOpen: true,
-            src: attrs.src,
-            alt: attrs.alt,
-            pos: attrs.pos,
-            position: { x: attrs.rect.left + attrs.rect.width / 2, y: attrs.rect.bottom },
-          });
-        },
-      }),
     ];
 
-    // Only add DatePill on desktop
-    if (!isMobile) {
+    // Conditionally add tables
+    if (!disabledFeatures.tables) {
+      baseExtensions.push(
+        Table.configure({
+          resizable: !isMobile, // Disable resize on mobile
+          HTMLAttributes: {
+            class: 'editor-table',
+          },
+        }),
+        TableRow,
+        TableCellWithMenu,
+        TableHeaderWithMenu,
+        TableSorting
+      );
+    }
+
+    // Conditionally add task lists
+    if (!disabledFeatures.taskLists) {
+      baseExtensions.push(
+        TaskList.configure({
+          HTMLAttributes: {
+            class: 'task-list',
+          },
+        }),
+        TaskItem.configure({
+          nested: true,
+          HTMLAttributes: {
+            class: 'task-item',
+          },
+        })
+      );
+    }
+
+    // Conditionally add code blocks
+    if (!disabledFeatures.codeBlocks) {
+      baseExtensions.push(CodeBlockWithFeatures);
+    }
+
+    // Conditionally add callouts
+    if (!disabledFeatures.callouts) {
+      baseExtensions.push(CalloutWithMenu, CalloutInputRule);
+    }
+
+    // Conditionally add collapsible headings
+    if (!disabledFeatures.collapsibleHeadings) {
+      baseExtensions.push(
+        CollapsibleHeading.configure({
+          levels: collapsibleHeadingLevels,
+        })
+      );
+    }
+
+    // Conditionally add images
+    if (!disabledFeatures.images) {
+      baseExtensions.push(
+        ResizableImage.configure({
+          allowBase64: true,
+          HTMLAttributes: {
+            class: 'editor-image',
+          },
+          onImageClick: (attrs) => {
+            setImageEditState({
+              isOpen: true,
+              src: attrs.src,
+              alt: attrs.alt,
+              pos: attrs.pos,
+              position: { x: attrs.rect.left + attrs.rect.width / 2, y: attrs.rect.bottom },
+            });
+          },
+        }),
+        ImageUpload.configure({
+          maxFileSize: maxImageSize,
+          onUploadStart: onImageUploadStart,
+          onUploadComplete: onImageUploadComplete,
+          onUploadError: onImageUploadError,
+        })
+      );
+    }
+
+    // Only add DatePill on desktop and if not disabled
+    if (!isMobile && !disabledFeatures.datePills) {
       baseExtensions.push(
         DatePill.configure({
           HTMLAttributes: {
@@ -256,35 +474,39 @@ export function MarkdownEditor({
       );
     }
 
-    // Add mobile-safe versions of WikiLink and MarkdownPaste
-    // These use simpler approaches that work on both desktop and mobile
-    baseExtensions.push(
-      WikiLinkSafe.configure({
-        onWikiLinkClick: (pageName) => {
-          console.log('WikiLink clicked:', pageName);
-          // You can customize this callback to navigate to the linked page
-        },
-      }),
-      MarkdownPasteSafe.configure({
-        enableMarkdownPaste: true,
-      }),
-      // Image upload via drag-and-drop and paste
-      ImageUpload.configure({
-        maxFileSize: maxImageSize,
-        onUploadStart: onImageUploadStart,
-        onUploadComplete: onImageUploadComplete,
-        onUploadError: onImageUploadError,
-      })
-    );
+    // Conditionally add wiki links
+    if (!disabledFeatures.wikiLinks) {
+      baseExtensions.push(
+        WikiLinkSafe.configure({
+          onWikiLinkClick: (pageName) => {
+            console.log('WikiLink clicked:', pageName);
+            onWikiLinkClick?.(pageName);
+          },
+        })
+      );
+    }
+
+    // Conditionally add markdown paste
+    if (!disabledFeatures.markdownPaste) {
+      baseExtensions.push(
+        MarkdownPasteSafe.configure({
+          enableMarkdownPaste: true,
+        })
+      );
+    }
 
     return baseExtensions;
-  }, [placeholder, isMobile, maxImageSize, onImageUploadStart, onImageUploadComplete, onImageUploadError]);
+  }, [placeholder, isMobile, maxImageSize, onImageUploadStart, onImageUploadComplete, onImageUploadError, headingLevels, collapsibleHeadingLevels, disabledFeatures, onWikiLinkClick]);
 
   const editor = useEditor({
     // @ts-ignore - Expose editor globally for debugging
     onCreate: ({ editor }) => {
       (window as any).__tiptapEditor = editor;
       console.log('TipTap editor created and exposed globally as window.__tiptapEditor');
+      onReady?.(editor);
+    },
+    onDestroy: () => {
+      onDestroy?.();
     },
     extensions,
     content,
@@ -293,8 +515,26 @@ export function MarkdownEditor({
     editorProps: {
       attributes: {
         class: 'tiptap-editor outline-none min-h-full',
+        spellcheck: spellCheck ? 'true' : 'false',
       },
-
+      handleClick: (view, pos, event) => {
+        // Handle link clicks
+        if (onLinkClick) {
+          const target = event.target as HTMLElement;
+          const link = target.closest('a');
+          if (link) {
+            const url = link.getAttribute('href');
+            if (url) {
+              const result = onLinkClick(url, event);
+              if (result === false) {
+                event.preventDefault();
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      },
     },
     onUpdate: ({ editor }) => {
       // Only call getHTML once for performance
@@ -302,6 +542,18 @@ export function MarkdownEditor({
         const html = editor.getHTML();
         onChange?.(html);
         onHTMLChange?.(html);
+      }
+    },
+    onFocus: () => {
+      onFocus?.();
+    },
+    onBlur: () => {
+      onBlur?.();
+    },
+    onSelectionUpdate: ({ editor }) => {
+      if (onSelectionChange) {
+        const { from, to, empty } = editor.state.selection;
+        onSelectionChange({ from, to, empty });
       }
     },
   });
@@ -318,8 +570,14 @@ export function MarkdownEditor({
     position: { x: number; y: number };
   } | null>(null);
   
-  // State for find/replace panel
-  const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
+  // State for find/replace panel - support both controlled and uncontrolled modes
+  const [internalFindReplaceOpen, setInternalFindReplaceOpen] = useState(false);
+  const isFindReplaceOpen = findReplaceOpen !== undefined ? findReplaceOpen : internalFindReplaceOpen;
+  const setIsFindReplaceOpen = useCallback((open: boolean) => {
+    setInternalFindReplaceOpen(open);
+    onFindReplaceChange?.(open);
+  }, [onFindReplaceChange]);
+  
   const [findReplaceFocusTrigger, setFindReplaceFocusTrigger] = useState(0);
 
   // Auto-save functionality
@@ -327,6 +585,12 @@ export function MarkdownEditor({
     storageKey: autoSaveKey,
     debounceMs: autoSaveDelay,
     enabled: autoSave,
+    onSave: (content) => {
+      onSave?.(content);
+    },
+    onRecover: (content) => {
+      onRecover?.(content);
+    },
   });
 
   // Create TurndownService for HTML to Markdown conversion
@@ -475,7 +739,8 @@ export function MarkdownEditor({
     
     setEditorMode(newMode);
     editorModeRef.current = newMode;
-  }, [editor, turndownService]);
+    onModeChange?.(newMode);
+  }, [editor, turndownService, onModeChange]);
 
   // Handle raw markdown changes
   const handleRawMarkdownChange = useCallback((markdown: string) => {
@@ -483,6 +748,109 @@ export function MarkdownEditor({
     rawMarkdownRef.current = markdown;
     onMarkdownChange?.(markdown);
   }, [onMarkdownChange]);
+
+  // Word count calculation (debounced for performance with large documents)
+  const wordCount = useWordCount(editor, {
+    debounceMs: 500,
+    extendedStats: false,
+    enabled: showWordCount,
+  });
+
+  // Expose imperative handle for ref
+  useImperativeHandle(ref, () => ({
+    getEditor: () => editor,
+    getHTML: () => editor?.getHTML() || '',
+    getMarkdown: () => {
+      if (!editor) return '';
+      return turndownService.turndown(editor.getHTML());
+    },
+    getText: () => editor?.getText() || '',
+    setContent: (content: string) => {
+      if (editor && !editor.isDestroyed) {
+        queueMicrotask(() => {
+          editor.commands.setContent(content);
+        });
+      }
+    },
+    clearContent: () => {
+      if (editor && !editor.isDestroyed) {
+        editor.commands.clearContent();
+      }
+    },
+    focus: (position) => {
+      if (editor && !editor.isDestroyed) {
+        editor.commands.focus(position);
+      }
+    },
+    blur: () => {
+      if (editor && !editor.isDestroyed) {
+        editor.commands.blur();
+      }
+    },
+    isEmpty: () => editor?.isEmpty || true,
+    isFocused: () => editor?.isFocused || false,
+    getMode: () => editorModeRef.current,
+    setMode: (mode) => handleModeSwitch(mode),
+    toggleMode: () => {
+      const newMode = editorModeRef.current === 'wysiwyg' ? 'markdown' : 'wysiwyg';
+      handleModeSwitch(newMode);
+      return newMode;
+    },
+    getWordCount: () => ({
+      words: wordCount.words,
+      characters: wordCount.characters,
+      charactersWithSpaces: wordCount.charactersWithSpaces,
+    }),
+    undo: () => editor?.commands.undo(),
+    redo: () => editor?.commands.redo(),
+    canUndo: () => editor?.can().undo() || false,
+    canRedo: () => editor?.can().redo() || false,
+    insertContent: (content) => editor?.commands.insertContent(content),
+    insertImage: (src, alt = '') => editor?.commands.setImage({ src, alt }),
+    insertTable: (rows = 3, cols = 3) => editor?.commands.insertTable({ rows, cols, withHeaderRow: true }),
+    insertCodeBlock: (language) => {
+      if (language) {
+        editor?.commands.setCodeBlock({ language });
+      } else {
+        editor?.commands.setCodeBlock();
+      }
+    },
+    insertCallout: (type = 'info') => editor?.commands.insertCallout?.({ type }),
+    insertHorizontalRule: () => editor?.commands.setHorizontalRule(),
+    toggleBold: () => editor?.commands.toggleBold(),
+    toggleItalic: () => editor?.commands.toggleItalic(),
+    toggleUnderline: () => editor?.commands.toggleUnderline(),
+    toggleStrike: () => editor?.commands.toggleStrike(),
+    toggleCode: () => editor?.commands.toggleCode(),
+    toggleHighlight: () => editor?.commands.toggleHighlight(),
+    setHeading: (level) => {
+      if (level === 0) {
+        editor?.commands.setParagraph();
+      } else {
+        editor?.commands.setHeading({ level });
+      }
+    },
+    toggleBulletList: () => editor?.commands.toggleBulletList(),
+    toggleOrderedList: () => editor?.commands.toggleOrderedList(),
+    toggleTaskList: () => editor?.commands.toggleTaskList(),
+    toggleBlockquote: () => editor?.commands.toggleBlockquote(),
+    setLink: (url) => editor?.commands.setLink({ href: url }),
+    unsetLink: () => editor?.commands.unsetLink(),
+    openFindReplace: () => {
+      setIsFindReplaceOpen(true);
+      setFindReplaceFocusTrigger(prev => prev + 1);
+    },
+    closeFindReplace: () => setIsFindReplaceOpen(false),
+    save: () => autoSaveState.save(),
+    clearSavedContent: () => autoSaveState.clear(),
+    getSelectedText: () => {
+      if (!editor) return '';
+      const { from, to } = editor.state.selection;
+      return editor.state.doc.textBetween(from, to, ' ');
+    },
+    isEditable: () => editor?.isEditable || false,
+    setEditable: (editable) => editor?.setEditable(editable),
+  }), [editor, turndownService, handleModeSwitch, wordCount, autoSaveState, setIsFindReplaceOpen]);
 
   // Expose Editor Mode API globally for external applications
   // Using refs to avoid closure issues - the API always reads the latest values
@@ -688,15 +1056,7 @@ export function MarkdownEditor({
     // Use capture: true to intercept Tab key before browser default behavior
     document.addEventListener('keydown', handleKeyDown, true);
     return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [editor, isMobile]);
-
-// Word count calculation (debounced for performance with large documents)
-  const wordCount = useWordCount(editor, {
-    debounceMs: 500,
-    extendedStats: false,
-    enabled: showWordCount,
-  });
-
+  }, [editor, isMobile, setIsFindReplaceOpen]);
 
   if (!editor) {
     return (
@@ -705,6 +1065,42 @@ export function MarkdownEditor({
       </div>
     );
   }
+
+  // Default toolbar component
+  const defaultToolbar = (
+    <EditorToolbar 
+      editor={editor} 
+      onOpenLinkPopover={() => setIsLinkPopoverOpen(true)}
+      className="flex-1 border-b-0"
+      onOpenFindReplace={() => {
+        setIsFindReplaceOpen(true);
+        setFindReplaceFocusTrigger(prev => prev + 1);
+      }}
+      disabledFeatures={disabledFeatures}
+    />
+  );
+
+  // Default footer component
+  const defaultFooter = (
+    <div className="editor-footer">
+      <div className="word-count">
+        <span>{wordCount.words} words</span>
+        <span>{wordCount.characters} characters</span>
+      </div>
+      {autoSave && (
+        <AutoSaveIndicator 
+          status={autoSaveState.status} 
+          lastSaved={autoSaveState.lastSaved}
+        />
+      )}
+    </div>
+  );
+
+  // Dynamic styles for min/max height
+  const editorContentStyle: React.CSSProperties = {
+    minHeight,
+    ...(maxHeight && { maxHeight, overflowY: 'auto' as const }),
+  };
 
   return (
     <div className={`markdown-editor-container ${className}`}>
@@ -721,11 +1117,7 @@ export function MarkdownEditor({
       {/* Top toolbar with mode toggle */}
       {showToolbar && (
         <div className="flex items-center border-b border-border bg-card/50">
-          <EditorToolbar 
-            editor={editor} 
-            onOpenLinkPopover={() => setIsLinkPopoverOpen(true)}
-            className="flex-1 border-b-0"
-          />
+          {renderToolbar ? renderToolbar(editor, defaultToolbar) : defaultToolbar}
           {showModeToggle && (
             <div className="editor-mode-toggle mr-2 sm:mr-3">
               <button
@@ -758,13 +1150,15 @@ export function MarkdownEditor({
       )}
       
       {/* Main editor area */}
-      <div className="editor-content-wrapper" ref={editorContentRef}>
+      <div className="editor-content-wrapper" ref={editorContentRef} style={editorContentStyle}>
         {editorMode === 'wysiwyg' ? (
           <>
             <EditorContent editor={editor} className="editor-content" />
             
             {/* Image drop zone overlay */}
-            <ImageDropZone containerRef={editorContentRef} enabled={editable} />
+            {!disabledFeatures.images && !disabledFeatures.dragAndDrop && (
+              <ImageDropZone containerRef={editorContentRef} enabled={editable} />
+            )}
             
             {/* Drag handle overlay removed - drag and reorder functionality disabled */}
             
@@ -772,7 +1166,7 @@ export function MarkdownEditor({
             {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} />}
             
             {/* Slash commands */}
-            <SlashCommands editor={editor} />
+            {!disabledFeatures.slashCommands && <SlashCommands editor={editor} disabledFeatures={disabledFeatures} />}
             
             {/* Link popover */}
             <LinkPopover
@@ -790,7 +1184,7 @@ export function MarkdownEditor({
             )}
             
             {/* Image edit popover */}
-            {imageEditState?.isOpen && (
+            {!disabledFeatures.images && imageEditState?.isOpen && (
               <ImageEditPopover
                 src={imageEditState.src}
                 alt={imageEditState.alt}
@@ -825,21 +1219,16 @@ export function MarkdownEditor({
       
       {/* Footer with word count and auto-save status */}
       {showWordCount && (
-        <div className="editor-footer">
-          <div className="word-count">
-            <span>{wordCount.words} words</span>
-            <span>{wordCount.characters} characters</span>
-          </div>
-          {autoSave && (
-            <AutoSaveIndicator 
-              status={autoSaveState.status} 
-              lastSaved={autoSaveState.lastSaved}
-            />
-          )}
-        </div>
+        renderFooter 
+          ? renderFooter(
+              { words: wordCount.words, characters: wordCount.characters },
+              autoSaveState.status,
+              defaultFooter
+            )
+          : defaultFooter
       )}
     </div>
   );
-}
+});
 
 export default MarkdownEditor;

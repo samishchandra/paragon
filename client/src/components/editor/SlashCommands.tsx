@@ -31,6 +31,19 @@ import {
 
 interface SlashCommandsProps {
   editor: Editor;
+  disabledFeatures?: {
+    tables?: boolean;
+    images?: boolean;
+    codeBlocks?: boolean;
+    taskLists?: boolean;
+    callouts?: boolean;
+    datePills?: boolean;
+    wikiLinks?: boolean;
+    collapsibleHeadings?: boolean;
+    slashCommands?: boolean;
+    markdownPaste?: boolean;
+    dragAndDrop?: boolean;
+  };
 }
 
 interface CommandItem {
