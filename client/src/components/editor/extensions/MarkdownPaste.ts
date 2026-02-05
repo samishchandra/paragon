@@ -7,11 +7,132 @@ export interface MarkdownPasteOptions {
 
 export const markdownPastePluginKey = new PluginKey('markdownPaste');
 
+// Parse a markdown table and convert to HTML
+function parseMarkdownTable(tableText: string): string {
+  const lines = tableText.trim().split('\n');
+  if (lines.length < 2) return '';
+  
+  // Parse header row
+  const headerLine = lines[0];
+  const headerCells = headerLine
+    .split('|')
+    .map(cell => cell.trim())
+    .filter(cell => cell.length > 0);
+  
+  if (headerCells.length === 0) return '';
+  
+  // Check for separator row (second line should have dashes)
+  const separatorLine = lines[1];
+  if (!separatorLine.includes('-')) return '';
+  
+  // Parse data rows
+  const dataRows = lines.slice(2);
+  
+  let html = '<table><thead><tr>';
+  
+  // Add header cells
+  for (const cell of headerCells) {
+    html += `<th><p>${cell}</p></th>`;
+  }
+  
+  html += '</tr></thead><tbody>';
+  
+  // Add data rows
+  for (const row of dataRows) {
+    if (!row.trim()) continue;
+    
+    const cells = row
+      .split('|')
+      .map(cell => cell.trim())
+      .filter((_, index, arr) => {
+        // Filter out empty cells at the beginning and end (from leading/trailing pipes)
+        if (index === 0 && arr[0] === '') return false;
+        if (index === arr.length - 1 && arr[arr.length - 1] === '') return false;
+        return true;
+      });
+    
+    // Re-parse to handle the filtering correctly
+    const rawCells = row.split('|');
+    const filteredCells: string[] = [];
+    for (let i = 0; i < rawCells.length; i++) {
+      const cell = rawCells[i].trim();
+      // Skip first empty cell if line starts with |
+      if (i === 0 && cell === '' && row.trim().startsWith('|')) continue;
+      // Skip last empty cell if line ends with |
+      if (i === rawCells.length - 1 && cell === '' && row.trim().endsWith('|')) continue;
+      filteredCells.push(cell);
+    }
+    
+    if (filteredCells.length === 0) continue;
+    
+    html += '<tr>';
+    
+    // Ensure we have the same number of cells as headers
+    for (let i = 0; i < headerCells.length; i++) {
+      const cellContent = filteredCells[i] || '';
+      html += `<td><p>${cellContent}</p></td>`;
+    }
+    
+    html += '</tr>';
+  }
+  
+  html += '</tbody></table>';
+  
+  return html;
+}
+
+// Check if a block of text is a markdown table
+function isMarkdownTable(text: string): boolean {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return false;
+  
+  // First line should have pipes
+  if (!lines[0].includes('|')) return false;
+  
+  // Second line should be the separator with dashes and pipes
+  const separatorPattern = /^[\s|:-]+$/;
+  if (!separatorPattern.test(lines[1]) || !lines[1].includes('-')) return false;
+  
+  return true;
+}
+
 // Simple markdown to HTML converter
 function markdownToHtml(markdown: string): string {
   let html = markdown;
   
-  // Escape HTML entities first
+  // First, extract and convert tables
+  // Tables are multi-line structures, so we need to handle them specially
+  const tablePattern = /^(\|[^\n]+\|\n\|[-:\s|]+\|\n(?:\|[^\n]+\|\n?)*)/gm;
+  const tables: { placeholder: string; html: string }[] = [];
+  let tableIndex = 0;
+  
+  html = html.replace(tablePattern, (match) => {
+    const tableHtml = parseMarkdownTable(match);
+    if (tableHtml) {
+      const placeholder = `__TABLE_PLACEHOLDER_${tableIndex}__`;
+      tables.push({ placeholder, html: tableHtml });
+      tableIndex++;
+      return placeholder;
+    }
+    return match;
+  });
+  
+  // Also handle tables without leading pipe
+  const tablePatternNoPipe = /^([^\n|]+\|[^\n]+\n[-:\s|]+\n(?:[^\n]+\n?)*)/gm;
+  html = html.replace(tablePatternNoPipe, (match) => {
+    if (isMarkdownTable(match)) {
+      const tableHtml = parseMarkdownTable(match);
+      if (tableHtml) {
+        const placeholder = `__TABLE_PLACEHOLDER_${tableIndex}__`;
+        tables.push({ placeholder, html: tableHtml });
+        tableIndex++;
+        return placeholder;
+      }
+    }
+    return match;
+  });
+  
+  // Escape HTML entities first (but not in table placeholders)
   html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   
   // Headers (must be at start of line)
@@ -81,9 +202,11 @@ function markdownToHtml(markdown: string): string {
   const processedLines = lines.map(line => {
     const trimmed = line.trim();
     if (!trimmed) return '';
+    // Skip table placeholders
+    if (trimmed.startsWith('__TABLE_PLACEHOLDER_')) return line;
     if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol') || 
         trimmed.startsWith('<li') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<pre') ||
-        trimmed.startsWith('<hr') || trimmed.startsWith('</')) {
+        trimmed.startsWith('<hr') || trimmed.startsWith('</') || trimmed.startsWith('<table')) {
       return line;
     }
     return `<p>${trimmed}</p>`;
@@ -94,6 +217,11 @@ function markdownToHtml(markdown: string): string {
   // Clean up empty paragraphs
   html = html.replace(/<p><\/p>/g, '');
   html = html.replace(/<p>\s*<\/p>/g, '');
+  
+  // Restore tables
+  for (const table of tables) {
+    html = html.replace(table.placeholder, table.html);
+  }
   
   return html;
 }
@@ -117,6 +245,8 @@ function looksLikeMarkdown(text: string): boolean {
     /!\[.*\]\(.+\)/,         // Images
     /^---+$/m,               // Horizontal rules
     /^\*\*\*+$/m,            // Horizontal rules
+    /^\|[^\n]+\|\n\|[-:\s|]+\|/m, // Tables with pipes
+    /^[^|\n]+\|[^|\n]+\n[-:\s|]+/m, // Tables without leading pipe
   ];
   
   return markdownPatterns.some(pattern => pattern.test(text));
@@ -147,11 +277,19 @@ export const MarkdownPaste = Extension.create<MarkdownPasteOptions>({
               const text = clipboardData.getData('text/plain');
               if (!text) return false;
 
+              console.log('MarkdownPaste: Received text:', text.substring(0, 100));
+
               // Check if it looks like markdown
-              if (!looksLikeMarkdown(text)) return false;
+              if (!looksLikeMarkdown(text)) {
+                console.log('MarkdownPaste: Text does not look like markdown');
+                return false;
+              }
+
+              console.log('MarkdownPaste: Text looks like markdown, converting...');
 
               // Convert markdown to HTML
               const html = markdownToHtml(text);
+              console.log('MarkdownPaste: Generated HTML:', html.substring(0, 200));
               
               // Insert the converted HTML
               editor.commands.insertContent(html, {

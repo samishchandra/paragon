@@ -13,6 +13,9 @@ const MARKDOWN_PATTERNS = {
   list: /^\s*[-*]\s+/m,
   taskList: /^\s*[-*]\s*\[[ x]\]/im,
   link: /\[.+\]\(.+\)/,
+  // Table pattern: header row with pipes, separator row with dashes, optional data rows
+  // Allow headers and separators with or without trailing pipes
+  table: /^\|[^\n]+\n\|[-:\s|]+/m,
 };
 
 // Quick check if text looks like markdown (optimized - check most common patterns first)
@@ -27,8 +30,70 @@ function looksLikeMarkdown(text: string): boolean {
   if (MARKDOWN_PATTERNS.taskList.test(text)) return true;
   if (MARKDOWN_PATTERNS.codeBlock.test(text)) return true;
   if (MARKDOWN_PATTERNS.link.test(text)) return true;
+  if (MARKDOWN_PATTERNS.table.test(text)) return true;
   
   return false;
+}
+
+// Parse markdown table to HTML
+function parseMarkdownTable(tableText: string): string {
+  const lines = tableText.trim().split('\n');
+  if (lines.length < 2) return '';
+  
+  // Parse header row
+  const headerLine = lines[0];
+  const headerCells = headerLine
+    .split('|')
+    .map(cell => cell.trim())
+    .filter(cell => cell.length > 0);
+  
+  if (headerCells.length === 0) return '';
+  
+  // Verify separator row
+  const separatorLine = lines[1];
+  if (!separatorLine.includes('-')) return '';
+  
+  // Parse data rows
+  const dataRows = lines.slice(2);
+  
+  // Build HTML table
+  let html = '<table><thead><tr>';
+  
+  for (const cell of headerCells) {
+    html += '<th><p>' + cell + '</p></th>';
+  }
+  
+  html += '</tr></thead><tbody>';
+  
+  for (const row of dataRows) {
+    if (!row.trim()) continue;
+    
+    const rawCells = row.split('|');
+    const filteredCells: string[] = [];
+    
+    for (let i = 0; i < rawCells.length; i++) {
+      const cell = rawCells[i].trim();
+      // Skip empty cells at start/end if row starts/ends with |
+      if (i === 0 && cell === '' && row.trim().startsWith('|')) continue;
+      if (i === rawCells.length - 1 && cell === '' && row.trim().endsWith('|')) continue;
+      filteredCells.push(cell);
+    }
+    
+    if (filteredCells.length === 0) continue;
+    
+    html += '<tr>';
+    
+    for (let i = 0; i < headerCells.length; i++) {
+      const cellContent = filteredCells[i] || '';
+      html += '<td><p>' + cellContent + '</p></td>';
+    }
+    
+    html += '</tr>';
+  }
+  
+  html += '</tbody></table>';
+  
+  return html;
 }
 
 // Optimized markdown to HTML converter
@@ -36,7 +101,32 @@ function looksLikeMarkdown(text: string): boolean {
 function markdownToHtml(markdown: string): string {
   let html = markdown;
   
-  // Code blocks first (preserve content inside)
+  // Tables first - find and replace markdown tables with HTML tables
+  // Pattern matches consecutive lines starting with | (header, separator, data rows)
+  const tablePattern = /^(\|[^\n]*(?:\n\|[^\n]*)*)/gm;
+  const tablePlaceholders: string[] = [];
+  
+  html = html.replace(tablePattern, (match) => {
+    // Validate that this is actually a table (has separator row with dashes)
+    const lines = match.split('\n');
+    if (lines.length >= 2) {
+      const separatorLine = lines[1];
+      // Check if second line is a separator (contains |, -, :, and spaces)
+      // Allow separators with or without trailing pipes
+      if (/^\|?[\s\-:|]+\|?$/.test(separatorLine) && separatorLine.includes('-')) {
+        const tableHtml = parseMarkdownTable(match);
+        if (tableHtml) {
+          // Use a unique placeholder that won't be affected by markdown parsing (no underscores)
+          const placeholder = `MANUSTABLEPLACEHOLDER${tablePlaceholders.length}END`;
+          tablePlaceholders.push(tableHtml);
+          return placeholder;
+        }
+      }
+    }
+    return match;
+  });
+  
+  // Code blocks (preserve content inside)
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
     const language = lang || 'plaintext';
     const escapedCode = code.trim()
@@ -93,8 +183,9 @@ function markdownToHtml(markdown: string): string {
   const processedLines = lines.map(line => {
     const trimmed = line.trim();
     if (!trimmed) return '';
-    // Skip lines that are already wrapped in HTML tags
+    // Skip lines that are already wrapped in HTML tags or are placeholders
     if (/^<[a-z]/.test(trimmed) || /^<\//.test(trimmed)) return line;
+    if (trimmed.startsWith('MANUSTABLEPLACEHOLDER')) return line;
     return `<p>${trimmed}</p>`;
   });
   
@@ -102,6 +193,11 @@ function markdownToHtml(markdown: string): string {
   
   // Clean up empty paragraphs
   html = html.replace(/<p>\s*<\/p>/g, '');
+  
+  // Restore table placeholders
+  for (let i = 0; i < tablePlaceholders.length; i++) {
+    html = html.replace(`MANUSTABLEPLACEHOLDER${i}END`, tablePlaceholders[i]);
+  }
   
   return html;
 }
