@@ -1445,7 +1445,7 @@
   background: oklch(0.15 0.01 250);
 }
 
-/* Controls - always visible, positioned inside code block, top right */
+/* Controls - hidden by default, visible on hover, positioned inside code block, top right */
 .code-block-controls {
   position: absolute;
   top: 0.75rem;
@@ -1454,6 +1454,13 @@
   align-items: center;
   gap: 0.5rem;
   z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* Show controls on hover */
+.code-block-wrapper:hover .code-block-controls {
+  opacity: 1;
 }
 
 /* Language selector wrapper - clean minimal style */

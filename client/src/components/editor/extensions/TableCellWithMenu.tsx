@@ -202,11 +202,18 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   
   const closeMenu = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (!dropdown.contains(target) && !target.classList.contains('table-cell-menu-btn')) {
-      dropdown.remove();
-      document.removeEventListener('mousedown', closeMenu);
-      document.removeEventListener('keydown', closeOnEscape);
+    // Don't close if clicking inside the dropdown or on the menu button
+    if (dropdown.contains(target) || target.classList.contains('table-cell-menu-btn')) {
+      return;
     }
+    // Don't close if clicking inside a dialog/modal overlay
+    const dialog = target.closest('[role="dialog"]');
+    if (dialog && dialog.contains(dropdown)) {
+      return;
+    }
+    dropdown.remove();
+    document.removeEventListener('mousedown', closeMenu);
+    document.removeEventListener('keydown', closeOnEscape);
   };
   
   const closeOnEscape = (e: KeyboardEvent) => {

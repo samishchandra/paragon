@@ -13,13 +13,6 @@ interface SortState {
 
 let currentSortState: SortState | null = null;
 
-function getColumnIndex(cell: HTMLElement): number {
-  const row = cell.closest('tr');
-  if (!row) return -1;
-  const cells = Array.from(row.querySelectorAll('th, td'));
-  return cells.indexOf(cell);
-}
-
 function parseValue(text: string): { type: 'number' | 'date' | 'string'; value: number | Date | string } {
   const num = parseFloat(text.replace(/[,$%]/g, ''));
   if (!isNaN(num) && text.match(/^[\d,.$%\-+]+$/)) {
@@ -101,7 +94,6 @@ function sortTable(editor: any, tablePos: number, columnIndex: number) {
   
   if (dataRows.length < 2) {
     showSortToast(columnIndex, newDirection);
-    // Force decoration update
     view.dispatch(state.tr.setMeta(tableSortingPluginKey, { updated: true }));
     return;
   }
@@ -144,7 +136,6 @@ function sortTable(editor: any, tablePos: number, columnIndex: number) {
     tr.setMeta(tableSortingPluginKey, { updated: true });
     view.dispatch(tr);
   } else {
-    // Just update decorations
     view.dispatch(state.tr.setMeta(tableSortingPluginKey, { updated: true }));
   }
   
@@ -171,7 +162,15 @@ function showSortToast(columnIndex: number, direction: 'asc' | 'desc') {
   }, 1500);
 }
 
-function createSortButton(direction: 'asc' | 'desc' | null, tablePos: number, columnIndex: number, editor: any): HTMLButtonElement {
+function createSortButton(direction: 'asc' | 'desc' | null, tablePos: number, columnIndex: number, editor: any): HTMLDivElement {
+  // Create wrapper positioned absolutely in the header cell
+  // Position it to the right of the 3-dot menu button (which is at right: 2px)
+  const wrapper = document.createElement('div');
+  wrapper.className = 'table-sort-btn-wrapper';
+  wrapper.setAttribute('contenteditable', 'false');
+  // Position to the left of the 3-dot menu button
+  wrapper.style.cssText = 'position:absolute;top:50%;right:24px;transform:translateY(-50%);z-index:49;pointer-events:auto;';
+  
   const button = document.createElement('button');
   button.className = 'table-sort-btn';
   button.setAttribute('contenteditable', 'false');
@@ -179,10 +178,10 @@ function createSortButton(direction: 'asc' | 'desc' | null, tablePos: number, co
   
   const isDark = document.documentElement.classList.contains('dark');
   const activeColor = isDark ? '#60a5fa' : '#3b82f6';
-  const inactiveColor = isDark ? '#888' : '#999';
+  const inactiveColor = isDark ? '#666' : '#aaa';
   const hoverBg = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
   
-  button.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;margin-left:6px;width:20px;height:20px;padding:0;font-size:10px;color:' + (direction ? activeColor : inactiveColor) + ';background:transparent;border:none;border-radius:4px;cursor:pointer;user-select:none;vertical-align:middle;transition:all 0.15s ease;opacity:' + (direction ? '1' : '0.6') + ';pointer-events:auto;flex-shrink:0;';
+  button.style.cssText = 'display:flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;font-size:10px;color:' + (direction ? activeColor : inactiveColor) + ';background:transparent;border:none;border-radius:3px;cursor:pointer;user-select:none;transition:all 0.15s ease;opacity:' + (direction ? '1' : '0.4') + ';pointer-events:auto;';
   
   // Add hover effect
   button.addEventListener('mouseenter', () => {
@@ -193,7 +192,7 @@ function createSortButton(direction: 'asc' | 'desc' | null, tablePos: number, co
   
   button.addEventListener('mouseleave', () => {
     button.style.background = 'transparent';
-    button.style.opacity = direction ? '1' : '0.6';
+    button.style.opacity = direction ? '1' : '0.4';
     button.style.color = direction ? activeColor : inactiveColor;
   });
   
@@ -205,17 +204,18 @@ function createSortButton(direction: 'asc' | 'desc' | null, tablePos: number, co
   });
   
   if (direction === 'asc') {
-    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
     button.title = 'Sorted ascending - Click to sort descending';
   } else if (direction === 'desc') {
-    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
     button.title = 'Sorted descending - Click to sort ascending';
   } else {
-    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>';
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>';
     button.title = 'Click to sort this column';
   }
   
-  return button;
+  wrapper.appendChild(button);
+  return wrapper;
 }
 
 function createTableSortingPlugin(editor: any) {
@@ -226,7 +226,6 @@ function createTableSortingPlugin(editor: any) {
         return DecorationSet.empty;
       },
       apply(tr, oldState) {
-        // Rebuild decorations on any transaction
         return buildDecorations(tr.doc, editor);
       },
     },
@@ -253,9 +252,8 @@ function buildDecorations(doc: any, editor: any): DecorationSet {
           rowNode.forEach((cellNode: any, offset: number) => {
             if (cellNode.type.name === 'tableHeader') {
               // Calculate the position for the decoration
-              // Position at the end of the cell content (before closing tag)
+              // Place at the start of the cell (position 0 inside the cell)
               const cellPos = pos + 1 + rowOffset + 1 + offset;
-              const decorationPos = cellPos + cellNode.nodeSize - 1;
               
               // Check if this column is currently sorted
               const isActive = currentSortState?.tablePos === tablePos && currentSortState?.columnIndex === currentCol;
@@ -264,9 +262,10 @@ function buildDecorations(doc: any, editor: any): DecorationSet {
               const colForClosure = currentCol;
               const tablePosForClosure = tablePos;
               
-              const widget = Decoration.widget(decorationPos, () => {
+              // Use widget decoration at the start of the cell
+              const widget = Decoration.widget(cellPos + 1, () => {
                 return createSortButton(direction, tablePosForClosure, colForClosure, editor);
-              }, { side: 1, key: 'sort-' + tablePos + '-' + colForClosure });
+              }, { side: -1, key: 'sort-' + tablePos + '-' + colForClosure });
               
               decorations.push(widget);
             }
