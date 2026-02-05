@@ -346,6 +346,25 @@ export function MarkdownEditor({
       replacement: (content) => `==${content}==`,
     });
     
+    // Custom image rule to preserve width attribute
+    td.addRule('resizableImage', {
+      filter: 'img',
+      replacement: (content, node) => {
+        const img = node as HTMLImageElement;
+        const src = img.getAttribute('src') || '';
+        const alt = img.getAttribute('alt') || '';
+        const width = img.getAttribute('width') || img.style.width?.replace('px', '');
+        
+        // If width is set, use HTML img tag to preserve it
+        if (width) {
+          return `<img src="${src}" alt="${alt}" width="${width}" />`;
+        }
+        
+        // Otherwise use standard markdown syntax
+        return `![${alt}](${src})`;
+      },
+    });
+    
     td.addRule('taskListItem', {
       filter: (node) => {
         return node.nodeName === 'LI' && 
