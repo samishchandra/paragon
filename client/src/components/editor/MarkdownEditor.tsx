@@ -431,8 +431,14 @@ export function MarkdownEditor({
       rawMarkdownRef.current = markdown;
     } else if (newMode === 'wysiwyg' && editorModeRef.current === 'markdown') {
       // Convert Markdown back to HTML and set in editor using marked
+      // Use queueMicrotask to avoid flushSync error when ReactNodeViewRenderer is used
+      // This defers the setContent call to after React's render cycle completes
       const html = marked.parse(rawMarkdownRef.current, { async: false }) as string;
-      editor.commands.setContent(html);
+      queueMicrotask(() => {
+        if (!editor.isDestroyed) {
+          editor.commands.setContent(html);
+        }
+      });
     }
     
     setEditorMode(newMode);

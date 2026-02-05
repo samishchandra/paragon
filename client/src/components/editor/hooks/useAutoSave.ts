@@ -246,9 +246,10 @@ export function useAutoSave(
         // and allow the browser to update before heavy operation
         setState(prev => ({ ...prev, hasRecoverableContent: false }));
         
-        // Use setTimeout to defer the heavy setContent operation
-        // This prevents the UI from hanging
-        setTimeout(() => {
+        // Use queueMicrotask to defer the setContent operation
+        // This avoids the flushSync error when ReactNodeViewRenderer is used
+        // by ensuring the call happens after React's render cycle completes
+        queueMicrotask(() => {
           if (editor && !editor.isDestroyed) {
             try {
               editor.commands.setContent(content);
@@ -259,7 +260,7 @@ export function useAutoSave(
               console.warn('useAutoSave: Error setting content during recovery', err);
             }
           }
-        }, 0);
+        });
         
         return content;
       }
