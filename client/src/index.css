@@ -151,12 +151,17 @@
   --table-row-even: #f8fafc;
   --table-row-hover: #edf2f7;
   
-  /* Callout colors */
-  --callout-info: #2e80f2;
-  --callout-warning: #e5b567;
-  --callout-error: #e04674;
-  --callout-success: #4eb57c;
-  --callout-note: #9e86c8;
+  /* Callout colors - refined palette */
+  --callout-info: #3b82f6;
+  --callout-info-bg: oklch(0.95 0.03 240);
+  --callout-warning: #f59e0b;
+  --callout-warning-bg: oklch(0.96 0.04 85);
+  --callout-error: #ef4444;
+  --callout-error-bg: oklch(0.96 0.03 25);
+  --callout-success: #10b981;
+  --callout-success-bg: oklch(0.96 0.03 160);
+  --callout-note: #8b5cf6;
+  --callout-note-bg: oklch(0.96 0.03 280);
   
   /* Syntax highlighting - Light mode */
   --syntax-keyword: #a625a4;
@@ -246,12 +251,17 @@
   --table-row-even: #2d323c;
   --table-row-hover: #353b47;
   
-  /* Callout colors - dark mode */
-  --callout-info: #2e80f2;
-  --callout-warning: #e5b567;
-  --callout-error: #e04674;
-  --callout-success: #4eb57c;
-  --callout-note: #9e86c8;
+  /* Callout colors - dark mode refined palette */
+  --callout-info: #60a5fa;
+  --callout-info-bg: oklch(0.22 0.04 240);
+  --callout-warning: #fbbf24;
+  --callout-warning-bg: oklch(0.22 0.04 85);
+  --callout-error: #f87171;
+  --callout-error-bg: oklch(0.22 0.04 25);
+  --callout-success: #34d399;
+  --callout-success-bg: oklch(0.22 0.04 160);
+  --callout-note: #a78bfa;
+  --callout-note-bg: oklch(0.22 0.04 280);
   
   /* Syntax highlighting - Atom One Dark */
   --syntax-keyword: #c678dd;
@@ -1370,27 +1380,27 @@
 
 .callout-info {
   border-color: var(--callout-info);
-  background: oklch(0.5 0.12 220 / 0.1);
+  background: var(--callout-info-bg);
 }
 
 .callout-warning {
   border-color: var(--callout-warning);
-  background: oklch(0.6 0.15 70 / 0.1);
+  background: var(--callout-warning-bg);
 }
 
 .callout-error {
   border-color: var(--callout-error);
-  background: oklch(0.5 0.15 25 / 0.1);
+  background: var(--callout-error-bg);
 }
 
 .callout-success {
   border-color: var(--callout-success);
-  background: oklch(0.5 0.12 160 / 0.1);
+  background: var(--callout-success-bg);
 }
 
 .callout-note {
   border-color: var(--callout-note);
-  background: oklch(0.5 0.12 280 / 0.1);
+  background: var(--callout-note-bg);
 }
 
 .callout-title {
