@@ -64,8 +64,8 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         },
       },
       align: {
-        default: 'center',
-        parseHTML: (element: HTMLElement) => element.getAttribute('data-align') || 'center',
+        default: 'left',
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-align') || 'left',
         renderHTML: (attributes: Record<string, unknown>) => ({
           'data-align': attributes.align,
         }),
@@ -135,7 +135,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         }[align] || 'margin-left: auto; margin-right: auto;';
         container.style.cssText = `display: block; position: relative; width: fit-content; ${alignStyle}`;
       };
-      applyAlignment(node.attrs.align || 'center');
+      applyAlignment(node.attrs.align || 'left');
       
       const img = document.createElement('img');
       img.src = node.attrs.src;
@@ -173,44 +173,94 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         </svg>
       `;
 
-      // Edit hint overlay
-      const editHint = document.createElement('div');
-      editHint.classList.add('image-edit-hint');
-      editHint.style.cssText = `
+      // 3-dot menu button
+      const menuButton = document.createElement('button');
+      menuButton.classList.add('image-menu-btn');
+      menuButton.setAttribute('type', 'button');
+      menuButton.setAttribute('title', 'Image options');
+      menuButton.style.cssText = `
         position: absolute;
         top: 8px;
         right: 8px;
-        padding: 4px 8px;
-        font-size: 11px;
-        font-weight: 500;
-        color: white;
-        background: oklch(0 0 0 / 0.6);
-        border-radius: 4px;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: oklch(0.98 0 0 / 0.95);
+        border: 1px solid oklch(0.85 0 0);
+        border-radius: 6px;
+        cursor: pointer;
         opacity: 0;
-        transition: opacity 0.15s ease;
-        pointer-events: none;
+        transition: opacity 0.15s ease, background 0.15s ease;
+        box-shadow: 0 2px 8px oklch(0 0 0 / 0.15);
+        z-index: 10;
       `;
-      editHint.textContent = 'Double-click to edit';
+      menuButton.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="5" r="1"></circle>
+          <circle cx="12" cy="12" r="1"></circle>
+          <circle cx="12" cy="19" r="1"></circle>
+        </svg>
+      `;
       
-      container.appendChild(img);
-      container.appendChild(resizeHandle);
-      container.appendChild(editHint);
+      // Dropdown menu
+      const dropdown = document.createElement('div');
+      dropdown.classList.add('image-menu-dropdown');
+      dropdown.style.cssText = `
+        position: fixed;
+        display: none;
+        flex-direction: column;
+        min-width: 140px;
+        padding: 4px;
+        background: oklch(0.99 0 0);
+        border: 1px solid oklch(0.9 0 0);
+        border-radius: 8px;
+        box-shadow: 0 4px 16px oklch(0 0 0 / 0.15);
+        z-index: 9999;
+      `;
       
-      // Show handle and hint on hover
-      container.addEventListener('mouseenter', () => {
-        resizeHandle.style.opacity = '1';
-        editHint.style.opacity = '1';
-      });
-      container.addEventListener('mouseleave', () => {
-        resizeHandle.style.opacity = '0';
-        editHint.style.opacity = '0';
-      });
-
-      // Double-click to edit image
-      img.addEventListener('dblclick', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
+      const createMenuItem = (label: string, icon: string, onClick: () => void) => {
+        const item = document.createElement('button');
+        item.setAttribute('type', 'button');
+        item.style.cssText = `
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+          padding: 8px 12px;
+          font-size: 13px;
+          color: oklch(0.3 0 0);
+          background: transparent;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          text-align: left;
+          transition: background 0.15s ease;
+        `;
+        item.innerHTML = `${icon}<span>${label}</span>`;
+        item.addEventListener('mouseenter', () => {
+          item.style.background = 'oklch(0.95 0 0)';
+        });
+        item.addEventListener('mouseleave', () => {
+          item.style.background = 'transparent';
+        });
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick();
+          dropdown.style.display = 'none';
+        });
+        return item;
+      };
+      
+      const editIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+      const copyIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+      const saveIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
+      
+      // Edit menu item
+      dropdown.appendChild(createMenuItem('Edit', editIcon, () => {
         const pos = typeof getPos === 'function' ? getPos() : null;
         if (pos !== null && pos !== undefined && this.options.onImageClick) {
           const rect = img.getBoundingClientRect();
@@ -221,7 +271,83 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
             rect,
           });
         }
+      }));
+      
+      // Copy image menu item
+      dropdown.appendChild(createMenuItem('Copy image', copyIcon, async () => {
+        try {
+          const response = await fetch(node.attrs.src);
+          const blob = await response.blob();
+          await navigator.clipboard.write([
+            new ClipboardItem({ [blob.type]: blob })
+          ]);
+        } catch (err) {
+          // Fallback: copy image URL
+          await navigator.clipboard.writeText(node.attrs.src);
+        }
+      }));
+      
+      // Save image menu item
+      dropdown.appendChild(createMenuItem('Save image', saveIcon, () => {
+        const link = document.createElement('a');
+        link.href = node.attrs.src;
+        link.download = node.attrs.alt || 'image';
+        link.click();
+      }));
+      
+      // Toggle dropdown on button click
+      let isDropdownOpen = false;
+      menuButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isDropdownOpen) {
+          dropdown.style.display = 'none';
+          isDropdownOpen = false;
+        } else {
+          const btnRect = menuButton.getBoundingClientRect();
+          dropdown.style.top = `${btnRect.bottom + 4}px`;
+          dropdown.style.left = `${btnRect.right - 140}px`;
+          dropdown.style.display = 'flex';
+          isDropdownOpen = true;
+        }
       });
+      
+      // Close dropdown when clicking outside
+      const closeDropdown = (e: MouseEvent) => {
+        if (!dropdown.contains(e.target as Node) && !menuButton.contains(e.target as Node)) {
+          dropdown.style.display = 'none';
+          isDropdownOpen = false;
+        }
+      };
+      document.addEventListener('click', closeDropdown);
+      
+      container.appendChild(img);
+      container.appendChild(resizeHandle);
+      container.appendChild(menuButton);
+      document.body.appendChild(dropdown);
+      
+      // Show handle and menu button on hover
+      container.addEventListener('mouseenter', () => {
+        resizeHandle.style.opacity = '1';
+        menuButton.style.opacity = '1';
+      });
+      container.addEventListener('mouseleave', () => {
+        resizeHandle.style.opacity = '0';
+        if (!isDropdownOpen) {
+          menuButton.style.opacity = '0';
+        }
+      });
+      
+      // Hover effect on menu button
+      menuButton.addEventListener('mouseenter', () => {
+        menuButton.style.background = 'oklch(0.95 0 0)';
+      });
+      menuButton.addEventListener('mouseleave', () => {
+        menuButton.style.background = 'oklch(0.98 0 0 / 0.95)';
+      });
+
+
       
       // Resize logic
       let startX: number;
@@ -268,11 +394,13 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
             img.style.width = `${updatedNode.attrs.width}px`;
           }
           // Update alignment
-          applyAlignment(updatedNode.attrs.align || 'center');
+          applyAlignment(updatedNode.attrs.align || 'left');
           return true;
         },
         destroy: () => {
           resizeHandle.removeEventListener('mousedown', onMouseDown);
+          document.removeEventListener('click', closeDropdown);
+          dropdown.remove();
         },
       };
     };
