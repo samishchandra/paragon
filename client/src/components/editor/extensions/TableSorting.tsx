@@ -171,90 +171,54 @@ function showSortToast(columnIndex: number, direction: 'asc' | 'desc') {
   }, 1500);
 }
 
-function createSortIndicator(direction: 'asc' | 'desc' | null): HTMLSpanElement {
-  const indicator = document.createElement('span');
-  indicator.className = 'table-sort-indicator';
-  indicator.setAttribute('contenteditable', 'false');
+function createSortButton(direction: 'asc' | 'desc' | null, tablePos: number, columnIndex: number, editor: any): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.className = 'table-sort-btn';
+  button.setAttribute('contenteditable', 'false');
+  button.type = 'button';
   
   const isDark = document.documentElement.classList.contains('dark');
   const activeColor = isDark ? '#60a5fa' : '#3b82f6';
-  const inactiveColor = isDark ? '#666' : '#999';
+  const inactiveColor = isDark ? '#888' : '#999';
+  const hoverBg = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
   
-  indicator.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;margin-left:4px;width:14px;height:14px;font-size:10px;color:' + (direction ? activeColor : inactiveColor) + ';opacity:' + (direction ? '1' : '0.5') + ';cursor:pointer;user-select:none;vertical-align:middle;transition:opacity 0.15s ease,color 0.15s ease;';
+  button.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;margin-left:6px;width:20px;height:20px;padding:0;font-size:10px;color:' + (direction ? activeColor : inactiveColor) + ';background:transparent;border:none;border-radius:4px;cursor:pointer;user-select:none;vertical-align:middle;transition:all 0.15s ease;opacity:' + (direction ? '1' : '0.6') + ';pointer-events:auto;flex-shrink:0;';
+  
+  // Add hover effect
+  button.addEventListener('mouseenter', () => {
+    button.style.background = hoverBg;
+    button.style.opacity = '1';
+    button.style.color = activeColor;
+  });
+  
+  button.addEventListener('mouseleave', () => {
+    button.style.background = 'transparent';
+    button.style.opacity = direction ? '1' : '0.6';
+    button.style.color = direction ? activeColor : inactiveColor;
+  });
+  
+  // Add click handler directly to the button
+  button.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    sortTable(editor, tablePos, columnIndex);
+  });
   
   if (direction === 'asc') {
-    indicator.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
-    indicator.title = 'Sorted ascending - Click to sort descending';
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+    button.title = 'Sorted ascending - Click to sort descending';
   } else if (direction === 'desc') {
-    indicator.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
-    indicator.title = 'Sorted descending - Click to sort ascending';
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
+    button.title = 'Sorted descending - Click to sort ascending';
   } else {
-    indicator.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>';
-    indicator.title = 'Click to sort';
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>';
+    button.title = 'Click to sort this column';
   }
   
-  return indicator;
+  return button;
 }
 
 function createTableSortingPlugin(editor: any) {
-  let clickHandlerSetup = false;
-  
-  const setupClickHandler = () => {
-    if (clickHandlerSetup) return;
-    clickHandlerSetup = true;
-    
-    document.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      
-      // Check if clicked on a sort indicator or header cell
-      const sortIndicator = target.closest('.table-sort-indicator');
-      const headerCell = target.closest('.ProseMirror th');
-      
-      if (!sortIndicator && !headerCell) return;
-      
-      // Don't trigger sort if clicking on the menu button
-      if (target.closest('.table-cell-menu-wrapper') || target.closest('.table-cell-menu-btn')) {
-        return;
-      }
-      
-      const cell = sortIndicator ? sortIndicator.closest('th') : headerCell;
-      if (!cell) return;
-      
-      const table = cell.closest('table');
-      if (!table || !table.closest('.ProseMirror')) return;
-      
-      const columnIndex = getColumnIndex(cell as HTMLElement);
-      if (columnIndex < 0) return;
-      
-      // Find the table position in ProseMirror
-      const { state } = editor;
-      let tablePos = -1;
-      
-      state.doc.descendants((node: any, pos: number) => {
-        if (node.type.name === 'table' && tablePos < 0) {
-          const domNode = editor.view.nodeDOM(pos);
-          // The domNode might be a wrapper element (tableWrapper), so get the actual table inside
-          if (domNode) {
-            const domElement = domNode as Element;
-            // Get the actual table element inside the wrapper
-            const tableInWrapper = domElement.querySelector ? domElement.querySelector('table') : null;
-            // Check if this is the table we clicked on
-            if (tableInWrapper === table || domElement === table) {
-              tablePos = pos;
-              return false;
-            }
-          }
-        }
-      });
-      
-      if (tablePos >= 0) {
-        e.preventDefault();
-        e.stopPropagation();
-        sortTable(editor, tablePos, columnIndex);
-      }
-    }, true);
-  };
-  
   return new Plugin({
     key: tableSortingPluginKey,
     state: {
@@ -271,10 +235,6 @@ function createTableSortingPlugin(editor: any) {
         return this.getState(state);
       },
     },
-    view() {
-      setupClickHandler();
-      return {};
-    },
   });
 }
 
@@ -284,12 +244,10 @@ function buildDecorations(doc: any, editor: any): DecorationSet {
   doc.descendants((node: any, pos: number) => {
     if (node.type.name === 'table') {
       const tablePos = pos;
-      let columnIndex = 0;
       
       // Find header cells in this table
       node.forEach((rowNode: any, rowOffset: number) => {
         if (rowNode.type.name === 'tableRow') {
-          let cellOffset = 0;
           let currentCol = 0;
           
           rowNode.forEach((cellNode: any, offset: number) => {
@@ -304,8 +262,10 @@ function buildDecorations(doc: any, editor: any): DecorationSet {
               const direction = isActive ? currentSortState!.direction : null;
               
               const colForClosure = currentCol;
+              const tablePosForClosure = tablePos;
+              
               const widget = Decoration.widget(decorationPos, () => {
-                return createSortIndicator(direction);
+                return createSortButton(direction, tablePosForClosure, colForClosure, editor);
               }, { side: 1, key: 'sort-' + tablePos + '-' + colForClosure });
               
               decorations.push(widget);
