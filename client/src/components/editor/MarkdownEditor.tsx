@@ -138,6 +138,10 @@ export function MarkdownEditor({
   // Raw markdown content for markdown mode
   const [rawMarkdown, setRawMarkdown] = useState('');
   
+  // Refs to track current values for the API (avoids closure issues)
+  const editorModeRef = useRef<'wysiwyg' | 'markdown'>('wysiwyg');
+  const rawMarkdownRef = useRef<string>('');
+  
   // Ref for the editor content wrapper (for drag handle overlay)
   const editorContentRef = useRef<HTMLDivElement>(null);
 
@@ -398,25 +402,125 @@ export function MarkdownEditor({
   const handleModeSwitch = useCallback((newMode: 'wysiwyg' | 'markdown') => {
     if (!editor) return;
     
-    if (newMode === 'markdown' && editorMode === 'wysiwyg') {
+    if (newMode === 'markdown' && editorModeRef.current === 'wysiwyg') {
       // Convert HTML to Markdown
       const html = editor.getHTML();
       const markdown = turndownService.turndown(html);
       setRawMarkdown(markdown);
-    } else if (newMode === 'wysiwyg' && editorMode === 'markdown') {
+      rawMarkdownRef.current = markdown;
+    } else if (newMode === 'wysiwyg' && editorModeRef.current === 'markdown') {
       // Convert Markdown back to HTML and set in editor using marked
-      const html = marked.parse(rawMarkdown, { async: false }) as string;
+      const html = marked.parse(rawMarkdownRef.current, { async: false }) as string;
       editor.commands.setContent(html);
     }
     
     setEditorMode(newMode);
-  }, [editor, editorMode, rawMarkdown, turndownService]);
+    editorModeRef.current = newMode;
+  }, [editor, turndownService]);
 
   // Handle raw markdown changes
   const handleRawMarkdownChange = useCallback((markdown: string) => {
     setRawMarkdown(markdown);
+    rawMarkdownRef.current = markdown;
     onMarkdownChange?.(markdown);
   }, [onMarkdownChange]);
+
+  // Expose Editor Mode API globally for external applications
+  // Using refs to avoid closure issues - the API always reads the latest values
+  useEffect(() => {
+    // Create the API object using refs for current values
+    const editorModeAPI = {
+      /**
+       * Get the current editor mode
+       * @returns {'wysiwyg' | 'markdown'} The current mode
+       */
+      getMode: () => editorModeRef.current,
+      
+      /**
+       * Set the editor mode
+       * @param mode {'wysiwyg' | 'markdown'} The mode to switch to
+       */
+      setMode: (mode: 'wysiwyg' | 'markdown') => {
+        if (mode !== 'wysiwyg' && mode !== 'markdown') {
+          console.error('Invalid mode. Use "wysiwyg" or "markdown"');
+          return;
+        }
+        handleModeSwitch(mode);
+      },
+      
+      /**
+       * Toggle between wysiwyg and markdown modes
+       * @returns {'wysiwyg' | 'markdown'} The new mode after toggle
+       */
+      toggleMode: () => {
+        const newMode = editorModeRef.current === 'wysiwyg' ? 'markdown' : 'wysiwyg';
+        handleModeSwitch(newMode);
+        return newMode;
+      },
+      
+      /**
+       * Switch to visual (WYSIWYG) mode
+       */
+      switchToVisual: () => {
+        handleModeSwitch('wysiwyg');
+      },
+      
+      /**
+       * Switch to raw markdown mode
+       */
+      switchToMarkdown: () => {
+        handleModeSwitch('markdown');
+      },
+      
+      /**
+       * Check if currently in visual mode
+       * @returns {boolean}
+       */
+      isVisualMode: () => editorModeRef.current === 'wysiwyg',
+      
+      /**
+       * Check if currently in markdown mode
+       * @returns {boolean}
+       */
+      isMarkdownMode: () => editorModeRef.current === 'markdown',
+      
+      /**
+       * Get the raw markdown content (only available in markdown mode)
+       * @returns {string | null} The raw markdown or null if in visual mode
+       */
+      getRawMarkdown: () => editorModeRef.current === 'markdown' ? rawMarkdownRef.current : null,
+      
+      /**
+       * Subscribe to mode changes
+       * @param callback Function to call when mode changes
+       * @returns Function to unsubscribe
+       */
+      onModeChange: (callback: (mode: 'wysiwyg' | 'markdown') => void) => {
+        const handler = (event: Event) => {
+          const customEvent = event as CustomEvent<{ mode: 'wysiwyg' | 'markdown' }>;
+          callback(customEvent.detail.mode);
+        };
+        window.addEventListener('manus-editor-mode-change', handler);
+        return () => window.removeEventListener('manus-editor-mode-change', handler);
+      },
+    };
+    
+    // Expose the API globally (only once on mount)
+    (window as any).__manusEditorModeAPI = editorModeAPI;
+    
+    console.log('Manus Editor Mode API exposed globally as window.__manusEditorModeAPI');
+    console.log('Available methods: getMode(), setMode(mode), toggleMode(), switchToVisual(), switchToMarkdown(), isVisualMode(), isMarkdownMode(), getRawMarkdown(), onModeChange(callback)');
+    
+    return () => {
+      // Cleanup on unmount
+      delete (window as any).__manusEditorModeAPI;
+    };
+  }, [handleModeSwitch]);
+  
+  // Dispatch event when mode changes (separate effect to avoid recreating the API)
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('manus-editor-mode-change', { detail: { mode: editorMode } }));
+  }, [editorMode]);
 
   // Handle keyboard shortcuts for markdown auto-detection
   useEffect(() => {
