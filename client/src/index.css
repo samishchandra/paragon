@@ -856,7 +856,7 @@
   
   .ProseMirror th,
   .ProseMirror td {
-    overflow: hidden;
+    overflow: visible !important; /* Allow menu button to be visible */
     text-overflow: ellipsis;
     box-sizing: border-box;
     position: relative;
@@ -867,8 +867,8 @@
     position: absolute;
     top: 2px;
     right: 2px;
-    z-index: 10;
-    pointer-events: none;
+    z-index: 50;
+    pointer-events: auto; /* Enable pointer events on wrapper */
   }
   
   /* Table cell menu button - 3-dot icon */
@@ -878,18 +878,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: hsl(var(--background) / 0.8);
+    background: hsl(var(--background) / 0.95);
     border: 1px solid hsl(var(--border) / 0.5);
-    border-radius: 3px;
+    border-radius: 4px;
     cursor: pointer;
-    opacity: 0.3;
+    opacity: 0.15;
     transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
     color: hsl(var(--muted-foreground));
     pointer-events: auto;
     padding: 0;
   }
   
-  /* Show button more prominently on hover */
+  /* Show button on cell hover - using multiple selectors for reliability */
+  .ProseMirror td:hover > .table-cell-menu-wrapper .table-cell-menu-btn,
+  .ProseMirror th:hover > .table-cell-menu-wrapper .table-cell-menu-btn,
   .ProseMirror td:hover .table-cell-menu-btn,
   .ProseMirror th:hover .table-cell-menu-btn,
   .table-cell-menu-wrapper:hover .table-cell-menu-btn,

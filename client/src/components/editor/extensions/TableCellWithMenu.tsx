@@ -3,16 +3,39 @@ import TableHeader from '@tiptap/extension-table-header';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
-/*
- * DESIGN: Table Cell with Menu Extension
- * Uses a ProseMirror plugin to add menu buttons to table cells
- * Uses CSS :hover for showing buttons (no JS event listeners needed)
- */
-
-// Create a plugin that adds menu buttons to table cells
 const tableCellMenuPluginKey = new PluginKey('tableCellMenu');
+let eventDelegationSetup = false;
+
+function setupEventDelegation() {
+  if (eventDelegationSetup) return;
+  eventDelegationSetup = true;
+  
+  document.addEventListener('mouseover', (e) => {
+    const target = e.target as HTMLElement;
+    const cell = target.closest('td, th');
+    if (cell && cell.closest('.ProseMirror')) {
+      const btn = cell.querySelector('.table-cell-menu-btn') as HTMLElement;
+      if (btn) btn.style.opacity = '1';
+    }
+  }, true);
+  
+  document.addEventListener('mouseout', (e) => {
+    const target = e.target as HTMLElement;
+    const relatedTarget = (e as MouseEvent).relatedTarget as HTMLElement;
+    const cell = target.closest('td, th');
+    if (cell && cell.closest('.ProseMirror')) {
+      if (relatedTarget && cell.contains(relatedTarget)) return;
+      const dropdown = document.querySelector('.table-cell-menu-dropdown');
+      if (dropdown) return;
+      const btn = cell.querySelector('.table-cell-menu-btn') as HTMLElement;
+      if (btn) btn.style.opacity = '0.15';
+    }
+  }, true);
+}
 
 function createTableCellMenuPlugin(editor: any) {
+  setupEventDelegation();
+  
   return new Plugin({
     key: tableCellMenuPluginKey,
     props: {
@@ -22,30 +45,42 @@ function createTableCellMenuPlugin(editor: any) {
         
         doc.descendants((node, pos) => {
           if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
-            // Add a widget decoration for the menu button
             const widget = Decoration.widget(pos + 1, (view) => {
               const wrapper = document.createElement('div');
               wrapper.className = 'table-cell-menu-wrapper ProseMirror-widget';
               wrapper.setAttribute('contenteditable', 'false');
+              wrapper.style.cssText = 'position:absolute;top:2px;right:2px;z-index:50;pointer-events:auto;';
               
               const button = document.createElement('button');
               button.className = 'table-cell-menu-btn';
-              button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>`;
+              button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>';
               button.title = 'Table options';
               button.type = 'button';
+              
+              const isDark = document.documentElement.classList.contains('dark');
+              const bgColor = isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)';
+              const borderColor = isDark ? 'rgba(60,60,60,0.5)' : 'rgba(200,200,200,0.5)';
+              const textColor = isDark ? '#999' : '#666';
+              const hoverBgColor = isDark ? '#2a2a2a' : '#f5f5f5';
+              
+              button.style.cssText = 'width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:4px;cursor:pointer;opacity:0.15;transition:opacity 0.15s ease,background-color 0.15s ease,transform 0.1s ease;color:' + textColor + ';pointer-events:auto;padding:0;';
+              
+              button.addEventListener('mouseenter', () => {
+                button.style.opacity = '1';
+                button.style.background = hoverBgColor;
+                button.style.transform = 'scale(1.05)';
+              });
+              button.addEventListener('mouseleave', () => {
+                const dropdown = document.querySelector('.table-cell-menu-dropdown');
+                button.style.background = bgColor;
+                button.style.transform = 'scale(1)';
+              });
               
               button.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                
-                // Capture button position BEFORE any editor operations
-                // (setTextSelection can cause decorations to be recreated)
                 const buttonRect = button.getBoundingClientRect();
-                
-                // Focus the cell first
                 editor.chain().focus().setTextSelection(pos + 1).run();
-                
-                // Show the dropdown menu with pre-captured position
                 showTableMenu(e, editor, pos, buttonRect);
               });
               
@@ -63,79 +98,56 @@ function createTableCellMenuPlugin(editor: any) {
   });
 }
 
-// Show the dropdown menu
 function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: DOMRect) {
-  // Remove any existing menu
   const existingMenu = document.querySelector('.table-cell-menu-dropdown');
-  if (existingMenu) {
-    existingMenu.remove();
-  }
+  if (existingMenu) existingMenu.remove();
   
-  // Create the dropdown menu
   const dropdown = document.createElement('div');
   dropdown.className = 'table-cell-menu-dropdown';
   
-  // Calculate position based on button position
   const dropdownWidth = 170;
   const dropdownHeight = 280;
   
-  // Position dropdown below the button, aligned to the right edge
-  let viewportTop = buttonRect.bottom + 4;
-  let viewportLeft = buttonRect.left - dropdownWidth + buttonRect.width + 8;
+  // Get the button's position relative to the viewport
+  // If button is outside viewport (in scrolled container), clamp to viewport
+  let btnTop = Math.max(0, Math.min(buttonRect.top, window.innerHeight));
+  let btnBottom = Math.max(0, Math.min(buttonRect.bottom, window.innerHeight));
+  let btnLeft = Math.max(0, Math.min(buttonRect.left, window.innerWidth));
   
-  // Adjust for viewport bounds - keep dropdown within viewport
-  // Right edge check
-  if (viewportLeft + dropdownWidth > window.innerWidth - 12) {
-    viewportLeft = window.innerWidth - dropdownWidth - 12;
-  }
-  // Left edge check
-  if (viewportLeft < 12) {
-    viewportLeft = 12;
-  }
-  // Bottom edge check - show above if not enough space below
+  // Position dropdown below button, or above if not enough space
+  let viewportTop = btnBottom + 4;
+  let viewportLeft = btnLeft - dropdownWidth + buttonRect.width + 8;
+  
+  // Adjust horizontal position
+  if (viewportLeft + dropdownWidth > window.innerWidth - 12) viewportLeft = window.innerWidth - dropdownWidth - 12;
+  if (viewportLeft < 12) viewportLeft = 12;
+  
+  // Adjust vertical position - if dropdown would go below viewport, show above button
   if (viewportTop + dropdownHeight > window.innerHeight - 12) {
-    viewportTop = buttonRect.top - dropdownHeight - 4;
+    viewportTop = btnTop - dropdownHeight - 4;
   }
-  // Top edge check
-  if (viewportTop < 12) {
-    viewportTop = 12;
+  // If still outside viewport, clamp to visible area
+  if (viewportTop < 12) viewportTop = 12;
+  if (viewportTop + dropdownHeight > window.innerHeight - 12) {
+    viewportTop = window.innerHeight - dropdownHeight - 12;
   }
   
-  // Check if dark mode is active
   const isDark = document.documentElement.classList.contains('dark');
   const bgColor = isDark ? '#1f1f1f' : '#ffffff';
   const borderColor = isDark ? '#3a3a3a' : '#e5e5e5';
   const textColor = isDark ? '#e5e5e5' : '#333333';
   
-  dropdown.style.cssText = `
-    position: fixed;
-    top: ${viewportTop}px;
-    left: ${viewportLeft}px;
-    z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 170px;
-    max-width: 220px;
-    width: auto;
-    padding: 6px;
-    background: ${bgColor};
-    border: 1px solid ${borderColor};
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
-    color: ${textColor};
-    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
-  `;
+  dropdown.style.cssText = 'position:fixed;top:' + viewportTop + 'px;left:' + viewportLeft + 'px;z-index:99999;display:flex;flex-direction:column;gap:2px;min-width:170px;max-width:220px;width:auto;padding:6px;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.15),0 2px 6px rgba(0,0,0,0.1);color:' + textColor + ';font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;';
   
   const menuItems = [
-    { label: 'Insert Column Left', icon: 'col-left', action: () => editor.chain().focus().addColumnBefore().run() },
-    { label: 'Insert Column Right', icon: 'col-right', action: () => editor.chain().focus().addColumnAfter().run() },
-    { label: 'Insert Row Above', icon: 'row-up', action: () => editor.chain().focus().addRowBefore().run() },
-    { label: 'Insert Row Below', icon: 'row-down', action: () => editor.chain().focus().addRowAfter().run() },
+    { label: 'Insert Column Left', icon: 'col-left', action: () => editor.chain().focus().setTextSelection(pos + 1).addColumnBefore().run() },
+    { label: 'Insert Column Right', icon: 'col-right', action: () => editor.chain().focus().setTextSelection(pos + 1).addColumnAfter().run() },
+    { label: 'Insert Row Above', icon: 'row-up', action: () => editor.chain().focus().setTextSelection(pos + 1).addRowBefore().run() },
+    { label: 'Insert Row Below', icon: 'row-down', action: () => editor.chain().focus().setTextSelection(pos + 1).addRowAfter().run() },
     { label: 'divider' },
-    { label: 'Delete Column', icon: 'delete', action: () => editor.chain().focus().deleteColumn().run(), destructive: true },
-    { label: 'Delete Row', icon: 'delete', action: () => editor.chain().focus().deleteRow().run(), destructive: true },
-    { label: 'Delete Table', icon: 'table-delete', action: () => editor.chain().focus().deleteTable().run(), destructive: true },
+    { label: 'Delete Column', icon: 'delete', action: () => editor.chain().focus().setTextSelection(pos + 1).deleteColumn().run(), destructive: true },
+    { label: 'Delete Row', icon: 'delete', action: () => editor.chain().focus().setTextSelection(pos + 1).deleteRow().run(), destructive: true },
+    { label: 'Delete Table', icon: 'table-delete', action: () => editor.chain().focus().setTextSelection(pos + 1).deleteTable().run(), destructive: true },
     { label: 'divider' },
     { label: 'Copy Table', icon: 'copy', action: () => copyTable(editor) },
   ];
@@ -158,40 +170,19 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   menuItems.forEach((item) => {
     if (item.label === 'divider') {
       const divider = document.createElement('div');
-      divider.style.cssText = `
-        height: 1px;
-        background: ${dividerColor};
-        margin: 4px 0;
-      `;
+      divider.style.cssText = 'height:1px;background:' + dividerColor + ';margin:4px 0;';
       dropdown.appendChild(divider);
     } else {
       const menuButton = document.createElement('button');
       menuButton.type = 'button';
       const itemTextColor = item.destructive ? destructiveColor : textColor;
-      menuButton.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        width: 100%;
-        padding: 8px 10px;
-        font-size: 13px;
-        font-weight: 450;
-        color: ${itemTextColor};
-        background: transparent;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        text-align: left;
-        transition: background 0.15s ease;
-      `;
-      menuButton.innerHTML = `
-        <span style="display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex-shrink: 0; color: ${item.destructive ? destructiveColor : iconColor};">${icons[item.icon || ''] || ''}</span>
-        <span style="flex: 1; white-space: nowrap;">${item.label}</span>
-      `;
+      menuButton.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;font-size:13px;font-weight:450;color:' + itemTextColor + ';background:transparent;border:none;border-radius:5px;cursor:pointer;text-align:left;transition:background 0.15s ease;';
+      const iconHtml = icons[item.icon || ''] || '';
+      const iconSpanColor = item.destructive ? destructiveColor : iconColor;
+      menuButton.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;width:16px;height:16px;flex-shrink:0;color:' + iconSpanColor + ';">' + iconHtml + '</span><span style="flex:1;white-space:nowrap;">' + item.label + '</span>';
       
-      // Hover effects
       menuButton.addEventListener('mouseenter', () => {
-        menuButton.style.background = item.destructive ? (isDark ? 'rgba(255, 107, 107, 0.15)' : 'rgba(220, 38, 38, 0.1)') : hoverBgColor;
+        menuButton.style.background = item.destructive ? (isDark ? 'rgba(255,107,107,0.15)' : 'rgba(220,38,38,0.1)') : hoverBgColor;
       });
       menuButton.addEventListener('mouseleave', () => {
         menuButton.style.background = 'transparent';
@@ -200,7 +191,7 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
       menuButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        item.action?.();
+        if (item.action) item.action();
         dropdown.remove();
       });
       dropdown.appendChild(menuButton);
@@ -209,7 +200,6 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   
   document.body.appendChild(dropdown);
   
-  // Close on click outside
   const closeMenu = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
     if (!dropdown.contains(target) && !target.classList.contains('table-cell-menu-btn')) {
@@ -219,7 +209,6 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
     }
   };
   
-  // Close on escape
   const closeOnEscape = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       dropdown.remove();
@@ -234,17 +223,13 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   }, 0);
 }
 
-// Copy table to clipboard
 function copyTable(editor: any) {
   const { state } = editor;
   const { selection } = state;
-  
-  // Find the table node
   let tableNode = null;
   
   state.doc.descendants((node: any, pos: number) => {
     if (node.type.name === 'table') {
-      // Check if selection is within this table
       if (pos <= selection.from && pos + node.nodeSize >= selection.to) {
         tableNode = node;
         return false;
@@ -253,58 +238,45 @@ function copyTable(editor: any) {
   });
   
   if (tableNode) {
-    // Build table HTML from node
     const buildTableHTML = (node: any): string => {
-      if (node.type.name === 'table') {
-        return `<table>${node.content.content.map(buildTableHTML).join('')}</table>`;
-      }
-      if (node.type.name === 'tableRow') {
-        return `<tr>${node.content.content.map(buildTableHTML).join('')}</tr>`;
-      }
+      if (node.type.name === 'table') return '<table>' + node.content.content.map(buildTableHTML).join('') + '</table>';
+      if (node.type.name === 'tableRow') return '<tr>' + node.content.content.map(buildTableHTML).join('') + '</tr>';
       if (node.type.name === 'tableCell') {
         const attrs = node.attrs;
-        const colspan = attrs.colspan > 1 ? ` colspan="${attrs.colspan}"` : '';
-        const rowspan = attrs.rowspan > 1 ? ` rowspan="${attrs.rowspan}"` : '';
-        return `<td${colspan}${rowspan}>${node.textContent}</td>`;
+        const colspan = attrs.colspan > 1 ? ' colspan="' + attrs.colspan + '"' : '';
+        const rowspan = attrs.rowspan > 1 ? ' rowspan="' + attrs.rowspan + '"' : '';
+        return '<td' + colspan + rowspan + '>' + node.textContent + '</td>';
       }
       if (node.type.name === 'tableHeader') {
         const attrs = node.attrs;
-        const colspan = attrs.colspan > 1 ? ` colspan="${attrs.colspan}"` : '';
-        const rowspan = attrs.rowspan > 1 ? ` rowspan="${attrs.rowspan}"` : '';
-        return `<th${colspan}${rowspan}>${node.textContent}</th>`;
+        const colspan = attrs.colspan > 1 ? ' colspan="' + attrs.colspan + '"' : '';
+        const rowspan = attrs.rowspan > 1 ? ' rowspan="' + attrs.rowspan + '"' : '';
+        return '<th' + colspan + rowspan + '>' + node.textContent + '</th>';
       }
       return node.textContent || '';
     };
     
     const tableHTML = buildTableHTML(tableNode);
     
-    // Copy to clipboard
     navigator.clipboard.writeText(tableHTML).then(() => {
-      // Show toast notification
       const toast = document.createElement('div');
       toast.className = 'tcm-toast';
       toast.textContent = 'Table copied to clipboard';
+      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:white;padding:10px 20px;border-radius:6px;font-size:13px;z-index:99999;animation:fadeInOut 2s ease-in-out forwards;';
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 2000);
     });
   }
 }
 
-// Extended TableCell with menu plugin
 export const TableCellWithMenu = TableCell.extend({
   addProseMirrorPlugins() {
     return [
+      ...(this.parent?.() || []),
       createTableCellMenuPlugin(this.editor),
     ];
   },
 });
 
-// Extended TableHeader with menu plugin (uses same styling)
-export const TableHeaderWithMenu = TableHeader.extend({
-  addProseMirrorPlugins() {
-    return [
-      // TableHeader uses the same plugin as TableCell
-      // The plugin handles both tableCell and tableHeader nodes
-    ];
-  },
-});
+// TableHeaderWithMenu doesn't add the plugin to avoid duplicate registration
+export const TableHeaderWithMenu = TableHeader.extend({});
