@@ -101,6 +101,12 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
     viewportTop = 12;
   }
   
+  // Check if dark mode is active
+  const isDark = document.documentElement.classList.contains('dark');
+  const bgColor = isDark ? '#1f1f1f' : '#ffffff';
+  const borderColor = isDark ? '#3a3a3a' : '#e5e5e5';
+  const textColor = isDark ? '#e5e5e5' : '#333333';
+  
   dropdown.style.cssText = `
     position: fixed;
     top: ${viewportTop}px;
@@ -108,15 +114,17 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
     z-index: 99999;
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    min-width: 160px;
-    max-width: 200px;
+    gap: 2px;
+    min-width: 170px;
+    max-width: 220px;
     width: auto;
-    padding: 4px;
-    background: hsl(var(--popover));
-    border: 1px solid hsl(var(--border));
-    border-radius: 6px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+    padding: 6px;
+    background: ${bgColor};
+    border: 1px solid ${borderColor};
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
+    color: ${textColor};
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
   `;
   
   const menuItems = [
@@ -142,19 +150,53 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
     'copy': '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
   };
   
+  const hoverBgColor = isDark ? '#2a2a2a' : '#f5f5f5';
+  const destructiveColor = isDark ? '#ff6b6b' : '#dc2626';
+  const iconColor = isDark ? '#999999' : '#666666';
+  const dividerColor = isDark ? '#333333' : '#e5e5e5';
+  
   menuItems.forEach((item) => {
     if (item.label === 'divider') {
       const divider = document.createElement('div');
-      divider.className = 'tcm-divider';
+      divider.style.cssText = `
+        height: 1px;
+        background: ${dividerColor};
+        margin: 4px 0;
+      `;
       dropdown.appendChild(divider);
     } else {
       const menuButton = document.createElement('button');
-      menuButton.className = 'tcm-item' + (item.destructive ? ' tcm-destructive' : '');
       menuButton.type = 'button';
-      menuButton.innerHTML = `
-        <span class="tcm-icon">${icons[item.icon || ''] || ''}</span>
-        <span class="tcm-label">${item.label}</span>
+      const itemTextColor = item.destructive ? destructiveColor : textColor;
+      menuButton.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 13px;
+        font-weight: 450;
+        color: ${itemTextColor};
+        background: transparent;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.15s ease;
       `;
+      menuButton.innerHTML = `
+        <span style="display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex-shrink: 0; color: ${item.destructive ? destructiveColor : iconColor};">${icons[item.icon || ''] || ''}</span>
+        <span style="flex: 1; white-space: nowrap;">${item.label}</span>
+      `;
+      
+      // Hover effects
+      menuButton.addEventListener('mouseenter', () => {
+        menuButton.style.background = item.destructive ? (isDark ? 'rgba(255, 107, 107, 0.15)' : 'rgba(220, 38, 38, 0.1)') : hoverBgColor;
+      });
+      menuButton.addEventListener('mouseleave', () => {
+        menuButton.style.background = 'transparent';
+      });
+      
       menuButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
