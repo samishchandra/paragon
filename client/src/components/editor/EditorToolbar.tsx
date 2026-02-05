@@ -387,10 +387,61 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
 
       <Divider />
 
-      {/* Insert elements dropdown - Combined for mobile */}
+      {/* Insert elements - Inline on large screens, dropdown on smaller screens */}
+      {/* Desktop: Show Table, Image, HR, and Callout buttons inline */}
+      <div className="hidden lg:flex items-center gap-0.5">
+        <ToolbarButton
+          onClick={addTable}
+          tooltip="Insert Table (3×3)"
+        >
+          <Table size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => setShowImageInput(true)}
+          tooltip="Insert Image"
+        >
+          <Image size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          tooltip="Horizontal Rule"
+        >
+          <Minus size={16} />
+        </ToolbarButton>
+        {/* Callout dropdown for desktop inline */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="flex items-center justify-center w-8 h-8 rounded-md transition-all duration-100 ease-out touch-manipulation bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80"
+              title="Insert Callout"
+            >
+              <Info size={16} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => addCallout('info')}>
+              <Info size={16} className="mr-2 text-blue-400" /> Info
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => addCallout('warning')}>
+              <AlertTriangle size={16} className="mr-2 text-yellow-400" /> Warning
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => addCallout('error')}>
+              <AlertCircle size={16} className="mr-2 text-red-400" /> Error
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => addCallout('success')}>
+              <CheckCircle size={16} className="mr-2 text-green-400" /> Success
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => addCallout('note')}>
+              <FileText size={16} className="mr-2 text-purple-400" /> Note
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Mobile/Tablet: Insert elements dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-9 sm:h-8 px-1.5 sm:px-2 gap-1">
+          <Button variant="ghost" size="sm" className="h-9 sm:h-8 px-1.5 sm:px-2 gap-1 lg:hidden">
             <PlusCircle size={18} className="sm:w-4 sm:h-4" />
             <span className="text-xs hidden sm:inline">Insert</span>
           </Button>
