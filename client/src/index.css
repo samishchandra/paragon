@@ -862,96 +862,168 @@
     position: relative;
   }
   
-  /* Table cell menu button */
-  .table-cell-menu-button {
+  /* Table cell menu - wrapper for positioning */
+  .table-cell-menu-wrapper {
     position: absolute;
     top: 2px;
     right: 2px;
-    width: 20px;
-    height: 20px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  
+  /* Table cell menu button - 3-dot icon */
+  .table-cell-menu-btn {
+    width: 18px;
+    height: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    background: hsl(var(--background) / 0.8);
+    border: 1px solid hsl(var(--border) / 0.5);
+    border-radius: 3px;
     cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.15s ease, background-color 0.15s ease;
-    z-index: 10;
-    color: var(--muted-foreground);
+    opacity: 0.3;
+    transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+    color: hsl(var(--muted-foreground));
+    pointer-events: auto;
+    padding: 0;
   }
   
-  .ProseMirror td:hover .table-cell-menu-button,
-  .ProseMirror th:hover .table-cell-menu-button,
-  td[data-node-view-wrapper]:hover .table-cell-menu-button,
-  th[data-node-view-wrapper]:hover .table-cell-menu-button,
-  .table-cell-menu-button:focus {
-    opacity: 1;
+  /* Show button more prominently on hover */
+  .ProseMirror td:hover .table-cell-menu-btn,
+  .ProseMirror th:hover .table-cell-menu-btn,
+  .table-cell-menu-wrapper:hover .table-cell-menu-btn,
+  .table-cell-menu-btn:hover,
+  .table-cell-menu-btn:focus {
+    opacity: 1 !important;
+    background: hsl(var(--background));
+    border-color: hsl(var(--border));
   }
   
-  .table-cell-menu-button:hover {
-    background: var(--accent);
-    color: var(--accent-foreground);
+  .table-cell-menu-btn:hover {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    transform: scale(1.05);
   }
   
-  /* Table cell menu dropdown */
+  .table-cell-menu-btn:active {
+    transform: scale(0.95);
+  }
+  
+  /* Table cell menu dropdown - modern compact vertical list */
   .table-cell-menu-dropdown {
     position: fixed !important;
-    /* Position is set via inline styles */
-    min-width: 180px;
-    background: var(--popover);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 9999 !important;
-    padding: 4px;
-    animation: table-menu-fade-in 0.15s ease;
+    min-width: 160px !important;
+    max-width: 200px !important;
+    width: auto !important;
+    background: hsl(var(--popover)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    z-index: 99999 !important;
+    padding: 4px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1px !important;
+    animation: tcm-fade-in 0.15s ease;
   }
   
-  @keyframes table-menu-fade-in {
+  @keyframes tcm-fade-in {
     from {
       opacity: 0;
-      transform: translateY(-4px);
+      transform: translateY(-4px) scale(0.98);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
   }
   
-  .table-cell-menu-item {
+  /* Menu item - compact vertical layout */
+  .tcm-item {
     display: flex;
     align-items: center;
     gap: 8px;
     width: 100%;
-    padding: 8px 10px;
-    font-size: 13px;
-    color: var(--popover-foreground);
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 450;
+    color: hsl(var(--popover-foreground));
     background: transparent;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.1s ease;
     text-align: left;
+    white-space: nowrap;
   }
   
-  .table-cell-menu-item:hover {
-    background: var(--accent);
+  .tcm-item:hover {
+    background: hsl(var(--accent));
   }
   
-  .table-cell-menu-item.destructive {
-    color: var(--destructive);
+  .tcm-item:active {
+    background: hsl(var(--accent) / 0.8);
   }
   
-  .table-cell-menu-item.destructive:hover {
-    background: oklch(0.35 0.1 25 / 0.2);
+  /* Destructive items (delete actions) */
+  .tcm-destructive {
+    color: hsl(var(--destructive));
   }
   
-  .table-cell-menu-separator {
+  .tcm-destructive:hover {
+    background: hsl(var(--destructive) / 0.1);
+  }
+  
+  /* Icon container */
+  .tcm-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+  
+  .tcm-item:hover .tcm-icon {
+    opacity: 1;
+  }
+  
+  /* Label */
+  .tcm-label {
+    flex: 1;
+  }
+  
+  /* Divider between menu sections */
+  .tcm-divider {
     height: 1px;
-    background: var(--border);
-    margin: 4px 0;
+    background: hsl(var(--border));
+    margin: 3px 4px;
+  }
+  
+  /* Toast notification for copy */
+  .tcm-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 99999;
+    animation: tcm-toast 2s ease-in-out forwards;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  @keyframes tcm-toast {
+    0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
   }
   
   /* Sortable table headers */
