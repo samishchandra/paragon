@@ -337,6 +337,7 @@ export default function Home() {
                       autofocus={true}
                       showTableOfContents={true}
                       tocMaxLevel={4}
+                      theme={modalTheme}
                     />
                   </div>
                 </DialogContent>

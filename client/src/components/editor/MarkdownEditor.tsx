@@ -193,7 +193,7 @@ export interface MarkdownEditorProps {
   showToolbar?: boolean;
   /** Show word count in footer (default: true) */
   showWordCount?: boolean;
-  /** Theme mode - will be deprecated, use CSS variables instead */
+  /** Theme mode - controls dark/light styling of the editor */
   theme?: 'dark' | 'light';
   /** Enable auto-save to localStorage (default: true) */
   autoSave?: boolean;
@@ -318,6 +318,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   className = '',
   showToolbar = true,
   showWordCount = true,
+  theme,
   autoSave = true,
   autoSaveKey = 'manus-editor-content',
   autoSaveDelay = 1000,
@@ -1149,7 +1150,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
 
   if (!editor) {
     return (
-      <div className={`markdown-editor-container ${className}`}>
+      <div className={`markdown-editor-container ${className}`} data-theme={theme}>
         <div className="editor-loading">Loading editor...</div>
       </div>
     );
@@ -1192,7 +1193,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   };
 
   return (
-    <div className={`markdown-editor-container ${className}`}>
+    <div className={`markdown-editor-container ${className}`} data-theme={theme}>
       {/* Recovery banner for auto-saved content */}
       {autoSave && showRecoveryBanner && autoSaveState.hasRecoverableContent && (
         <RecoveryBanner
