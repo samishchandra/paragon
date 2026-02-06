@@ -43,6 +43,7 @@ import { ImageDropZone } from './ImageDropZone';
 import { ImageEditPopover } from './ImageEditPopover';
 import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
 import { FileText, Eye } from 'lucide-react';
+import { TableOfContents } from './TableOfContents';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 import { marked } from 'marked';
@@ -165,6 +166,10 @@ export interface MarkdownEditorRef {
   isEditable: () => boolean;
   /** Set editable state */
   setEditable: (editable: boolean) => void;
+  /** Get the table of contents headings */
+  getTableOfContents: () => { id: string; text: string; level: number; pos: number }[];
+  /** Scroll to a heading by position */
+  scrollToHeading: (pos: number) => void;
 }
 
 export interface MarkdownEditorProps {
@@ -267,6 +272,39 @@ export interface MarkdownEditorProps {
   headingLevels?: (1 | 2 | 3 | 4 | 5 | 6)[];
   /** Collapsible heading levels (default: [1, 2, 3]) */
   collapsibleHeadingLevels?: (1 | 2 | 3 | 4 | 5 | 6)[];
+  
+  // === TABLE OF CONTENTS PROPS ===
+  
+  /** Show table of contents sidebar (default: false) */
+  showTableOfContents?: boolean;
+  /** Initial visibility of the TOC sidebar (default: true) */
+  tocVisible?: boolean;
+  /** Callback when TOC visibility changes */
+  onTocVisibilityChange?: (visible: boolean) => void;
+  /** TOC sidebar title (default: 'Table of Contents') */
+  tocTitle?: string;
+  /** Minimum heading level to include in TOC (default: 1) */
+  tocMinLevel?: number;
+  /** Maximum heading level to include in TOC (default: 4) */
+  tocMaxLevel?: number;
+  /** Show heading level indicators in TOC (default: true) */
+  tocShowLevelIndicators?: boolean;
+  /** Highlight active heading in TOC (default: true) */
+  tocHighlightActive?: boolean;
+  /** Use tree view with collapsible sections (default: false) */
+  tocTreeView?: boolean;
+  /** TOC sidebar width (default: '240px') */
+  tocWidth?: string;
+  /** TOC sidebar position (default: 'right') */
+  tocPosition?: 'left' | 'right';
+  /** Scroll offset when clicking a TOC item (default: 20) */
+  tocScrollOffset?: number;
+  /** Callback when a TOC item is clicked */
+  onTocItemClick?: (item: { id: string; text: string; level: number; pos: number }) => void;
+  /** Custom render function for TOC items */
+  renderTocItem?: (item: { id: string; text: string; level: number; pos: number }, isActive: boolean, onClick: () => void) => React.ReactNode;
+  /** Show TOC toggle button (default: true) */
+  tocShowToggleButton?: boolean;
 }
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(function MarkdownEditor({
@@ -312,6 +350,22 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   spellCheck = true,
   headingLevels = [1, 2, 3, 4, 5, 6],
   collapsibleHeadingLevels = [1, 2, 3],
+  // TOC props
+  showTableOfContents = false,
+  tocVisible = true,
+  onTocVisibilityChange,
+  tocTitle = 'Table of Contents',
+  tocMinLevel = 1,
+  tocMaxLevel = 4,
+  tocShowLevelIndicators = true,
+  tocHighlightActive = true,
+  tocTreeView = false,
+  tocWidth = '240px',
+  tocPosition = 'right',
+  tocScrollOffset = 20,
+  onTocItemClick,
+  renderTocItem,
+  tocShowToggleButton = true,
 }, ref) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
@@ -850,6 +904,41 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     },
     isEditable: () => editor?.isEditable || false,
     setEditable: (editable) => editor?.setEditable(editable),
+    /** Get the table of contents headings */
+    getTableOfContents: () => {
+      if (!editor) return [];
+      const headings: { id: string; text: string; level: number; pos: number }[] = [];
+      editor.state.doc.descendants((node, pos) => {
+        if (node.type.name === 'heading') {
+          const level = node.attrs.level as number;
+          const text = node.textContent.trim();
+          if (text) {
+            headings.push({ id: `toc-heading-${pos}`, text, level, pos });
+          }
+        }
+      });
+      return headings;
+    },
+    /** Scroll to a heading by position */
+    scrollToHeading: (pos: number) => {
+      if (!editor || editor.isDestroyed) return;
+      try {
+        const resolvedPos = editor.state.doc.resolve(pos);
+        const dom = editor.view.nodeDOM(resolvedPos.before(resolvedPos.depth + 1));
+        if (dom instanceof HTMLElement) {
+          const scrollContainer = editor.view.dom.closest('.editor-content-wrapper') as HTMLElement;
+          if (scrollContainer) {
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const elementRect = dom.getBoundingClientRect();
+            const relativeTop = elementRect.top - containerRect.top + scrollContainer.scrollTop;
+            scrollContainer.scrollTo({ top: relativeTop - 20, behavior: 'smooth' });
+          } else {
+            dom.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+        editor.commands.setTextSelection(pos + 1);
+      } catch { /* position might be invalid */ }
+    },
   }), [editor, turndownService, handleModeSwitch, wordCount, autoSaveState, setIsFindReplaceOpen]);
 
   // Expose Editor Mode API globally for external applications
@@ -1149,7 +1238,29 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         />
       )}
       
-      {/* Main editor area */}
+      {/* Main editor area with optional TOC sidebar */}
+      <div className={`editor-main-area ${showTableOfContents ? 'editor-with-toc' : ''}`}>
+      {/* TOC sidebar - left position */}
+      {showTableOfContents && tocPosition === 'left' && (
+        <TableOfContents
+          editor={editor}
+          visible={tocVisible}
+          onVisibilityChange={onTocVisibilityChange}
+          title={tocTitle}
+          minLevel={tocMinLevel}
+          maxLevel={tocMaxLevel}
+          showLevelIndicators={tocShowLevelIndicators}
+          highlightActive={tocHighlightActive}
+          treeView={tocTreeView}
+          width={tocWidth}
+          position={tocPosition}
+          scrollOffset={tocScrollOffset}
+          onItemClick={onTocItemClick}
+          renderItem={renderTocItem}
+          showToggleButton={tocShowToggleButton}
+          scrollContainerRef={editorContentRef as React.RefObject<HTMLElement>}
+        />
+      )}
       <div className="editor-content-wrapper" ref={editorContentRef} style={editorContentStyle}>
         {editorMode === 'wysiwyg' ? (
           <>
@@ -1215,6 +1326,28 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             autofocus
           />
         )}
+      </div>
+      {/* TOC sidebar - right position */}
+      {showTableOfContents && tocPosition === 'right' && (
+        <TableOfContents
+          editor={editor}
+          visible={tocVisible}
+          onVisibilityChange={onTocVisibilityChange}
+          title={tocTitle}
+          minLevel={tocMinLevel}
+          maxLevel={tocMaxLevel}
+          showLevelIndicators={tocShowLevelIndicators}
+          highlightActive={tocHighlightActive}
+          treeView={tocTreeView}
+          width={tocWidth}
+          position={tocPosition}
+          scrollOffset={tocScrollOffset}
+          onItemClick={onTocItemClick}
+          renderItem={renderTocItem}
+          showToggleButton={tocShowToggleButton}
+          scrollContainerRef={editorContentRef as React.RefObject<HTMLElement>}
+        />
+      )}
       </div>
       
       {/* Footer with word count and auto-save status */}

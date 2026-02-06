@@ -335,6 +335,8 @@ export default function Home() {
                       showToolbar={true}
                       showWordCount={true}
                       autofocus={true}
+                      showTableOfContents={true}
+                      tocMaxLevel={4}
                     />
                   </div>
                 </DialogContent>
@@ -429,6 +431,8 @@ export default function Home() {
               showToolbar={true}
               showWordCount={true}
               autofocus={false}
+              showTableOfContents={true}
+              tocMaxLevel={4}
             />
           </div>
         </div>
