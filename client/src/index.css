@@ -4729,7 +4729,7 @@ pre.with-line-numbers code .line::before {
 }
 
 .toc-sidebar.toc-visible {
-  min-width: 160px;
+  min-width: 200px;
 }
 
 /* TOC Inner container */
@@ -4737,7 +4737,7 @@ pre.with-line-numbers code .line::before {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-width: 160px;
+  min-width: 200px;
   overflow: hidden;
 }
 
@@ -4768,7 +4768,7 @@ pre.with-line-numbers code .line::before {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 6px 0;
+  padding: 10px 8px;
   scrollbar-width: thin;
   scrollbar-color: oklch(0.88 0.003 250) transparent;
 }
@@ -4790,7 +4790,7 @@ pre.with-line-numbers code .line::before {
 .toc-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 2px;
 }
 
 /* TOC Item */
@@ -4801,18 +4801,18 @@ pre.with-line-numbers code .line::before {
 .toc-item-button {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   width: 100%;
-  padding: 3px 10px;
+  padding: 8px 12px;
   border: none;
   background: transparent;
   color: oklch(0.42 0.008 250);
-  font-size: 11.5px;
-  line-height: 1.35;
+  font-size: 13px;
+  line-height: 1.4;
   text-align: left;
   cursor: pointer;
-  transition: color 0.12s ease, background 0.12s ease;
-  border-radius: 0;
+  transition: color 0.15s ease, background 0.15s ease;
+  border-radius: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4825,19 +4825,9 @@ pre.with-line-numbers code .line::before {
 
 /* Active TOC item */
 .toc-item-active .toc-item-button {
-  color: oklch(0.42 0.18 250);
-  background: oklch(0.95 0.015 250);
-}
-
-.toc-item-active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 2px;
-  bottom: 2px;
-  width: 2px;
-  background: oklch(0.52 0.18 250);
-  border-radius: 0 1px 1px 0;
+  color: oklch(0.98 0 0);
+  background: oklch(0.45 0.18 250);
+  font-weight: 500;
 }
 
 /* Level indicators (hidden by default) */
@@ -4862,30 +4852,30 @@ pre.with-line-numbers code .line::before {
 /* Level-specific styling — subtle hierarchy via weight + opacity */
 .toc-level-1 .toc-item-button {
   font-weight: 600;
-  font-size: 11.5px;
+  font-size: 14px;
 }
 
 .toc-level-2 .toc-item-button {
   font-weight: 500;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .toc-level-3 .toc-item-button {
   font-weight: 400;
-  font-size: 10.5px;
+  font-size: 12.5px;
   color: oklch(0.48 0.008 250);
 }
 
 .toc-level-4 .toc-item-button {
   font-weight: 400;
-  font-size: 10.5px;
+  font-size: 12px;
   color: oklch(0.52 0.008 250);
 }
 
 .toc-level-5 .toc-item-button,
 .toc-level-6 .toc-item-button {
   font-weight: 400;
-  font-size: 10px;
+  font-size: 11.5px;
   color: oklch(0.56 0.008 250);
 }
 
@@ -5013,19 +5003,15 @@ pre.with-line-numbers code .line::before {
 
 [data-theme="dark"] .toc-item-button:hover,
 .dark .toc-item-button:hover {
-  background: oklch(0.18 0.008 250);
-  color: oklch(0.8 0.01 250);
+  background: oklch(0.22 0.008 250);
+  color: oklch(0.85 0.01 250);
 }
 
 [data-theme="dark"] .toc-item-active .toc-item-button,
 .dark .toc-item-active .toc-item-button {
-  color: oklch(0.72 0.14 250);
-  background: oklch(0.16 0.015 250);
-}
-
-[data-theme="dark"] .toc-item-active::before,
-.dark .toc-item-active::before {
-  background: oklch(0.6 0.18 250);
+  color: oklch(0.98 0 0);
+  background: oklch(0.35 0.06 250);
+  font-weight: 500;
 }
 
 [data-theme="dark"] .toc-level-indicator,
@@ -5055,6 +5041,12 @@ pre.with-line-numbers code .line::before {
 .dark .toc-level-5 .toc-item-button,
 .dark .toc-level-6 .toc-item-button {
   color: oklch(0.42 0.008 250);
+}
+
+/* Dark theme active item text override - ensure white text on dark pill */
+[data-theme="dark"] .toc-item-active .toc-item-button .toc-item-text,
+.dark .toc-item-active .toc-item-button .toc-item-text {
+  color: oklch(0.98 0 0);
 }
 
 [data-theme="dark"] .toc-collapse-toggle,
@@ -5136,12 +5128,9 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-theme="light"] .toc-item-active .toc-item-button {
-  color: oklch(0.42 0.18 250);
-  background: oklch(0.95 0.015 250);
-}
-
-[data-theme="light"] .toc-item-active::before {
-  background: oklch(0.52 0.18 250);
+  color: oklch(0.98 0 0);
+  background: oklch(0.45 0.18 250);
+  font-weight: 500;
 }
 
 [data-theme="light"] .toc-level-indicator {
@@ -5165,6 +5154,11 @@ pre.with-line-numbers code .line::before {
 [data-theme="light"] .toc-level-5 .toc-item-button,
 [data-theme="light"] .toc-level-6 .toc-item-button {
   color: oklch(0.56 0.008 250);
+}
+
+/* Light theme active item text override */
+[data-theme="light"] .toc-item-active .toc-item-button .toc-item-text {
+  color: oklch(0.98 0 0);
 }
 
 [data-theme="light"] .toc-collapse-toggle {
