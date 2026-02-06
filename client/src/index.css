@@ -4825,9 +4825,9 @@ pre.with-line-numbers code .line::before {
 
 /* Active TOC item */
 .toc-item-active .toc-item-button {
-  color: oklch(0.98 0 0);
-  background: oklch(0.45 0.18 250);
-  font-weight: 500;
+  color: oklch(0.25 0.01 250);
+  background: oklch(0.95 0.003 250);
+  font-weight: 600;
 }
 
 /* Level indicators (hidden by default) */
@@ -5009,9 +5009,9 @@ pre.with-line-numbers code .line::before {
 
 [data-theme="dark"] .toc-item-active .toc-item-button,
 .dark .toc-item-active .toc-item-button {
-  color: oklch(0.98 0 0);
-  background: oklch(0.35 0.06 250);
-  font-weight: 500;
+  color: oklch(0.85 0.01 250);
+  background: oklch(0.22 0.008 250);
+  font-weight: 600;
 }
 
 [data-theme="dark"] .toc-level-indicator,
@@ -5043,10 +5043,10 @@ pre.with-line-numbers code .line::before {
   color: oklch(0.42 0.008 250);
 }
 
-/* Dark theme active item text override - ensure white text on dark pill */
+/* Dark theme active item text override */
 [data-theme="dark"] .toc-item-active .toc-item-button .toc-item-text,
 .dark .toc-item-active .toc-item-button .toc-item-text {
-  color: oklch(0.98 0 0);
+  color: oklch(0.85 0.01 250);
 }
 
 [data-theme="dark"] .toc-collapse-toggle,
@@ -5128,9 +5128,9 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-theme="light"] .toc-item-active .toc-item-button {
-  color: oklch(0.98 0 0);
-  background: oklch(0.45 0.18 250);
-  font-weight: 500;
+  color: oklch(0.25 0.01 250);
+  background: oklch(0.95 0.003 250);
+  font-weight: 600;
 }
 
 [data-theme="light"] .toc-level-indicator {
@@ -5158,7 +5158,7 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme active item text override */
 [data-theme="light"] .toc-item-active .toc-item-button .toc-item-text {
-  color: oklch(0.98 0 0);
+  color: oklch(0.25 0.01 250);
 }
 
 [data-theme="light"] .toc-collapse-toggle {
