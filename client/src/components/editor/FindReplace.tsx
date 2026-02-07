@@ -10,11 +10,12 @@ import {
   Regex,
   ReplaceAll,
   WholeWord,
+  MousePointerClick,
 } from 'lucide-react';
 
 /*
  * DESIGN: Dark Mode Craftsman
- * Find and Replace panel with regex support
+ * Find and Replace panel with regex support, Select All Occurrences
  * Glassmorphic styling with keyboard navigation
  */
 
@@ -23,6 +24,7 @@ interface FindReplaceProps {
   isOpen: boolean;
   onClose: () => void;
   focusTrigger?: number;
+  initialSearchQuery?: string;
 }
 
 interface SearchMatch {
@@ -31,7 +33,7 @@ interface SearchMatch {
   text: string;
 }
 
-export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindReplaceProps) {
+export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initialSearchQuery }: FindReplaceProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [replaceQuery, setReplaceQuery] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(false);
@@ -41,10 +43,19 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
   const [matches, setMatches] = useState<SearchMatch[]>([]);
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const [regexError, setRegexError] = useState<string | null>(null);
+  const [isSelectAllActive, setIsSelectAllActive] = useState(false);
+  const closedBySelectAllRef = useRef(false);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const isNavigatingRef = useRef(false);
+
+  // Auto-fill search query from initialSearchQuery prop (when Cmd+F with selected text)
+  useEffect(() => {
+    if (isOpen && initialSearchQuery && initialSearchQuery.trim()) {
+      setSearchQuery(initialSearchQuery);
+    }
+  }, [isOpen, initialSearchQuery, focusTrigger]);
 
   // Find all matches in the document
   const findMatches = useCallback(() => {
@@ -131,6 +142,15 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
       if (hasSearchHighlight) {
         editor.commands.clearSearchHighlight();
       }
+      // Only clear select-all-occurrences if the panel was NOT closed by the Select All action
+      if (!closedBySelectAllRef.current) {
+        const hasClearAll = typeof editor.commands.clearAllOccurrences === 'function';
+        if (hasClearAll) {
+          editor.commands.clearAllOccurrences();
+          setIsSelectAllActive(false);
+        }
+      }
+      closedBySelectAllRef.current = false;
     }
   }, [isOpen, editor]);
 
@@ -138,9 +158,6 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
   useEffect(() => {
     if (matches.length > 0 && currentMatchIndex < matches.length) {
       const match = matches[currentMatchIndex];
-      
-      // Don't select text - just scroll to it
-      // The SearchHighlight extension will visually highlight the current match
       
       // Scroll to the match
       const domAtPos = editor.view.domAtPos(match.from);
@@ -218,6 +235,34 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
     setTimeout(findMatches, 10);
   }, [matches, replaceQuery, editor, findMatches]);
 
+  // Select All Occurrences - highlight all matches for batch operations
+  const selectAllOccurrences = useCallback(() => {
+    if (matches.length === 0 || !searchQuery) return;
+    
+    const hasCommand = typeof editor.commands.selectAllOccurrences === 'function';
+    if (!hasCommand) return;
+
+    const success = editor.commands.selectAllOccurrences({
+      searchTerm: searchQuery,
+      caseSensitive,
+      useRegex,
+      wholeWord,
+    });
+
+    if (success) {
+      setIsSelectAllActive(true);
+      // Mark that we're closing via Select All so the cleanup effect doesn't clear our decorations
+      closedBySelectAllRef.current = true;
+      // Clear the search highlight (yellow) but keep the select-all-occurrence highlight (blue)
+      const hasSearchHighlight = typeof editor.commands.clearSearchHighlight === 'function';
+      if (hasSearchHighlight) {
+        editor.commands.clearSearchHighlight();
+      }
+      onClose();
+      editor.commands.focus();
+    }
+  }, [matches, searchQuery, caseSensitive, useRegex, wholeWord, editor, onClose]);
+
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -235,8 +280,12 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
     } else if (e.key === 'h' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       setShowReplace((prev) => !prev);
+    } else if (e.key === 'l' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      // Cmd+Shift+L to select all occurrences
+      e.preventDefault();
+      selectAllOccurrences();
     }
-  }, [goToNextMatch, goToPrevMatch, onClose]);
+  }, [goToNextMatch, goToPrevMatch, onClose, selectAllOccurrences]);
 
   if (!isOpen) return null;
 
@@ -287,6 +336,19 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0 }: FindR
         >
           <ChevronDown size={16} />
         </button>
+        
+        {/* Select All Occurrences button */}
+        <button
+          onClick={selectAllOccurrences}
+          disabled={matches.length === 0}
+          className={`find-replace-btn ${isSelectAllActive ? 'active' : ''}`}
+          title={`Select all occurrences (${navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}+Shift+L) — Apply formatting to all ${matches.length} matches`}
+        >
+          <MousePointerClick size={16} />
+        </button>
+
+        {/* Separator */}
+        <div className="find-replace-separator" />
         
         {/* Options */}
         <button

@@ -38,6 +38,7 @@ import { MarkdownLinkInputRule } from './extensions/MarkdownLinkInputRule';
 import { CalloutInputRule } from './extensions/CalloutInputRule';
 import { SearchHighlight } from './extensions/SearchHighlight';
 import { TabIndent } from './extensions/TabIndent';
+import { SelectAllOccurrences } from './extensions/SelectAllOccurrences';
 import { ImageUpload } from './extensions/ImageUpload';
 import { ImageDropZone } from './ImageDropZone';
 import { ImageEditPopover } from './ImageEditPopover';
@@ -449,6 +450,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       Typography,
       MarkdownLinkInputRule,
       SearchHighlight,
+      SelectAllOccurrences,
       TabIndent,
     ];
 
@@ -681,6 +683,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   }, [onFindReplaceChange]);
   
   const [findReplaceFocusTrigger, setFindReplaceFocusTrigger] = useState(0);
+  const [findReplaceInitialQuery, setFindReplaceInitialQuery] = useState('');
 
   // Auto-save functionality
   const autoSaveState = useAutoSave(editor, {
@@ -1104,6 +1107,17 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       // Cmd/Ctrl+F for find/replace (desktop only)
       if (!isMobile && (event.metaKey || event.ctrlKey) && event.key === 'f') {
         event.preventDefault();
+        // Extract selected text to auto-fill the search input
+        if (editor) {
+          const { state } = editor;
+          const { from, to } = state.selection;
+          if (from !== to) {
+            const selectedText = state.doc.textBetween(from, to, ' ');
+            if (selectedText.trim()) {
+              setFindReplaceInitialQuery(selectedText.trim());
+            }
+          }
+        }
         setIsFindReplaceOpen(true);
         // Always increment focus trigger to refocus search input even if already open
         setFindReplaceFocusTrigger(prev => prev + 1);
@@ -1283,6 +1297,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           isOpen={isFindReplaceOpen}
           onClose={() => setIsFindReplaceOpen(false)}
           focusTrigger={findReplaceFocusTrigger}
+          initialSearchQuery={findReplaceInitialQuery}
         />
       )}
       

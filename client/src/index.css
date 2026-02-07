@@ -2763,6 +2763,33 @@ pre.with-line-numbers code .line::before {
   box-shadow: 0 0 0 2px oklch(0.8 0.18 70 / 0.5);
 }
 
+/* Select All Occurrences highlight */
+.ProseMirror .select-all-occurrence-highlight {
+  background: oklch(0.75 0.15 250 / 0.5); /* Soft blue highlight */
+  border-radius: 3px;
+  padding: 2px 1px;
+  box-shadow: 0 0 0 1.5px oklch(0.6 0.18 250 / 0.6);
+  transition: background 0.15s ease;
+}
+
+.ProseMirror .select-all-occurrence-highlight:hover {
+  background: oklch(0.75 0.15 250 / 0.7);
+}
+
+[data-theme="light"] .ProseMirror .select-all-occurrence-highlight,
+.ProseMirror .select-all-occurrence-highlight {
+  background: oklch(0.8 0.14 250 / 0.5); /* Light blue */
+  color: oklch(0.15 0 0);
+  box-shadow: 0 0 0 1.5px oklch(0.65 0.14 250 / 0.6);
+}
+
+.dark .ProseMirror .select-all-occurrence-highlight,
+[data-theme="dark"] .ProseMirror .select-all-occurrence-highlight {
+  background: oklch(0.5 0.18 250 / 0.55); /* Deeper blue for dark */
+  color: oklch(0.95 0 0);
+  box-shadow: 0 0 0 1.5px oklch(0.5 0.18 250 / 0.65);
+}
+
 
 /* Mobile responsive utilities */
 @media (max-width: 639px) {
