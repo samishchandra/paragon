@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
+import { memo } from 'react';
 
 /*
  * TABLE OF CONTENTS SIDEBAR
@@ -89,7 +90,7 @@ function findHeadingElement(editor: Editor, pos: number): HTMLElement | null {
   return null;
 }
 
-export function TableOfContents({
+export const TableOfContents = memo(function TableOfContents({
   editor,
   visible = true,
   onVisibilityChange,
@@ -341,6 +342,6 @@ export function TableOfContents({
       </div>
     </>
   );
-}
+});
 
 export default TableOfContents;

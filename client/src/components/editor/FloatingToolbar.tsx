@@ -17,7 +17,8 @@ import {
   Pilcrow,
   FileCode,
 } from 'lucide-react';
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef, memo } from 'react';
+import { useEditorState } from '@tiptap/react';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -63,7 +64,28 @@ const Divider = () => (
   <div className="w-px h-5 bg-border mx-0.5 flex-shrink-0" />
 );
 
-export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps) {
+export const FloatingToolbar = memo(function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps) {
+  // Performance: Use useEditorState for selective re-renders based on active formatting states
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor: e }: { editor: Editor }) => ({
+      isBold: e.isActive('bold'),
+      isItalic: e.isActive('italic'),
+      isUnderline: e.isActive('underline'),
+      isStrike: e.isActive('strike'),
+      isCode: e.isActive('code'),
+      isHighlight: e.isActive('highlight'),
+      isLink: e.isActive('link'),
+      isH1: e.isActive('heading', { level: 1 }),
+      isH2: e.isActive('heading', { level: 2 }),
+      isH3: e.isActive('heading', { level: 3 }),
+      isBulletList: e.isActive('bulletList'),
+      isOrderedList: e.isActive('orderedList'),
+      isTaskList: e.isActive('taskList'),
+      isBlockquote: e.isActive('blockquote'),
+      isCodeBlock: e.isActive('codeBlock'),
+    }),
+  });
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [isVisible, setIsVisible] = useState(false);
@@ -124,6 +146,7 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
         const selectedNode = isNodeSelection ? (selection as any).node : editor.state.doc.nodeAt(from);
         const isImageSelected = selectedNode?.type?.name === 'resizableImage';
         
+        // Check codeBlock directly since this is in an event callback, not render
         if ((empty && !isImageSelected) || editor.isActive('codeBlock')) {
           // Clear any pending show timeout
           if (showTimeoutRef.current) {
@@ -200,12 +223,14 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
       }
     };
 
+    // Performance: Only listen to selectionUpdate, NOT transaction.
+    // The 'transaction' event fires on EVERY keystroke, causing expensive
+    // DOM measurements (getBoundingClientRect) on each character typed.
+    // selectionUpdate is sufficient - it fires when the selection changes.
     editor.on('selectionUpdate', updateToolbar);
-    editor.on('transaction', updateToolbar);
 
     return () => {
       editor.off('selectionUpdate', updateToolbar);
-      editor.off('transaction', updateToolbar);
       if (hideTimeoutRef.current) {
         clearTimeout(hideTimeoutRef.current);
       }
@@ -306,7 +331,7 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
       {/* Paragraph style - convert to normal paragraph */}
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setParagraph().run())}
-        isActive={editor.isActive('paragraph') && !editor.isActive('heading') && !editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList') && !editor.isActive('blockquote') && !editor.isActive('codeBlock')}
+        isActive={!editorState?.isH1 && !editorState?.isH2 && !editorState?.isH3 && !editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList && !editorState?.isBlockquote && !editorState?.isCodeBlock}
         title="Paragraph"
       >
         <Pilcrow size={iconSize} />
@@ -315,21 +340,21 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
       {/* Headings */}
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 1 }).run())}
-        isActive={editor.isActive('heading', { level: 1 })}
+        isActive={editorState?.isH1}
         title="Heading 1"
       >
         <Heading1 size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 2 }).run())}
-        isActive={editor.isActive('heading', { level: 2 })}
+        isActive={editorState?.isH2}
         title="Heading 2"
       >
         <Heading2 size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 3 }).run())}
-        isActive={editor.isActive('heading', { level: 3 })}
+        isActive={editorState?.isH3}
         title="Heading 3"
       >
         <Heading3 size={iconSize} />
@@ -340,42 +365,42 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
       {/* Primary text formatting */}
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBold().run())}
-        isActive={editor.isActive('bold')}
+        isActive={editorState?.isBold}
         title="Bold (Ctrl+B)"
       >
         <Bold size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleItalic().run())}
-        isActive={editor.isActive('italic')}
+        isActive={editorState?.isItalic}
         title="Italic (Ctrl+I)"
       >
         <Italic size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleUnderline().run())}
-        isActive={editor.isActive('underline')}
+        isActive={editorState?.isUnderline}
         title="Underline (Ctrl+U)"
       >
         <Underline size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleStrike().run())}
-        isActive={editor.isActive('strike')}
+        isActive={editorState?.isStrike}
         title="Strikethrough"
       >
         <Strikethrough size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleCode().run())}
-        isActive={editor.isActive('code')}
+        isActive={editorState?.isCode}
         title="Inline Code (Ctrl+E)"
       >
         <Code size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHighlight().run())}
-        isActive={editor.isActive('highlight')}
+        isActive={editorState?.isHighlight}
         title="Highlight"
       >
         <Highlighter size={iconSize} />
@@ -383,7 +408,7 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
 
       <ToolbarButton
         onMouseDown={handleLinkClick}
-        isActive={editor.isActive('link')}
+        isActive={editorState?.isLink}
         title="Link (Ctrl+K)"
       >
         <Link size={iconSize} />
@@ -394,35 +419,35 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
       {/* Block elements */}
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBlockquote().run())}
-        isActive={editor.isActive('blockquote')}
+        isActive={editorState?.isBlockquote}
         title="Quote"
       >
         <Quote size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBulletList().run())}
-        isActive={editor.isActive('bulletList')}
+        isActive={editorState?.isBulletList}
         title="Bullet List"
       >
         <List size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleOrderedList().run())}
-        isActive={editor.isActive('orderedList')}
+        isActive={editorState?.isOrderedList}
         title="Numbered List"
       >
         <ListOrdered size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleTaskList().run())}
-        isActive={editor.isActive('taskList')}
+        isActive={editorState?.isTaskList}
         title="Task List"
       >
         <CheckSquare size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleCodeBlock().run())}
-        isActive={editor.isActive('codeBlock')}
+        isActive={editorState?.isCodeBlock}
         title="Code Block"
       >
         <FileCode size={iconSize} />
@@ -431,6 +456,6 @@ export function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps
 
     </div>
   );
-}
+});
 
 export default FloatingToolbar;

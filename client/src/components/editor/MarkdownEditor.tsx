@@ -553,11 +553,29 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     return baseExtensions;
   }, [placeholder, isMobile, maxImageSize, onImageUploadStart, onImageUploadComplete, onImageUploadError, headingLevels, collapsibleHeadingLevels, disabledFeatures, onWikiLinkClick]);
 
+  // Debounced onUpdate ref for HTML serialization performance
+  const onUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onChangeRef = useRef(onChange);
+  const onHTMLChangeRef = useRef(onHTMLChange);
+  const onMarkdownChangeRef = useRef(onMarkdownChange);
+  onChangeRef.current = onChange;
+  onHTMLChangeRef.current = onHTMLChange;
+  onMarkdownChangeRef.current = onMarkdownChange;
+
   const editor = useEditor({
+    /**
+     * Performance: Render immediately without waiting for next tick
+     */
+    immediatelyRender: true,
+    /**
+     * Performance: Prevent React re-renders on every ProseMirror transaction.
+     * The editor DOM updates are handled by ProseMirror directly.
+     * Only toolbar state and other React UI need selective re-renders via useEditorState.
+     */
+    shouldRerenderOnTransaction: false,
     // @ts-ignore - Expose editor globally for debugging
     onCreate: ({ editor }) => {
       (window as any).__tiptapEditor = editor;
-      console.log('TipTap editor created and exposed globally as window.__tiptapEditor');
       onReady?.(editor);
     },
     onDestroy: () => {
@@ -592,12 +610,19 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       },
     },
     onUpdate: ({ editor }) => {
-      // Only call getHTML once for performance
-      if (onChange || onHTMLChange) {
-        const html = editor.getHTML();
-        onChange?.(html);
-        onHTMLChange?.(html);
+      // Performance: Debounce HTML serialization to avoid calling getHTML() on every keystroke
+      // getHTML() serializes the entire document - expensive for large docs
+      if (onUpdateTimeoutRef.current) {
+        clearTimeout(onUpdateTimeoutRef.current);
       }
+      onUpdateTimeoutRef.current = setTimeout(() => {
+        if (editor.isDestroyed) return;
+        if (onChangeRef.current || onHTMLChangeRef.current) {
+          const html = editor.getHTML();
+          onChangeRef.current?.(html);
+          onHTMLChangeRef.current?.(html);
+        }
+      }, 150);
     },
     onFocus: () => {
       onFocus?.();
@@ -612,6 +637,15 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       }
     },
   });
+
+  // Cleanup debounced onUpdate timeout
+  useEffect(() => {
+    return () => {
+      if (onUpdateTimeoutRef.current) {
+        clearTimeout(onUpdateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // State for link popover
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);

@@ -1,4 +1,5 @@
-import { Editor } from '@tiptap/react';
+import { Editor, useEditorState } from '@tiptap/react';
+import { memo } from 'react';
 import {
   Bold,
   Italic,
@@ -40,7 +41,7 @@ import {
   IndentIncrease,
   IndentDecrease,
 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -126,9 +127,34 @@ const Divider = () => (
   <div className="w-px h-6 bg-border mx-0.5 hidden sm:block" />
 );
 
-export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '' }: EditorToolbarProps) {
+export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '' }: EditorToolbarProps) {
   const [imageUrl, setImageUrl] = useState('');
   const [showImageInput, setShowImageInput] = useState(false);
+
+  // Performance: Use useEditorState to only re-render when relevant toolbar states change
+  // instead of re-rendering on every transaction
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor: e }: { editor: Editor }) => ({
+      canUndo: e.can().undo(),
+      canRedo: e.can().redo(),
+      isBold: e.isActive('bold'),
+      isItalic: e.isActive('italic'),
+      isUnderline: e.isActive('underline'),
+      isStrike: e.isActive('strike'),
+      isCode: e.isActive('code'),
+      isHighlight: e.isActive('highlight'),
+      isH1: e.isActive('heading', { level: 1 }),
+      isH2: e.isActive('heading', { level: 2 }),
+      isH3: e.isActive('heading', { level: 3 }),
+      isBlockquote: e.isActive('blockquote'),
+      isBulletList: e.isActive('bulletList'),
+      isOrderedList: e.isActive('orderedList'),
+      isTaskList: e.isActive('taskList'),
+      isCodeBlock: e.isActive('codeBlock'),
+      isLink: e.isActive('link'),
+    }),
+  });
 
   const addImage = useCallback(() => {
     if (imageUrl) {
@@ -151,14 +177,14 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
       {/* Undo/Redo - Always visible */}
       <ToolbarButton
         onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editor.can().undo()}
+        disabled={!editorState?.canUndo}
         tooltip="Undo (Ctrl+Z)"
       >
         <Undo size={18} className="sm:w-4 sm:h-4" />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editor.can().redo()}
+        disabled={!editorState?.canRedo}
         tooltip="Redo (Ctrl+Shift+Z)"
       >
         <Redo size={18} className="sm:w-4 sm:h-4" />
@@ -170,49 +196,49 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
       <div className="hidden sm:flex items-center gap-0.5">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
-          isActive={editor.isActive('bold')}
+          isActive={editorState?.isBold}
           tooltip="Bold (Ctrl+B)"
         >
           <Bold size={16} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          isActive={editor.isActive('italic')}
+          isActive={editorState?.isItalic}
           tooltip="Italic (Ctrl+I)"
         >
           <Italic size={16} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          isActive={editor.isActive('underline')}
+          isActive={editorState?.isUnderline}
           tooltip="Underline (Ctrl+U)"
         >
           <Underline size={16} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          isActive={editor.isActive('strike')}
+          isActive={editorState?.isStrike}
           tooltip="Strikethrough"
         >
           <Strikethrough size={16} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleCode().run()}
-          isActive={editor.isActive('code')}
+          isActive={editorState?.isCode}
           tooltip="Inline Code (Ctrl+E)"
         >
           <Code size={16} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHighlight().run()}
-          isActive={editor.isActive('highlight')}
+          isActive={editorState?.isHighlight}
           tooltip="Highlight"
         >
           <Highlighter size={16} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => onOpenLinkPopover?.()}
-          isActive={editor.isActive('link')}
+          isActive={editorState?.isLink}
           tooltip="Link (Ctrl+K)"
         >
           <Link size={16} />
@@ -284,35 +310,35 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
       <div className="hidden md:flex items-center gap-0.5">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          isActive={editor.isActive('bulletList')}
+          isActive={editorState?.isBulletList}
           tooltip="Bullet List"
         >
           <List size={16} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          isActive={editor.isActive('orderedList')}
+          isActive={editorState?.isOrderedList}
           tooltip="Numbered List"
         >
           <ListOrdered size={16} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleTaskList().run()}
-          isActive={editor.isActive('taskList')}
+          isActive={editorState?.isTaskList}
           tooltip="Task List"
         >
           <CheckSquare size={16} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          isActive={editor.isActive('blockquote')}
+          isActive={editorState?.isBlockquote}
           tooltip="Quote"
         >
           <Quote size={16} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          isActive={editor.isActive('codeBlock')}
+          isActive={editorState?.isCodeBlock}
           tooltip="Code Block"
         >
           <Code2 size={16} />
@@ -321,13 +347,13 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
         <ToolbarButton
           onClick={() => {
             // Check if in task list or regular list and indent accordingly
-            if (editor.isActive('taskList')) {
+            if (editorState?.isTaskList) {
               editor.chain().focus().sinkListItem('taskItem').run();
-            } else if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+            } else if (editorState?.isBulletList || editorState?.isOrderedList) {
               editor.chain().focus().sinkListItem('listItem').run();
             }
           }}
-          disabled={!editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList')}
+          disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
           tooltip="Indent (Tab)"
         >
           <IndentIncrease size={16} />
@@ -335,13 +361,13 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
         <ToolbarButton
           onClick={() => {
             // Check if in task list or regular list and outdent accordingly
-            if (editor.isActive('taskList')) {
+            if (editorState?.isTaskList) {
               editor.chain().focus().liftListItem('taskItem').run();
-            } else if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+            } else if (editorState?.isBulletList || editorState?.isOrderedList) {
               editor.chain().focus().liftListItem('listItem').run();
             }
           }}
-          disabled={!editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList')}
+          disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
           tooltip="Outdent (Shift+Tab)"
         >
           <IndentDecrease size={16} />
@@ -374,25 +400,25 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
           <DropdownMenuSeparator />
           <DropdownMenuItem 
             onClick={() => {
-              if (editor.isActive('taskList')) {
+              if (editorState?.isTaskList) {
                 editor.chain().focus().sinkListItem('taskItem').run();
-              } else if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+              } else if (editorState?.isBulletList || editorState?.isOrderedList) {
                 editor.chain().focus().sinkListItem('listItem').run();
               }
             }}
-            disabled={!editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList')}
+            disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
           >
             <IndentIncrease size={16} className="mr-2" /> Indent
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => {
-              if (editor.isActive('taskList')) {
+              if (editorState?.isTaskList) {
                 editor.chain().focus().liftListItem('taskItem').run();
-              } else if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+              } else if (editorState?.isBulletList || editorState?.isOrderedList) {
                 editor.chain().focus().liftListItem('listItem').run();
               }
             }}
-            disabled={!editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList')}
+            disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
           >
             <IndentDecrease size={16} className="mr-2" /> Outdent
           </DropdownMenuItem>
@@ -686,6 +712,6 @@ export function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, class
       )}
     </div>
   );
-}
+});
 
 export default EditorToolbar;
