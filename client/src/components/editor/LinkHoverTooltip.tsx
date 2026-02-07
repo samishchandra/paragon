@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Editor } from '@tiptap/react';
 import { ExternalLink, Unlink, Pencil } from 'lucide-react';
 
@@ -7,6 +8,7 @@ import { ExternalLink, Unlink, Pencil } from 'lucide-react';
  * - Glassmorphic tooltip with backdrop blur
  * - Cyan accent for interactive elements
  * - Smooth hover transitions
+ * Uses React portal to escape overflow containers.
  */
 
 interface LinkHoverTooltipProps {
@@ -41,17 +43,35 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     try {
       const href = linkElement.getAttribute('href') || '';
       const rect = linkElement.getBoundingClientRect();
-      const editorRect = editor.view.dom.getBoundingClientRect();
+      
+      const tooltipWidth = 320;
+      const tooltipHeight = 40;
+      const padding = 8;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
 
-    setTooltip({
-      isVisible: true,
-      url: href,
-      position: {
-        top: rect.bottom - editorRect.top + 8,
-        left: rect.left - editorRect.left,
-      },
-      linkElement,
-    });
+      let top = rect.bottom + 8;
+      let left = rect.left;
+
+      // Flip upward if not enough space below
+      if (top + tooltipHeight > viewportHeight - padding) {
+        top = rect.top - tooltipHeight - 8;
+      }
+
+      // Keep within horizontal bounds
+      if (left + tooltipWidth > viewportWidth - padding) {
+        left = viewportWidth - tooltipWidth - padding;
+      }
+      if (left < padding) {
+        left = padding;
+      }
+
+      setTooltip({
+        isVisible: true,
+        url: href,
+        position: { top, left },
+        linkElement,
+      });
     } catch (error) {
       console.warn('LinkHoverTooltip: Error showing tooltip', error);
     }
@@ -120,12 +140,10 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
   }, [tooltip.url]);
 
   const handleRemoveLink = useCallback(() => {
-    // Select the link and remove it
     if (tooltip.linkElement) {
       const { view } = editor;
       const { doc } = view.state;
       
-      // Find the link position in the document
       let linkPos: number | null = null;
       let linkEnd: number | null = null;
       
@@ -149,7 +167,6 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
           .unsetLink()
           .run();
       } else {
-        // Fallback: just unset link at current selection
         editor.chain().focus().unsetLink().run();
       }
     }
@@ -157,7 +174,6 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
   }, [editor, tooltip.linkElement]);
 
   const handleEditLink = useCallback(() => {
-    // Select the link text first
     if (tooltip.linkElement) {
       const { view } = editor;
       const { doc } = view.state;
@@ -185,15 +201,15 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     ? tooltip.url.substring(0, 40) + '...' 
     : tooltip.url;
 
-  return (
+  return createPortal(
     <div
       ref={tooltipRef}
       className="link-hover-tooltip"
       style={{
-        position: 'absolute',
+        position: 'fixed',
         top: `${tooltip.position.top}px`,
         left: `${tooltip.position.left}px`,
-        zIndex: 100,
+        zIndex: 9999,
       }}
       onMouseEnter={keepTooltipVisible}
       onMouseLeave={hideTooltip}
@@ -223,7 +239,8 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

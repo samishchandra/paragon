@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Editor } from '@tiptap/react';
 import { 
   MoreVertical, 
@@ -15,6 +16,7 @@ import {
  * DESIGN: Table Cell Menu Component
  * A 3-dot menu that appears on table cells with context menu options
  * for table manipulation (insert/delete rows/columns, copy table, etc.)
+ * Uses React portal to escape overflow containers.
  */
 
 interface TableCellMenuProps {
@@ -23,9 +25,58 @@ interface TableCellMenuProps {
 
 export function TableCellMenu({ editor }: TableCellMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; flipped: boolean }>({ top: 0, left: 0, flipped: false });
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Update dropdown position when open
+  const updatePosition = useCallback(() => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const dropdownHeight = 320; // estimated max height
+    const dropdownWidth = 200;
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const padding = 8;
+
+    // Check if there's enough space below
+    const spaceBelow = viewportHeight - rect.bottom;
+    const flipped = spaceBelow < dropdownHeight + padding && rect.top > dropdownHeight + padding;
+
+    let top = flipped ? rect.top - dropdownHeight - 4 : rect.bottom + 4;
+    let left = rect.left;
+
+    // Keep within horizontal bounds
+    if (left + dropdownWidth > viewportWidth - padding) {
+      left = viewportWidth - dropdownWidth - padding;
+    }
+    if (left < padding) {
+      left = padding;
+    }
+
+    // Keep within vertical bounds
+    top = Math.max(padding, Math.min(viewportHeight - dropdownHeight - padding, top));
+
+    setDropdownPos({ top, left, flipped });
+  }, []);
+
+  // Reposition on scroll/resize
+  useEffect(() => {
+    if (!isOpen) return;
+    updatePosition();
+
+    const handleReposition = () => {
+      requestAnimationFrame(updatePosition);
+    };
+
+    window.addEventListener('scroll', handleReposition, true);
+    window.addEventListener('resize', handleReposition);
+
+    return () => {
+      window.removeEventListener('scroll', handleReposition, true);
+      window.removeEventListener('resize', handleReposition);
+    };
+  }, [isOpen, updatePosition]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -96,19 +147,14 @@ export function TableCellMenu({ editor }: TableCellMenuProps) {
   }, [editor, handleMenuAction]);
 
   const copyTable = useCallback(() => {
-    // Get the table HTML and copy it to clipboard
     const { state } = editor;
     const { selection } = state;
     
-    // Find the table node
-    let tableNode = null;
     let tablePos = -1;
     
     state.doc.descendants((node, pos) => {
       if (node.type.name === 'table') {
-        // Check if selection is within this table
         if (pos <= selection.from && pos + node.nodeSize >= selection.to) {
-          tableNode = node;
           tablePos = pos;
           return false;
         }
@@ -116,29 +162,19 @@ export function TableCellMenu({ editor }: TableCellMenuProps) {
       return true;
     });
 
-    if (tableNode && tablePos >= 0) {
-      // Create a temporary element to get the HTML
-      const tempDiv = document.createElement('div');
-      const serializer = editor.view.dom.ownerDocument.createElement('div');
-      
-      // Get the table element from the DOM
+    if (tablePos >= 0) {
       const tableElement = editor.view.domAtPos(tablePos + 1).node as HTMLElement;
       const table = tableElement.closest('table');
       
       if (table) {
-        // Clone the table and clean it up for copying
         const clonedTable = table.cloneNode(true) as HTMLTableElement;
-        
-        // Remove any editor-specific attributes and classes
         clonedTable.removeAttribute('data-pm-slice');
         clonedTable.querySelectorAll('[data-node-view-wrapper]').forEach(el => {
           el.removeAttribute('data-node-view-wrapper');
         });
         
-        // Copy as both HTML and plain text
         const htmlContent = clonedTable.outerHTML;
         
-        // Create plain text version
         let plainText = '';
         const rows = clonedTable.querySelectorAll('tr');
         rows.forEach((row, rowIndex) => {
@@ -153,14 +189,12 @@ export function TableCellMenu({ editor }: TableCellMenuProps) {
           }
         });
 
-        // Use clipboard API
         navigator.clipboard.write([
           new ClipboardItem({
             'text/html': new Blob([htmlContent], { type: 'text/html' }),
             'text/plain': new Blob([plainText], { type: 'text/plain' }),
           })
         ]).catch(() => {
-          // Fallback to plain text copy
           navigator.clipboard.writeText(plainText);
         });
       }
@@ -195,10 +229,16 @@ export function TableCellMenu({ editor }: TableCellMenuProps) {
         <MoreVertical size={14} />
       </button>
       
-      {isOpen && (
+      {isOpen && createPortal(
         <div 
           ref={menuRef}
           className="table-cell-menu-dropdown"
+          style={{
+            position: 'fixed',
+            top: `${dropdownPos.top}px`,
+            left: `${dropdownPos.left}px`,
+            zIndex: 9999,
+          }}
         >
           {menuItems.map((item, index) => (
             <div key={item.label}>
@@ -218,7 +258,8 @@ export function TableCellMenu({ editor }: TableCellMenuProps) {
               )}
             </div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

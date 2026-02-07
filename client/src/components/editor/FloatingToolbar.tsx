@@ -18,6 +18,7 @@ import {
   FileCode,
 } from 'lucide-react';
 import { useCallback, useState, useEffect, useRef, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { useEditorState } from '@tiptap/react';
 
 /*
@@ -25,6 +26,7 @@ import { useEditorState } from '@tiptap/react';
  * Mobile-responsive floating toolbar
  * Touch-friendly buttons with proper sizing
  * Auto-positioning to stay within editor bounds
+ * Uses React portal to escape overflow containers.
  */
 
 interface FloatingToolbarProps {
@@ -141,19 +143,15 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
         const { empty, from, to } = selection;
 
         // Hide if selection is empty or in code block (but show for image node selections)
-        // Check for NodeSelection (when an image is selected)
         const isNodeSelection = 'node' in selection && (selection as any).node;
         const selectedNode = isNodeSelection ? (selection as any).node : editor.state.doc.nodeAt(from);
         const isImageSelected = selectedNode?.type?.name === 'resizableImage';
         
-        // Check codeBlock directly since this is in an event callback, not render
         if ((empty && !isImageSelected) || editor.isActive('codeBlock')) {
-          // Clear any pending show timeout
           if (showTimeoutRef.current) {
             clearTimeout(showTimeoutRef.current);
             showTimeoutRef.current = null;
           }
-          // Delay hiding to allow button clicks
           if (hideTimeoutRef.current) {
             clearTimeout(hideTimeoutRef.current);
           }
@@ -164,69 +162,53 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
           return;
         }
 
-        // Clear any pending hide
         if (hideTimeoutRef.current) {
           clearTimeout(hideTimeoutRef.current);
           hideTimeoutRef.current = null;
         }
 
-        // Get selection coordinates
+        // Get selection coordinates in viewport space (fixed positioning)
         const start = editor.view.coordsAtPos(from);
         const end = editor.view.coordsAtPos(to);
         
-        // Get editor container bounds
-        const editorRect = editor.view.dom.getBoundingClientRect();
-        
-        // Get the editor-content-wrapper for proper positioning
-        const wrapper = editor.view.dom.closest('.editor-content-wrapper');
-        const wrapperRect = wrapper?.getBoundingClientRect() || editorRect;
-        
-        // Get actual toolbar dimensions after render, or estimate
         const toolbarWidth = toolbarRef.current?.offsetWidth || 500;
-        // Use actual height for multi-row support, with fallback
         const toolbarHeight = toolbarRef.current?.offsetHeight || 40;
+        const padding = 8;
+        const viewportWidth = window.innerWidth;
         
-        // Calculate center position of selection relative to wrapper
-        const selectionCenterX = ((start.left + end.left) / 2) - wrapperRect.left;
+        // Calculate center position of selection in viewport coords
+        const selectionCenterX = (start.left + end.left) / 2;
         
-        // Calculate left position (we'll use left-aligned positioning, not center transform)
-        // Start with selection center minus half toolbar width
+        // Position horizontally centered on selection
         let left = selectionCenterX - toolbarWidth / 2;
         
-        // Constrain to wrapper bounds
-        // Left edge: minimum 8px from left
-        const minLeft = 8;
-        // Right edge: toolbar right edge must be at least 8px from right edge
-        const maxLeft = wrapperRect.width - toolbarWidth - 8;
+        // Clamp to viewport bounds
+        left = Math.max(padding, Math.min(viewportWidth - toolbarWidth - padding, left));
         
-        // Clamp the position
-        left = Math.max(minLeft, Math.min(maxLeft, left));
+        // Position above the selection in viewport coords
+        let top = start.top - toolbarHeight - 10;
         
-        // Calculate top position (above selection, relative to wrapper)
-        const top = start.top - wrapperRect.top - toolbarHeight - 10;
+        // If not enough space above, position below
+        if (top < padding) {
+          top = end.bottom + 10;
+        }
 
-        // Add delay before showing toolbar (200ms)
         if (!isVisible) {
           if (showTimeoutRef.current) {
             clearTimeout(showTimeoutRef.current);
           }
           showTimeoutRef.current = setTimeout(() => {
-            setPosition({ top: Math.max(10, top), left });
+            setPosition({ top: Math.max(padding, top), left });
             setIsVisible(true);
           }, 50);
         } else {
-          // Already visible, update position immediately
-          setPosition({ top: Math.max(10, top), left });
+          setPosition({ top: Math.max(padding, top), left });
         }
       } catch (error) {
         console.warn('FloatingToolbar: Error updating position', error);
       }
     };
 
-    // Performance: Only listen to selectionUpdate, NOT transaction.
-    // The 'transaction' event fires on EVERY keystroke, causing expensive
-    // DOM measurements (getBoundingClientRect) on each character typed.
-    // selectionUpdate is sufficient - it fires when the selection changes.
     editor.on('selectionUpdate', updateToolbar);
 
     return () => {
@@ -242,7 +224,6 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
 
   // Keep toolbar visible when interacting with it
   const handleToolbarMouseDown = (e: React.MouseEvent) => {
-    // Prevent the toolbar from hiding when clicking on it
     if (hideTimeoutRef.current) {
       clearTimeout(hideTimeoutRef.current);
       hideTimeoutRef.current = null;
@@ -253,82 +234,88 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
     return null;
   }
 
-  if (showLinkInput) {
-    return (
-      <div
-        ref={toolbarRef}
-        className={`floating-toolbar absolute z-50 ${className}`}
-        style={{ top: position.top, left: position.left }}
-        onMouseDown={handleToolbarMouseDown}
-      >
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 px-2 w-[280px] sm:w-auto">
-          <input
-            type="url"
-            placeholder="Enter URL..."
-            value={linkUrl}
-            onChange={(e) => setLinkUrl(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                setLink();
-              }
-              if (e.key === 'Escape') {
-                setShowLinkInput(false);
-                setLinkUrl('');
-              }
-            }}
-            className="
-              bg-secondary/50 rounded px-3 py-2 sm:py-1
-              text-sm text-foreground placeholder:text-muted-foreground
-              outline-none border border-border/50
-              w-full sm:w-48
-            "
-            autoFocus
-          />
-          <div className="flex gap-2">
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setLink();
-              }}
-              className="
-                flex-1 sm:flex-none px-4 sm:px-3 py-2 sm:py-1 text-sm sm:text-xs font-medium rounded
-                bg-primary text-primary-foreground
-                hover:opacity-90 active:opacity-80 transition-opacity touch-manipulation
-              "
-            >
-              Apply
-            </button>
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setShowLinkInput(false);
-                setLinkUrl('');
-              }}
-              className="
-                flex-1 sm:flex-none px-4 sm:px-2 py-2 sm:py-1 text-sm sm:text-xs font-medium rounded
-                bg-secondary text-secondary-foreground
-                hover:bg-accent active:bg-accent/80 transition-colors touch-manipulation
-              "
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const iconSize = 15;
 
-  return (
+  const toolbarContent = showLinkInput ? (
     <div
       ref={toolbarRef}
-      className={`floating-toolbar absolute z-50 ${className}`}
-      style={{ top: position.top, left: position.left }}
+      className={`floating-toolbar ${className}`}
+      style={{ 
+        position: 'fixed',
+        top: position.top, 
+        left: position.left,
+        zIndex: 9999,
+      }}
       onMouseDown={handleToolbarMouseDown}
     >
-      {/* Paragraph style - convert to normal paragraph */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 px-2 w-[280px] sm:w-auto">
+        <input
+          type="url"
+          placeholder="Enter URL..."
+          value={linkUrl}
+          onChange={(e) => setLinkUrl(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              setLink();
+            }
+            if (e.key === 'Escape') {
+              setShowLinkInput(false);
+              setLinkUrl('');
+            }
+          }}
+          className="
+            bg-secondary/50 rounded px-3 py-2 sm:py-1
+            text-sm text-foreground placeholder:text-muted-foreground
+            outline-none border border-border/50
+            w-full sm:w-48
+          "
+          autoFocus
+        />
+        <div className="flex gap-2">
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setLink();
+            }}
+            className="
+              flex-1 sm:flex-none px-4 sm:px-3 py-2 sm:py-1 text-sm sm:text-xs font-medium rounded
+              bg-primary text-primary-foreground
+              hover:opacity-90 active:opacity-80 transition-opacity touch-manipulation
+            "
+          >
+            Apply
+          </button>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setShowLinkInput(false);
+              setLinkUrl('');
+            }}
+            className="
+              flex-1 sm:flex-none px-4 sm:px-2 py-2 sm:py-1 text-sm sm:text-xs font-medium rounded
+              bg-secondary text-secondary-foreground
+              hover:bg-accent active:bg-accent/80 transition-colors touch-manipulation
+            "
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div
+      ref={toolbarRef}
+      className={`floating-toolbar ${className}`}
+      style={{ 
+        position: 'fixed',
+        top: position.top, 
+        left: position.left,
+        zIndex: 9999,
+      }}
+      onMouseDown={handleToolbarMouseDown}
+    >
+      {/* Paragraph style */}
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setParagraph().run())}
         isActive={!editorState?.isH1 && !editorState?.isH2 && !editorState?.isH3 && !editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList && !editorState?.isBlockquote && !editorState?.isCodeBlock}
@@ -452,10 +439,10 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
       >
         <FileCode size={iconSize} />
       </ToolbarButton>
-
-
     </div>
   );
+
+  return createPortal(toolbarContent, document.body);
 });
 
 export default FloatingToolbar;
