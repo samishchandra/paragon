@@ -338,6 +338,7 @@ export default function Home() {
                       showTableOfContents={true}
                       tocMaxLevel={4}
                       theme={modalTheme}
+                      showPerformanceProfiler={true}
                     />
                   </div>
                 </DialogContent>
@@ -434,6 +435,7 @@ export default function Home() {
               autofocus={false}
               showTableOfContents={true}
               tocMaxLevel={4}
+              showPerformanceProfiler={true}
             />
           </div>
         </div>

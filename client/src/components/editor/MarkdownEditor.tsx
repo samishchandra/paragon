@@ -42,6 +42,8 @@ import { ImageUpload } from './extensions/ImageUpload';
 import { ImageDropZone } from './ImageDropZone';
 import { ImageEditPopover } from './ImageEditPopover';
 import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
+import { PerformanceProfiler } from './PerformanceProfiler';
+import './PerformanceProfiler.css';
 import { FileText, Eye } from 'lucide-react';
 import { TableOfContents } from './TableOfContents';
 import TurndownService from 'turndown';
@@ -305,6 +307,11 @@ export interface MarkdownEditorProps {
   renderTocItem?: (item: { id: string; text: string; level: number; pos: number }, isActive: boolean, onClick: () => void) => React.ReactNode;
   /** Show TOC toggle button (default: true) */
   tocShowToggleButton?: boolean;
+  
+  // === PERFORMANCE PROFILER ===
+  
+  /** Show performance profiler overlay for dev mode (default: false) */
+  showPerformanceProfiler?: boolean;
 }
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(function MarkdownEditor({
@@ -367,6 +374,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   onTocItemClick,
   renderTocItem,
   tocShowToggleButton = true,
+  // Performance profiler
+  showPerformanceProfiler = false,
 }, ref) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
@@ -1395,6 +1404,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             )
           : defaultFooter
       )}
+      
+      {/* Performance Profiler Overlay (dev mode) */}
+      <PerformanceProfiler enabled={showPerformanceProfiler} editor={editor} />
     </div>
   );
 });

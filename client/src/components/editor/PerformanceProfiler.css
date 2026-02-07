@@ -1,0 +1,179 @@
+/* Performance Profiler Overlay Styles */
+
+.perf-profiler-toggle {
+  position: absolute;
+  bottom: 40px;
+  right: 16px;
+  z-index: 100;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #a3a3a3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.perf-profiler-toggle:hover {
+  background: rgba(40, 40, 40, 0.95);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
+  transform: scale(1.05);
+}
+
+.perf-profiler-overlay {
+  position: absolute;
+  bottom: 40px;
+  right: 16px;
+  z-index: 100;
+  width: 240px;
+  background: rgba(18, 18, 18, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: #e5e5e5;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  user-select: none;
+}
+
+.perf-profiler-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.perf-profiler-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 11px;
+  color: #a3a3a3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.perf-profiler-title svg {
+  color: #4ade80;
+}
+
+.perf-profiler-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.perf-profiler-actions button {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: #737373;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.perf-profiler-actions button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e5e5;
+}
+
+.perf-profiler-body {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.perf-section {
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.perf-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.perf-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1px 0;
+}
+
+.perf-row-sub {
+  opacity: 0.7;
+}
+
+.perf-label {
+  color: #a3a3a3;
+  font-size: 11px;
+}
+
+.perf-label-sub {
+  color: #737373;
+  font-size: 10px;
+  padding-left: 8px;
+}
+
+.perf-value {
+  font-weight: 600;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.perf-value-sub {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.perf-sparkline {
+  margin-top: 4px;
+  width: 100%;
+  height: 24px;
+  opacity: 0.8;
+}
+
+.perf-hint {
+  text-align: center;
+  color: #525252;
+  font-size: 9px;
+  padding-top: 4px;
+}
+
+.perf-hint kbd {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 9px;
+  font-family: inherit;
+  color: #737373;
+}
+
+/* Deferred code block styling - plain text appearance before highlighting kicks in */
+.code-block-deferred code {
+  color: #a3a3a3 !important;
+}
+
+.code-block-deferred code .hljs {
+  background: transparent !important;
+}
