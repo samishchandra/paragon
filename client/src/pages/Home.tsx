@@ -1,5 +1,5 @@
 import { MarkdownEditor } from '@/components/editor';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -270,7 +270,11 @@ export default function Home() {
   const [content, setContent] = useState(DEMO_CONTENT);
   const [modalContent, setModalContent] = useState(MODAL_DEMO_CONTENT);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalTheme, setModalTheme] = useState<'dark' | 'light'>('light');
+   const [modalTheme, setModalTheme] = useState<'light' | 'dark'>('dark');
+  const [showModalProfiler, setShowModalProfiler] = useState(false);
+  const [showInlineProfiler, setShowInlineProfiler] = useState(false);
+  const handleModalProfilerClose = useCallback(() => setShowModalProfiler(false), []);
+  const handleInlineProfilerClose = useCallback(() => setShowInlineProfiler(false), []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -338,7 +342,8 @@ export default function Home() {
                       showTableOfContents={true}
                       tocMaxLevel={4}
                       theme={modalTheme}
-                      showPerformanceProfiler={true}
+                      showPerformanceProfiler={showModalProfiler}
+                      onPerformanceProfilerClose={handleModalProfilerClose}
                     />
                   </div>
                 </DialogContent>
@@ -435,7 +440,8 @@ export default function Home() {
               autofocus={false}
               showTableOfContents={true}
               tocMaxLevel={4}
-              showPerformanceProfiler={true}
+              showPerformanceProfiler={showInlineProfiler}
+              onPerformanceProfilerClose={handleInlineProfilerClose}
             />
           </div>
         </div>

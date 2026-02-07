@@ -5,8 +5,8 @@ import { Activity, X, Minimize2, Maximize2 } from 'lucide-react';
  * PERFORMANCE PROFILER OVERLAY
  * Dev-mode tool for monitoring editor performance in real-time.
  * Shows: FPS, frame times, render counts, memory usage, and transaction stats.
- * Toggle with Ctrl+Shift+P or the floating button.
- * Designed to be non-intrusive and draggable.
+ * Visibility is fully controlled by the `visible` prop from the embedding application.
+ * The embedding app can also listen to `onClose` to update its own state.
  */
 
 interface PerformanceMetrics {
@@ -27,6 +27,16 @@ interface FrameTimeSample {
   duration: number;
 }
 
+export interface PerformanceProfilerProps {
+  /** Whether the profiler panel is visible. Fully controlled by the embedding application. */
+  visible: boolean;
+  /** Callback when the user clicks the close button inside the profiler. The embedding app should set `visible` to false. */
+  onClose?: () => void;
+  /** The TipTap editor instance to monitor transactions. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  editor?: any;
+}
+
 // Global render counter that components can increment
 let globalRenderCount = 0;
 let globalTransactionCount = 0;
@@ -42,14 +52,10 @@ export function recordTransaction(duration: number) {
 }
 
 export const PerformanceProfiler = memo(function PerformanceProfiler({
-  enabled = false,
+  visible,
+  onClose,
   editor,
-}: {
-  enabled?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  editor?: any;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
+}: PerformanceProfilerProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [metrics, setMetrics] = useState<PerformanceMetrics>({
     fps: 0,
@@ -75,24 +81,9 @@ export const PerformanceProfiler = memo(function PerformanceProfiler({
   const [fpsHistory, setFpsHistory] = useState<number[]>(new Array(60).fill(0));
   const [frameTimeHistory, setFrameTimeHistory] = useState<number[]>(new Array(60).fill(0));
   
-  // Keyboard shortcut: Ctrl+Shift+P
-  useEffect(() => {
-    if (!enabled) return;
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'P') {
-        e.preventDefault();
-        setIsOpen(prev => !prev);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [enabled]);
-  
   // Track editor transactions
   useEffect(() => {
-    if (!enabled || !editor || !isOpen) return;
+    if (!visible || !editor) return;
     
     const handleTransaction = () => {
       const start = performance.now();
@@ -107,11 +98,11 @@ export const PerformanceProfiler = memo(function PerformanceProfiler({
     return () => {
       editor.off('transaction', handleTransaction);
     };
-  }, [enabled, editor, isOpen]);
+  }, [visible, editor]);
   
   // Main measurement loop
   useEffect(() => {
-    if (!enabled || !isOpen) return;
+    if (!visible) return;
     
     let frameCount = 0;
     let lastSecond = performance.now();
@@ -194,30 +185,17 @@ export const PerformanceProfiler = memo(function PerformanceProfiler({
     return () => {
       cancelAnimationFrame(rafIdRef.current);
     };
-  }, [enabled, isOpen]);
+  }, [visible]);
   
-  const toggleOpen = useCallback(() => {
-    setIsOpen(prev => !prev);
-  }, []);
+  const handleClose = useCallback(() => {
+    onClose?.();
+  }, [onClose]);
   
   const toggleMinimize = useCallback(() => {
     setIsMinimized(prev => !prev);
   }, []);
   
-  if (!enabled) return null;
-  
-  // Floating toggle button
-  if (!isOpen) {
-    return (
-      <button
-        onClick={toggleOpen}
-        className="perf-profiler-toggle"
-        title="Performance Profiler (Ctrl+Shift+P)"
-      >
-        <Activity size={16} />
-      </button>
-    );
-  }
+  if (!visible) return null;
   
   // Get color based on FPS
   const getFpsColor = (fps: number) => {
@@ -267,7 +245,7 @@ export const PerformanceProfiler = memo(function PerformanceProfiler({
           <button onClick={toggleMinimize} title={isMinimized ? 'Expand' : 'Minimize'}>
             {isMinimized ? <Maximize2 size={12} /> : <Minimize2 size={12} />}
           </button>
-          <button onClick={toggleOpen} title="Close (Ctrl+Shift+P)">
+          <button onClick={handleClose} title="Close profiler">
             <X size={12} />
           </button>
         </div>
@@ -337,11 +315,6 @@ export const PerformanceProfiler = memo(function PerformanceProfiler({
                 <span className="perf-value">{metrics.memoryUsed}MB / {metrics.memoryTotal}MB</span>
               </div>
             )}
-          </div>
-          
-          {/* Keyboard shortcut hint */}
-          <div className="perf-hint">
-            <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> to toggle
           </div>
         </div>
       )}

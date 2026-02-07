@@ -310,8 +310,11 @@ export interface MarkdownEditorProps {
   
   // === PERFORMANCE PROFILER ===
   
-  /** Show performance profiler overlay for dev mode (default: false) */
+  /** Whether the performance profiler panel is visible. Fully controlled by the embedding application. (default: false) */
   showPerformanceProfiler?: boolean;
+  
+  /** Callback when the user clicks the close button inside the profiler. The embedding app should set showPerformanceProfiler to false. */
+  onPerformanceProfilerClose?: () => void;
 }
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(function MarkdownEditor({
@@ -376,6 +379,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   tocShowToggleButton = true,
   // Performance profiler
   showPerformanceProfiler = false,
+  onPerformanceProfilerClose,
 }, ref) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
@@ -1406,7 +1410,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       )}
       
       {/* Performance Profiler Overlay (dev mode) */}
-      <PerformanceProfiler enabled={showPerformanceProfiler} editor={editor} />
+      <PerformanceProfiler visible={showPerformanceProfiler} onClose={onPerformanceProfilerClose} editor={editor} />
     </div>
   );
 });
