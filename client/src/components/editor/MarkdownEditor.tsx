@@ -26,6 +26,7 @@ import { DatePill } from './extensions/DatePill';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace } from './FindReplace';
+import { SelectAllActionBar } from './SelectAllActionBar';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useWordCount } from './hooks/useWordCount';
 import { AutoSaveIndicator } from './AutoSaveIndicator';
@@ -1300,6 +1301,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           initialSearchQuery={findReplaceInitialQuery}
         />
       )}
+      
+      {/* Floating action bar for Select All Occurrences mode */}
+      <SelectAllActionBar editor={editor} />
       
       {/* Main editor area with optional TOC sidebar */}
       <div className={`editor-main-area ${showTableOfContents ? 'editor-with-toc' : ''}`}>
