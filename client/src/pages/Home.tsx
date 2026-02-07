@@ -270,7 +270,7 @@ export default function Home() {
   const [content, setContent] = useState(DEMO_CONTENT);
   const [modalContent, setModalContent] = useState(MODAL_DEMO_CONTENT);
   const [isModalOpen, setIsModalOpen] = useState(false);
-   const [modalTheme, setModalTheme] = useState<'light' | 'dark'>('dark');
+   const [modalTheme, setModalTheme] = useState<'light' | 'dark'>('light');
   const [showModalProfiler, setShowModalProfiler] = useState(false);
   const [showInlineProfiler, setShowInlineProfiler] = useState(false);
   const handleModalProfilerClose = useCallback(() => setShowModalProfiler(false), []);
