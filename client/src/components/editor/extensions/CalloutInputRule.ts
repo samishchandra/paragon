@@ -15,7 +15,7 @@ import { Fragment } from '@tiptap/pm/model';
  * This converts the code block fence into a callout block.
  */
 
-const CALLOUT_TYPES = ['info', 'warning', 'error', 'success', 'note'] as const;
+const CALLOUT_TYPES = ['info', 'note', 'prompt', 'resources', 'todo'] as const;
 type CalloutType = typeof CALLOUT_TYPES[number];
 
 export const CalloutInputRule = Extension.create({

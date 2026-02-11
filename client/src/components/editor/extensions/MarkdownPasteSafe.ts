@@ -16,12 +16,12 @@ const MARKDOWN_PATTERNS = {
   // Table pattern: header row with pipes, separator row with dashes, optional data rows
   // Allow headers and separators with or without trailing pipes
   table: /^\|[^\n]+\n\|[-:\s|]+/m,
-  // Callout pattern: ```info, ```warning, ```error, ```success, ```note
-  callout: /```(?:info|warning|error|success|note)\s*\n[\s\S]*?```/,
+  // Callout pattern: ```info, ```note, ```prompt, ```resources, ```todo
+  callout: /```(?:info|note|prompt|resources|todo)\s*\n[\s\S]*?```/,
 };
 
 // Callout types for parsing
-const CALLOUT_TYPES = ['info', 'warning', 'error', 'success', 'note'];
+const CALLOUT_TYPES = ['info', 'note', 'prompt', 'resources', 'todo'];
 
 // Quick check if text looks like markdown (optimized - check most common patterns first)
 function looksLikeMarkdown(text: string): boolean {

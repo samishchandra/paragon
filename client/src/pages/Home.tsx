@@ -247,7 +247,7 @@ const features = [
   {
     icon: <Quote className="w-5 h-5" />,
     title: 'Callouts',
-    description: 'Info, warning, error, and success callouts',
+    description: 'Info, note, prompt, resources, and todo callouts',
   },
   {
     icon: <Image className="w-5 h-5" />,
