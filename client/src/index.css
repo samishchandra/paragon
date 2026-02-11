@@ -3048,6 +3048,52 @@ pre.with-line-numbers code .line::before {
   color: oklch(0.7 0.2 25);
 }
 
+.select-all-action-bar-btn-primary {
+  background: oklch(0.6 0.15 250 / 0.12);
+  color: oklch(0.45 0.15 250);
+  font-weight: 500;
+}
+
+.select-all-action-bar-btn-primary:hover {
+  background: oklch(0.6 0.15 250 / 0.22);
+  color: oklch(0.4 0.18 250);
+}
+
+.dark .select-all-action-bar-btn-primary,
+[data-theme="dark"] .select-all-action-bar-btn-primary {
+  background: oklch(0.5 0.15 250 / 0.2);
+  color: oklch(0.7 0.12 250);
+}
+
+.dark .select-all-action-bar-btn-primary:hover,
+[data-theme="dark"] .select-all-action-bar-btn-primary:hover {
+  background: oklch(0.5 0.15 250 / 0.3);
+  color: oklch(0.8 0.12 250);
+}
+
+.select-all-action-bar-btn-secondary {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  color: oklch(0.5 0 0);
+}
+
+.select-all-action-bar-btn-secondary:hover {
+  background: oklch(0.5 0 0 / 0.08);
+  color: oklch(0.35 0 0);
+}
+
+.dark .select-all-action-bar-btn-secondary,
+[data-theme="dark"] .select-all-action-bar-btn-secondary {
+  color: oklch(0.6 0 0);
+}
+
+.dark .select-all-action-bar-btn-secondary:hover,
+[data-theme="dark"] .select-all-action-bar-btn-secondary:hover {
+  background: oklch(0.5 0 0 / 0.15);
+  color: oklch(0.75 0 0);
+}
+
 .select-all-action-bar-hint {
   font-size: 10px;
   color: oklch(0.6 0 0);

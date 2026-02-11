@@ -8,6 +8,7 @@ import {
   Trash2,
   X,
   Type,
+  Plus,
 } from 'lucide-react';
 import type { SelectAllOccurrencesStorage } from './extensions/SelectAllOccurrences';
 
@@ -19,18 +20,24 @@ import type { SelectAllOccurrencesStorage } from './extensions/SelectAllOccurren
  * buttons for Bold, Italic, Underline, Strikethrough, Delete, and Exit.
  * 
  * Also shows a live preview of the typed replacement text when the user starts typing.
+ * In incremental (Cmd+D) mode, shows "N of M" count and a "Select Next" button.
  */
 
 interface SelectAllActionBarProps {
   editor: Editor;
 }
 
+const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+const modKey = isMac ? '⌘' : 'Ctrl';
+
 const SelectAllActionBarInner = ({ editor }: SelectAllActionBarProps) => {
   const [isActive, setIsActive] = useState(false);
   const [count, setCount] = useState(0);
+  const [totalMatches, setTotalMatches] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [typedBuffer, setTypedBuffer] = useState('');
   const [isTypingReplace, setIsTypingReplace] = useState(false);
+  const [isIncremental, setIsIncremental] = useState(false);
 
   // Poll the extension storage for state changes
   useEffect(() => {
@@ -41,12 +48,15 @@ const SelectAllActionBarInner = ({ editor }: SelectAllActionBarProps) => {
       if (storage) {
         setIsActive(storage.isActive);
         setCount(storage.ranges.length);
+        setTotalMatches(storage.allMatches.length);
         setSearchTerm(storage.searchTerm);
         setTypedBuffer(storage.typedBuffer);
         setIsTypingReplace(storage.isTypingReplace);
+        setIsIncremental(storage.isIncremental);
       } else {
         setIsActive(false);
         setCount(0);
+        setTotalMatches(0);
       }
     };
 
@@ -93,6 +103,24 @@ const SelectAllActionBarInner = ({ editor }: SelectAllActionBarProps) => {
     editor.commands.focus();
   }, [editor]);
 
+  const handleSelectNext = useCallback(() => {
+    editor.commands.selectNextOccurrence();
+    editor.commands.focus();
+  }, [editor]);
+
+  const handleSelectAll = useCallback(() => {
+    // Select all remaining occurrences at once
+    if (searchTerm) {
+      editor.commands.selectAllOccurrences({
+        searchTerm,
+        caseSensitive: false,
+        useRegex: false,
+        wholeWord: false,
+      });
+      editor.commands.focus();
+    }
+  }, [editor, searchTerm]);
+
   if (!isActive || count === 0) return null;
 
   return (
@@ -100,7 +128,9 @@ const SelectAllActionBarInner = ({ editor }: SelectAllActionBarProps) => {
       <div className="select-all-action-bar-inner">
         {/* Count badge */}
         <div className="select-all-action-bar-count">
-          <span className="select-all-action-bar-count-number">{count}</span>
+          <span className="select-all-action-bar-count-number">
+            {isIncremental && totalMatches > 0 ? `${count}/${totalMatches}` : count}
+          </span>
           <span className="select-all-action-bar-count-label">selected</span>
         </div>
 
@@ -123,25 +153,46 @@ const SelectAllActionBarInner = ({ editor }: SelectAllActionBarProps) => {
         {/* Separator */}
         <div className="select-all-action-bar-separator" />
 
+        {/* Incremental mode: Select Next button */}
+        {isIncremental && count < totalMatches && (
+          <>
+            <button
+              onClick={handleSelectNext}
+              className="select-all-action-bar-btn select-all-action-bar-btn-primary"
+              title={`Select next occurrence (${modKey}+D)`}
+            >
+              <Plus size={14} />
+            </button>
+            <button
+              onClick={handleSelectAll}
+              className="select-all-action-bar-btn select-all-action-bar-btn-secondary"
+              title={`Select all remaining (${modKey}+Shift+L)`}
+            >
+              All
+            </button>
+            <div className="select-all-action-bar-separator" />
+          </>
+        )}
+
         {/* Formatting buttons */}
         <button
           onClick={handleBold}
           className="select-all-action-bar-btn"
-          title="Bold all occurrences (Ctrl+B)"
+          title={`Bold all occurrences (${modKey}+B)`}
         >
           <Bold size={14} />
         </button>
         <button
           onClick={handleItalic}
           className="select-all-action-bar-btn"
-          title="Italic all occurrences (Ctrl+I)"
+          title={`Italic all occurrences (${modKey}+I)`}
         >
           <Italic size={14} />
         </button>
         <button
           onClick={handleUnderline}
           className="select-all-action-bar-btn"
-          title="Underline all occurrences (Ctrl+U)"
+          title={`Underline all occurrences (${modKey}+U)`}
         >
           <Underline size={14} />
         </button>
@@ -177,7 +228,15 @@ const SelectAllActionBarInner = ({ editor }: SelectAllActionBarProps) => {
 
       {/* Hint text */}
       <div className="select-all-action-bar-hint">
-        Type to replace all · <kbd>Esc</kbd> to exit · <kbd>Backspace</kbd> to delete
+        {isIncremental && count < totalMatches ? (
+          <>
+            <kbd>{modKey}+D</kbd> next · <kbd>{modKey}+Shift+L</kbd> all · Type to replace · <kbd>Esc</kbd> to exit · <kbd>{modKey}+Z</kbd> undo
+          </>
+        ) : (
+          <>
+            Type to replace all · <kbd>Esc</kbd> to exit · <kbd>Backspace</kbd> to delete · <kbd>{modKey}+Z</kbd> undo
+          </>
+        )}
       </div>
     </div>
   );
