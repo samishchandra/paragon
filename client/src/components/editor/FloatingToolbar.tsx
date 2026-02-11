@@ -29,9 +29,10 @@ import { useEditorState } from '@tiptap/react';
  * Uses React portal to escape overflow containers.
  */
 
-interface FloatingToolbarProps {
+export interface FloatingToolbarProps {
   editor: Editor;
   className?: string;
+  suppressWhenLinkPopoverOpen?: boolean;
 }
 
 interface ToolbarButtonProps {
@@ -66,7 +67,7 @@ const Divider = () => (
   <div className="w-px h-5 bg-border mx-0.5 flex-shrink-0" />
 );
 
-export const FloatingToolbar = memo(function FloatingToolbar({ editor, className = '' }: FloatingToolbarProps) {
+export const FloatingToolbar = memo(function FloatingToolbar({ editor, className = '', suppressWhenLinkPopoverOpen = false }: FloatingToolbarProps) {
   // Performance: Use useEditorState for selective re-renders based on active formatting states
   const editorState = useEditorState({
     editor,
@@ -230,7 +231,7 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
     }
   };
 
-  if (!isVisible) {
+  if (!isVisible || suppressWhenLinkPopoverOpen) {
     return null;
   }
 

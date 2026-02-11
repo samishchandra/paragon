@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 
-export type CalloutType = 'info' | 'warning' | 'error' | 'success' | 'note';
+export type CalloutType = 'info' | 'note' | 'prompt' | 'resources' | 'todo';
 
 export interface CalloutOptions {
   HTMLAttributes: Record<string, unknown>;
@@ -25,7 +25,7 @@ export const Callout = Node.create<CalloutOptions>({
   addOptions() {
     return {
       HTMLAttributes: {},
-      types: ['info', 'warning', 'error', 'success', 'note'],
+      types: ['info', 'note', 'prompt', 'resources', 'todo'],
     };
   },
 

@@ -36,6 +36,8 @@ export { WikiLinkSafe } from '@/components/editor/extensions/WikiLinkSafe';
 export { MarkdownPasteSafe } from '@/components/editor/extensions/MarkdownPasteSafe';
 export { MarkdownLinkInputRule } from '@/components/editor/extensions/MarkdownLinkInputRule';
 export { CalloutInputRule } from '@/components/editor/extensions/CalloutInputRule';
+export { MixedBulletList, MixedOrderedList, MixedTaskList, MixedTaskItem, MixedListItem } from '@/components/editor/extensions/MixedLists';
+export { CollapsibleList } from '@/components/editor/extensions/CollapsibleList';
 
 // ─── Theming ────────────────────────────────────────────────────────────────
 export { EditorThemeProvider, useEditorTheme } from '@/components/editor/ThemeProvider';

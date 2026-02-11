@@ -1,190 +1,167 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import type { CommandProps } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper, NodeViewContent, NodeViewProps } from '@tiptap/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Info, AlertTriangle, XCircle, CheckCircle, FileText, ChevronDown } from 'lucide-react';
+import { Info, StickyNote, MessageSquareText, BookOpen, ListTodo, ChevronDown, ChevronRight } from 'lucide-react';
 
-export type CalloutType = 'info' | 'warning' | 'error' | 'success' | 'note';
+export type CalloutType = 'info' | 'note' | 'prompt' | 'resources' | 'todo';
 
 export interface CalloutOptions {
   HTMLAttributes: Record<string, unknown>;
   types: CalloutType[];
 }
 
-const calloutConfig: Record<CalloutType, { icon: typeof Info; label: string; color: string }> = {
-  info: { icon: Info, label: 'Info', color: 'var(--callout-info)' },
-  warning: { icon: AlertTriangle, label: 'Warning', color: 'var(--callout-warning)' },
-  error: { icon: XCircle, label: 'Error', color: 'var(--callout-error)' },
-  success: { icon: CheckCircle, label: 'Success', color: 'var(--callout-success)' },
-  note: { icon: FileText, label: 'Note', color: 'var(--callout-note)' },
+// Module augmentation: declare custom commands so TypeScript recognises them
+// on editor.commands.* and in addCommands return type.
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    callout: {
+      setCallout: (attributes?: { type?: CalloutType }) => ReturnType;
+      toggleCallout: (attributes?: { type?: CalloutType }) => ReturnType;
+      unsetCallout: () => ReturnType;
+      insertCallout: (attributes?: { type?: CalloutType }) => ReturnType;
+      updateCalloutType: (type: CalloutType) => ReturnType;
+    };
+  }
+}
+
+const calloutConfig: Record<CalloutType, { icon: typeof Info; label: string; color: string; borderColor: string }> = {
+  info: { icon: Info, label: 'Info', color: 'var(--callout-info)', borderColor: 'var(--callout-info-border)' },
+  note: { icon: StickyNote, label: 'Note', color: 'var(--callout-note)', borderColor: 'var(--callout-note-border)' },
+  prompt: { icon: MessageSquareText, label: 'Prompt', color: 'var(--callout-prompt)', borderColor: 'var(--callout-prompt-border)' },
+  resources: { icon: BookOpen, label: 'Resources', color: 'var(--callout-resources)', borderColor: 'var(--callout-resources-border)' },
+  todo: { icon: ListTodo, label: 'Todo', color: 'var(--callout-todo)', borderColor: 'var(--callout-todo-border)' },
 };
 
-function CalloutDropdownPortal({
-  buttonRef,
-  type,
-  onTypeChange,
-  onClose,
-  theme,
-}: {
-  buttonRef: React.RefObject<HTMLButtonElement | null>;
-  type: CalloutType;
-  onTypeChange: (type: CalloutType) => void;
-  onClose: () => void;
-  theme?: string;
-}) {
+function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState<{ top: number; left: number; flipped: boolean } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const type = (node.attrs.type as CalloutType) || 'info';
+  const config = calloutConfig[type] || calloutConfig.info;
+  const Icon = config.icon;
 
-  // Estimated dropdown height (5 items * ~33px + padding)
-  const DROPDOWN_HEIGHT = 185;
+  const updateDropdownPosition = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + 4,
+        left: rect.left,
+      });
+    }
+  }, []);
 
-  // Calculate position based on button's bounding rect, flip upward if needed
-  const updatePosition = useCallback(() => {
-    if (!buttonRef.current) return;
-    const rect = buttonRef.current.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const spaceBelow = viewportHeight - rect.bottom;
-    const spaceAbove = rect.top;
-
-    // Flip upward if not enough space below but enough above
-    const shouldFlip = spaceBelow < DROPDOWN_HEIGHT + 8 && spaceAbove > DROPDOWN_HEIGHT + 8;
-
-    setPosition({
-      top: shouldFlip ? rect.top - DROPDOWN_HEIGHT - 4 : rect.bottom + 4,
-      left: rect.left,
-      flipped: shouldFlip,
-    });
-  }, [buttonRef]);
-
+  // Only register click-outside listener when dropdown is open (reduces event listener overhead)
   useEffect(() => {
-    updatePosition();
-
-    // Reposition on scroll/resize
-    const handleReposition = () => updatePosition();
-    window.addEventListener('scroll', handleReposition, true);
-    window.addEventListener('resize', handleReposition);
-
-    return () => {
-      window.removeEventListener('scroll', handleReposition, true);
-      window.removeEventListener('resize', handleReposition);
-    };
-  }, [updatePosition]);
-
-  // Close on click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    if (!showDropdown) return;
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as globalThis.Node) &&
         buttonRef.current &&
         !buttonRef.current.contains(event.target as globalThis.Node)
       ) {
-        onClose();
+        setShowDropdown(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [buttonRef, onClose]);
-
-  // Close on Escape
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, [showDropdown]);
 
-  if (!position) return null;
-
-  const dropdown = (
-    <div
-      ref={dropdownRef}
-      className={`callout-type-dropdown-portal ${theme === 'dark' ? 'dark-theme' : 'light-theme'}`}
-      style={{
-        position: 'fixed',
-        top: position.top,
-        left: position.left,
-        zIndex: 99999,
-        maxHeight: DROPDOWN_HEIGHT,
-        overflowY: 'auto',
-      }}
-    >
-      {(Object.keys(calloutConfig) as CalloutType[]).map((calloutType) => {
-        const typeConfig = calloutConfig[calloutType];
-        const TypeIcon = typeConfig.icon;
-        return (
-          <button
-            key={calloutType}
-            className={`callout-type-option ${calloutType === type ? 'active' : ''}`}
-            onClick={() => onTypeChange(calloutType)}
-            style={{ '--callout-option-color': typeConfig.color } as React.CSSProperties}
-          >
-            <TypeIcon size={16} style={{ color: typeConfig.color }} />
-            <span>{typeConfig.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-
-  return createPortal(dropdown, document.body);
-}
-
-function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const type = (node.attrs.type as CalloutType) || 'info';
-  const config = calloutConfig[type] || calloutConfig.info;
-  const Icon = config.icon;
-
-  // Detect theme from closest data-theme attribute or .dark class
-  const [theme, setTheme] = useState<string>('light');
+  // Close dropdown on scroll to prevent misalignment
   useEffect(() => {
-    const editorEl = editor.view.dom.closest('[data-theme]');
-    if (editorEl) {
-      setTheme(editorEl.getAttribute('data-theme') || 'light');
-    } else if (document.documentElement.classList.contains('dark')) {
-      setTheme('dark');
-    }
-  }, [editor]);
+    if (!showDropdown) return;
+    const handleScroll = () => setShowDropdown(false);
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, [showDropdown]);
 
-  const handleTypeChange = useCallback((newType: CalloutType) => {
+  const handleToggleDropdown = useCallback(() => {
+    if (!editor.isEditable) return;
+    if (!showDropdown) {
+      updateDropdownPosition();
+    }
+    setShowDropdown(!showDropdown);
+  }, [editor.isEditable, showDropdown, updateDropdownPosition]);
+
+  const handleTypeChange = (newType: CalloutType) => {
     updateAttributes({ type: newType });
     setShowDropdown(false);
-  }, [updateAttributes]);
+  };
 
-  const handleClose = useCallback(() => {
-    setShowDropdown(false);
+  const handleToggleCollapse = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCollapsed(prev => !prev);
   }, []);
 
   return (
-    <NodeViewWrapper className={`callout callout-${type}`} data-callout="" data-type={type}>
-      <div className="callout-icon-container">
+    <NodeViewWrapper className={`callout callout-${type}${collapsed ? ' callout-collapsed' : ''}`} data-callout="" data-type={type}>
+      {/* Header row: icon + label + dropdown trigger + collapse chevron */}
+      <div className="callout-header" contentEditable={false}>
         <button
           ref={buttonRef}
-          className="callout-icon-button"
-          onClick={() => editor.isEditable && setShowDropdown(!showDropdown)}
+          className="callout-header-button"
+          onClick={handleToggleDropdown}
           title={editor.isEditable ? "Click to change callout type" : config.label}
-          style={{ color: config.color }}
+          style={{ color: config.borderColor }}
           contentEditable={false}
         >
-          <Icon size={20} />
-          {editor.isEditable && <ChevronDown size={12} className="callout-chevron" />}
+          <Icon size={18} />
+          <span className="callout-label">{config.label}</span>
+          {editor.isEditable && <ChevronDown size={12} className="callout-type-chevron" />}
         </button>
-
-        {showDropdown && editor.isEditable && (
-          <CalloutDropdownPortal
-            buttonRef={buttonRef}
-            type={type}
-            onTypeChange={handleTypeChange}
-            onClose={handleClose}
-            theme={theme}
-          />
+        <button
+          className="callout-collapse-toggle"
+          onClick={handleToggleCollapse}
+          title={collapsed ? 'Expand callout' : 'Collapse callout'}
+          contentEditable={false}
+          style={{ color: config.borderColor }}
+        >
+          {collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+        </button>
+        
+        {showDropdown && editor.isEditable && dropdownPos && createPortal(
+          <div
+            ref={dropdownRef}
+            className="callout-type-dropdown"
+            contentEditable={false}
+            style={{
+              position: 'fixed',
+              top: dropdownPos.top,
+              left: dropdownPos.left,
+              zIndex: 9999,
+            }}
+          >
+            {(Object.keys(calloutConfig) as CalloutType[]).map((calloutType) => {
+              const typeConfig = calloutConfig[calloutType];
+              const TypeIcon = typeConfig.icon;
+              return (
+                <button
+                  key={calloutType}
+                  className={`callout-type-option ${calloutType === type ? 'active' : ''}`}
+                  onClick={() => handleTypeChange(calloutType)}
+                  style={{ '--callout-option-color': typeConfig.color } as React.CSSProperties}
+                >
+                  <TypeIcon size={16} style={{ color: typeConfig.borderColor }} />
+                  <span>{typeConfig.label}</span>
+                </button>
+              );
+            })}
+          </div>,
+          document.body
         )}
       </div>
-      <div className="callout-content">
+
+      {/* Content area: collapsible, below header */}
+      <div className={`callout-content${collapsed ? ' callout-content-hidden' : ''}`}>
         <NodeViewContent />
       </div>
     </NodeViewWrapper>
@@ -197,7 +174,7 @@ export const CalloutWithMenu = Node.create<CalloutOptions>({
   addOptions() {
     return {
       HTMLAttributes: {},
-      types: ['info', 'warning', 'error', 'success', 'note'],
+      types: ['info', 'note', 'prompt', 'resources', 'todo'],
     };
   },
 
@@ -248,22 +225,22 @@ export const CalloutWithMenu = Node.create<CalloutOptions>({
     return {
       setCallout:
         (attributes?: { type?: CalloutType }) =>
-        ({ commands }: { commands: { wrapIn: (name: string, attrs?: Record<string, unknown>) => boolean } }) => {
+        ({ commands }: CommandProps) => {
           return commands.wrapIn(this.name, attributes);
         },
       toggleCallout:
         (attributes?: { type?: CalloutType }) =>
-        ({ commands }: { commands: { toggleWrap: (name: string, attrs?: Record<string, unknown>) => boolean } }) => {
+        ({ commands }: CommandProps) => {
           return commands.toggleWrap(this.name, attributes);
         },
       unsetCallout:
         () =>
-        ({ commands }: { commands: { lift: (name: string) => boolean } }) => {
+        ({ commands }: CommandProps) => {
           return commands.lift(this.name);
         },
       insertCallout:
         (attributes?: { type?: CalloutType }) =>
-        ({ chain }: { chain: () => ReturnType<typeof import('@tiptap/core').Editor.prototype.chain> }) => {
+        ({ chain }: CommandProps) => {
           const type = attributes?.type || 'info';
           return chain()
             .insertContent({
@@ -276,7 +253,7 @@ export const CalloutWithMenu = Node.create<CalloutOptions>({
         },
       updateCalloutType:
         (type: CalloutType) =>
-        ({ commands }: { commands: { updateAttributes: (name: string, attrs: Record<string, unknown>) => boolean } }) => {
+        ({ commands }: CommandProps) => {
           return commands.updateAttributes(this.name, { type });
         },
     };

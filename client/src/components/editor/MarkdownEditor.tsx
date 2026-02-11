@@ -8,8 +8,8 @@ import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import { TableCellWithMenu, TableHeaderWithMenu } from './extensions/TableCellWithMenu';
 import { TableSorting } from './extensions/TableSorting';
-import TaskList from '@tiptap/extension-task-list';
-import TaskItem from '@tiptap/extension-task-item';
+import { MixedBulletList, MixedOrderedList, MixedTaskList, MixedTaskItem, MixedListItem } from './extensions/MixedLists';
+import { CollapsibleList } from './extensions/CollapsibleList';
 // Using custom CodeBlockWithFeatures instead of CodeBlockLowlight
 import Underline from '@tiptap/extension-underline';
 import Subscript from '@tiptap/extension-subscript';
@@ -127,7 +127,7 @@ export interface MarkdownEditorRef {
   /** Insert code block at cursor position */
   insertCodeBlock: (language?: string) => void;
   /** Insert callout at cursor position */
-  insertCallout: (type?: 'info' | 'warning' | 'error' | 'success' | 'note') => void;
+  insertCallout: (type?: 'info' | 'note' | 'prompt' | 'resources' | 'todo') => void;
   /** Insert horizontal rule at cursor position */
   insertHorizontalRule: () => void;
   /** Toggle bold on selection */
@@ -412,6 +412,10 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           color: 'var(--primary)',
           width: 2,
         },
+        // Disable default list extensions - we use MixedLists instead
+        bulletList: false,
+        orderedList: false,
+        listItem: false,
         // Disable extensions that we configure separately to avoid duplicates
         link: false, // We configure Link separately with custom options
         underline: false, // We add Underline separately
@@ -426,6 +430,10 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           },
         },
       }),
+      // Mixed list extensions - allow inter-mixing of bullet, ordered, and task list items
+      MixedBulletList,
+      MixedOrderedList,
+      MixedListItem,
       Placeholder.configure({
         placeholder,
         emptyEditorClass: 'is-editor-empty',
@@ -471,19 +479,28 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       );
     }
 
-    // Conditionally add task lists
+    // Conditionally add task lists (using mixed variants)
     if (!disabledFeatures.taskLists) {
       baseExtensions.push(
-        TaskList.configure({
+        MixedTaskList.configure({
           HTMLAttributes: {
             class: 'task-list',
           },
         }),
-        TaskItem.configure({
+        MixedTaskItem.configure({
           nested: true,
           HTMLAttributes: {
             class: 'task-item',
           },
+        })
+      );
+    }
+
+    // Collapsible list items (desktop only)
+    if (!isMobile) {
+      baseExtensions.push(
+        CollapsibleList.configure({
+          listItemTypes: ['listItem', 'taskItem'],
         })
       );
     }
@@ -582,7 +599,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     /**
      * Performance: Render immediately without waiting for next tick
      */
-    immediatelyRender: true,
+    immediatelyRender: false,
     /**
      * Performance: Prevent React re-renders on every ProseMirror transaction.
      * The editor DOM updates are handled by ProseMirror directly.
@@ -644,6 +661,19 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       onFocus?.();
     },
     onBlur: () => {
+      // Flush any pending debounced onChange immediately on blur
+      // This prevents data loss when user switches apps (especially on mobile)
+      if (onUpdateTimeoutRef.current) {
+        clearTimeout(onUpdateTimeoutRef.current);
+        onUpdateTimeoutRef.current = null;
+        if (editor && !editor.isDestroyed) {
+          if (onChangeRef.current || onHTMLChangeRef.current) {
+            const html = editor.getHTML();
+            onChangeRef.current?.(html);
+            onHTMLChangeRef.current?.(html);
+          }
+        }
+      }
       onBlur?.();
     },
     onSelectionUpdate: ({ editor }) => {
@@ -745,7 +775,35 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       replacement: (content, node) => {
         const checkbox = (node as HTMLElement).querySelector('input[type="checkbox"]');
         const checked = checkbox?.hasAttribute('checked') || (checkbox as HTMLInputElement)?.checked;
-        return `- [${checked ? 'x' : ' '}] ${content.trim()}\n`;
+        // Add ZWSP after empty checkboxes so marked parses them correctly
+        const trimmed = content.trim();
+        const text = trimmed || '\u200B';
+        return `- [${checked ? 'x' : ' '}] ${text}\n`;
+      },
+    });
+    
+    // Tight lists: strip extra blank lines from <p> wrappers inside <li>
+    td.addRule('tightListParagraph', {
+      filter: (node) => {
+        return node.nodeName === 'P' && 
+               node.parentNode !== null &&
+               (node.parentNode as HTMLElement).nodeName === 'LI';
+      },
+      replacement: (content) => {
+        return content;
+      },
+    });
+    
+    // Blank line preservation: empty paragraphs emit ZWSP so blank lines survive round-trip
+    td.addRule('blankLinePreservation', {
+      filter: (node) => {
+        return node.nodeName === 'P' && 
+               (node.textContent === '' || node.textContent === '\u200B') &&
+               node.parentNode !== null &&
+               (node.parentNode as HTMLElement).nodeName !== 'LI';
+      },
+      replacement: () => {
+        return '\n\n\u200B\n\n';
       },
     });
     
@@ -789,7 +847,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     });
     
     // Custom callout rule to convert callouts to markdown code block syntax
-    // e.g., ```info\ncontent\n```
+    // e.g., ```ad-info\ncontent\n```
     td.addRule('callout', {
       filter: (node) => {
         return node.nodeName === 'DIV' && node.hasAttribute('data-callout');
@@ -798,7 +856,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         const calloutType = (node as HTMLElement).getAttribute('data-type') || 'info';
         // Clean up the content - remove leading/trailing whitespace and normalize newlines
         const cleanContent = content.trim().replace(/\n{3,}/g, '\n\n');
-        return `\n\n\`\`\`${calloutType}\n${cleanContent}\n\`\`\`\n\n`;
+        return `\n\n\`\`\`ad-${calloutType}\n${cleanContent}\n\`\`\`\n\n`;
       },
     });
     
@@ -821,15 +879,23 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       // This defers the setContent call to after React's render cycle completes
       
       // First, convert callout code blocks to callout HTML before parsing
-      // Matches ```info, ```warning, ```error, ```success, ```note code blocks
-      const calloutTypes = ['info', 'warning', 'error', 'success', 'note'];
+      // Matches ```ad-info, ```ad-note, ```ad-prompt, ```ad-resources, ```ad-todo code blocks
+      // Also supports legacy format without ad- prefix
+      const calloutTypes = ['info', 'note', 'prompt', 'resources', 'todo'];
       let processedMarkdown = rawMarkdownRef.current;
       
-      // Replace callout code blocks with callout HTML
+      // Replace callout code blocks with callout HTML (ad- prefix format)
+      calloutTypes.forEach(type => {
+        const regex = new RegExp(`\`\`\`ad-${type}\\s*\\n([\\s\\S]*?)\`\`\``, 'g');
+        processedMarkdown = processedMarkdown.replace(regex, (match, content) => {
+          const innerHtml = marked.parse(content.trim(), { async: false }) as string;
+          return `<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`;
+        });
+      });
+      // Also support legacy format without ad- prefix
       calloutTypes.forEach(type => {
         const regex = new RegExp(`\`\`\`${type}\\s*\\n([\\s\\S]*?)\`\`\``, 'g');
         processedMarkdown = processedMarkdown.replace(regex, (match, content) => {
-          // Convert the content inside the callout using marked
           const innerHtml = marked.parse(content.trim(), { async: false }) as string;
           return `<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`;
         });
@@ -921,7 +987,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         editor?.commands.setCodeBlock();
       }
     },
-    insertCallout: (type = 'info') => editor?.commands.insertCallout?.({ type }),
+    insertCallout: (type = 'info') => editor?.commands.insertCallout?.({ type: type as 'info' | 'note' | 'prompt' | 'resources' | 'todo' }),
     insertHorizontalRule: () => editor?.commands.setHorizontalRule(),
     toggleBold: () => editor?.commands.toggleBold(),
     toggleItalic: () => editor?.commands.toggleItalic(),
@@ -1341,7 +1407,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             {/* Drag handle overlay removed - drag and reorder functionality disabled */}
             
             {/* Floating toolbar on text selection (desktop only) */}
-            {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} />}
+            {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} suppressWhenLinkPopoverOpen={isLinkPopoverOpen} />}
             
             {/* Slash commands */}
             {!disabledFeatures.slashCommands && <SlashCommands editor={editor} disabledFeatures={disabledFeatures} />}

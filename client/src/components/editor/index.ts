@@ -21,3 +21,5 @@ export { AutoSaveIndicator, type AutoSaveIndicatorProps } from './AutoSaveIndica
 export { RecoveryBanner, type RecoveryBannerProps } from './RecoveryBanner';
 export { ImageUpload, type ImageUploadOptions } from './extensions/ImageUpload';
 export { ImageDropZone } from './ImageDropZone';
+export { MixedBulletList, MixedOrderedList, MixedTaskList, MixedTaskItem, MixedListItem } from './extensions/MixedLists';
+export { CollapsibleList } from './extensions/CollapsibleList';

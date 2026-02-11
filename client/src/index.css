@@ -154,14 +154,19 @@
   /* Callout colors - refined palette */
   --callout-info: #3b82f6;
   --callout-info-bg: oklch(0.95 0.03 240);
-  --callout-warning: #f59e0b;
-  --callout-warning-bg: oklch(0.96 0.04 85);
-  --callout-error: #ef4444;
-  --callout-error-bg: oklch(0.96 0.03 25);
-  --callout-success: #10b981;
-  --callout-success-bg: oklch(0.96 0.03 160);
+  --callout-info-border: #3b82f6;
   --callout-note: #8b5cf6;
   --callout-note-bg: oklch(0.96 0.03 280);
+  --callout-note-border: #8b5cf6;
+  --callout-prompt: #f59e0b;
+  --callout-prompt-bg: oklch(0.96 0.04 85);
+  --callout-prompt-border: #f59e0b;
+  --callout-resources: #10b981;
+  --callout-resources-bg: oklch(0.96 0.03 160);
+  --callout-resources-border: #10b981;
+  --callout-todo: #06b6d4;
+  --callout-todo-bg: oklch(0.96 0.03 200);
+  --callout-todo-border: #06b6d4;
   
   /* Syntax highlighting - Light mode */
   --syntax-keyword: #a625a4;
@@ -254,14 +259,19 @@
   /* Callout colors - dark mode refined palette */
   --callout-info: #60a5fa;
   --callout-info-bg: oklch(0.22 0.04 240);
-  --callout-warning: #fbbf24;
-  --callout-warning-bg: oklch(0.22 0.04 85);
-  --callout-error: #f87171;
-  --callout-error-bg: oklch(0.22 0.04 25);
-  --callout-success: #34d399;
-  --callout-success-bg: oklch(0.22 0.04 160);
+  --callout-info-border: #60a5fa;
   --callout-note: #a78bfa;
   --callout-note-bg: oklch(0.22 0.04 280);
+  --callout-note-border: #a78bfa;
+  --callout-prompt: #fbbf24;
+  --callout-prompt-bg: oklch(0.22 0.04 85);
+  --callout-prompt-border: #fbbf24;
+  --callout-resources: #34d399;
+  --callout-resources-bg: oklch(0.22 0.04 160);
+  --callout-resources-border: #34d399;
+  --callout-todo: #22d3ee;
+  --callout-todo-bg: oklch(0.22 0.04 200);
+  --callout-todo-border: #22d3ee;
   
   /* Syntax highlighting - Atom One Dark */
   --syntax-keyword: #c678dd;
@@ -344,14 +354,19 @@
   /* Callout colors - dark mode */
   --callout-info: #60a5fa;
   --callout-info-bg: oklch(0.22 0.04 240);
-  --callout-warning: #fbbf24;
-  --callout-warning-bg: oklch(0.22 0.04 85);
-  --callout-error: #f87171;
-  --callout-error-bg: oklch(0.22 0.04 25);
-  --callout-success: #34d399;
-  --callout-success-bg: oklch(0.22 0.04 160);
+  --callout-info-border: #60a5fa;
   --callout-note: #a78bfa;
   --callout-note-bg: oklch(0.22 0.04 280);
+  --callout-note-border: #a78bfa;
+  --callout-prompt: #fbbf24;
+  --callout-prompt-bg: oklch(0.22 0.04 85);
+  --callout-prompt-border: #fbbf24;
+  --callout-resources: #34d399;
+  --callout-resources-bg: oklch(0.22 0.04 160);
+  --callout-resources-border: #34d399;
+  --callout-todo: #22d3ee;
+  --callout-todo-bg: oklch(0.22 0.04 200);
+  --callout-todo-border: #22d3ee;
   
   /* Syntax highlighting - Atom One Dark */
   --syntax-keyword: #c678dd;
@@ -435,14 +450,19 @@
   /* Callout colors - light mode */
   --callout-info: #3b82f6;
   --callout-info-bg: oklch(0.96 0.02 240);
-  --callout-warning: #f59e0b;
-  --callout-warning-bg: oklch(0.96 0.03 85);
-  --callout-error: #ef4444;
-  --callout-error-bg: oklch(0.96 0.02 25);
-  --callout-success: #10b981;
-  --callout-success-bg: oklch(0.96 0.02 160);
+  --callout-info-border: #3b82f6;
   --callout-note: #8b5cf6;
   --callout-note-bg: oklch(0.96 0.02 280);
+  --callout-note-border: #8b5cf6;
+  --callout-prompt: #f59e0b;
+  --callout-prompt-bg: oklch(0.96 0.03 85);
+  --callout-prompt-border: #f59e0b;
+  --callout-resources: #10b981;
+  --callout-resources-bg: oklch(0.96 0.02 160);
+  --callout-resources-border: #10b981;
+  --callout-todo: #06b6d4;
+  --callout-todo-bg: oklch(0.96 0.02 200);
+  --callout-todo-border: #06b6d4;
   
   /* Syntax highlighting - Light */
   --syntax-keyword: #9e86c8;
@@ -1523,12 +1543,14 @@
 /* Callout styles */
 .callout {
   border-radius: 8px;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   margin: 1rem 0;
-  border-left: 4px solid;
-  background: var(--card);
+  border: none;
+  border-left: 4px solid var(--callout-info-border);
+  background: var(--callout-info-bg);
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   min-height: 2.5rem;
 }
 
@@ -1569,65 +1591,121 @@
   min-width: 0;
 }
 
+/* Per-type background + left border colors */
 .callout-info {
-  border-color: var(--callout-info);
   background: var(--callout-info-bg);
-}
-
-.callout-warning {
-  border-color: var(--callout-warning);
-  background: var(--callout-warning-bg);
-}
-
-.callout-error {
-  border-color: var(--callout-error);
-  background: var(--callout-error-bg);
-}
-
-.callout-success {
-  border-color: var(--callout-success);
-  background: var(--callout-success-bg);
+  border-left-color: var(--callout-info-border);
 }
 
 .callout-note {
-  border-color: var(--callout-note);
   background: var(--callout-note-bg);
+  border-left-color: var(--callout-note-border);
 }
 
-/* Callout icon container and type switcher */
-.callout-icon-container {
-  position: relative;
-  flex-shrink: 0;
-  margin-right: 0.75rem;
+.callout-prompt {
+  background: var(--callout-prompt-bg);
+  border-left-color: var(--callout-prompt-border);
 }
 
-.callout-icon-button {
+.callout-resources {
+  background: var(--callout-resources-bg);
+  border-left-color: var(--callout-resources-border);
+}
+
+.callout-todo {
+  background: var(--callout-todo-bg);
+  border-left-color: var(--callout-todo-border);
+}
+
+/* ===== Callout header: icon + label row ===== */
+.callout-header {
   display: flex;
   align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  user-select: none;
   gap: 2px;
-  padding: 4px;
+}
+
+/* Push collapse toggle to the right */
+.callout-collapse-toggle {
+  margin-left: auto;
+}
+
+.callout-header-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px 2px 2px;
   border: none;
   background: transparent;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
+  font-size: 0;
 }
 
-.callout-icon-button:hover {
+.callout-header-button:hover {
   background: oklch(0 0 0 / 0.08);
 }
 
-.dark .callout-icon-button:hover {
+.dark .callout-header-button:hover {
   background: oklch(1 0 0 / 0.1);
 }
 
-.callout-chevron {
+.callout-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.callout-type-chevron {
   opacity: 0.5;
   transition: transform 0.15s ease;
 }
 
-.callout-icon-button:hover .callout-chevron {
+.callout-header-button:hover .callout-type-chevron {
   opacity: 0.8;
+}
+
+/* ===== Callout collapse toggle ===== */
+.callout-collapse-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.callout-collapse-toggle:hover {
+  opacity: 1;
+  background: oklch(0 0 0 / 0.06);
+}
+
+.dark .callout-collapse-toggle:hover {
+  background: oklch(1 0 0 / 0.08);
+}
+
+/* ===== Callout collapsed state ===== */
+.callout-collapsed {
+  padding-bottom: 0.75rem;
+}
+
+.callout-collapsed .callout-header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.callout-content-hidden {
+  display: none;
 }
 
 .callout-type-dropdown {
@@ -3527,28 +3605,24 @@ pre.with-line-numbers code .line::before {
 }
 
 /* Light theme callouts */
-[data-theme="light"] .callout {
-  border-color: oklch(0.88 0.01 250);
+[data-theme="light"] .callout-info {
+  background: #F8FAFD;
 }
 
-[data-theme="light"] .callout.info {
-  background: oklch(0.95 0.03 220);
-  border-left-color: oklch(0.5 0.12 220);
+[data-theme="light"] .callout-note {
+  background: #FEF7EF;
 }
 
-[data-theme="light"] .callout.warning {
-  background: oklch(0.95 0.04 70);
-  border-left-color: oklch(0.6 0.15 70);
+[data-theme="light"] .callout-prompt {
+  background: #FFFAFF;
 }
 
-[data-theme="light"] .callout.error {
-  background: oklch(0.95 0.04 25);
-  border-left-color: oklch(0.5 0.15 25);
+[data-theme="light"] .callout-resources {
+  background: #F8FEF6;
 }
 
-[data-theme="light"] .callout.success {
-  background: oklch(0.95 0.03 160);
-  border-left-color: oklch(0.5 0.12 160);
+[data-theme="light"] .callout-todo {
+  background: #F7FBFF;
 }
 
 /* Light theme editor toolbar */
@@ -5611,4 +5685,187 @@ pre.with-line-numbers code .line::before {
   .toc-toggle-button {
     display: none;
   }
+}
+
+/* ============================================
+   COLLAPSIBLE LIST ITEMS
+   ============================================ */
+
+/* List item with nested children - make paragraph inline-flex for chevron alignment */
+.collapsible-list-item > p,
+.collapsible-list-item > div > p {
+  display: flex;
+  align-items: center;
+}
+
+/* Chevron wrapper - positioned inline after the list item text */
+.collapsible-list-chevron-wrapper {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* Chevron button */
+.collapsible-list-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: oklch(0.55 0.01 240);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.collapsible-list-chevron:hover {
+  background: oklch(0.94 0.01 240);
+  color: oklch(0.4 0.02 240);
+}
+
+.collapsible-list-chevron:focus {
+  outline: none;
+}
+
+.collapsible-list-chevron svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  stroke-width: 2.5;
+}
+
+/* Expanded state - chevron points down, subtly visible, more visible on hover */
+.collapsible-list-chevron.expanded {
+  opacity: 0.25;
+}
+
+.collapsible-list-chevron.expanded svg {
+  transform: rotate(90deg);
+}
+
+/* Show expanded chevron on list item hover */
+.collapsible-list-item:hover > p .collapsible-list-chevron.expanded,
+.collapsible-list-item:hover > div > p .collapsible-list-chevron.expanded {
+  opacity: 0.7;
+}
+
+.collapsible-list-chevron.expanded:hover {
+  opacity: 1 !important;
+}
+
+/* Collapsed state - chevron points right, ALWAYS visible */
+.collapsible-list-chevron.collapsed {
+  opacity: 1 !important;
+  color: oklch(0.55 0.01 240);
+}
+
+.collapsible-list-chevron.collapsed svg {
+  transform: rotate(0deg);
+}
+
+.collapsible-list-chevron.collapsed:hover {
+  background: oklch(0.94 0.01 240);
+  color: oklch(0.4 0.02 240);
+}
+
+/* Hidden nested content when collapsed */
+.collapsible-list-hidden {
+  display: none !important;
+}
+
+/* Collapsed indicator - subtle bottom border to hint at hidden content */
+.collapsible-list-item.is-collapsed {
+  position: relative;
+}
+
+.collapsible-list-item.is-collapsed::after {
+  content: '';
+  display: block;
+  height: 1px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  background: oklch(0.85 0.01 240);
+  border-radius: 1px;
+  opacity: 0.5;
+}
+
+/* ============================================
+   DARK THEME - COLLAPSIBLE LIST ITEMS
+   ============================================ */
+
+[data-theme="dark"] .collapsible-list-chevron {
+  color: oklch(0.6 0.02 240);
+}
+
+[data-theme="dark"] .collapsible-list-chevron:hover {
+  background: oklch(0.25 0.01 240);
+  color: oklch(0.8 0.01 240);
+}
+
+[data-theme="dark"] .collapsible-list-chevron.collapsed {
+  color: oklch(0.6 0.02 240);
+}
+
+[data-theme="dark"] .collapsible-list-chevron.collapsed:hover {
+  background: oklch(0.25 0.01 240);
+  color: oklch(0.8 0.01 240);
+}
+
+[data-theme="dark"] .collapsible-list-item.is-collapsed::after {
+  background: oklch(0.35 0.01 240);
+}
+
+.dark .collapsible-list-chevron {
+  color: oklch(0.6 0.02 240);
+}
+
+.dark .collapsible-list-chevron:hover {
+  background: oklch(0.25 0.01 240);
+  color: oklch(0.8 0.01 240);
+}
+
+.dark .collapsible-list-chevron.collapsed {
+  color: oklch(0.6 0.02 240);
+}
+
+.dark .collapsible-list-chevron.collapsed:hover {
+  background: oklch(0.25 0.01 240);
+  color: oklch(0.8 0.01 240);
+}
+
+.dark .collapsible-list-item.is-collapsed::after {
+  background: oklch(0.35 0.01 240);
+}
+
+/* ============================================
+   LIGHT THEME - COLLAPSIBLE LIST ITEMS
+   ============================================ */
+
+[data-theme="light"] .collapsible-list-chevron {
+  color: oklch(0.55 0.01 240);
+}
+
+[data-theme="light"] .collapsible-list-chevron:hover {
+  background: oklch(0.94 0.01 240);
+  color: oklch(0.4 0.02 240);
+}
+
+[data-theme="light"] .collapsible-list-chevron.collapsed {
+  color: oklch(0.55 0.01 240);
+}
+
+[data-theme="light"] .collapsible-list-chevron.collapsed:hover {
+  background: oklch(0.94 0.01 240);
+  color: oklch(0.4 0.02 240);
+}
+
+[data-theme="light"] .collapsible-list-item.is-collapsed::after {
+  background: oklch(0.85 0.01 240);
 }

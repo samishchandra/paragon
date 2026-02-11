@@ -22,10 +22,10 @@ import {
   Redo,
   Copy,
   Info,
-  AlertTriangle,
-  AlertCircle,
-  CheckCircle,
-  FileText,
+  BookOpen,
+  PenLine,
+  Library,
+  ListTodo,
   Code2,
   Rows,
   Columns,
@@ -99,7 +99,7 @@ const ToolbarButton = ({ onClick, isActive, disabled, children, tooltip }: Toolb
         flex items-center justify-center w-9 h-9 sm:w-8 sm:h-8 rounded-md
         transition-all duration-100 ease-out touch-manipulation
         ${isActive 
-          ? 'bg-primary text-primary-foreground' 
+          ? 'bg-secondary text-foreground' 
           : 'bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -168,12 +168,12 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   }, [editor]);
 
-  const addCallout = useCallback((type: 'info' | 'warning' | 'error' | 'success' | 'note') => {
+  const addCallout = useCallback((type: 'info' | 'note' | 'prompt' | 'resources' | 'todo') => {
     editor.chain().focus().insertCallout({ type }).run();
   }, [editor]);
 
   return (
-    <div className={`flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1.5 sm:py-2 border-b border-border bg-card/50 overflow-x-auto scrollbar-hide ${className}`}>
+    <div className={`flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1.5 sm:py-2 border-b border-border/50 bg-muted/30 overflow-x-auto scrollbar-hide ${className}`}>
       {/* Undo/Redo - Always visible */}
       <ToolbarButton
         onClick={() => editor.chain().focus().undo().run()}
@@ -299,7 +299,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => editor.chain().focus().setParagraph().run()}>
-            <FileText size={16} className="mr-2" /> Paragraph
+            <Type size={16} className="mr-2" /> Paragraph
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -460,19 +460,19 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={() => addCallout('info')}>
-              <Info size={16} className="mr-2 text-blue-400" /> Info
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => addCallout('warning')}>
-              <AlertTriangle size={16} className="mr-2 text-yellow-400" /> Warning
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => addCallout('error')}>
-              <AlertCircle size={16} className="mr-2 text-red-400" /> Error
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => addCallout('success')}>
-              <CheckCircle size={16} className="mr-2 text-green-400" /> Success
+              <Info size={16} className="mr-2" style={{ color: '#3F78BB' }} /> Info
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => addCallout('note')}>
-              <FileText size={16} className="mr-2 text-purple-400" /> Note
+              <BookOpen size={16} className="mr-2" style={{ color: '#FF8200' }} /> Note
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => addCallout('prompt')}>
+              <PenLine size={16} className="mr-2" style={{ color: '#B244B3' }} /> Prompt
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => addCallout('resources')}>
+              <Library size={16} className="mr-2" style={{ color: '#63B148' }} /> Resources
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => addCallout('todo')}>
+              <ListTodo size={16} className="mr-2" style={{ color: '#4479B3' }} /> Todo
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -503,19 +503,19 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuItem onClick={() => addCallout('info')}>
-                <Info size={16} className="mr-2 text-blue-400" /> Info
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addCallout('warning')}>
-                <AlertTriangle size={16} className="mr-2 text-yellow-400" /> Warning
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addCallout('error')}>
-                <AlertCircle size={16} className="mr-2 text-red-400" /> Error
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addCallout('success')}>
-                <CheckCircle size={16} className="mr-2 text-green-400" /> Success
+                <Info size={16} className="mr-2" style={{ color: '#3F78BB' }} /> Info
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => addCallout('note')}>
-                <FileText size={16} className="mr-2 text-purple-400" /> Note
+                <BookOpen size={16} className="mr-2" style={{ color: '#FF8200' }} /> Note
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addCallout('prompt')}>
+                <PenLine size={16} className="mr-2" style={{ color: '#B244B3' }} /> Prompt
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addCallout('resources')}>
+                <Library size={16} className="mr-2" style={{ color: '#63B148' }} /> Resources
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addCallout('todo')}>
+                <ListTodo size={16} className="mr-2" style={{ color: '#4479B3' }} /> Todo
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>

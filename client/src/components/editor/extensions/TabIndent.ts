@@ -1,6 +1,8 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { keymap } from '@tiptap/pm/keymap';
+import type { EditorState } from '@tiptap/pm/state';
+import type { EditorView } from '@tiptap/pm/view';
+import { sinkListItem, liftListItem } from '@tiptap/pm/schema-list';
 
 /**
  * TabIndent Extension
@@ -12,8 +14,40 @@ import { keymap } from '@tiptap/pm/keymap';
  * - Tab outside list: Prevent default browser behavior (no focus change)
  * - Shift+Tab outside list: Prevent default browser behavior
  * 
- * Uses ProseMirror keymap plugin for reliable Tab key interception
+ * Uses ProseMirror's native sinkListItem/liftListItem commands directly
+ * (not TipTap's chain().sinkListItem() which can cause item duplication
+ * in mixed list contexts).
+ * 
+ * IMPORTANT: In mixed lists (MixedLists extension), a taskList can contain
+ * listItem children and a bulletList can contain taskItem children. We must
+ * detect the IMMEDIATE list item type (listItem vs taskItem) rather than
+ * the parent list type, because sinkListItem/liftListItem operate on the
+ * node type of the item itself.
  */
+
+const tabIndentPluginKey = new PluginKey('tabIndent');
+
+/**
+ * Find the immediate list item node type at the cursor position.
+ * Walks up from the cursor to find the first taskItem or listItem ancestor.
+ * Returns the node type name, or null if not in a list.
+ */
+function getListItemTypeName(state: EditorState): 'taskItem' | 'listItem' | null {
+  const { $from } = state.selection;
+  
+  for (let depth = $from.depth; depth >= 0; depth--) {
+    const node = $from.node(depth);
+    if (node.type.name === 'taskItem') {
+      return 'taskItem';
+    }
+    if (node.type.name === 'listItem') {
+      return 'listItem';
+    }
+  }
+  
+  return null;
+}
+
 export const TabIndent = Extension.create({
   name: 'tabIndent',
 
@@ -21,73 +55,58 @@ export const TabIndent = Extension.create({
   priority: 1000,
 
   addProseMirrorPlugins() {
-    const editor = this.editor;
-    
     return [
-      keymap({
-        'Tab': (state, dispatch) => {
-          const { $from } = state.selection;
-          
-          // Check if we're in a list by looking at the parent nodes
-          let inList = false;
-          let isTaskList = false;
-          
-          for (let depth = $from.depth; depth >= 0; depth--) {
-            const node = $from.node(depth);
-            if (node.type.name === 'taskList') {
-              inList = true;
-              isTaskList = true;
-              break;
+      new Plugin({
+        key: tabIndentPluginKey,
+        props: {
+          handleKeyDown(view: EditorView, event: KeyboardEvent) {
+            // Only handle Tab and Shift+Tab
+            if (event.key !== 'Tab') return false;
+            
+            const { state, dispatch } = view;
+            const itemTypeName = getListItemTypeName(state);
+            
+            if (!itemTypeName) {
+              // Not in a list - still prevent default Tab behavior
+              event.preventDefault();
+              return true;
             }
-            if (node.type.name === 'bulletList' || node.type.name === 'orderedList') {
-              inList = true;
-              break;
-            }
-          }
-          
-          if (inList) {
-            // Tab: Nest (sink list item)
-            if (isTaskList) {
-              editor.chain().focus().sinkListItem('taskItem').run();
+            
+            event.preventDefault();
+            
+            const nodeType = state.schema.nodes[itemTypeName];
+            if (!nodeType) return true;
+            
+            if (event.shiftKey) {
+              // Shift+Tab: lift (outdent)
+              const cmd = liftListItem(nodeType);
+              const result = cmd(state, dispatch);
+              
+              if (!result) {
+                // Fallback: try the other item type
+                const fallbackName = itemTypeName === 'taskItem' ? 'listItem' : 'taskItem';
+                const fallbackType = state.schema.nodes[fallbackName];
+                if (fallbackType) {
+                  liftListItem(fallbackType)(state, dispatch);
+                }
+              }
             } else {
-              editor.chain().focus().sinkListItem('listItem').run();
+              // Tab: sink (indent)
+              const cmd = sinkListItem(nodeType);
+              const result = cmd(state, dispatch);
+              
+              if (!result) {
+                // Fallback: try the other item type
+                const fallbackName = itemTypeName === 'taskItem' ? 'listItem' : 'taskItem';
+                const fallbackType = state.schema.nodes[fallbackName];
+                if (fallbackType) {
+                  sinkListItem(fallbackType)(state, dispatch);
+                }
+              }
             }
-          }
-          
-          // Always return true to prevent browser default Tab behavior
-          return true;
-        },
-        'Shift-Tab': (state, dispatch) => {
-          const { $from } = state.selection;
-          
-          // Check if we're in a list by looking at the parent nodes
-          let inList = false;
-          let isTaskList = false;
-          
-          for (let depth = $from.depth; depth >= 0; depth--) {
-            const node = $from.node(depth);
-            if (node.type.name === 'taskList') {
-              inList = true;
-              isTaskList = true;
-              break;
-            }
-            if (node.type.name === 'bulletList' || node.type.name === 'orderedList') {
-              inList = true;
-              break;
-            }
-          }
-          
-          if (inList) {
-            // Shift+Tab: Unnest (lift list item)
-            if (isTaskList) {
-              editor.chain().focus().liftListItem('taskItem').run();
-            } else {
-              editor.chain().focus().liftListItem('listItem').run();
-            }
-          }
-          
-          // Always return true to prevent browser default Shift+Tab behavior
-          return true;
+            
+            return true;
+          },
         },
       }),
     ];
