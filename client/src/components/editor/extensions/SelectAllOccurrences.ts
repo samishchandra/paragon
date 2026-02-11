@@ -35,6 +35,8 @@ export interface SelectAllOccurrencesStorage {
   typedBuffer: string;
   /** Whether we are in "typing replacement" mode */
   isTypingReplace: boolean;
+  /** The original search term length, used for position tracking */
+  originalTermLength: number;
 }
 
 const selectAllOccurrencesPluginKey = new PluginKey('selectAllOccurrences');
@@ -85,32 +87,23 @@ function findAllMatches(
 }
 
 /**
- * Helper: refresh ranges in storage and update decorations.
+ * Helper: rebuild ranges after a batch replacement by reading the actual
+ * text at tracked positions. We use the decoration positions (which are
+ * automatically mapped by ProseMirror) to know where the replaced text is.
  */
-function refreshRangesAndDecorations(
-  editor: any,
+function rebuildRangesFromDecorations(
+  view: any,
   storage: SelectAllOccurrencesStorage,
-  newSearchTerm?: string,
-) {
-  const term = newSearchTerm ?? storage.searchTerm;
-  const newRanges = findAllMatches(
-    editor.state.doc,
-    term,
-    storage.caseSensitive,
-    storage.useRegex,
-    storage.wholeWord,
-  );
-  storage.ranges = newRanges;
-  if (newSearchTerm !== undefined) {
-    storage.searchTerm = term;
-  }
-  if (newRanges.length === 0) {
-    storage.isActive = false;
-    storage.isTypingReplace = false;
-    storage.typedBuffer = '';
-  }
-  const { tr } = editor.state;
-  editor.view.dispatch(tr.setMeta(selectAllOccurrencesPluginKey, { refresh: true }));
+): OccurrenceRange[] {
+  const pluginState = selectAllOccurrencesPluginKey.getState(view.state);
+  if (!pluginState) return [];
+
+  const ranges: OccurrenceRange[] = [];
+  pluginState.find().forEach((deco: any) => {
+    const text = view.state.doc.textBetween(deco.from, deco.to, '');
+    ranges.push({ from: deco.from, to: deco.to, text });
+  });
+  return ranges;
 }
 
 export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesStorage>({
@@ -126,6 +119,7 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
       wholeWord: false,
       typedBuffer: '',
       isTypingReplace: false,
+      originalTermLength: 0,
     };
   },
 
@@ -161,6 +155,7 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
         this.storage.wholeWord = wholeWord;
         this.storage.typedBuffer = '';
         this.storage.isTypingReplace = false;
+        this.storage.originalTermLength = searchTerm.length;
 
         if (dispatch) {
           dispatch(tr.setMeta(selectAllOccurrencesPluginKey, { activate: true }));
@@ -219,10 +214,19 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
           dispatch(tr);
         }
 
-        // Refresh ranges after document change
+        // Refresh ranges after document change — use decoration mapping
         setTimeout(() => {
           try {
-            refreshRangesAndDecorations(editor, this.storage);
+            const view = (editor as any).view;
+            if (view) {
+              const newRanges = rebuildRangesFromDecorations(view, this.storage);
+              this.storage.ranges = newRanges;
+              if (newRanges.length === 0) {
+                this.storage.isActive = false;
+                this.storage.isTypingReplace = false;
+                this.storage.typedBuffer = '';
+              }
+            }
           } catch { /* ignore */ }
         }, 10);
 
@@ -266,9 +270,18 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
         }
 
         if (newText) {
+          // Refresh via decoration mapping
           setTimeout(() => {
             try {
-              refreshRangesAndDecorations(editor, this.storage, newText);
+              const view = (editor as any).view;
+              if (view) {
+                const newRanges = rebuildRangesFromDecorations(view, this.storage);
+                this.storage.ranges = newRanges;
+                this.storage.searchTerm = newText;
+                if (newRanges.length === 0) {
+                  this.storage.isActive = false;
+                }
+              }
             } catch { /* ignore */ }
           }, 10);
         } else {
@@ -315,8 +328,11 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
               return DecorationSet.create(newState.doc, decorations);
             }
 
+            // When the doc changes (e.g., from batch replace), map decorations
+            // to their new positions. This is the key to tracking ranges correctly.
             if (tr.docChanged) {
-              return oldDecorations.map(tr.mapping, newState.doc);
+              const mapped = oldDecorations.map(tr.mapping, newState.doc);
+              return mapped;
             }
 
             return oldDecorations;
@@ -353,7 +369,6 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
            * Intercept keystrokes when Select All mode is active.
            * - Escape: exit mode
            * - Backspace: delete one char from typed buffer, or delete all occurrences if buffer empty
-           * - Printable characters: start batch replace mode, accumulate typed text
            * - Formatting shortcuts (Cmd+B, Cmd+I, etc.): let them through for batch formatting
            */
           handleKeyDown(view, event) {
@@ -382,69 +397,45 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
               event.preventDefault();
 
               if (storage.isTypingReplace && storage.typedBuffer.length > 0) {
-                // Remove last char from typed buffer and replace all occurrences
+                // Remove last char from typed buffer
                 storage.typedBuffer = storage.typedBuffer.slice(0, -1);
 
-                if (storage.typedBuffer.length === 0) {
-                  // Buffer is empty — restore original search term in all positions
-                  // We need to replace current content with original search term
-                  const sortedRanges = [...storage.ranges].sort((a, b) => b.from - a.from);
-                  const { tr } = view.state;
-                  const originalText = storage.searchTerm;
-                  for (const range of sortedRanges) {
-                    tr.replaceWith(range.from, range.to, view.state.schema.text(originalText));
-                  }
-                  view.dispatch(tr);
+                // Get current positions from decorations
+                const currentRanges = rebuildRangesFromDecorations(view, storage);
+                if (currentRanges.length === 0) {
+                  storage.isActive = false;
                   storage.isTypingReplace = false;
-
-                  // Refresh ranges
-                  setTimeout(() => {
-                    const newRanges = findAllMatches(
-                      view.state.doc,
-                      storage.searchTerm,
-                      storage.caseSensitive,
-                      storage.useRegex,
-                      storage.wholeWord,
-                    );
-                    storage.ranges = newRanges;
-                    if (newRanges.length === 0) {
-                      storage.isActive = false;
-                    }
-                    const { tr: rTr } = view.state;
-                    view.dispatch(rTr.setMeta(selectAllOccurrencesPluginKey, { refresh: true }));
-                  }, 10);
-                } else {
-                  // Replace all occurrences with the shorter buffer
-                  const sortedRanges = [...storage.ranges].sort((a, b) => b.from - a.from);
                   const { tr } = view.state;
-                  for (const range of sortedRanges) {
-                    tr.replaceWith(range.from, range.to, view.state.schema.text(storage.typedBuffer));
-                  }
-                  view.dispatch(tr);
-
-                  // Refresh ranges with new text
-                  setTimeout(() => {
-                    const escaped = storage.typedBuffer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const pattern = new RegExp(escaped, storage.caseSensitive ? 'g' : 'gi');
-                    const newRanges: OccurrenceRange[] = [];
-                    view.state.doc.descendants((node: any, pos: number) => {
-                      if (node.isText && node.text) {
-                        let m;
-                        while ((m = pattern.exec(node.text)) !== null) {
-                          newRanges.push({ from: pos + m.index, to: pos + m.index + m[0].length, text: m[0] });
-                        }
-                      }
-                      return true;
-                    });
-                    storage.ranges = newRanges;
-                    if (newRanges.length === 0) {
-                      storage.isActive = false;
-                      storage.isTypingReplace = false;
-                    }
-                    const { tr: rTr } = view.state;
-                    view.dispatch(rTr.setMeta(selectAllOccurrencesPluginKey, { refresh: true }));
-                  }, 10);
+                  view.dispatch(tr.setMeta(selectAllOccurrencesPluginKey, { deactivate: true }));
+                  return true;
                 }
+
+                const newText = storage.typedBuffer.length > 0
+                  ? storage.typedBuffer
+                  : storage.searchTerm; // Restore original if buffer empty
+
+                // Replace all at current decoration positions
+                const sortedRanges = [...currentRanges].sort((a, b) => b.from - a.from);
+                const { tr } = view.state;
+                for (const range of sortedRanges) {
+                  tr.replaceWith(range.from, range.to, view.state.schema.text(newText));
+                }
+                view.dispatch(tr);
+
+                if (storage.typedBuffer.length === 0) {
+                  storage.isTypingReplace = false;
+                }
+
+                // Rebuild ranges from mapped decorations
+                setTimeout(() => {
+                  const newRanges = rebuildRangesFromDecorations(view, storage);
+                  storage.ranges = newRanges;
+                  if (newRanges.length === 0) {
+                    storage.isActive = false;
+                    storage.isTypingReplace = false;
+                  }
+                }, 10);
+
               } else if (!storage.isTypingReplace) {
                 // Not in typing mode — delete all occurrences
                 const sortedRanges = [...storage.ranges].sort((a, b) => b.from - a.from);
@@ -518,13 +509,30 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
 
           /**
            * Intercept text input (typed characters) for batch replacement.
-           * This fires for printable characters and handles the actual text insertion.
+           * 
+           * KEY FIX: Instead of re-searching the document after replacement (which
+           * would find false matches), we rely on ProseMirror's decoration mapping
+           * to track where the replaced text lives. After replacing text at all
+           * decoration positions, the decorations automatically map to the new
+           * positions in the next transaction.
            */
           handleTextInput(view, _from, _to, text) {
             if (!storage.isActive) return false;
             if (!text) return false;
 
-            // First character typed: replace all occurrences with this character
+            // Get current positions from decorations (these are always accurate
+            // because ProseMirror maps them through transactions)
+            const currentRanges = rebuildRangesFromDecorations(view, storage);
+            if (currentRanges.length === 0) {
+              storage.isActive = false;
+              storage.isTypingReplace = false;
+              storage.typedBuffer = '';
+              const { tr } = view.state;
+              view.dispatch(tr.setMeta(selectAllOccurrencesPluginKey, { deactivate: true }));
+              return true;
+            }
+
+            // Accumulate typed text
             if (!storage.isTypingReplace) {
               storage.isTypingReplace = true;
               storage.typedBuffer = text;
@@ -532,35 +540,25 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
               storage.typedBuffer += text;
             }
 
-            // Replace all occurrences with the accumulated buffer
-            const sortedRanges = [...storage.ranges].sort((a, b) => b.from - a.from);
+            // Replace all occurrences at their current decoration positions
+            // with the accumulated buffer. Sort in reverse to preserve positions.
+            const sortedRanges = [...currentRanges].sort((a, b) => b.from - a.from);
             const { tr } = view.state;
             for (const range of sortedRanges) {
               tr.replaceWith(range.from, range.to, view.state.schema.text(storage.typedBuffer));
             }
             view.dispatch(tr);
 
-            // Refresh ranges with the new text
+            // After the transaction, decorations are automatically mapped.
+            // Rebuild storage.ranges from the mapped decorations.
             setTimeout(() => {
-              const escaped = storage.typedBuffer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              const pattern = new RegExp(escaped, storage.caseSensitive ? 'g' : 'gi');
-              const newRanges: OccurrenceRange[] = [];
-              view.state.doc.descendants((node: any, pos: number) => {
-                if (node.isText && node.text) {
-                  let m;
-                  while ((m = pattern.exec(node.text)) !== null) {
-                    newRanges.push({ from: pos + m.index, to: pos + m.index + m[0].length, text: m[0] });
-                  }
-                }
-                return true;
-              });
+              const newRanges = rebuildRangesFromDecorations(view, storage);
               storage.ranges = newRanges;
               if (newRanges.length === 0) {
                 storage.isActive = false;
                 storage.isTypingReplace = false;
+                storage.typedBuffer = '';
               }
-              const { tr: rTr } = view.state;
-              view.dispatch(rTr.setMeta(selectAllOccurrencesPluginKey, { refresh: true }));
             }, 10);
 
             return true; // Prevent default text insertion
