@@ -213,6 +213,74 @@ function App() {
 
 export default App;</code></pre>
 
+<h3>Mixed Lists</h3>
+<p>Lists can mix different item types — bullet items and task items can live together in the same list:</p>
+<ul>
+  <li>Project planning overview</li>
+  <li data-type="taskItem" data-checked="true">Define project scope</li>
+  <li data-type="taskItem" data-checked="true">Set up repository</li>
+  <li>Development milestones</li>
+  <li data-type="taskItem" data-checked="false">Build authentication module</li>
+  <li data-type="taskItem" data-checked="false">Implement API endpoints</li>
+  <li data-type="taskItem" data-checked="true">Write unit tests</li>
+  <li>Deployment checklist</li>
+  <li data-type="taskItem" data-checked="false">Configure CI/CD pipeline</li>
+  <li data-type="taskItem" data-checked="false">Set up monitoring</li>
+</ul>
+
+<h3>Collapsible Lists</h3>
+<p>List items with nested children can be collapsed and expanded by clicking the chevron icon. Try clicking the arrows next to the items below:</p>
+<ul>
+  <li>Frontend Architecture
+    <ul>
+      <li>React Components
+        <ul>
+          <li>Layout components (Header, Sidebar, Footer)</li>
+          <li>Form components (Input, Select, DatePicker)</li>
+          <li>Data display (Table, Card, Chart)</li>
+        </ul>
+      </li>
+      <li>State Management
+        <ul>
+          <li>Context API for theme and auth</li>
+          <li>React Query for server state</li>
+        </ul>
+      </li>
+      <li>Styling
+        <ul>
+          <li>Tailwind CSS utility classes</li>
+          <li>CSS variables for theming</li>
+          <li>Responsive breakpoints</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Backend Services
+    <ul>
+      <li>API Layer
+        <ul>
+          <li>REST endpoints</li>
+          <li>WebSocket connections</li>
+          <li>Authentication middleware</li>
+        </ul>
+      </li>
+      <li>Database
+        <ul>
+          <li>PostgreSQL for relational data</li>
+          <li>Redis for caching</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>DevOps & Infrastructure
+    <ul>
+      <li>Docker containerization</li>
+      <li>Kubernetes orchestration</li>
+      <li>Terraform for infrastructure as code</li>
+    </ul>
+  </li>
+</ul>
+
 <h3>Callout</h3>
 <blockquote>
   <p>💡 <strong>Pro Tip:</strong> Press <code>Escape</code> or click outside to close this modal. Your content is automatically saved to local storage, so you won't lose your work!</p>

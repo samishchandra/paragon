@@ -209,6 +209,8 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageDialogPosition, setImageDialogPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
+  // Track the position where the slash was typed
+  const slashPosRef = useRef<number>(-1);
 
   const filteredCommands = commands.filter((cmd) => {
     const searchText = query.toLowerCase();
@@ -219,38 +221,54 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
     );
   });
 
+  const deleteSlashAndQuery = useCallback(() => {
+    // Delete from the slash position to the current cursor position
+    const { state } = editor;
+    const { selection } = state;
+    const cursorPos = selection.from;
+    const slashPos = slashPosRef.current;
+
+    if (slashPos >= 0 && slashPos < cursorPos) {
+      // Delete the range from slash to current cursor
+      editor.chain().focus().deleteRange({ from: slashPos, to: cursorPos }).run();
+    } else {
+      // Fallback: search backward for the slash character
+      const { $from } = selection;
+      const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc');
+      const slashIndex = textBefore.lastIndexOf('/');
+      if (slashIndex !== -1) {
+        const deleteFrom = $from.pos - ($from.parentOffset - slashIndex);
+        editor.chain().focus().deleteRange({ from: deleteFrom, to: $from.pos }).run();
+      }
+    }
+  }, [editor]);
+
   const executeCommand = useCallback((index: number) => {
     const command = filteredCommands[index];
     if (command) {
-      // Delete the slash and query
-      const { state } = editor;
-      const { selection } = state;
-      const { $from } = selection;
-      const textBefore = $from.nodeBefore?.textContent || '';
-      const slashIndex = textBefore.lastIndexOf('/');
-      
-      if (slashIndex !== -1) {
-        const deleteFrom = $from.pos - (textBefore.length - slashIndex);
-        editor.chain().focus().deleteRange({ from: deleteFrom, to: $from.pos }).run();
-      }
-      
+      // First, delete the slash and query text
+      deleteSlashAndQuery();
+
       // Handle image command specially with dialog
       if (command.isImageCommand) {
-        const coords = editor.view.coordsAtPos($from.pos);
+        const { state } = editor;
+        const coords = editor.view.coordsAtPos(state.selection.from);
         setImageDialogPosition({
           top: coords.bottom + 8,
           left: coords.left,
         });
         setShowImageDialog(true);
       } else {
+        // Now apply the command on the current line (cursor is where slash was)
         command.command(editor);
       }
       
       setIsOpen(false);
       setQuery('');
       setSelectedIndex(0);
+      slashPosRef.current = -1;
     }
-  }, [editor, filteredCommands]);
+  }, [editor, filteredCommands, deleteSlashAndQuery]);
 
   const handleImageInsert = useCallback((url: string, alt: string) => {
     editor.chain().focus().setImage({ src: url, alt }).run();
@@ -266,6 +284,10 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
           const { state } = editor;
           const { selection } = state;
           const { $from } = selection;
+          
+          // Record the position where the slash will be typed
+          // The slash hasn't been inserted yet, so the slash will appear at $from.pos
+          slashPosRef.current = $from.pos;
           
           // Get cursor position for menu placement
           const coords = editor.view.coordsAtPos($from.pos);
@@ -298,9 +320,11 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
         event.preventDefault();
         setIsOpen(false);
         setQuery('');
+        slashPosRef.current = -1;
       } else if (event.key === 'Backspace') {
         if (query.length === 0) {
           setIsOpen(false);
+          slashPosRef.current = -1;
         } else {
           setQuery((prev) => prev.slice(0, -1));
         }
@@ -314,6 +338,7 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
         setQuery('');
+        slashPosRef.current = -1;
       }
     };
 

@@ -31,7 +31,7 @@ function setupEventDelegation() {
       const dropdown = document.querySelector('.table-cell-menu-dropdown');
       if (dropdown) return;
       const btn = cell.querySelector('.table-cell-menu-btn') as HTMLElement;
-      if (btn) btn.style.opacity = '0.15';
+      if (btn) btn.style.opacity = '0';
     }
   }, true);
 }
@@ -88,7 +88,7 @@ function buildMenuDecorations(doc: any, editor: any): DecorationSet {
         const textColor = isDark ? '#999' : '#666';
         const hoverBgColor = isDark ? '#2a2a2a' : '#f5f5f5';
         
-        button.style.cssText = 'width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:4px;cursor:pointer;opacity:0.15;transition:opacity 0.15s ease,background-color 0.15s ease,transform 0.1s ease;color:' + textColor + ';pointer-events:auto;padding:0;';
+        button.style.cssText = 'width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:4px;cursor:pointer;opacity:0;transition:opacity 0.15s ease,background-color 0.15s ease,transform 0.1s ease;color:' + textColor + ';pointer-events:auto;padding:0;';
         
         button.addEventListener('mouseenter', () => {
           button.style.opacity = '1';
