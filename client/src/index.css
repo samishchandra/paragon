@@ -954,6 +954,96 @@
     padding-left: 1.25rem; /* Match unordered list nested indentation */
   }
   
+  /* ==========================================================================
+     MIXED LISTS - Task items inside bullet/ordered lists
+     TipTap renders taskItem nodes with class="task-item" and data-checked attr.
+     When inside a bulletList or orderedList (not taskList), they need:
+     no bullet marker, flex layout, checkbox inline with text.
+     ========================================================================== */
+
+  /* Remove bullet/number marker from task items in any list */
+  li.task-item {
+    list-style: none !important;
+    display: flex !important;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  /* Ensure the content div is flex:1 and inline */
+  li.task-item > div {
+    min-height: 1.5em;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Style the label/checkbox in task items regardless of parent list */
+  li.task-item > label {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    height: 1.5em;
+    margin-top: 0.05em;
+  }
+
+  li.task-item > label input[type="checkbox"] {
+    appearance: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 2px solid var(--muted-foreground);
+    border-radius: 30%;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    transform: scale(1);
+  }
+
+  li.task-item > label input[type="checkbox"]:hover {
+    border-color: var(--primary);
+    background: rgba(46, 128, 242, 0.1);
+    transform: scale(1.1);
+  }
+
+  li.task-item > label input[type="checkbox"]:active {
+    transform: scale(0.9);
+  }
+
+  li.task-item > label input[type="checkbox"]:checked {
+    background: var(--checkbox-checked);
+    border-color: var(--checkbox-checked);
+    animation: checkbox-bounce 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  li.task-item > label input[type="checkbox"]:checked::after {
+    content: '\2713';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--checkbox-checked-foreground);
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 100%;
+    height: 100%;
+    animation: checkmark-pop 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+  }
+
+  /* Strikethrough for checked task items in mixed lists */
+  li.task-item[data-checked="true"] > div > p {
+    text-decoration: line-through;
+    color: var(--muted-foreground);
+    animation: task-complete 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  li.task-item[data-checked="true"] > div {
+    color: var(--muted-foreground);
+  }
+
+  /* Remove extra margin from p tags inside task items in mixed lists */
+  li.task-item > div > p {
+    margin: 0;
+    padding: 0;
+  }
+
   /* Horizontal rule - dotted gray per user preference */
   hr {
     border: none;
@@ -3535,6 +3625,32 @@ pre.with-line-numbers code .line::before {
   text-decoration: line-through !important;
   color: #9a9a9a !important;
   text-decoration-color: #cccccc;
+}
+
+/* Light theme task item checkbox (mixed lists - target by class) */
+[data-theme="light"] li.task-item > label input[type="checkbox"] {
+  border-color: #cccccc;
+  border-radius: 50%;
+}
+
+[data-theme="light"] li.task-item > label input[type="checkbox"]:hover {
+  border-color: #2e80f2;
+  background: rgba(46, 128, 242, 0.1);
+}
+
+[data-theme="light"] li.task-item > label input[type="checkbox"]:checked {
+  background: #2e80f2;
+  border-color: #2e80f2;
+}
+
+[data-theme="light"] li.task-item[data-checked="true"] > div > p {
+  color: #9a9a9a;
+  text-decoration: line-through;
+  text-decoration-color: #cccccc;
+}
+
+[data-theme="light"] li.task-item[data-checked="true"] > div {
+  color: #9a9a9a;
 }
 
 /* Light theme blockquote */
