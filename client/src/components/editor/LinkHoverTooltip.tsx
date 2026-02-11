@@ -1,14 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Editor } from '@tiptap/react';
-import { ExternalLink, Unlink, Pencil } from 'lucide-react';
+import { Pencil, Copy, Unlink, Check, ExternalLink } from 'lucide-react';
 
 /*
- * DESIGN: Dark Mode Craftsman
- * - Glassmorphic tooltip with backdrop blur
- * - Cyan accent for interactive elements
- * - Smooth hover transitions
- * Uses React portal to escape overflow containers.
+ * Link Hover Tooltip
+ * Shows when hovering over a link in the editor.
+ * Layout: [clickable link URL] [edit] [copy] [unlink]
+ * - Clicking the link opens it in a new tab
+ * - Pencil icon opens the link editor (selects link text in LinkPopover)
+ * - Copy icon copies the URL to clipboard
+ * - Unlink icon removes the link formatting
+ * Uses React portal to avoid overflow clipping
+ * Theme-aware via data-theme attribute
  */
 
 interface LinkHoverTooltipProps {
@@ -43,28 +47,10 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     try {
       const href = linkElement.getAttribute('href') || '';
       const rect = linkElement.getBoundingClientRect();
-      
-      const tooltipWidth = 320;
-      const tooltipHeight = 40;
-      const padding = 8;
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
 
-      let top = rect.bottom + 8;
-      let left = rect.left;
-
-      // Flip upward if not enough space below
-      if (top + tooltipHeight > viewportHeight - padding) {
-        top = rect.top - tooltipHeight - 8;
-      }
-
-      // Keep within horizontal bounds
-      if (left + tooltipWidth > viewportWidth - padding) {
-        left = viewportWidth - tooltipWidth - padding;
-      }
-      if (left < padding) {
-        left = padding;
-      }
+      // Use viewport-relative (fixed) positioning
+      const top = rect.bottom + 8;
+      const left = Math.max(16, Math.min(rect.left, window.innerWidth - 340));
 
       setTooltip({
         isVisible: true,
@@ -132,18 +118,48 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     };
   }, [editor, showTooltip, hideTooltip]);
 
+  // Hide tooltip on scroll to prevent stale positioning
+  useEffect(() => {
+    if (!tooltip.isVisible) return;
+
+    const handleScroll = () => {
+      setTooltip(prev => ({ ...prev, isVisible: false, linkElement: null }));
+    };
+
+    const wrapper = editor.view.dom.closest('.editor-content-wrapper');
+    wrapper?.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => {
+      wrapper?.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [tooltip.isVisible, editor]);
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = useCallback(() => {
+    if (tooltip.url) {
+      navigator.clipboard.writeText(tooltip.url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      });
+    }
+  }, [tooltip.url]);
+
   const handleOpenLink = useCallback(() => {
     if (tooltip.url) {
       window.open(tooltip.url, '_blank', 'noopener,noreferrer');
     }
-    setTooltip(prev => ({ ...prev, isVisible: false }));
   }, [tooltip.url]);
 
   const handleRemoveLink = useCallback(() => {
+    // Select the link and remove it
     if (tooltip.linkElement) {
       const { view } = editor;
       const { doc } = view.state;
       
+      // Find the link position in the document
       let linkPos: number | null = null;
       let linkEnd: number | null = null;
       
@@ -167,6 +183,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
           .unsetLink()
           .run();
       } else {
+        // Fallback: just unset link at current selection
         editor.chain().focus().unsetLink().run();
       }
     }
@@ -174,6 +191,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
   }, [editor, tooltip.linkElement]);
 
   const handleEditLink = useCallback(() => {
+    // Select the link text first so LinkPopover can edit it
     if (tooltip.linkElement) {
       const { view } = editor;
       const { doc } = view.state;
@@ -201,10 +219,16 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     ? tooltip.url.substring(0, 40) + '...' 
     : tooltip.url;
 
-  return createPortal(
+  // Get the theme from the editor's container
+  // Look for the markdown-editor-container first, then any ancestor with data-theme
+  const editorContainer = editor.view.dom.closest('.markdown-editor-container') || editor.view.dom.closest('[data-theme]');
+  const theme = editorContainer?.getAttribute('data-theme') || '';
+
+  const tooltipContent = (
     <div
       ref={tooltipRef}
       className="link-hover-tooltip"
+      data-theme={theme}
       style={{
         position: 'fixed',
         top: `${tooltip.position.top}px`,
@@ -215,21 +239,37 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
       onMouseLeave={hideTooltip}
     >
       <div className="link-hover-tooltip-content">
+        {/* 1. Clickable link - opens in new tab */}
         <button
-          onClick={handleEditLink}
-          className="link-hover-tooltip-edit"
-          title="Edit link"
+          onClick={handleOpenLink}
+          className="link-hover-tooltip-link"
+          title={tooltip.url}
         >
-          <span className="link-hover-tooltip-url">{displayUrl || 'Edit link'}</span>
+          <ExternalLink size={13} className="link-hover-tooltip-link-icon" />
+          <span className="link-hover-tooltip-url">{displayUrl || 'No URL'}</span>
         </button>
+
+        {/* Action buttons: edit, copy, unlink */}
         <div className="link-hover-tooltip-actions">
+          {/* 2. Edit link - pencil icon */}
           <button
-            onClick={handleOpenLink}
+            onClick={handleEditLink}
             className="link-hover-tooltip-btn"
-            title="Open link"
+            title="Edit link"
           >
-            <ExternalLink size={14} />
+            <Pencil size={14} />
           </button>
+
+          {/* 3. Copy link */}
+          <button
+            onClick={handleCopyLink}
+            className="link-hover-tooltip-btn"
+            title="Copy link"
+          >
+            {copied ? <Check size={14} style={{ color: 'var(--primary)' }} /> : <Copy size={14} />}
+          </button>
+
+          {/* 4. Unlink - remove link */}
           <button
             onClick={handleRemoveLink}
             className="link-hover-tooltip-btn link-hover-tooltip-btn-danger"
@@ -239,9 +279,11 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
           </button>
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
+
+  // Render via portal to avoid overflow clipping
+  return createPortal(tooltipContent, document.body);
 }
 
 export default LinkHoverTooltip;

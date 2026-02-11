@@ -4,11 +4,11 @@ import { Editor } from '@tiptap/react';
 import { Link2 } from 'lucide-react';
 
 /*
- * DESIGN: Dark Mode Craftsman
+ * DESIGN: Theme-aware link editor popover
+ * - Uses CSS variables for proper light/dark theme support
  * - Glassmorphic popover with backdrop blur
- * - Cyan accent for focus states
- * - Smooth transitions
- * Uses React portal to escape overflow containers.
+ * - Closes on scroll to prevent stale positioning
+ * - Uses React portal to avoid overflow clipping
  */
 
 interface LinkPopoverProps {
@@ -19,83 +19,39 @@ interface LinkPopoverProps {
 
 export function LinkPopover({ editor, isOpen, onClose }: LinkPopoverProps) {
   const [url, setUrl] = useState('');
-  const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
 
-  // Calculate position based on cursor coords
-  const updatePosition = useCallback(() => {
-    if (!editor || editor.isDestroyed) return;
-    try {
-      const { view } = editor;
-      const { from } = view.state.selection;
-      const coords = view.coordsAtPos(from);
-      
-      const popoverWidth = 320;
-      const popoverHeight = 80;
-      const padding = 8;
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-
-      let top = coords.bottom + 8;
-      let left = coords.left;
-
-      // Flip upward if not enough space below
-      if (top + popoverHeight > viewportHeight - padding) {
-        top = coords.top - popoverHeight - 8;
-      }
-
-      // Keep within horizontal bounds
-      if (left + popoverWidth > viewportWidth - padding) {
-        left = viewportWidth - popoverWidth - padding;
-      }
-      if (left < padding) {
-        left = padding;
-      }
-
-      // Keep within vertical bounds
-      top = Math.max(padding, top);
-
-      setPopoverPos({ top, left });
-    } catch {
-      // Fallback to center of viewport
-      setPopoverPos({
-        top: window.innerHeight / 2 - 40,
-        left: window.innerWidth / 2 - 160,
-      });
-    }
-  }, [editor]);
-
-  // Get current link URL if cursor is on a link
+  // Get current link URL if cursor is on a link and calculate position
   useEffect(() => {
     if (isOpen) {
       const currentUrl = editor.getAttributes('link').href || '';
       setUrl(currentUrl);
-      updatePosition();
+
+      // Calculate position relative to viewport using fixed positioning
+      try {
+        const { view } = editor;
+        const { from } = view.state.selection;
+        const coords = view.coordsAtPos(from);
+
+        // Position below the cursor, with some offset
+        const top = coords.bottom + 8;
+        const left = Math.max(16, Math.min(coords.left, window.innerWidth - 420));
+
+        setPosition({ top, left });
+      } catch {
+        // Fallback: center horizontally
+        setPosition({ top: 200, left: window.innerWidth / 2 - 160 });
+      }
+
       // Focus input after a short delay to ensure popover is rendered
       setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
       }, 50);
     }
-  }, [isOpen, editor, updatePosition]);
-
-  // Reposition on scroll/resize
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleReposition = () => {
-      requestAnimationFrame(updatePosition);
-    };
-
-    window.addEventListener('scroll', handleReposition, true);
-    window.addEventListener('resize', handleReposition);
-
-    return () => {
-      window.removeEventListener('scroll', handleReposition, true);
-      window.removeEventListener('resize', handleReposition);
-    };
-  }, [isOpen, updatePosition]);
+  }, [isOpen, editor]);
 
   // Handle click outside to close
   useEffect(() => {
@@ -107,9 +63,26 @@ export function LinkPopover({ editor, isOpen, onClose }: LinkPopoverProps) {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onClose]);
+    // Close on scroll to avoid stale position
+    const handleScroll = () => {
+      onClose();
+    };
+
+    // Delay attachment to prevent immediate close from the same click that opened it
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 10);
+
+    // Listen for scroll on the editor content wrapper
+    const wrapper = editor.view.dom.closest('.editor-content-wrapper');
+    wrapper?.addEventListener('scroll', handleScroll);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+      wrapper?.removeEventListener('scroll', handleScroll);
+    };
+  }, [isOpen, onClose, editor]);
 
   const handleSubmit = useCallback((e?: React.FormEvent) => {
     e?.preventDefault();
@@ -147,14 +120,19 @@ export function LinkPopover({ editor, isOpen, onClose }: LinkPopoverProps) {
 
   if (!isOpen) return null;
 
-  return createPortal(
+  // Get the theme from the editor's container
+  const editorContainer = editor.view.dom.closest('.markdown-editor-container') || editor.view.dom.closest('[data-theme]');
+  const theme = editorContainer?.getAttribute('data-theme') || '';
+
+  const popoverContent = (
     <div
       ref={popoverRef}
       className="link-popover"
+      data-theme={theme}
       style={{
         position: 'fixed',
-        top: `${popoverPos.top}px`,
-        left: `${popoverPos.left}px`,
+        top: `${position.top}px`,
+        left: `${position.left}px`,
         zIndex: 9999,
       }}
     >
@@ -177,9 +155,11 @@ export function LinkPopover({ editor, isOpen, onClose }: LinkPopoverProps) {
           Press Enter to save · Escape to cancel
         </div>
       </form>
-    </div>,
-    document.body
+    </div>
   );
+
+  // Render via portal to avoid overflow clipping
+  return createPortal(popoverContent, document.body);
 }
 
 export default LinkPopover;

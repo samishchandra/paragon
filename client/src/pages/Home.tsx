@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 
 const DEMO_CONTENT = `
 <h1>Welcome to Manus Markdown Editor</h1>
-<p>A <strong>professional</strong>, feature-rich markdown editor designed as a drop-in component for note-taking applications.</p>
+<p>A <strong>professional</strong>, feature-rich markdown editor designed as a drop-in component for note-taking applications. Visit <a href="https://github.com/tiptap/tiptap">TipTap on GitHub</a> for more details.</p>
 
 <h2>Features at a Glance</h2>
 <p>This editor supports all the markdown features you need:</p>
