@@ -5,7 +5,7 @@ A professional, feature-rich markdown editor component built with TipTap and Rea
 ## Features
 
 - **Rich Text Editing** — Full WYSIWYG markdown editing with TipTap/ProseMirror
-- **Syntax Highlighting** — 20+ language support via highlight.js
+- **Syntax Highlighting** — 15 languages bundled (30+ aliases), extensible via lowlight
 - **Tables** — Full table support with resizable columns, sorting, and cell menus
 - **Task Lists** — Interactive checkboxes for todo items
 - **Code Blocks** — Beautiful code blocks with language detection and copy button
@@ -33,11 +33,23 @@ yarn add @manus/editor
 
 ### Peer Dependencies
 
-The editor requires React 18 or 19:
+The editor requires React and TipTap (with ProseMirror). Most consuming apps already have these:
 
 ```bash
+# Core peer dependencies
 npm install react react-dom
+npm install @tiptap/core @tiptap/react @tiptap/starter-kit
+npm install @tiptap/extension-code-block-lowlight lowlight highlight.js
+npm install @tiptap/extension-highlight @tiptap/extension-link
+npm install @tiptap/extension-placeholder @tiptap/extension-table
+npm install @tiptap/extension-table-row @tiptap/extension-task-item
+npm install @tiptap/extension-task-list @tiptap/extension-text-align
+npm install @tiptap/extension-typography @tiptap/extension-underline
+npm install @tiptap/extension-subscript @tiptap/extension-superscript
+npm install lucide-react
 ```
+
+> **Note:** By externalizing TipTap, ProseMirror, highlight.js, and lucide-react, the library bundle is only **618 KB** (ESM) instead of 1.66 MB — a **62.8% reduction**. Your app won't double-bundle these heavy dependencies.
 
 ## Quick Start
 
@@ -158,6 +170,22 @@ applyTheme(document.getElementById('editor-container')!, myTheme);
 | `Shift+Tab` | Outdent |
 | `/` | Slash commands |
 | `Escape` | Exit current mode |
+
+## Extending Syntax Highlighting
+
+The editor bundles 15 languages by default: JavaScript, TypeScript, Python, HTML/XML, CSS, JSON, Bash, SQL, Java, C/C++, Go, Rust, Markdown, YAML, and Diff.
+
+To add more languages:
+
+```tsx
+import { lowlight } from '@manus/editor';
+import ruby from 'highlight.js/lib/languages/ruby';
+import php from 'highlight.js/lib/languages/php';
+
+// Register additional languages before rendering the editor
+lowlight.register('ruby', ruby);
+lowlight.register('php', php);
+```
 
 ## Advanced Usage
 

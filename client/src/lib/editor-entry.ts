@@ -71,6 +71,7 @@ export {
 // ─── Supplementary Components ───────────────────────────────────────────────
 export { ImageDropZone } from '@/components/editor/ImageDropZone';
 export { CodeBlockComponent } from '@/components/editor/CodeBlockComponent';
+export { lowlight } from '@/components/editor/extensions/CodeBlockWithFeatures';
 export { FindReplace } from '@/components/editor/FindReplace';
 export { SelectAllActionBar } from '@/components/editor/SelectAllActionBar';
 export { TableOfContents } from '@/components/editor/TableOfContents';

@@ -11,6 +11,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * 
  * Builds the Manus Markdown Editor as a reusable npm package.
  * 
+ * Bundle Optimization Strategy:
+ * ─────────────────────────────
+ * 1. React is externalized (peer dependency)
+ * 2. TipTap + ProseMirror are externalized (peer dependencies)
+ *    - Consuming apps already have these; bundling them doubles the cost
+ * 3. highlight.js uses selective imports (15 languages instead of 37)
+ * 4. lucide-react is externalized (peer dependency)
+ * 
  * Usage:
  *   pnpm run build:lib
  * 
@@ -19,7 +27,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  *     manus-editor.js      (ESM bundle)
  *     manus-editor.umd.cjs (UMD bundle)
  *     manus-editor.css      (Extracted styles)
- *     index.d.ts            (TypeScript declarations - generated separately)
+ *     types/                (TypeScript declarations)
  */
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -47,17 +55,33 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       // Externalize peer dependencies — consumers must provide these
-      external: [
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-        'react/jsx-dev-runtime',
-      ],
+      // This is the primary bundle size optimization: instead of bundling
+      // TipTap/ProseMirror (~800 KB), we expect the consuming app to
+      // provide them. Any app using @manus/editor already needs TipTap.
+      external: (id) => {
+        // React
+        if (id === 'react' || id === 'react-dom' || id.startsWith('react/') || id.startsWith('react-dom/')) {
+          return true;
+        }
+        // TipTap
+        if (id.startsWith('@tiptap/')) return true;
+        // ProseMirror
+        if (id.startsWith('prosemirror-') || id.startsWith('@prosemirror/')) return true;
+        // lowlight / highlight.js (consumers configure their own languages)
+        if (id === 'lowlight' || id.startsWith('lowlight/') || id === 'highlight.js' || id.startsWith('highlight.js/')) return true;
+        // lucide-react (icon library — consumers already have it)
+        if (id === 'lucide-react' || id.startsWith('lucide-react/')) return true;
+        return false;
+      },
       output: {
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
+          'lucide-react': 'LucideReact',
+          'lowlight': 'lowlight',
+          '@tiptap/react': 'TiptapReact',
+          '@tiptap/core': 'TiptapCore',
         },
         // Ensure CSS is extracted
         assetFileNames: (assetInfo) => {
