@@ -115,6 +115,8 @@ function rebuildRangesFromDecorations(
 
   const ranges: OccurrenceRange[] = [];
   pluginState.find().forEach((deco: any) => {
+    // Skip widget decorations (cursors) — they have from === to
+    if (deco.from === deco.to) return;
     const text = view.state.doc.textBetween(deco.from, deco.to, '');
     ranges.push({ from: deco.from, to: deco.to, text });
   });
@@ -502,12 +504,26 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
             }
 
             if (meta?.activate || meta?.refresh) {
-              const decorations: Decoration[] = storage.ranges.map(range => {
-                return Decoration.inline(range.from, range.to, {
-                  class: 'select-all-occurrence-highlight',
-                  'data-occurrence': 'true',
-                });
-              });
+              const decorations: Decoration[] = [];
+              for (const range of storage.ranges) {
+                // Inline highlight for the matched text
+                decorations.push(
+                  Decoration.inline(range.from, range.to, {
+                    class: 'select-all-occurrence-highlight',
+                    'data-occurrence': 'true',
+                  })
+                );
+                // Widget cursor at the end of each occurrence
+                const cursorWidget = document.createElement('span');
+                cursorWidget.className = 'select-all-multi-cursor';
+                cursorWidget.setAttribute('aria-hidden', 'true');
+                decorations.push(
+                  Decoration.widget(range.to, cursorWidget, {
+                    side: 1,
+                    key: `cursor-${range.from}-${range.to}`,
+                  })
+                );
+              }
               return DecorationSet.create(newState.doc, decorations);
             }
 

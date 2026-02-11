@@ -2863,6 +2863,41 @@ pre.with-line-numbers code .line::before {
   box-shadow: 0 0 0 1.5px oklch(0.5 0.18 250 / 0.65);
 }
 
+/* ===== Multi-Cursor Visual Indicators ===== */
+@keyframes multi-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.ProseMirror .select-all-multi-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  vertical-align: text-bottom;
+  background: oklch(0.55 0.2 250);
+  border-radius: 1px;
+  animation: multi-cursor-blink 1s step-end infinite;
+  pointer-events: none;
+  margin-left: -1px;
+  position: relative;
+  z-index: 2;
+}
+
+.dark .ProseMirror .select-all-multi-cursor,
+[data-theme="dark"] .ProseMirror .select-all-multi-cursor {
+  background: oklch(0.75 0.18 250);
+}
+
+[data-theme="light"] .ProseMirror .select-all-multi-cursor,
+.ProseMirror .select-all-multi-cursor {
+  background: oklch(0.45 0.22 250);
+}
+
+.dark .ProseMirror .select-all-multi-cursor,
+[data-theme="dark"] .ProseMirror .select-all-multi-cursor {
+  background: oklch(0.75 0.18 250);
+}
+
 /* ===== Select All Action Bar ===== */
 .select-all-action-bar {
   position: absolute;

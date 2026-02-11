@@ -1,0 +1,48 @@
+{
+  "name": "@manus/editor",
+  "version": "1.0.0",
+  "description": "A professional, feature-rich markdown editor component built with TipTap and React. Drop-in editor for note-taking applications like Taskmate, Momentum, and more.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./manus-editor.umd.cjs",
+  "module": "./manus-editor.js",
+  "types": "./types/lib/editor-entry.d.ts",
+  "exports": {
+    ".": {
+      "import": "./manus-editor.js",
+      "require": "./manus-editor.umd.cjs",
+      "types": "./types/lib/editor-entry.d.ts"
+    },
+    "./style.css": "./manus-editor.css"
+  },
+  "files": [
+    "manus-editor.js",
+    "manus-editor.js.map",
+    "manus-editor.umd.cjs",
+    "manus-editor.umd.cjs.map",
+    "manus-editor.css",
+    "types/"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "keywords": [
+    "markdown",
+    "editor",
+    "tiptap",
+    "react",
+    "wysiwyg",
+    "rich-text",
+    "prosemirror",
+    "note-taking",
+    "manus"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user/manus-markdown-editor"
+  }
+}

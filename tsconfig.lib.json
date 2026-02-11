@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationDir": "./dist-lib/types",
+    "emitDeclarationOnly": true,
+    "rootDir": "./client/src",
+    "outDir": "./dist-lib/types",
+    "noEmit": false
+  },
+  "include": [
+    "client/src/lib/editor-entry.ts",
+    "client/src/components/editor/**/*.ts",
+    "client/src/components/editor/**/*.tsx",
+    "client/src/types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist-lib"
+  ]
+}
