@@ -50,10 +50,15 @@ export function ImageURLDialog({ isOpen, onClose, onInsert, position }: ImageURL
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    // Delay attaching the click-outside listener so the same click
+    // that opened the dialog doesn't immediately close it
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
     document.addEventListener('keydown', handleEscape);
 
     return () => {
+      clearTimeout(timer);
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };

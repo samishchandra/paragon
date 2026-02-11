@@ -41,7 +41,8 @@ import {
   IndentIncrease,
   IndentDecrease,
 } from 'lucide-react';
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useRef } from 'react';
+import { ImageURLDialog } from './ImageURLDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -128,8 +129,8 @@ const Divider = () => (
 );
 
 export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '' }: EditorToolbarProps) {
-  const [imageUrl, setImageUrl] = useState('');
-  const [showImageInput, setShowImageInput] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [imageDialogPosition, setImageDialogPosition] = useState<{ top: number; left: number } | undefined>(undefined);
 
   // Performance: Use useEditorState to only re-render when relevant toolbar states change
   // instead of re-rendering on every transaction
@@ -156,13 +157,19 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
     }),
   });
 
-  const addImage = useCallback(() => {
-    if (imageUrl) {
-      editor.chain().focus().setImage({ src: imageUrl }).run();
-      setImageUrl('');
-      setShowImageInput(false);
-    }
-  }, [editor, imageUrl]);
+  const openImageDialog = useCallback(() => {
+    // Get cursor position in the editor to anchor the dialog
+    const { view } = editor;
+    const { from } = view.state.selection;
+    const coords = view.coordsAtPos(from);
+    setImageDialogPosition({ top: coords.bottom + 8, left: coords.left });
+    setShowImageDialog(true);
+  }, [editor]);
+
+  const handleImageInsert = useCallback((url: string, alt: string) => {
+    editor.chain().focus().setImage({ src: url, alt }).run();
+    setShowImageDialog(false);
+  }, [editor]);
 
   const addTable = useCallback(() => {
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
@@ -437,7 +444,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
           <Table size={16} />
         </ToolbarButton>
         <ToolbarButton
-          onClick={() => setShowImageInput(true)}
+          onClick={openImageDialog}
           tooltip="Insert Image"
         >
           <Image size={16} />
@@ -490,7 +497,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
           <DropdownMenuItem onClick={addTable}>
             <Table size={16} className="mr-2" /> Table (3×3)
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowImageInput(true)}>
+          <DropdownMenuItem onClick={openImageDialog}>
             <Image size={16} className="mr-2" /> Image
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => editor.chain().focus().setHorizontalRule().run()}>
@@ -645,48 +652,13 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
         </DropdownMenu>
       )}
 
-      {/* Image URL input modal */}
-      {showImageInput && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:relative sm:inset-auto sm:bg-transparent sm:p-0">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-4 sm:p-0 bg-card sm:bg-secondary rounded-lg sm:rounded-md w-full max-w-sm sm:max-w-none sm:w-auto">
-            <input
-              type="url"
-              placeholder="Image URL..."
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  addImage();
-                }
-                if (e.key === 'Escape') {
-                  setShowImageInput(false);
-                  setImageUrl('');
-                }
-              }}
-              className="bg-secondary sm:bg-transparent border sm:border-none rounded px-3 py-2 sm:py-0 outline-none text-sm w-full sm:w-40"
-              autoFocus
-            />
-            <div className="flex gap-2 sm:gap-1">
-              <button
-                onClick={addImage}
-                className="flex-1 sm:flex-none px-4 sm:px-2 py-2 sm:py-0.5 text-sm sm:text-xs bg-primary text-primary-foreground rounded"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => {
-                  setShowImageInput(false);
-                  setImageUrl('');
-                }}
-                className="flex-1 sm:flex-none px-4 sm:px-2 py-2 sm:py-0.5 text-sm sm:text-xs text-muted-foreground bg-secondary sm:bg-transparent rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Image URL dialog */}
+      <ImageURLDialog
+        isOpen={showImageDialog}
+        onClose={() => setShowImageDialog(false)}
+        onInsert={handleImageInsert}
+        position={imageDialogPosition}
+      />
 
       {/* Spacer */}
       <div className="flex-1 min-w-2" />

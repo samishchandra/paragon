@@ -122,7 +122,14 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
   },
 
   addNodeView() {
+    // Capture extension options in a variable accessible to the closure
+    const extensionOptions = this.options;
+
     return ({ node, editor, getPos }) => {
+      // Mutable reference to track the current node state
+      // This ensures menu actions always use the latest src/alt values
+      let currentNode = node;
+
       const container = document.createElement('figure');
       container.classList.add('image-resizer');
       
@@ -164,7 +171,6 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         justify-content: center;
         box-shadow: 0 2px 8px oklch(0 0 0 / 0.15);
       `;
-      // Add diagonal resize SVG icon (se-resize arrows) - rotated 90 degrees
       resizeHandle.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.4 0 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(90deg);">
           <polyline points="15 3 21 3 21 9"></polyline>
@@ -252,6 +258,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           e.stopPropagation();
           onClick();
           dropdown.style.display = 'none';
+          isDropdownOpen = false;
         });
         return item;
       };
@@ -259,41 +266,66 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       const editIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
       const copyIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
       const saveIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
+      const copyUrlIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
       
-      // Edit menu item
+      // Edit menu item — uses extensionOptions (captured from this.options above)
       dropdown.appendChild(createMenuItem('Edit', editIcon, () => {
         const pos = typeof getPos === 'function' ? getPos() : null;
-        if (pos !== null && pos !== undefined && this.options.onImageClick) {
+        if (pos !== null && pos !== undefined && extensionOptions.onImageClick) {
           const rect = img.getBoundingClientRect();
-          this.options.onImageClick({
-            src: node.attrs.src,
-            alt: node.attrs.alt || '',
+          extensionOptions.onImageClick({
+            src: currentNode.attrs.src,
+            alt: currentNode.attrs.alt || '',
             pos,
             rect,
           });
         }
       }));
       
-      // Copy image menu item
+      // Copy image menu item — uses currentNode for latest src
       dropdown.appendChild(createMenuItem('Copy image', copyIcon, async () => {
+        const src = currentNode.attrs.src;
         try {
-          const response = await fetch(node.attrs.src);
+          const response = await fetch(src);
           const blob = await response.blob();
           await navigator.clipboard.write([
             new ClipboardItem({ [blob.type]: blob })
           ]);
-        } catch (err) {
+        } catch {
           // Fallback: copy image URL
-          await navigator.clipboard.writeText(node.attrs.src);
+          try {
+            await navigator.clipboard.writeText(src);
+          } catch {
+            // Silent fail
+          }
+        }
+      }));
+
+      // Copy URL menu item
+      dropdown.appendChild(createMenuItem('Copy URL', copyUrlIcon, async () => {
+        const src = currentNode.attrs.src;
+        try {
+          await navigator.clipboard.writeText(src);
+        } catch {
+          // Silent fail
         }
       }));
       
-      // Save image menu item
+      // Save image menu item — uses currentNode for latest src, appends link to DOM
       dropdown.appendChild(createMenuItem('Save image', saveIcon, () => {
+        const src = currentNode.attrs.src;
+        const alt = currentNode.attrs.alt || 'image';
         const link = document.createElement('a');
-        link.href = node.attrs.src;
-        link.download = node.attrs.alt || 'image';
+        link.href = src;
+        link.download = alt;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
         link.click();
+        // Clean up after a short delay
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
       }));
       
       // Toggle dropdown on button click
@@ -348,7 +380,6 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         menuButton.style.background = 'oklch(0.98 0 0 / 0.95)';
       });
 
-
       
       // Resize logic
       let startX: number;
@@ -389,6 +420,8 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           if (updatedNode.type.name !== 'resizableImage') {
             return false;
           }
+          // Update the mutable reference so menu actions use latest values
+          currentNode = updatedNode;
           img.src = updatedNode.attrs.src;
           img.alt = updatedNode.attrs.alt || '';
           if (updatedNode.attrs.width) {
