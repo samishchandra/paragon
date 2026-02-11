@@ -281,6 +281,12 @@ export default App;</code></pre>
   </li>
 </ul>
 
+<h3>Date Pills</h3>
+<p>Track deadlines and dates inline. Click any date pill to change it:</p>
+<p>Project kickoff: <span data-type="date-pill" data-date="2026-02-11"></span></p>
+<p>First milestone: <span data-type="date-pill" data-date="2026-02-12"></span></p>
+<p>Sprint review: <span data-type="date-pill" data-date="2026-02-18"></span></p>
+
 <h3>Callout</h3>
 <blockquote>
   <p>💡 <strong>Pro Tip:</strong> Press <code>Escape</code> or click outside to close this modal. Your content is automatically saved to local storage, so you won't lose your work!</p>

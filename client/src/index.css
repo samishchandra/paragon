@@ -2496,76 +2496,23 @@ pre.with-line-numbers code .line::before {
   outline-offset: 1px;
 }
 
-/* Date picker popup */
+/* Date picker portal - inherits theme from data-theme attribute */
+.date-picker-portal {
+  animation: datepicker-fade-in 0.15s ease;
+}
+
+.date-picker-portal.dark {
+  color-scheme: dark;
+}
+
+@keyframes datepicker-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Date picker popup - Calendar-based (Taskmate style) */
 .date-picker-popup {
-  position: absolute;
-  background: var(--popover);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px oklch(0 0 0 / 0.3);
-  padding: 0.75rem;
-  z-index: 50;
-  min-width: 200px;
-}
-
-.date-picker-popup input[type="date"] {
-  width: 100%;
-  padding: 0.5rem;
-  background: var(--input);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--foreground);
-  font-size: 0.875rem;
-}
-
-.date-picker-popup input[type="date"]:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px oklch(0.7 0.15 220 / 0.2);
-}
-
-
-/* Quick date buttons in date picker */
-.quick-date-btn {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  background: var(--secondary);
-  border: 1px solid var(--border);
-  border-radius: 9999px;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.quick-date-btn:hover {
-  background: var(--accent);
-  color: var(--foreground);
-  border-color: var(--primary);
-}
-
-/* Date picker input styling */
-.date-picker-input {
-  width: 100%;
-  padding: 0.5rem;
-  background: var(--input);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--foreground);
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.date-picker-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px oklch(0.7 0.15 220 / 0.2);
-}
-
-/* Make date input calendar icon visible in dark mode */
-.date-picker-input::-webkit-calendar-picker-indicator {
-  filter: invert(0.8);
-  cursor: pointer;
+  min-width: 280px;
 }
 
 /* Date pill cursor when editable */
@@ -4134,7 +4081,8 @@ pre.with-line-numbers code .line::before {
 }
 
 /* Light theme date picker popup */
-[data-theme="light"] .date-picker-popup {
+[data-theme="light"] .date-picker-popup,
+.date-picker-portal:not(.dark) .date-picker-popup {
   box-shadow: 0 4px 20px oklch(0 0 0 / 0.1);
 }
 

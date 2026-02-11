@@ -22,7 +22,7 @@ import { LinkHoverTooltip } from './LinkHoverTooltip';
 import { FloatingToolbar } from './FloatingToolbar';
 import { CalloutWithMenu } from './extensions/CalloutWithMenu';
 import { ResizableImage } from './extensions/ResizableImage';
-import { DatePill } from './extensions/DatePill';
+import { DatePill, formatDateForMarkdown, parseDateFromMarkdown, getDateVariant } from './extensions/DatePill';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace } from './FindReplace';
@@ -846,6 +846,21 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       }
     });
     
+    // Date pill rule: serialize as @Feb 11, 2025@ markdown format
+    td.addRule('datePill', {
+      filter: (node) => {
+        return node.nodeName === 'SPAN' && 
+               (node as HTMLElement).getAttribute('data-type') === 'date-pill';
+      },
+      replacement: (content, node) => {
+        const dateStr = (node as HTMLElement).getAttribute('data-date');
+        if (dateStr) {
+          return `@${formatDateForMarkdown(dateStr)}@`;
+        }
+        return content;
+      },
+    });
+    
     // Custom callout rule to convert callouts to markdown code block syntax
     // e.g., ```ad-info\ncontent\n```
     td.addRule('callout', {
@@ -899,6 +914,17 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           const innerHtml = marked.parse(content.trim(), { async: false }) as string;
           return `<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`;
         });
+      });
+      
+      // Convert date pill markdown format @Mon DD, YYYY@ back to date pill HTML
+      // Matches @Today@, @Tomorrow@, @Yesterday@, @Next Monday@, @Feb 11, 2025@, etc.
+      processedMarkdown = processedMarkdown.replace(/@([^@\n]+)@/g, (match, dateText) => {
+        const parsed = parseDateFromMarkdown(dateText);
+        if (parsed) {
+          const variant = getDateVariant(parsed);
+          return `<span data-type="date-pill" data-date="${parsed}" class="date-pill ${variant}"><span class="date-icon">📅</span><span class="date-text">${dateText.trim()}</span></span>`;
+        }
+        return match; // Not a valid date, leave as-is
       });
       
       const html = marked.parse(processedMarkdown, { async: false }) as string;
