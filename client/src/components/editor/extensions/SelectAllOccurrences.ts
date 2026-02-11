@@ -1,7 +1,7 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { undo } from '@tiptap/pm/history';
+import { undo, redo } from '@tiptap/pm/history';
 
 /*
  * SelectAllOccurrences Extension
@@ -20,7 +20,7 @@ import { undo } from '@tiptap/pm/history';
  * - Batch replace-with-typed-text (intercepts keystrokes to replace all occurrences)
  * - Regex-based matching support
  * - Floating action bar integration via storage state
- * - Proper undo/redo: each keystroke is one undo step, Cmd+Z reverts and re-enters mode
+ * - Proper undo/redo: each keystroke is one undo step, Cmd+Z reverts and Cmd+Shift+Z re-applies
  */
 
 export interface OccurrenceRange {
@@ -50,6 +50,8 @@ export interface SelectAllOccurrencesStorage {
   isIncremental: boolean;
   /** Stack of previous typed buffers for undo tracking */
   undoStack: string[];
+  /** Stack of forward typed buffers for redo tracking */
+  redoStack: string[];
 }
 
 const selectAllOccurrencesPluginKey = new PluginKey('selectAllOccurrences');
@@ -147,6 +149,7 @@ function deactivateMode(storage: SelectAllOccurrencesStorage) {
   storage.nextMatchIndex = 0;
   storage.isIncremental = false;
   storage.undoStack = [];
+  storage.redoStack = [];
 }
 
 export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesStorage>({
@@ -167,6 +170,7 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
       nextMatchIndex: 0,
       isIncremental: false,
       undoStack: [],
+      redoStack: [],
     };
   },
 
@@ -207,6 +211,7 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
         this.storage.nextMatchIndex = ranges.length; // All selected
         this.storage.isIncremental = false;
         this.storage.undoStack = [];
+        this.storage.redoStack = [];
 
         if (dispatch) {
           dispatch(tr.setMeta(selectAllOccurrencesPluginKey, { activate: true }));
@@ -274,6 +279,7 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
           storage.nextMatchIndex = (startIndex + 1) % allMatches.length;
           storage.isIncremental = true;
           storage.undoStack = [];
+          storage.redoStack = [];
 
           if (dispatch) {
             dispatch(tr.setMeta(selectAllOccurrencesPluginKey, { activate: true }));
@@ -562,6 +568,9 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
               event.preventDefault();
 
               if (storage.isTypingReplace && storage.undoStack.length > 0) {
+                // Save current buffer to redo stack before undoing
+                storage.redoStack.push(storage.typedBuffer);
+
                 // Pop the previous buffer state from the undo stack
                 const previousBuffer = storage.undoStack.pop()!;
 
@@ -595,9 +604,42 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
               return false; // Let default undo proceed
             }
 
-            // Cmd+Shift+Z / Ctrl+Y: redo — let it through
+            // Cmd+Shift+Z / Ctrl+Y: redo within Select All mode
             if ((event.metaKey || event.ctrlKey) && ((event.key === 'z' && event.shiftKey) || event.key === 'y')) {
-              return false;
+              event.preventDefault();
+
+              if (storage.redoStack.length > 0) {
+                // Save current buffer to undo stack before redoing
+                storage.undoStack.push(storage.isTypingReplace ? storage.typedBuffer : '');
+
+                // Pop the next buffer state from the redo stack
+                const nextBuffer = storage.redoStack.pop()!;
+
+                // Update storage BEFORE calling redo so the action bar reads
+                // the correct state when the redo transaction triggers a re-render
+                storage.typedBuffer = nextBuffer;
+                storage.isTypingReplace = true;
+
+                // Use ProseMirror's redo to re-apply the last undone transaction
+                redo(view.state, view.dispatch);
+
+                // Rebuild ranges from the (now re-applied) decorations
+                setTimeout(() => {
+                  const newRanges = rebuildRangesFromDecorations(view, storage);
+                  storage.ranges = newRanges;
+                  if (newRanges.length === 0) {
+                    deactivateMode(storage);
+                  }
+                }, 10);
+
+                return true;
+              }
+
+              // If redo stack is empty, exit select-all mode and let ProseMirror handle redo
+              deactivateMode(storage);
+              const { tr: redoTr } = view.state;
+              view.dispatch(redoTr.setMeta(selectAllOccurrencesPluginKey, { deactivate: true }));
+              return false; // Let default redo proceed
             }
 
             // Let formatting shortcuts through (Cmd+B, Cmd+I, Cmd+U, Cmd+Shift+X)
@@ -734,6 +776,10 @@ export const SelectAllOccurrences = Extension.create<{}, SelectAllOccurrencesSto
 
             // Push current buffer state to undo stack before modifying
             storage.undoStack.push(storage.isTypingReplace ? storage.typedBuffer : '');
+
+            // Clear redo stack on new input (standard editor behavior:
+            // typing after undo invalidates the redo history)
+            storage.redoStack = [];
 
             // Accumulate typed text
             if (!storage.isTypingReplace) {
