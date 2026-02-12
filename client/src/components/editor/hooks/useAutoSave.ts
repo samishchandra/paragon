@@ -8,7 +8,7 @@ import { Editor } from '@tiptap/react';
  */
 
 export interface AutoSaveOptions {
-  /** Unique key for localStorage (default: 'manus-editor-content') */
+  /** Unique key for localStorage (default: 'paragon-editor-content') */
   storageKey?: string;
   /** Debounce delay in milliseconds (default: 1000) */
   debounceMs?: number;
@@ -60,7 +60,7 @@ export function useAutoSave(
   options: AutoSaveOptions = {}
 ): AutoSaveReturn {
   const {
-    storageKey = 'manus-editor-content',
+    storageKey = 'paragon-editor-content',
     debounceMs = 1000,
     enabled = true,
     onSave,

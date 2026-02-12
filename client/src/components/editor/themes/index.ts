@@ -1,5 +1,5 @@
 /**
- * Manus Markdown Editor - Theming System
+ * Paragon Editor - Theming System
  * 
  * This module provides a comprehensive theming system for the markdown editor.
  * Themes can be applied by setting CSS variables on the editor container.

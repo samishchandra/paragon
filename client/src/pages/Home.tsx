@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
  */
 
 const DEMO_CONTENT = `
-<h1>Welcome to Manus Markdown Editor</h1>
+<h1>Welcome to Paragon Editor</h1>
 <p>A <strong>professional</strong>, feature-rich markdown editor designed as a drop-in component for note-taking applications. Visit <a href="https://github.com/tiptap/tiptap">TipTap on GitHub</a> for more details.</p>
 
 <h2>Features at a Glance</h2>
@@ -136,7 +136,7 @@ const MODAL_DEMO_CONTENT = `
 <h2>Rich Content Examples</h2>
 
 <h3>Paragraph Text</h3>
-<p>The Manus Markdown Editor is built with <strong>TipTap</strong> and <strong>React</strong>, providing a seamless editing experience. It supports all standard markdown features while offering a <em>WYSIWYG interface</em> that makes writing intuitive and enjoyable.</p>
+<p>The Paragon Editor is built with <strong>TipTap</strong> and <strong>React</strong>, providing a seamless editing experience. It supports all standard markdown features while offering a <em>WYSIWYG interface</em> that makes writing intuitive and enjoyable.</p>
 <p>Whether you're writing documentation, taking notes, or drafting blog posts, this editor adapts to your workflow. The clean interface keeps you focused on what matters most: <mark>your content</mark>.</p>
 
 <h3>Data Table</h3>
@@ -194,8 +194,8 @@ const MODAL_DEMO_CONTENT = `
 </ul>
 
 <h3>Code Block</h3>
-<pre><code class="language-typescript">// Example: Using the Manus Markdown Editor
-import { MarkdownEditor } from '@manus/editor';
+<pre><code class="language-typescript">// Example: Using the Paragon Editor
+import { MarkdownEditor } from '@paragon/editor';
 
 function App() {
   const [content, setContent] = useState('');
@@ -361,7 +361,7 @@ export default function Home() {
                 <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">Manus Markdown Editor</h1>
+                <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">Paragon Editor</h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">Drop-in editor for note-taking apps</p>
               </div>
             </div>
@@ -382,7 +382,7 @@ export default function Home() {
                           <FileText className="w-4 h-4 text-primary" />
                         </div>
                         <div>
-                          <DialogTitle className="text-base font-semibold">Manus Markdown Editor</DialogTitle>
+                          <DialogTitle className="text-base font-semibold">Paragon Editor</DialogTitle>
                           <p className="text-xs text-muted-foreground">Full-screen editing experience</p>
                         </div>
                       </div>

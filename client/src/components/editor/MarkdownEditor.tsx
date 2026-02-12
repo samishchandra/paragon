@@ -202,7 +202,7 @@ export interface MarkdownEditorProps {
   theme?: 'dark' | 'light';
   /** Enable auto-save to localStorage (default: true) */
   autoSave?: boolean;
-  /** Storage key for auto-save (default: 'manus-editor-content') */
+  /** Storage key for auto-save (default: 'paragon-editor-content') */
   autoSaveKey?: string;
   /** Auto-save debounce delay in ms (default: 1000) */
   autoSaveDelay?: number;
@@ -343,7 +343,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   showWordCount = true,
   theme,
   autoSave = true,
-  autoSaveKey = 'manus-editor-content',
+  autoSaveKey = 'paragon-editor-content',
   autoSaveDelay = 1000,
   showRecoveryBanner = true,
   showFloatingToolbar = true,
@@ -1189,26 +1189,26 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           const customEvent = event as CustomEvent<{ mode: 'wysiwyg' | 'markdown' }>;
           callback(customEvent.detail.mode);
         };
-        window.addEventListener('manus-editor-mode-change', handler);
-        return () => window.removeEventListener('manus-editor-mode-change', handler);
+        window.addEventListener('paragon-editor-mode-change', handler);
+        return () => window.removeEventListener('paragon-editor-mode-change', handler);
       },
     };
     
     // Expose the API globally (only once on mount)
-    (window as any).__manusEditorModeAPI = editorModeAPI;
+    (window as any).__paragonEditorModeAPI = editorModeAPI;
     
-    console.log('Manus Editor Mode API exposed globally as window.__manusEditorModeAPI');
+    console.log('Paragon Editor Mode API exposed globally as window.__paragonEditorModeAPI');
     console.log('Available methods: getMode(), setMode(mode), toggleMode(), switchToVisual(), switchToMarkdown(), isVisualMode(), isMarkdownMode(), getRawMarkdown(), onModeChange(callback)');
     
     return () => {
       // Cleanup on unmount
-      delete (window as any).__manusEditorModeAPI;
+      delete (window as any).__paragonEditorModeAPI;
     };
   }, [handleModeSwitch]);
   
   // Dispatch event when mode changes (separate effect to avoid recreating the API)
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent('manus-editor-mode-change', { detail: { mode: editorMode } }));
+    window.dispatchEvent(new CustomEvent('paragon-editor-mode-change', { detail: { mode: editorMode } }));
   }, [editorMode]);
 
   // Handle keyboard shortcuts for markdown auto-detection

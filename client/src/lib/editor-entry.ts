@@ -1,11 +1,11 @@
 /**
- * @manus/editor — Public API Entry Point
+ * @paragon/editor — Public API Entry Point
  * 
- * This file defines the public surface of the Manus Markdown Editor library.
+ * This file defines the public surface of the Paragon Editor library.
  * Import the CSS file alongside this module in your application:
  * 
- *   import { MarkdownEditor } from '@manus/editor';
- *   import '@manus/editor/style.css';
+ *   import { MarkdownEditor } from '@paragon/editor';
+ *   import '@paragon/editor/style.css';
  * 
  * Or if using the UMD build, include the CSS via a <link> tag.
  */

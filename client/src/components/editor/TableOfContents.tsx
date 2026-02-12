@@ -10,7 +10,7 @@ import { memo } from 'react';
  * and draggable width with localStorage persistence.
  */
 
-const TOC_WIDTH_STORAGE_KEY = 'manus-editor-toc-width';
+const TOC_WIDTH_STORAGE_KEY = 'paragon-editor-toc-width';
 const TOC_DEFAULT_WIDTH = 280; // px — wider default
 const TOC_MIN_WIDTH = 200;
 const TOC_MAX_WIDTH = 500;
