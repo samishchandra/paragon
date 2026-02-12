@@ -2313,11 +2313,29 @@ pre.with-line-numbers code .line::before {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  animation: slash-fade-in 0.12s ease-out;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-@keyframes slash-fade-in {
+.slash-menu::-webkit-scrollbar {
+  display: none;
+}
+
+.slash-menu-below {
+  animation: slash-fade-in-below 0.12s ease-out;
+}
+
+.slash-menu-above {
+  animation: slash-fade-in-above 0.12s ease-out;
+}
+
+@keyframes slash-fade-in-below {
   from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slash-fade-in-above {
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 

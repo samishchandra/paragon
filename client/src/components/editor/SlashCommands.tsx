@@ -1,5 +1,6 @@
 import { Editor } from '@tiptap/react';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import ImageURLDialog from './ImageURLDialog';
 import {
   Heading1,
@@ -27,6 +28,7 @@ import {
  * DESIGN: Taskmate-style compact slash command menu
  * Uses editor transaction monitoring to detect "/" typed at start of line
  * Single-line items: icon + title only, no descriptions
+ * Rendered via portal to document.body for correct fixed positioning
  */
 
 interface SlashCommandsProps {
@@ -177,13 +179,60 @@ const commands: CommandItem[] = [
   },
 ];
 
+// Menu height per item (padding + content)
+const ITEM_HEIGHT = 28; // ~28px per item
+const MENU_PADDING = 8; // 4px top + 4px bottom
+const MENU_MAX_HEIGHT = 320;
+const MENU_WIDTH = 210;
+const VIEWPORT_MARGIN = 12;
+
+/**
+ * Get reliable viewport-relative cursor coordinates.
+ * ProseMirror's coordsAtPos can be inaccurate when the editor is inside
+ * scrollable containers or dialogs. We use the native Selection API instead,
+ * which always returns correct viewport-relative coordinates via getBoundingClientRect.
+ */
+function getCursorViewportCoords(editor: Editor): { top: number; bottom: number; left: number } | null {
+  try {
+    // First try: use native window selection (most reliable for viewport coords)
+    const domSelection = window.getSelection();
+    if (domSelection && domSelection.rangeCount > 0) {
+      const range = domSelection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      // getBoundingClientRect returns 0,0,0,0 for collapsed selections in some cases
+      if (rect.width === 0 && rect.height === 0 && rect.top === 0) {
+        // Fallback: create a temporary span at cursor position
+        const tempSpan = document.createElement('span');
+        tempSpan.textContent = '\u200b'; // zero-width space
+        const clonedRange = range.cloneRange();
+        clonedRange.insertNode(tempSpan);
+        const spanRect = tempSpan.getBoundingClientRect();
+        const coords = { top: spanRect.top, bottom: spanRect.bottom, left: spanRect.left };
+        tempSpan.parentNode?.removeChild(tempSpan);
+        // Restore selection
+        domSelection.removeAllRanges();
+        domSelection.addRange(range);
+        return coords;
+      }
+      return { top: rect.top, bottom: rect.bottom, left: rect.left };
+    }
+    // Last resort: use ProseMirror coordsAtPos
+    const pos = editor.state.selection.from;
+    const coords = editor.view.coordsAtPos(pos);
+    return { top: coords.top, bottom: coords.bottom, left: coords.left };
+  } catch {
+    return null;
+  }
+}
+
 export function SlashCommands({ editor }: SlashCommandsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [cursorCoords, setCursorCoords] = useState<{ top: number; bottom: number; left: number } | null>(null);
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageDialogPosition, setImageDialogPosition] = useState({ top: 0, left: 0 });
+  const [placement, setPlacement] = useState<'below' | 'above'>('below');
   const menuRef = useRef<HTMLDivElement>(null);
   const slashPosRef = useRef<number>(-1);
   const isOpenRef = useRef(false);
@@ -201,6 +250,50 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
       cmd.keywords?.some((kw) => kw.includes(searchText))
     );
   });
+
+  // Calculate actual menu height based on filtered items
+  const menuHeight = Math.min(
+    filteredCommands.length * ITEM_HEIGHT + MENU_PADDING,
+    MENU_MAX_HEIGHT
+  );
+
+  // Compute position after render so we can measure the menu
+  useLayoutEffect(() => {
+    if (!isOpen || !cursorCoords) return;
+
+    const { top: cursorTop, bottom: cursorBottom, left: cursorLeft } = cursorCoords;
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+
+    // Determine vertical placement
+    const spaceBelow = viewportHeight - cursorBottom - VIEWPORT_MARGIN;
+    const spaceAbove = cursorTop - VIEWPORT_MARGIN;
+
+    let newPlacement: 'below' | 'above';
+    if (spaceBelow >= menuHeight) {
+      newPlacement = 'below';
+    } else if (spaceAbove >= menuHeight) {
+      newPlacement = 'above';
+    } else {
+      // Pick whichever side has more room
+      newPlacement = spaceBelow >= spaceAbove ? 'below' : 'above';
+    }
+    setPlacement(newPlacement);
+
+    // Clamp left so menu doesn't overflow viewport
+    if (menuRef.current) {
+      const safeLeft = Math.max(
+        VIEWPORT_MARGIN,
+        Math.min(cursorLeft, viewportWidth - MENU_WIDTH - VIEWPORT_MARGIN)
+      );
+      const top = newPlacement === 'below'
+        ? cursorBottom + 4
+        : cursorTop - menuHeight - 4;
+
+      menuRef.current.style.top = `${top}px`;
+      menuRef.current.style.left = `${safeLeft}px`;
+    }
+  }, [isOpen, cursorCoords, menuHeight, filteredCommands.length]);
 
   const deleteSlashAndQuery = useCallback(() => {
     const { state } = editor;
@@ -226,6 +319,7 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
     setQuery('');
     setSelectedIndex(0);
     slashPosRef.current = -1;
+    setCursorCoords(null);
   }, []);
 
   const executeCommand = useCallback((index: number) => {
@@ -277,19 +371,11 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
       // Record the slash position (the character before cursor)
       slashPosRef.current = $from.pos - 1;
 
-      // Get cursor position for menu placement
-      const coords = editor.view.coordsAtPos($from.pos);
-      
-      // Check if we need to open above (near bottom of viewport)
-      const viewportHeight = window.innerHeight;
-      const menuHeight = 320; // approximate max height
-      const spaceBelow = viewportHeight - coords.bottom;
-      const openAbove = spaceBelow < menuHeight && coords.top > menuHeight;
-      
-      setPosition({
-        top: openAbove ? coords.top - menuHeight - 4 : coords.bottom + 6,
-        left: coords.left,
-      });
+      // Get cursor coordinates using reliable viewport-relative method
+      const coords = getCursorViewportCoords(editor);
+      if (!coords) return;
+
+      setCursorCoords(coords);
       setIsOpen(true);
       setQuery('');
       setSelectedIndex(0);
@@ -359,7 +445,7 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
       try {
         const queryText = state.doc.textBetween(slashPos + 1, cursorPos, undefined, '\ufffc');
         
-        // If query contains a space or newline, close menu
+        // If query contains a newline, close menu
         if (queryText.includes('\n')) {
           closeMenu();
           return;
@@ -367,6 +453,13 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
 
         setQuery(queryText);
         setSelectedIndex(0);
+
+        // Update cursor coords — re-measure from native selection
+        // The menu stays anchored near the slash position
+        const coords = getCursorViewportCoords(editor);
+        if (coords) {
+          setCursorCoords(coords);
+        }
       } catch {
         closeMenu();
       }
@@ -433,21 +526,20 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
     return null;
   }
 
-  // Calculate safe position
-  const safeLeft = Math.max(8, Math.min(
-    position.left,
-    typeof window !== 'undefined' ? window.innerWidth - 220 : position.left
-  ));
+  const animationClass = placement === 'below' ? 'slash-menu-below' : 'slash-menu-above';
 
-  return (
+  // Render via portal to document.body so position:fixed works correctly
+  // regardless of parent overflow/transform contexts
+  return createPortal(
     <div
       ref={menuRef}
-      className="slash-menu"
+      className={`slash-menu ${animationClass}`}
       style={{
         position: 'fixed',
-        top: position.top,
-        left: safeLeft,
-        zIndex: 9999,
+        top: 0,
+        left: 0,
+        zIndex: 99999,
+        pointerEvents: 'auto',
       }}
     >
       {filteredCommands.map((cmd, index) => (
@@ -465,7 +557,8 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
           <span className="slash-label">{cmd.title}</span>
         </div>
       ))}
-    </div>
+    </div>,
+    document.body
   );
 }
 
