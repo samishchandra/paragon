@@ -9,6 +9,7 @@ export interface MarkdownPasteOptions {
 const MARKDOWN_PATTERNS = {
   header: /^#{1,6}\s+/m,
   bold: /\*\*[^*]+\*\*/,
+  highlight: /==[^=]+==/,
   codeBlock: /```[\s\S]*?```/,
   list: /^\s*[-*]\s+/m,
   taskList: /^\s*[-*]\s*\[[ x]\]/im,
@@ -35,6 +36,7 @@ function looksLikeMarkdown(text: string): boolean {
   if (MARKDOWN_PATTERNS.taskList.test(text)) return true;
   if (MARKDOWN_PATTERNS.codeBlock.test(text)) return true;
   if (MARKDOWN_PATTERNS.callout.test(text)) return true;
+  if (MARKDOWN_PATTERNS.highlight.test(text)) return true;
   if (MARKDOWN_PATTERNS.link.test(text)) return true;
   if (MARKDOWN_PATTERNS.table.test(text)) return true;
   
@@ -204,6 +206,9 @@ function markdownToHtml(markdown: string): string {
   
   // Strikethrough
   html = html.replace(/~~([^~]+)~~/g, '<s>$1</s>');
+  
+  // Highlight ==text==
+  html = html.replace(/(?<!`)==((?:(?!==)[^\n])+)==(?!`)/g, '<mark>$1</mark>');
   
   // Links and images with optional width: ![alt | width](url) or ![alt](url)
   html = html.replace(/!\[([^\]]*?)\s*\|\s*(\d+)\]\(([^)]+)\)/g, '<img src="$3" alt="$1" width="$2" style="width: $2px">');

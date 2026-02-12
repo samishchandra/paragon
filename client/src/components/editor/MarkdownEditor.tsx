@@ -922,6 +922,11 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         return `<img src="${src.trim()}" alt="${alt.trim()}" width="${width.trim()}" style="width: ${width.trim()}px" />`;
       });
       
+      // Convert ==text== highlight format to <mark> tags
+      // Must be done before marked.parse() since marked doesn't support == syntax natively
+      // Use negative lookbehind/lookahead to avoid matching inside code blocks or URLs
+      processedMarkdown = processedMarkdown.replace(/(?<!`)==((?:(?!==)[^\n])+)==(?!`)/g, '<mark>$1</mark>');
+
       // Convert date pill markdown format @Mon DD, YYYY@ back to date pill HTML
       // Matches @Today@, @Tomorrow@, @Yesterday@, @Next Monday@, @Feb 11, 2025@, etc.
       processedMarkdown = processedMarkdown.replace(/@([^@\n]+)@/g, (match, dateText) => {

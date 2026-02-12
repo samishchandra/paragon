@@ -188,6 +188,9 @@ function markdownToHtml(markdown: string): string {
   // Strikethrough
   html = html.replace(/~~([^~]+)~~/g, '<s>$1</s>');
   
+  // Highlight ==text==
+  html = html.replace(/(?<!`)==((?:(?!==)[^\n])+)==(?!`)/g, '<mark>$1</mark>');
+  
   // Links
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
   
@@ -236,6 +239,7 @@ function looksLikeMarkdown(text: string): boolean {
     /__[^_]+__/,             // Bold (underscore)
     /_[^_]+_/,               // Italic (underscore)
     /~~[^~]+~~/,             // Strikethrough
+    /==[^=]+==/,              // Highlight
     /`[^`]+`/,               // Inline code
     /```[\s\S]*?```/,        // Code blocks
     /^\s*[-*]\s+/m,          // Unordered lists
