@@ -1,5 +1,6 @@
 import { Node, mergeAttributes, InputRule } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { DatePillComponent } from '../DatePillComponent';
 
 /*
@@ -7,6 +8,11 @@ import { DatePillComponent } from '../DatePillComponent';
  * Creates inline date pills with rounded corners and click-to-edit date picker
  * Stores dates as YYYY-MM-DD strings, renders as relative or formatted dates
  * Markdown format: @Mon DD, YYYY@ (e.g., @Feb 11, 2025@)
+ * 
+ * Auto-detection triggers:
+ * 1. Typing: @today , @tomorrow , @mar15 , @2025-03-24 , etc. (space-terminated)
+ * 2. Typing: @mar 24, 2025@ (closing @ terminates)
+ * 3. Pasting: text containing @date@ patterns is auto-converted
  */
 
 export interface DatePillOptions {
@@ -157,6 +163,9 @@ export function getDateVariant(dateStr: string): string {
   return '';
 }
 
+/** Plugin key for the date pill paste handler */
+const datePillPastePluginKey = new PluginKey('datePillPaste');
+
 export const DatePill = Node.create<DatePillOptions>({
   name: 'datePill',
   group: 'inline',
@@ -236,6 +245,7 @@ export const DatePill = Node.create<DatePillOptions>({
   },
 
   addInputRules() {
+    // Rule 1: @today (space-terminated)
     const todayRule = new InputRule({
       find: /@today\s$/,
       handler: ({ range, chain }) => {
@@ -243,6 +253,7 @@ export const DatePill = Node.create<DatePillOptions>({
       },
     });
 
+    // Rule 2: @tomorrow (space-terminated)
     const tomorrowRule = new InputRule({
       find: /@tomorrow\s$/,
       handler: ({ range, chain }) => {
@@ -250,6 +261,7 @@ export const DatePill = Node.create<DatePillOptions>({
       },
     });
 
+    // Rule 3: @yesterday (space-terminated)
     const yesterdayRule = new InputRule({
       find: /@yesterday\s$/,
       handler: ({ range, chain }) => {
@@ -257,6 +269,7 @@ export const DatePill = Node.create<DatePillOptions>({
       },
     });
 
+    // Rule 4: @2025-03-24 (ISO date, space-terminated)
     const isoDateRule = new InputRule({
       find: /@(\d{4}-\d{2}-\d{2})\s$/,
       handler: ({ range, chain, match }) => {
@@ -264,6 +277,7 @@ export const DatePill = Node.create<DatePillOptions>({
       },
     });
 
+    // Rule 5: @mar15 or @mar 15 (month + day, space-terminated)
     const monthDayRule = new InputRule({
       find: /@([A-Za-z]{3})\s?(\d{1,2})\s$/,
       handler: ({ range, chain, match }) => {
@@ -280,7 +294,163 @@ export const DatePill = Node.create<DatePillOptions>({
       },
     });
 
-    return [todayRule, tomorrowRule, yesterdayRule, isoDateRule, monthDayRule];
+    // Rule 6: @mar 24, 2025@ — closing @ terminates (full date with year)
+    // Matches: @Mon DD, YYYY@, @Month DD, YYYY@, @Mon DD YYYY@
+    const fullDateClosingRule = new InputRule({
+      find: /@([A-Za-z]{3,9}\s+\d{1,2},?\s*\d{4})@$/,
+      handler: ({ range, chain, match }) => {
+        const parsed = parseDateFromMarkdown(match[1]);
+        if (parsed) {
+          chain().deleteRange(range).insertDatePill(parsed).run();
+        }
+      },
+    });
+
+    // Rule 7: @today@, @tomorrow@, @yesterday@ — closing @ terminates
+    const relativeClosingRule = new InputRule({
+      find: /@(today|tomorrow|yesterday|next monday)@$/i,
+      handler: ({ range, chain, match }) => {
+        const parsed = parseDateFromMarkdown(match[1]);
+        if (parsed) {
+          chain().deleteRange(range).insertDatePill(parsed).run();
+        }
+      },
+    });
+
+    // Rule 8: @2025-03-24@ — ISO date with closing @
+    const isoClosingRule = new InputRule({
+      find: /@(\d{4}-\d{2}-\d{2})@$/,
+      handler: ({ range, chain, match }) => {
+        chain().deleteRange(range).insertDatePill(match[1]).run();
+      },
+    });
+
+    // Rule 9: @mar 24@ or @march 24@ — month + day with closing @
+    const monthDayClosingRule = new InputRule({
+      find: /@([A-Za-z]{3,9}\s+\d{1,2})@$/,
+      handler: ({ range, chain, match }) => {
+        const parsed = parseDateFromMarkdown(match[1]);
+        if (parsed) {
+          chain().deleteRange(range).insertDatePill(parsed).run();
+        }
+      },
+    });
+
+    // Rule 10: @03/24/2025@ — MM/DD/YYYY with closing @
+    const slashDateClosingRule = new InputRule({
+      find: /@(\d{1,2}\/\d{1,2}\/\d{4})@$/,
+      handler: ({ range, chain, match }) => {
+        const parsed = parseDateFromMarkdown(match[1]);
+        if (parsed) {
+          chain().deleteRange(range).insertDatePill(parsed).run();
+        }
+      },
+    });
+
+    return [
+      todayRule, tomorrowRule, yesterdayRule, isoDateRule, monthDayRule,
+      fullDateClosingRule, relativeClosingRule, isoClosingRule,
+      monthDayClosingRule, slashDateClosingRule,
+    ];
+  },
+
+  addProseMirrorPlugins() {
+    const datePillType = this.type;
+
+    return [
+      new Plugin({
+        key: datePillPastePluginKey,
+        props: {
+          handlePaste(view, event) {
+            const clipboardData = event.clipboardData;
+            if (!clipboardData) return false;
+
+            const text = clipboardData.getData('text/plain');
+            const html = clipboardData.getData('text/html');
+
+            // If there's HTML with date pills already, let the default handler process it
+            if (html && html.includes('data-type="date-pill"')) return false;
+
+            // Check if the pasted text contains @date@ patterns
+            const datePattern = /@([^@\n]+)@/g;
+            let hasDatePatterns = false;
+            let testMatch: RegExpExecArray | null;
+            
+            // First pass: check if any @...@ patterns are valid dates
+            const tempRegex = new RegExp(datePattern.source, datePattern.flags);
+            while ((testMatch = tempRegex.exec(text)) !== null) {
+              if (parseDateFromMarkdown(testMatch[1])) {
+                hasDatePatterns = true;
+                break;
+              }
+            }
+
+            if (!hasDatePatterns) return false;
+
+            // Build content array: split text by @date@ patterns and create
+            // alternating text nodes and date pill nodes
+            const { state } = view;
+            const { tr, schema } = state;
+            const contentNodes: any[] = [];
+            let lastIndex = 0;
+            const regex = new RegExp(datePattern.source, datePattern.flags);
+            let match: RegExpExecArray | null;
+
+            while ((match = regex.exec(text)) !== null) {
+              const dateText = match[1];
+              const parsed = parseDateFromMarkdown(dateText);
+
+              if (parsed) {
+                // Add text before the date pattern
+                const beforeText = text.slice(lastIndex, match.index);
+                if (beforeText) {
+                  contentNodes.push(schema.text(beforeText));
+                }
+                // Add date pill node
+                contentNodes.push(datePillType.create({ date: parsed }));
+                lastIndex = match.index + match[0].length;
+              }
+              // If not a valid date, skip — the text will be included as-is
+            }
+
+            // Add remaining text after the last match
+            const remainingText = text.slice(lastIndex);
+            if (remainingText) {
+              contentNodes.push(schema.text(remainingText));
+            }
+
+            if (contentNodes.length === 0) return false;
+
+            // Insert the content
+            const fragment = schema.nodes.doc.create(
+              null,
+              schema.nodes.paragraph.create(null, contentNodes)
+            );
+
+            // If pasting into an existing paragraph, insert inline
+            const { $from } = state.selection;
+            if ($from.parent.type.name === 'paragraph') {
+              // Insert nodes inline
+              const insertTr = tr;
+              let insertPos = state.selection.from;
+              for (const node of contentNodes) {
+                insertTr.insert(insertPos, node);
+                insertPos += node.nodeSize;
+              }
+              insertTr.delete(state.selection.from, state.selection.to);
+              view.dispatch(insertTr);
+            } else {
+              // Replace selection with the fragment
+              tr.replaceSelectionWith(fragment);
+              view.dispatch(tr);
+            }
+
+            event.preventDefault();
+            return true;
+          },
+        },
+      }),
+    ];
   },
 });
 

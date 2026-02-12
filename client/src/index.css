@@ -5480,6 +5480,35 @@ pre.with-line-numbers code .line::before {
   left: 6px;
 }
 
+/* Resize handle for draggable ToC width */
+.toc-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  z-index: 15;
+  transition: background 0.15s ease;
+}
+
+.toc-resize-handle:hover,
+.toc-resize-handle:active {
+  background: oklch(0.7 0.1 250 / 0.3);
+}
+
+.toc-resize-handle.toc-resize-right {
+  left: 0;
+}
+
+.toc-resize-handle.toc-resize-left {
+  right: 0;
+}
+
+/* Add top padding when toggle button is present to avoid overlap */
+.toc-content.toc-content-with-toggle {
+  padding-top: 40px;
+}
+
 /* ============================================
    DARK THEME - TABLE OF CONTENTS
    Supports both [data-theme="dark"] and .dark class
@@ -5597,6 +5626,13 @@ pre.with-line-numbers code .line::before {
   border-color: oklch(0.35 0.01 250);
 }
 
+[data-theme="dark"] .toc-resize-handle:hover,
+[data-theme="dark"] .toc-resize-handle:active,
+.dark .toc-resize-handle:hover,
+.dark .toc-resize-handle:active {
+  background: oklch(0.5 0.1 250 / 0.3);
+}
+
 [data-theme="dark"] .toc-content::-webkit-scrollbar-thumb,
 .dark .toc-content::-webkit-scrollbar-thumb {
   background: oklch(0.25 0.005 250);
@@ -5701,6 +5737,11 @@ pre.with-line-numbers code .line::before {
   background: oklch(0.95 0.003 250);
   color: oklch(0.3 0.01 250);
   border-color: oklch(0.85 0.003 250);
+}
+
+[data-theme="light"] .toc-resize-handle:hover,
+[data-theme="light"] .toc-resize-handle:active {
+  background: oklch(0.7 0.1 250 / 0.3);
 }
 
 [data-theme="light"] .toc-content::-webkit-scrollbar-thumb {

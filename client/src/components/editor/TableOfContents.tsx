@@ -6,8 +6,39 @@ import { memo } from 'react';
 /*
  * TABLE OF CONTENTS SIDEBAR
  * Modern, minimalistic component that displays document heading hierarchy
- * Supports click-to-scroll, active heading tracking, and collapsible sections
+ * Supports click-to-scroll, active heading tracking, collapsible sections,
+ * and draggable width with localStorage persistence.
  */
+
+const TOC_WIDTH_STORAGE_KEY = 'manus-editor-toc-width';
+const TOC_DEFAULT_WIDTH = 280; // px — wider default
+const TOC_MIN_WIDTH = 200;
+const TOC_MAX_WIDTH = 500;
+
+/** Get stored width from localStorage, or return default */
+function getStoredWidth(): number {
+  try {
+    const stored = localStorage.getItem(TOC_WIDTH_STORAGE_KEY);
+    if (stored) {
+      const parsed = parseInt(stored, 10);
+      if (!isNaN(parsed) && parsed >= TOC_MIN_WIDTH && parsed <= TOC_MAX_WIDTH) {
+        return parsed;
+      }
+    }
+  } catch {
+    // localStorage not available
+  }
+  return TOC_DEFAULT_WIDTH;
+}
+
+/** Store width to localStorage */
+function storeWidth(width: number) {
+  try {
+    localStorage.setItem(TOC_WIDTH_STORAGE_KEY, String(width));
+  } catch {
+    // localStorage not available
+  }
+}
 
 export interface TocItem {
   id: string;
@@ -101,7 +132,7 @@ export const TableOfContents = memo(function TableOfContents({
   highlightActive = true,
   treeView = false,
   className = '',
-  width = '220px',
+  width,
   position = 'right',
   scrollOffset = 20,
   onItemClick,
@@ -113,12 +144,64 @@ export const TableOfContents = memo(function TableOfContents({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(visible);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  const [tocWidth, setTocWidth] = useState<number>(() => {
+    // If a width prop is provided, parse it; otherwise use stored/default
+    if (width) {
+      const parsed = parseInt(width, 10);
+      return !isNaN(parsed) ? parsed : getStoredWidth();
+    }
+    return getStoredWidth();
+  });
   const tocRef = useRef<HTMLDivElement>(null);
   const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartWidthRef = useRef(0);
 
   useEffect(() => {
     setIsVisible(visible);
   }, [visible]);
+
+  // ── Drag-to-resize logic ──
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isDraggingRef.current = true;
+    dragStartXRef.current = e.clientX;
+    dragStartWidthRef.current = tocWidth;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, [tocWidth]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      const delta = position === 'right'
+        ? dragStartXRef.current - e.clientX  // dragging left = wider for right panel
+        : e.clientX - dragStartXRef.current; // dragging right = wider for left panel
+      const newWidth = Math.min(TOC_MAX_WIDTH, Math.max(TOC_MIN_WIDTH, dragStartWidthRef.current + delta));
+      setTocWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      // Persist the width
+      setTocWidth(prev => {
+        storeWidth(prev);
+        return prev;
+      });
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [position]);
 
   const updateHeadings = useCallback(() => {
     if (!editor || editor.isDestroyed) return;
@@ -300,7 +383,7 @@ export const TableOfContents = memo(function TableOfContents({
 
   return (
     <>
-      {/* Toggle button */}
+      {/* Toggle button — positioned outside the sidebar so it doesn't overlap content */}
       {showToggleButton && (
         <button
           className={`toc-toggle-button toc-toggle-${position}`}
@@ -315,8 +398,16 @@ export const TableOfContents = memo(function TableOfContents({
       <div
         ref={tocRef}
         className={`toc-sidebar ${isVisible ? 'toc-visible' : 'toc-hidden'} toc-${position} ${className}`}
-        style={{ width: isVisible ? width : '0px' }}
+        style={{ width: isVisible ? `${tocWidth}px` : '0px' }}
       >
+        {/* Drag handle for resizing — on the edge facing the editor */}
+        {isVisible && (
+          <div
+            className={`toc-resize-handle toc-resize-${position}`}
+            onMouseDown={handleDragStart}
+          />
+        )}
+
         <div className="toc-inner">
           {/* Optional header - only show if title is provided */}
           {title && (
@@ -325,8 +416,8 @@ export const TableOfContents = memo(function TableOfContents({
             </div>
           )}
 
-          {/* Content */}
-          <div className="toc-content">
+          {/* Content — add top padding to avoid overlap with toggle button */}
+          <div className="toc-content toc-content-with-toggle">
             {headings.length === 0 ? (
               <div className="toc-empty">
                 <p>No headings yet</p>
