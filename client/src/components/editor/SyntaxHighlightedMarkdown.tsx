@@ -454,14 +454,198 @@ export function SyntaxHighlightedMarkdown({
     onChange(textarea.value);
   }, [onChange]);
 
-  // Handle tab key for indentation
+  // Handle markdown autocomplete and tab key
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    const hasSelection = start !== end;
+
+    // --- Markdown autocomplete pairs ---
+
+    // Backtick: auto-close ` or wrap selection
+    if (e.key === '`' && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      if (hasSelection) {
+        const selected = value.substring(start, end);
+        const newContent = value.substring(0, start) + '`' + selected + '`' + value.substring(end);
+        pendingCursorRef.current = { start: start + 1, end: end + 1 };
+        onChange(newContent);
+      } else {
+        // Check if we're already inside backticks and the next char is a backtick — skip over it
+        if (value[start] === '`') {
+          pendingCursorRef.current = { start: start + 1, end: start + 1 };
+          onChange(value); // trigger re-render to restore cursor
+          // Actually just move cursor
+          textarea.selectionStart = textarea.selectionEnd = start + 1;
+        } else {
+          const newContent = value.substring(0, start) + '``' + value.substring(end);
+          pendingCursorRef.current = { start: start + 1, end: start + 1 };
+          onChange(newContent);
+        }
+      }
+      return;
+    }
+
+    // Asterisk (*): auto-close * or ** or wrap selection
+    if (e.key === '*' && !e.ctrlKey && !e.metaKey) {
+      // Check if previous char is also * (making it **)
+      const prevChar = value[start - 1];
+      if (prevChar === '*' && value[start] === '*') {
+        // We just typed the second * and there's already a closing * — we're inside **|**
+        // The auto-close already added the pair, just skip
+        // Actually this case is handled by the skip-over logic below
+      }
+
+      if (hasSelection) {
+        e.preventDefault();
+        const selected = value.substring(start, end);
+        // If shift is held, use single *; otherwise check if prev char is * for **
+        const newContent = value.substring(0, start) + '*' + selected + '*' + value.substring(end);
+        pendingCursorRef.current = { start: start + 1, end: end + 1 };
+        onChange(newContent);
+        return;
+      }
+
+      // Skip over closing * if next char is *
+      if (value[start] === '*') {
+        e.preventDefault();
+        pendingCursorRef.current = { start: start + 1, end: start + 1 };
+        // Force re-render to apply cursor
+        onChange(value.substring(0, start) + value.substring(start));
+        return;
+      }
+
+      // Auto-close: insert ** and place cursor between
+      e.preventDefault();
+      const newContent = value.substring(0, start) + '**' + value.substring(end);
+      pendingCursorRef.current = { start: start + 1, end: start + 1 };
+      onChange(newContent);
+      return;
+    }
+
+    // Underscore (_): auto-close _ or __ or wrap selection
+    if (e.key === '_' && !e.ctrlKey && !e.metaKey) {
+      if (hasSelection) {
+        e.preventDefault();
+        const selected = value.substring(start, end);
+        const newContent = value.substring(0, start) + '_' + selected + '_' + value.substring(end);
+        pendingCursorRef.current = { start: start + 1, end: end + 1 };
+        onChange(newContent);
+        return;
+      }
+
+      // Skip over closing _
+      if (value[start] === '_') {
+        e.preventDefault();
+        pendingCursorRef.current = { start: start + 1, end: start + 1 };
+        onChange(value.substring(0, start) + value.substring(start));
+        return;
+      }
+
+      // Auto-close
+      e.preventDefault();
+      const newContent = value.substring(0, start) + '__' + value.substring(end);
+      pendingCursorRef.current = { start: start + 1, end: start + 1 };
+      onChange(newContent);
+      return;
+    }
+
+    // Tilde (~): auto-close ~~ for strikethrough or wrap selection
+    if (e.key === '~' && !e.ctrlKey && !e.metaKey) {
+      if (hasSelection) {
+        e.preventDefault();
+        const selected = value.substring(start, end);
+        const newContent = value.substring(0, start) + '~' + selected + '~' + value.substring(end);
+        pendingCursorRef.current = { start: start + 1, end: end + 1 };
+        onChange(newContent);
+        return;
+      }
+
+      // Skip over closing ~
+      if (value[start] === '~') {
+        e.preventDefault();
+        pendingCursorRef.current = { start: start + 1, end: start + 1 };
+        onChange(value.substring(0, start) + value.substring(start));
+        return;
+      }
+
+      // Auto-close
+      e.preventDefault();
+      const newContent = value.substring(0, start) + '~~' + value.substring(end);
+      pendingCursorRef.current = { start: start + 1, end: start + 1 };
+      onChange(newContent);
+      return;
+    }
+
+    // Open bracket [: auto-close []() for links or wrap selection
+    if (e.key === '[' && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      if (hasSelection) {
+        const selected = value.substring(start, end);
+        const newContent = value.substring(0, start) + '[' + selected + ']()' + value.substring(end);
+        // Place cursor inside the () for the URL
+        pendingCursorRef.current = { start: end + 3, end: end + 3 };
+        onChange(newContent);
+      } else {
+        const newContent = value.substring(0, start) + '[]()' + value.substring(end);
+        // Place cursor inside the [] for the link text
+        pendingCursorRef.current = { start: start + 1, end: start + 1 };
+        onChange(newContent);
+      }
+      return;
+    }
+
+    // Close bracket ]: skip over if next char is ]
+    if (e.key === ']' && !e.ctrlKey && !e.metaKey && value[start] === ']') {
+      e.preventDefault();
+      pendingCursorRef.current = { start: start + 1, end: start + 1 };
+      onChange(value.substring(0, start) + value.substring(start));
+      return;
+    }
+
+    // Close paren ): skip over if next char is )
+    if (e.key === ')' && !e.ctrlKey && !e.metaKey && value[start] === ')') {
+      e.preventDefault();
+      pendingCursorRef.current = { start: start + 1, end: start + 1 };
+      onChange(value.substring(0, start) + value.substring(start));
+      return;
+    }
+
+    // Backspace: delete both characters of an empty pair
+    if (e.key === 'Backspace' && !hasSelection && start > 0) {
+      const prevChar = value[start - 1];
+      const nextChar = value[start];
+      const emptyPairs = [
+        ['`', '`'],
+        ['*', '*'],
+        ['_', '_'],
+        ['~', '~'],
+        ['[', ']'],
+      ];
+      for (const [open, close] of emptyPairs) {
+        if (prevChar === open && nextChar === close) {
+          e.preventDefault();
+          const newContent = value.substring(0, start - 1) + value.substring(start + 1);
+          pendingCursorRef.current = { start: start - 1, end: start - 1 };
+          onChange(newContent);
+          return;
+        }
+      }
+      // Special case: delete empty []() link
+      if (prevChar === '[' && value.substring(start, start + 3) === ']()') {
+        e.preventDefault();
+        const newContent = value.substring(0, start - 1) + value.substring(start + 3);
+        pendingCursorRef.current = { start: start - 1, end: start - 1 };
+        onChange(newContent);
+        return;
+      }
+    }
+
+    // --- Tab key for indentation ---
     if (e.key === 'Tab') {
       e.preventDefault();
-      const textarea = e.currentTarget;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const value = textarea.value;
       
       if (e.shiftKey) {
         // Outdent
