@@ -35,11 +35,11 @@ export interface ImageUploadOptions {
    */
   onUploadError?: (error: string) => void;
   /**
-   * External image upload handler.
-   * If provided, images are uploaded via this callback instead of being embedded as base64.
+   * External image upload handler (REQUIRED for image paste/drop to work).
    * The callback receives the compressed File and metadata, and should return
    * a reference string (e.g. a relative path like "../_images/photo.jpg").
-   * If not provided or if it throws, falls back to base64 embedding.
+   * If not provided, paste/drop of images is silently ignored.
+   * If the upload throws, the placeholder image is removed from the editor.
    */
   onImageUpload?: (
     file: File,
@@ -55,7 +55,7 @@ function generateUploadId(): string {
 }
 
 /**
- * Convert a File to a base64 data URL
+ * Convert a File to a base64 data URL (used only for the temporary placeholder during upload)
  */
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -179,15 +179,42 @@ async function compressImage(
 }
 
 /**
+ * Remove a placeholder image node from the editor by matching its src and alt.
+ */
+function removePlaceholderNode(editor: any, placeholderSrc: string, altText: string): void {
+  editor.view.state.doc.descendants((n: any, p: number) => {
+    if (n.type.name === 'resizableImage' && n.attrs.src === placeholderSrc && n.attrs.alt === altText) {
+      try {
+        const { state, dispatch } = editor.view;
+        const tr = state.tr.delete(p, p + n.nodeSize);
+        dispatch(tr);
+      } catch {
+        // Node may have already been removed
+      }
+      return false;
+    }
+    return true;
+  });
+}
+
+/**
  * Process and insert an image file into the editor.
- * If onImageUpload is provided, uploads externally and stores the returned reference.
- * Otherwise falls back to base64 embedding.
+ * Requires onImageUpload to be provided — images are always uploaded externally.
+ * A temporary base64 placeholder is shown during upload, then replaced with the
+ * returned reference. If upload fails, the placeholder is removed entirely.
+ * If onImageUpload is not configured, the paste/drop is silently ignored.
  */
 async function processAndInsertImage(
   file: File,
   editor: any,
   options: ImageUploadOptions
 ): Promise<boolean> {
+  // If no upload handler is configured, silently ignore the image
+  if (!options.onImageUpload) {
+    options.onUploadError?.('Image upload not available. Please connect Dropbox in Settings.');
+    return false;
+  }
+
   // Validate file type
   if (!isValidImage(file, options.allowedMimeTypes)) {
     options.onUploadError?.(`Invalid file type: ${file.type}. Allowed types: ${options.allowedMimeTypes.join(', ')}`);
@@ -207,8 +234,8 @@ async function processAndInsertImage(
   try {
     options.onUploadStart?.();
 
-    // Step 1: Compress the image (or read as-is)
-    let dataUrl: string;
+    // Step 1: Compress the image (or read as-is) for the temporary placeholder
+    let placeholderDataUrl: string;
     let displayWidth: number;
     let compressedFile: File;
 
@@ -220,130 +247,98 @@ async function processAndInsertImage(
         options.maxCompressedWidth,
         options.compressionQuality
       );
-      dataUrl = compressed.dataUrl;
+      placeholderDataUrl = compressed.dataUrl;
       compressedFile = compressed.file;
       const maxDisplayWidth = 600;
       displayWidth = Math.min(compressed.width, maxDisplayWidth);
     } else {
-      dataUrl = await fileToBase64(file);
+      placeholderDataUrl = await fileToBase64(file);
       compressedFile = file;
-      const dimensions = await getImageDimensions(dataUrl);
+      const dimensions = await getImageDimensions(placeholderDataUrl);
       const maxDisplayWidth = 600;
       displayWidth = Math.min(dimensions.width, maxDisplayWidth);
     }
 
-    // Step 2: If external upload handler is provided, upload and use the returned reference
-    if (options.onImageUpload) {
-      // Insert a placeholder image (blurred base64 thumbnail) while uploading
-      const placeholderDataUrl = dataUrl;
-      editor.chain().focus().setImage({
-        src: placeholderDataUrl,
-        alt: file.name,
-        width: displayWidth,
-      }).run();
-
-      // Mark the just-inserted image node as uploading
-      // Find the node we just inserted (it's at the current selection - 1)
-      const { state } = editor.view;
-      const pos = state.selection.from - 1;
-      const node = state.doc.nodeAt(pos);
-      if (node && node.type.name === 'resizableImage') {
-        // Add a CSS class to show upload overlay
-        const nodeView = editor.view.nodeDOM(pos);
-        if (nodeView) {
-          const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
-          if (figure) {
-            figure.classList.add('image-uploading');
-          }
-        }
-      }
-
-      try {
-        // Perform the external upload
-        const imageRef = await options.onImageUpload(compressedFile, {
-          fileName: file.name,
-          mimeType: compressedFile.type,
-          fileSize: compressedFile.size,
-          uploadId,
-        });
-
-        // Replace the placeholder src with the returned reference
-        // Find the image node again (position may have changed)
-        let found = false;
-        editor.view.state.doc.descendants((n: any, p: number) => {
-          if (found) return false;
-          if (n.type.name === 'resizableImage' && n.attrs.src === placeholderDataUrl && n.attrs.alt === file.name) {
-            try {
-              const { state: currentState, dispatch } = editor.view;
-              const currentNode = currentState.doc.nodeAt(p);
-              if (currentNode) {
-                const tr = currentState.tr.setNodeMarkup(p, undefined, {
-                  ...currentNode.attrs,
-                  src: imageRef,
-                });
-                dispatch(tr);
-              }
-            } catch (e) {
-              // Fallback: leave the base64 in place
-              console.warn('Failed to replace placeholder with uploaded reference:', e);
-            }
-            found = true;
-            return false;
-          }
-          return true;
-        });
-
-        // Remove uploading class
-        editor.view.state.doc.descendants((n: any, p: number) => {
-          if (n.type.name === 'resizableImage' && n.attrs.src === imageRef) {
-            const nodeView = editor.view.nodeDOM(p);
-            if (nodeView) {
-              const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
-              if (figure) {
-                figure.classList.remove('image-uploading');
-              }
-            }
-            return false;
-          }
-          return true;
-        });
-
-        options.onUploadComplete?.();
-        return true;
-      } catch (uploadError) {
-        // Upload failed — leave the base64 placeholder in place as fallback
-        console.warn('External image upload failed, keeping base64 fallback:', uploadError);
-
-        // Remove uploading class
-        editor.view.state.doc.descendants((n: any, p: number) => {
-          if (n.type.name === 'resizableImage' && n.attrs.src === placeholderDataUrl) {
-            const nodeView = editor.view.nodeDOM(p);
-            if (nodeView) {
-              const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
-              if (figure) {
-                figure.classList.remove('image-uploading');
-              }
-            }
-            return false;
-          }
-          return true;
-        });
-
-        options.onUploadError?.(`Upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}. Image saved as embedded.`);
-        options.onUploadComplete?.();
-        return true; // Still true because the base64 fallback was inserted
-      }
-    }
-
-    // Step 3: No external upload handler — use base64 embedding (original behavior)
+    // Step 2: Insert a temporary placeholder image while uploading
     editor.chain().focus().setImage({
-      src: dataUrl,
+      src: placeholderDataUrl,
       alt: file.name,
       width: displayWidth,
     }).run();
 
-    options.onUploadComplete?.();
-    return true;
+    // Mark the just-inserted image node as uploading
+    const { state } = editor.view;
+    const pos = state.selection.from - 1;
+    const node = state.doc.nodeAt(pos);
+    if (node && node.type.name === 'resizableImage') {
+      const nodeView = editor.view.nodeDOM(pos);
+      if (nodeView) {
+        const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
+        if (figure) {
+          figure.classList.add('image-uploading');
+        }
+      }
+    }
+
+    // Step 3: Perform the external upload
+    try {
+      const imageRef = await options.onImageUpload(compressedFile, {
+        fileName: file.name,
+        mimeType: compressedFile.type,
+        fileSize: compressedFile.size,
+        uploadId,
+      });
+
+      // Replace the placeholder src with the returned reference
+      let found = false;
+      editor.view.state.doc.descendants((n: any, p: number) => {
+        if (found) return false;
+        if (n.type.name === 'resizableImage' && n.attrs.src === placeholderDataUrl && n.attrs.alt === file.name) {
+          try {
+            const { state: currentState, dispatch } = editor.view;
+            const currentNode = currentState.doc.nodeAt(p);
+            if (currentNode) {
+              const tr = currentState.tr.setNodeMarkup(p, undefined, {
+                ...currentNode.attrs,
+                src: imageRef,
+              });
+              dispatch(tr);
+            }
+          } catch (e) {
+            console.warn('Failed to replace placeholder with uploaded reference:', e);
+          }
+          found = true;
+          return false;
+        }
+        return true;
+      });
+
+      // Remove uploading class
+      editor.view.state.doc.descendants((n: any, p: number) => {
+        if (n.type.name === 'resizableImage' && n.attrs.src === imageRef) {
+          const nodeView = editor.view.nodeDOM(p);
+          if (nodeView) {
+            const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
+            if (figure) {
+              figure.classList.remove('image-uploading');
+            }
+          }
+          return false;
+        }
+        return true;
+      });
+
+      options.onUploadComplete?.();
+      return true;
+    } catch (uploadError) {
+      // Upload failed — remove the placeholder entirely (no base64 fallback)
+      console.warn('Image upload failed, removing placeholder:', uploadError);
+      removePlaceholderNode(editor, placeholderDataUrl, file.name);
+
+      options.onUploadError?.(`Upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
+      options.onUploadComplete?.();
+      return false;
+    }
   } catch (error) {
     options.onUploadError?.(`Failed to process image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return false;

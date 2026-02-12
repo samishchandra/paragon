@@ -220,10 +220,10 @@ export interface MarkdownEditorProps {
   /** Callback when image upload fails */
   onImageUploadError?: (error: string) => void;
   /**
-   * External image upload handler.
-   * If provided, images are uploaded via this callback instead of being embedded as base64.
+   * External image upload handler (REQUIRED for image paste/drop to work).
    * Should return a reference string (e.g. relative path like "../_images/photo.jpg").
-   * If not provided or if it throws, falls back to base64 embedding.
+   * If not provided, paste/drop of images is silently ignored.
+   * If the upload throws, the placeholder image is removed from the editor.
    */
   onImageUpload?: (
     file: File,
