@@ -418,6 +418,7 @@ export default function Home() {
                       theme={modalTheme}
                       showPerformanceProfiler={showModalProfiler}
                       onPerformanceProfilerClose={handleModalProfilerClose}
+                      autoReorderChecklist={true}
                     />
                   </div>
                 </DialogContent>
@@ -516,6 +517,7 @@ export default function Home() {
               tocMaxLevel={4}
               showPerformanceProfiler={showInlineProfiler}
               onPerformanceProfilerClose={handleInlineProfilerClose}
+              autoReorderChecklist={true}
             />
           </div>
         </div>

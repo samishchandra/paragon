@@ -40,8 +40,9 @@ import {
   PlusCircle,
   IndentIncrease,
   IndentDecrease,
+  ArrowUpDown,
 } from 'lucide-react';
-import { useCallback, useState, useMemo, useRef } from 'react';
+import { useCallback, useState, useMemo, useRef, useEffect } from 'react';
 import { ImageURLDialog } from './ImageURLDialog';
 import {
   DropdownMenu,
@@ -81,6 +82,7 @@ interface EditorToolbarProps {
     markdownPaste?: boolean;
     dragAndDrop?: boolean;
   };
+  autoReorderChecklist?: boolean;
 }
 
 interface ToolbarButtonProps {
@@ -128,7 +130,7 @@ const Divider = () => (
   <div className="w-px h-6 bg-border mx-0.5 hidden sm:block" />
 );
 
-export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '' }: EditorToolbarProps) {
+export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '', autoReorderChecklist = false }: EditorToolbarProps) {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageDialogPosition, setImageDialogPosition] = useState<{ top: number; left: number } | undefined>(undefined);
 
@@ -178,6 +180,150 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
   const addCallout = useCallback((type: 'info' | 'note' | 'prompt' | 'resources' | 'todo') => {
     editor.chain().focus().insertCallout({ type }).run();
   }, [editor]);
+
+  // === Auto-Reorder Checklist ===
+  // FLIP animation positions ref
+  const firstPositions = useRef(new Map<string, DOMRect>());
+  const prevCheckedStatesRef = useRef(new Map<number, boolean>());
+
+  // Standalone reorder function that operates on an editor instance
+  const performReorder = useCallback((ed: Editor) => {
+    const { doc, tr } = ed.state;
+    let modified = false;
+
+    // FLIP Step 1: Capture "First" positions before reorder
+    const taskListElements = ed.view.dom.querySelectorAll('ul[data-type="taskList"]');
+    firstPositions.current.clear();
+    taskListElements.forEach((taskList, listIdx) => {
+      const items = taskList.querySelectorAll(':scope > li');
+      items.forEach((item, itemIdx) => {
+        const li = item as HTMLElement;
+        const text = (li.textContent || '').trim().substring(0, 50);
+        firstPositions.current.set(`${listIdx}-${text}`, li.getBoundingClientRect());
+      });
+    });
+
+    doc.descendants((node, pos) => {
+      if (node.type.name !== 'taskList') return true;
+      const items: { node: any; checked: boolean }[] = [];
+      node.forEach((child: any) => {
+        items.push({
+          node: child,
+          checked: child.attrs.checked === true,
+        });
+      });
+      const unchecked = items.filter(i => !i.checked);
+      const checked = items.filter(i => i.checked);
+      const reordered = [...unchecked, ...checked];
+      const orderChanged = reordered.some((item, idx) => item.node !== items[idx].node);
+      if (!orderChanged) return false;
+      const newTaskList = node.type.create(
+        node.attrs,
+        reordered.map(i => i.node)
+      );
+      const mappedPos = tr.mapping.map(pos);
+      tr.replaceWith(mappedPos, mappedPos + node.nodeSize, newTaskList);
+      modified = true;
+      return false;
+    });
+
+    if (modified) {
+      ed.view.dispatch(tr);
+      // FLIP Step 2: After DOM update, capture "Last" positions and animate
+      requestAnimationFrame(() => {
+        const newTaskListElements = ed.view.dom.querySelectorAll('ul[data-type="taskList"]');
+        newTaskListElements.forEach((taskList) => {
+          const items = taskList.querySelectorAll(':scope > li');
+          const oldByText = new Map<string, DOMRect>();
+          firstPositions.current.forEach((rect, key) => {
+            const text = key.replace(/^\d+-/, '');
+            oldByText.set(text, rect);
+          });
+          items.forEach((item) => {
+            const li = item as HTMLElement;
+            const text = (li.textContent || '').trim().substring(0, 50);
+            const oldRect = oldByText.get(text);
+            if (!oldRect) return;
+            const newRect = li.getBoundingClientRect();
+            const deltaY = oldRect.top - newRect.top;
+            if (Math.abs(deltaY) < 2) return;
+            li.style.transform = `translateY(${deltaY}px)`;
+            li.style.transition = 'none';
+            li.style.zIndex = '1';
+            li.offsetHeight;
+            li.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            li.style.transform = 'translateY(0)';
+            const cleanup = () => {
+              li.style.transform = '';
+              li.style.transition = '';
+              li.style.zIndex = '';
+              li.removeEventListener('transitionend', cleanup);
+            };
+            li.addEventListener('transitionend', cleanup);
+            setTimeout(cleanup, 400);
+          });
+        });
+      });
+    }
+  }, []);
+
+  // Auto-reorder on checkbox toggle
+  useEffect(() => {
+    if (!autoReorderChecklist || !editor) return;
+
+    const initStates = new Map<number, boolean>();
+    editor.state.doc.descendants((node, pos) => {
+      if (node.type.name === 'taskItem') {
+        initStates.set(pos, node.attrs.checked === true);
+      }
+      return true;
+    });
+    prevCheckedStatesRef.current = initStates;
+
+    const handleTransaction = ({ transaction }: { transaction: any }) => {
+      if (!transaction.docChanged) return;
+
+      const currentStates = new Map<number, boolean>();
+      editor.state.doc.descendants((node, pos) => {
+        if (node.type.name === 'taskItem') {
+          currentStates.set(pos, node.attrs.checked === true);
+        }
+        return true;
+      });
+
+      const prev = prevCheckedStatesRef.current;
+      let checkboxToggled = false;
+      if (prev.size > 0 && currentStates.size > 0) {
+        let prevCheckedCount = 0;
+        let currCheckedCount = 0;
+        prev.forEach((val) => { if (val) prevCheckedCount++; });
+        currentStates.forEach((val) => { if (val) currCheckedCount++; });
+        if (prevCheckedCount !== currCheckedCount) {
+          checkboxToggled = true;
+        }
+      }
+
+      prevCheckedStatesRef.current = currentStates;
+
+      if (checkboxToggled) {
+        setTimeout(() => {
+          if (editor.isDestroyed) return;
+          performReorder(editor);
+        }, 150);
+      }
+    };
+
+    editor.on('transaction', handleTransaction);
+    return () => {
+      editor.off('transaction', handleTransaction);
+    };
+  }, [autoReorderChecklist, editor, performReorder]);
+
+  // Manual reorder function
+  const reorderTodoItems = useCallback(() => {
+    if (!editor) return;
+    performReorder(editor);
+  }, [editor, performReorder]);
 
   return (
     <div className={`flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1.5 sm:py-2 border-b border-border/50 bg-muted/30 overflow-x-auto scrollbar-hide ${className}`}>
@@ -613,6 +759,15 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
         onInsert={handleImageInsert}
         position={imageDialogPosition}
       />
+
+      {/* Reorder Todo Items button */}
+      <Divider />
+      <ToolbarButton
+        onClick={reorderTodoItems}
+        tooltip="Sort tasks: unchecked first, checked last"
+      >
+        <ArrowUpDown size={18} className="sm:w-4 sm:h-4" />
+      </ToolbarButton>
 
       {/* Spacer */}
       <div className="flex-1 min-w-2" />

@@ -319,6 +319,11 @@ export interface MarkdownEditorProps {
   /** Callback when the user clicks the close button inside the profiler. The embedding app should set showPerformanceProfiler to false. */
   onPerformanceProfilerClose?: () => void;
   
+  // === CHECKLIST REORDER ===
+  
+  /** Automatically reorder checklist items when toggled: move completed to bottom, preserving relative order within each group (default: false) */
+  autoReorderChecklist?: boolean;
+  
   // === ERROR BOUNDARY ===
   
   /** Callback when the editor crashes — useful for external error reporting */
@@ -388,6 +393,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   // Performance profiler
   showPerformanceProfiler = false,
   onPerformanceProfilerClose,
+  // Auto reorder checklist
+  autoReorderChecklist = false,
   // Error boundary
   onEditorError,
 }, ref) {
@@ -1343,6 +1350,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         setFindReplaceFocusTrigger(prev => prev + 1);
       }}
       disabledFeatures={disabledFeatures}
+      autoReorderChecklist={autoReorderChecklist}
     />
   );
 
