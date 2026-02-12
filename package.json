@@ -10,7 +10,8 @@
     "preview": "vite preview --host",
     "build:lib": "node scripts/build-lib.mjs",
     "check": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "postinstall": "node patch-tiptap.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
