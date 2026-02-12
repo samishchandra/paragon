@@ -488,41 +488,59 @@ export function SyntaxHighlightedMarkdown({
   }, [content, searchMatches, currentMatchIndex]);
 
   // Auto-resize textarea to fit content
-  // CRITICAL: Save and restore scrollTop to prevent cursor jumps
+  // The textarea expands to its full scrollHeight so the PARENT (editor-content-wrapper) scrolls.
+  // The overlay is positioned absolutely and sized to match the textarea.
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current;
     const highlight = highlightRef.current;
     const container = containerRef.current;
     if (textarea) {
-      const savedScrollTop = textarea.scrollTop;
-      const savedSelectionStart = textarea.selectionStart;
-      const savedSelectionEnd = textarea.selectionEnd;
+      // Use the scroll container (editor-content-wrapper) height as minimum
+      const scrollParent = container?.parentElement;
+      const parentHeight = scrollParent ? scrollParent.clientHeight : 200;
       
-      // Use the container's height as the minimum so the textarea fills the available space
-      const containerHeight = container ? container.clientHeight : 200;
       textarea.style.height = 'auto';
-      const newHeight = Math.max(textarea.scrollHeight, containerHeight, 200);
+      const newHeight = Math.max(textarea.scrollHeight, parentHeight, 200);
       textarea.style.height = `${newHeight}px`;
       if (highlight) {
         highlight.style.height = `${newHeight}px`;
       }
-      
-      // Restore scroll position and selection after height adjustment
-      textarea.scrollTop = savedScrollTop;
-      if (highlight) {
-        highlight.scrollTop = savedScrollTop;
-      }
     }
   }, []);
 
-  // Sync scroll between textarea and highlight overlay
-  const syncScroll = useCallback(() => {
+  // Forward wheel events from the textarea to the parent scroll container.
+  // The textarea is set to full content height with overflow:hidden, so it doesn't
+  // scroll internally. But it captures wheel events, preventing the parent from scrolling.
+  // This handler manually scrolls the parent editor-content-wrapper.
+  useEffect(() => {
     const textarea = textareaRef.current;
-    const highlight = highlightRef.current;
-    if (textarea && highlight) {
-      highlight.scrollTop = textarea.scrollTop;
-      highlight.scrollLeft = textarea.scrollLeft;
-    }
+    if (!textarea) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Find the parent editor-content-wrapper
+      const scrollContainer = textarea.closest('.editor-content-wrapper');
+      if (!scrollContainer) return;
+
+      // Check if the container can scroll in the requested direction
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+      const atTop = scrollTop <= 0;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+
+      // If we can scroll in the requested direction, prevent default and scroll the container
+      if ((e.deltaY > 0 && !atBottom) || (e.deltaY < 0 && !atTop)) {
+        e.preventDefault();
+        scrollContainer.scrollTop += e.deltaY;
+      }
+      // If at the edge, let the event propagate to scroll the page
+    };
+
+    textarea.addEventListener('wheel', handleWheel, { passive: false });
+    return () => textarea.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  // No-op sync scroll since textarea doesn't scroll internally
+  const syncScroll = useCallback(() => {
+    // No-op: scrolling is handled by the parent container
   }, []);
 
   useEffect(() => {

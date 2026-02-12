@@ -46,6 +46,7 @@ import { ImageEditPopover } from './ImageEditPopover';
 import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
 import { PerformanceProfiler } from './PerformanceProfiler';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
+import CustomScrollbar from './CustomScrollbar';
 import './PerformanceProfiler.css';
 import { FileText, Eye } from 'lucide-react';
 import { TableOfContents } from './TableOfContents';
@@ -423,24 +424,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     setRawSearchCurrentIndex(currentIndex);
   }, []);
 
-  // Scroll-triggered scrollbar visibility: show scrollbar briefly during active scrolling
-  useEffect(() => {
-    const wrapper = editorContentRef.current;
-    if (!wrapper) return;
-    let scrollTimer: ReturnType<typeof setTimeout> | null = null;
-    const onScroll = () => {
-      wrapper.classList.add('is-scrolling');
-      if (scrollTimer) clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => {
-        wrapper.classList.remove('is-scrolling');
-      }, 1200);
-    };
-    wrapper.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      wrapper.removeEventListener('scroll', onScroll);
-      if (scrollTimer) clearTimeout(scrollTimer);
-    };
-  }, []);
+  // Old scroll-triggered scrollbar via CSS class removed — replaced by CustomScrollbar component
 
   // Build extensions array - conditionally include problematic extensions on mobile
   const extensions = useMemo(() => {
@@ -1604,6 +1588,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           />
         )}
       </div>
+      <CustomScrollbar scrollContainerRef={editorContentRef} />
       </EditorErrorBoundary>
       {/* TOC sidebar - right position */}
       {showTableOfContents && tocPosition === 'right' && (

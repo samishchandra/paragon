@@ -2995,26 +2995,20 @@ pre.with-line-numbers code .line::before {
   min-height: 0;
   
   /* Performance optimizations for large documents */
-  scrollbar-gutter: stable; /* Prevent layout shift from scrollbar */
-  will-change: scroll-position; /* Hint for smooth scrolling */
+  will-change: scroll-position;
   
   /* CSS containment for better rendering performance */
   contain: layout style;
   
-  /* Hidden scrollbar by default, shown only during active scrolling */
+  /* Always-visible thin scrollbar - subtle by default, prominent on hover */
   scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-  transition: scrollbar-color 0.3s ease;
+  scrollbar-color: oklch(0.7 0.01 250 / 0.25) transparent;
 }
 
-/* Show scrollbar during active scrolling */
-.editor-content-wrapper.is-scrolling {
-  scrollbar-color: oklch(0.8 0.01 250) transparent;
-}
-
-/* Webkit scrollbar - hidden by default */
+/* Webkit/Chromium scrollbar - thin and subtle */
 .editor-content-wrapper::-webkit-scrollbar {
   width: 6px;
+  background: transparent;
 }
 
 .editor-content-wrapper::-webkit-scrollbar-track {
@@ -3022,17 +3016,16 @@ pre.with-line-numbers code .line::before {
 }
 
 .editor-content-wrapper::-webkit-scrollbar-thumb {
-  background: transparent;
+  background: oklch(0.7 0.01 250 / 0.25);
   border-radius: 3px;
-  transition: background 0.3s ease;
 }
 
-.editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb {
-  background: oklch(0.8 0.01 250);
+.editor-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.55 0.01 250 / 0.55);
 }
 
-.editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.7 0.01 250);
+.editor-content-wrapper::-webkit-scrollbar-thumb:active {
+  background: oklch(0.45 0.01 250 / 0.7);
 }
 
 .editor-content {
@@ -3397,25 +3390,17 @@ pre.with-line-numbers code .line::before {
   background: oklch(0.7 0.01 250);
 }
 
-/* Light theme scroll-triggered scrollbar for editor */
+/* Light theme editor scrollbar */
 [data-theme="light"] .editor-content-wrapper {
-  scrollbar-color: transparent transparent;
-}
-
-[data-theme="light"] .editor-content-wrapper.is-scrolling {
-  scrollbar-color: oklch(0.8 0.01 250) transparent;
+  scrollbar-color: oklch(0.7 0.01 250 / 0.2) transparent;
 }
 
 [data-theme="light"] .editor-content-wrapper::-webkit-scrollbar-thumb {
-  background: transparent;
+  background: oklch(0.7 0.01 250 / 0.2);
 }
 
-[data-theme="light"] .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb {
-  background: oklch(0.8 0.01 250);
-}
-
-[data-theme="light"] .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.7 0.01 250);
+[data-theme="light"] .editor-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.55 0.01 250 / 0.5);
 }
 
 /* Light theme selection */
@@ -3684,30 +3669,20 @@ pre.with-line-numbers code .line::before {
   background: #4a4e56;
 }
 
-/* Dark theme scroll-triggered scrollbar for editor */
+/* Dark theme editor scrollbar */
 [data-theme="dark"] .editor-content-wrapper,
 .dark .editor-content-wrapper {
-  scrollbar-color: transparent transparent;
-}
-
-[data-theme="dark"] .editor-content-wrapper.is-scrolling,
-.dark .editor-content-wrapper.is-scrolling {
-  scrollbar-color: #35393e transparent;
+  scrollbar-color: rgba(120, 124, 132, 0.2) transparent;
 }
 
 [data-theme="dark"] .editor-content-wrapper::-webkit-scrollbar-thumb,
 .dark .editor-content-wrapper::-webkit-scrollbar-thumb {
-  background: transparent;
+  background: rgba(120, 124, 132, 0.2);
 }
 
-[data-theme="dark"] .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb,
-.dark .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb {
-  background: #35393e;
-}
-
-[data-theme="dark"] .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb:hover,
-.dark .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb:hover {
-  background: #4a4e56;
+[data-theme="dark"] .editor-content-wrapper::-webkit-scrollbar-thumb:hover,
+.dark .editor-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 144, 152, 0.45);
 }
 
 /* Dark theme selection */
@@ -4650,10 +4625,7 @@ pre.with-line-numbers code .line::before {
 .syntax-highlighted-editor {
   position: relative;
   width: 100%;
-  height: 100%;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
+  min-height: 100%;
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
   font-size: 14px;
   line-height: 1.6;
@@ -4664,15 +4636,11 @@ pre.with-line-numbers code .line::before {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
   padding: 16px;
   pointer-events: none;
   white-space: pre-wrap;
   word-wrap: break-word;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow: hidden;
   color: transparent;
   background: transparent;
   font-family: inherit;
@@ -4686,7 +4654,6 @@ pre.with-line-numbers code .line::before {
 .syntax-textarea {
   position: relative;
   width: 100%;
-  flex: 1;
   min-height: 200px;
   padding: 16px;
   font-family: inherit;
@@ -4700,6 +4667,7 @@ pre.with-line-numbers code .line::before {
   outline: none;
   caret-color: var(--primary);
   -webkit-text-fill-color: transparent;
+  overflow: hidden;
 }
 
 .syntax-textarea:focus {
