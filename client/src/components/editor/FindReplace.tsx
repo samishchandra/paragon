@@ -25,6 +25,12 @@ interface FindReplaceProps {
   onClose: () => void;
   focusTrigger?: number;
   initialSearchQuery?: string;
+  /** Current editor mode - 'wysiwyg' or 'markdown' */
+  editorMode?: 'wysiwyg' | 'markdown';
+  /** Raw markdown content (for searching in raw mode) */
+  rawMarkdown?: string;
+  /** Callback to update raw markdown (for replace in raw mode) */
+  onRawMarkdownChange?: (content: string) => void;
 }
 
 interface SearchMatch {
@@ -33,7 +39,8 @@ interface SearchMatch {
   text: string;
 }
 
-export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initialSearchQuery }: FindReplaceProps) {
+export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initialSearchQuery, editorMode = 'wysiwyg', rawMarkdown = '', onRawMarkdownChange }: FindReplaceProps) {
+  const isRawMode = editorMode === 'markdown';
   const [searchQuery, setSearchQuery] = useState('');
   const [replaceQuery, setReplaceQuery] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(false);
@@ -57,7 +64,7 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
     }
   }, [isOpen, initialSearchQuery, focusTrigger]);
 
-  // Find all matches in the document
+  // Find all matches in the document (WYSIWYG) or raw markdown text
   const findMatches = useCallback(() => {
     if (!searchQuery || !editor) {
       setMatches([]);
@@ -66,7 +73,6 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
       return;
     }
 
-    const { doc } = editor.state;
     const foundMatches: SearchMatch[] = [];
     let searchPattern: RegExp;
 
@@ -89,26 +95,39 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
       return;
     }
 
-    // Search through all text nodes
-    doc.descendants((node, pos) => {
-      if (node.isText && node.text) {
-        let match;
-        while ((match = searchPattern.exec(node.text)) !== null) {
-          foundMatches.push({
-            from: pos + match.index,
-            to: pos + match.index + match[0].length,
-            text: match[0],
-          });
-        }
+    if (isRawMode) {
+      // In raw markdown mode, search the raw text directly
+      let match;
+      while ((match = searchPattern.exec(rawMarkdown)) !== null) {
+        foundMatches.push({
+          from: match.index,
+          to: match.index + match[0].length,
+          text: match[0],
+        });
       }
-      return true;
-    });
+    } else {
+      // In WYSIWYG mode, search through ProseMirror text nodes
+      const { doc } = editor.state;
+      doc.descendants((node, pos) => {
+        if (node.isText && node.text) {
+          let match;
+          while ((match = searchPattern.exec(node.text)) !== null) {
+            foundMatches.push({
+              from: pos + match.index,
+              to: pos + match.index + match[0].length,
+              text: match[0],
+            });
+          }
+        }
+        return true;
+      });
+    }
 
     setMatches(foundMatches);
     if (foundMatches.length > 0 && currentMatchIndex >= foundMatches.length) {
       setCurrentMatchIndex(0);
     }
-  }, [searchQuery, caseSensitive, useRegex, wholeWord, editor, currentMatchIndex]);
+  }, [searchQuery, caseSensitive, useRegex, wholeWord, editor, currentMatchIndex, isRawMode, rawMarkdown]);
 
   // Update matches when search parameters change
   useEffect(() => {
@@ -118,6 +137,30 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
   // Update search highlighting in the editor
   useEffect(() => {
     if (!editor) return;
+    
+    // In raw mode, highlight matches in the textarea via CSS selection
+    if (isRawMode) {
+      // Clear WYSIWYG highlights when in raw mode
+      const hasSearchHighlight = typeof editor.commands.clearSearchHighlight === 'function';
+      if (hasSearchHighlight) {
+        editor.commands.clearSearchHighlight();
+      }
+      // Highlight current match in textarea by selecting it
+      if (isOpen && matches.length > 0 && currentMatchIndex < matches.length) {
+        const match = matches[currentMatchIndex];
+        const textarea = document.querySelector('.syntax-textarea') as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
+          textarea.setSelectionRange(match.from, match.to);
+          // Scroll the match into view
+          const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 22;
+          const textBefore = rawMarkdown.substring(0, match.from);
+          const lineNumber = textBefore.split('\n').length;
+          textarea.scrollTop = Math.max(0, (lineNumber - 3) * lineHeight);
+        }
+      }
+      return;
+    }
     
     // Check if the SearchHighlight extension is available
     const hasSearchHighlight = typeof editor.commands.setSearchHighlight === 'function';
@@ -132,7 +175,7 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
     } else if (hasSearchHighlight) {
       editor.commands.clearSearchHighlight();
     }
-  }, [editor, isOpen, searchQuery, caseSensitive, useRegex, currentMatchIndex]);
+  }, [editor, isOpen, searchQuery, caseSensitive, useRegex, currentMatchIndex, isRawMode, matches, rawMarkdown]);
 
   // Clear highlighting when panel closes
   useEffect(() => {
@@ -157,6 +200,13 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
   // Scroll to current match in editor (without selecting text to avoid floating toolbar)
   useEffect(() => {
     if (matches.length > 0 && currentMatchIndex < matches.length) {
+      if (isRawMode) {
+        // In raw mode, scrolling is handled in the highlighting effect above
+        if (isNavigatingRef.current) {
+          isNavigatingRef.current = false;
+        }
+        return;
+      }
       const match = matches[currentMatchIndex];
       
       // Scroll to the match
@@ -171,7 +221,7 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
         isNavigatingRef.current = false;
       }
     }
-  }, [currentMatchIndex, matches, editor]);
+  }, [currentMatchIndex, matches, editor, isRawMode]);
 
   // Focus search input when opened or when focusTrigger changes
   useEffect(() => {
@@ -201,6 +251,14 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
     
     const match = matches[currentMatchIndex];
     
+    if (isRawMode && onRawMarkdownChange) {
+      // In raw mode, replace directly in the raw markdown string
+      const newContent = rawMarkdown.substring(0, match.from) + replaceQuery + rawMarkdown.substring(match.to);
+      onRawMarkdownChange(newContent);
+      setTimeout(findMatches, 10);
+      return;
+    }
+    
     editor
       .chain()
       .focus()
@@ -211,11 +269,23 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
     
     // Re-find matches after replacement
     setTimeout(findMatches, 10);
-  }, [matches, currentMatchIndex, replaceQuery, editor, findMatches]);
+  }, [matches, currentMatchIndex, replaceQuery, editor, findMatches, isRawMode, rawMarkdown, onRawMarkdownChange]);
 
   // Replace all matches
   const replaceAll = useCallback(() => {
     if (matches.length === 0) return;
+    
+    if (isRawMode && onRawMarkdownChange) {
+      // In raw mode, replace all in the raw markdown string (from end to preserve positions)
+      const sortedMatches = [...matches].sort((a, b) => b.from - a.from);
+      let newContent = rawMarkdown;
+      sortedMatches.forEach((match) => {
+        newContent = newContent.substring(0, match.from) + replaceQuery + newContent.substring(match.to);
+      });
+      onRawMarkdownChange(newContent);
+      setTimeout(findMatches, 10);
+      return;
+    }
     
     // Replace from end to start to preserve positions
     const sortedMatches = [...matches].sort((a, b) => b.from - a.from);
@@ -233,7 +303,7 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
     
     // Re-find matches after replacement
     setTimeout(findMatches, 10);
-  }, [matches, replaceQuery, editor, findMatches]);
+  }, [matches, replaceQuery, editor, findMatches, isRawMode, rawMarkdown, onRawMarkdownChange]);
 
   // Select All Occurrences - highlight all matches for batch operations
   const selectAllOccurrences = useCallback(() => {

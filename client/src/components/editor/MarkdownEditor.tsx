@@ -702,11 +702,21 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     },
   });
 
-  // Cleanup debounced onUpdate timeout
+  // Cleanup debounced onUpdate timeout - flush pending changes on unmount
+  // This ensures image resize and other pending changes are saved when navigating away
   useEffect(() => {
     return () => {
       if (onUpdateTimeoutRef.current) {
         clearTimeout(onUpdateTimeoutRef.current);
+        onUpdateTimeoutRef.current = null;
+        // Flush the pending onChange before unmount
+        if (editor && !editor.isDestroyed) {
+          if (onChangeRef.current || onHTMLChangeRef.current) {
+            const html = editor.getHTML();
+            onChangeRef.current?.(html);
+            onHTMLChangeRef.current?.(html);
+          }
+        }
       }
     };
   }, []);
@@ -1453,6 +1463,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           onClose={() => setIsFindReplaceOpen(false)}
           focusTrigger={findReplaceFocusTrigger}
           initialSearchQuery={findReplaceInitialQuery}
+          editorMode={editorMode}
+          rawMarkdown={rawMarkdown}
+          onRawMarkdownChange={handleRawMarkdownChange}
         />
       )}
       
