@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
  * DESIGN: Syntax Highlighted Markdown Editor
  * A textarea with an overlay that provides syntax highlighting for markdown
  * Supports headers, bold, italic, links, code, lists, and more
+ * 
+ * CRITICAL: The overlay and textarea MUST have identical font metrics.
+ * Never apply font-size changes to overlay tokens — this causes cursor/text misalignment.
  */
 
 interface SyntaxHighlightedMarkdownProps {
@@ -24,6 +27,7 @@ type TokenType =
   | 'list-bullet' | 'list-number' | 'task-list' | 'task-checked'
   | 'blockquote' | 'horizontal-rule'
   | 'table-header' | 'table-separator' | 'table-cell'
+  | 'date-pill'
   | 'text';
 
 interface Token {
@@ -191,12 +195,12 @@ function tokenizeMarkdown(text: string): Token[] {
     }
 
     // Process inline elements for regular lines
-    let linePos = 0;
     let lastEnd = 0;
-    const inlineTokens: Token[] = [];
 
     // Process inline patterns
     const inlinePatterns = [
+      // Date pills (@Mon DD, YYYY@)
+      { regex: /@[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}@/g, type: 'date-pill' as TokenType },
       // Bold italic (must come before bold and italic)
       { regex: /\*\*\*(.+?)\*\*\*|___(.+?)___/g, type: 'bold-italic' as TokenType },
       // Bold
@@ -261,22 +265,12 @@ function tokenizeMarkdown(text: string): Token[] {
       lastEnd = match.end - lineStart;
     }
 
-    // Add remaining text
+    // Add remaining text after the last inline match
     if (lastEnd < line.length) {
       tokens.push({
         type: 'text',
         content: line.substring(lastEnd),
         start: lineStart + lastEnd,
-        end: lineStart + line.length,
-      });
-    }
-
-    // If no inline tokens were added, add the whole line as text
-    if (nonOverlapping.length === 0 && line.length > 0) {
-      tokens.push({
-        type: 'text',
-        content: line,
-        start: lineStart,
         end: lineStart + line.length,
       });
     }
@@ -316,6 +310,7 @@ function getTokenClass(type: TokenType): string {
     'table-header': 'md-table-header',
     'table-separator': 'md-table-separator',
     'table-cell': 'md-table-cell',
+    'date-pill': 'md-date-pill',
     'text': 'md-text',
   };
   return classMap[type] || 'md-text';
@@ -338,9 +333,7 @@ function renderHighlightedHtml(content: string, tokens: Token[]): string {
   }
 
   let html = '';
-  let lastEnd = 0;
   const lines = content.split('\n');
-  let currentLine = 0;
   let lineStart = 0;
 
   // Group tokens by line for proper newline handling
@@ -357,12 +350,11 @@ function renderHighlightedHtml(content: string, tokens: Token[]): string {
       if (token.start > linePos) {
         html += escapeHtml(content.substring(linePos, token.start));
       }
-      // Add the token with highlighting
       html += `<span class="${getTokenClass(token.type)}">${escapeHtml(token.content)}</span>`;
       linePos = token.end;
     }
     
-    // Add remaining content on this line
+    // Add any remaining text on this line
     if (linePos < lineEnd) {
       html += escapeHtml(content.substring(linePos, lineEnd));
     }
@@ -389,6 +381,7 @@ export function SyntaxHighlightedMarkdown({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const pendingCursorRef = useRef<{ start: number; end: number } | null>(null);
 
   // Tokenize and render highlighted content
   const highlightedHtml = useMemo(() => {
@@ -397,15 +390,26 @@ export function SyntaxHighlightedMarkdown({
   }, [content]);
 
   // Auto-resize textarea to fit content
+  // CRITICAL: Save and restore scrollTop to prevent cursor jumps
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current;
     const highlight = highlightRef.current;
     if (textarea) {
+      const savedScrollTop = textarea.scrollTop;
+      const savedSelectionStart = textarea.selectionStart;
+      const savedSelectionEnd = textarea.selectionEnd;
+      
       textarea.style.height = 'auto';
       const newHeight = Math.max(textarea.scrollHeight, 200);
       textarea.style.height = `${newHeight}px`;
       if (highlight) {
         highlight.style.height = `${newHeight}px`;
+      }
+      
+      // Restore scroll position and selection after height adjustment
+      textarea.scrollTop = savedScrollTop;
+      if (highlight) {
+        highlight.scrollTop = savedScrollTop;
       }
     }
   }, []);
@@ -429,6 +433,26 @@ export function SyntaxHighlightedMarkdown({
       textareaRef.current.focus();
     }
   }, [autofocus]);
+
+  // Restore cursor position after React commits the re-render
+  useEffect(() => {
+    if (pendingCursorRef.current && textareaRef.current) {
+      const { start, end } = pendingCursorRef.current;
+      textareaRef.current.selectionStart = start;
+      textareaRef.current.selectionEnd = end;
+      pendingCursorRef.current = null;
+    }
+  }, [content]);
+
+  // Handle input changes - save cursor position for restoration after re-render
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const textarea = e.target;
+    pendingCursorRef.current = {
+      start: textarea.selectionStart,
+      end: textarea.selectionEnd,
+    };
+    onChange(textarea.value);
+  }, [onChange]);
 
   // Handle tab key for indentation
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -458,20 +482,17 @@ export function SyntaxHighlightedMarkdown({
         });
         
         const newContent = linesBefore + outdentedLines.join('\n') + afterSelection;
+        const removedChars = (currentLineStart + selection).length - outdentedLines.join('\n').length;
+        pendingCursorRef.current = {
+          start: Math.max(lineStart, start - (lines[0].length - outdentedLines[0].length)),
+          end: end - removedChars,
+        };
         onChange(newContent);
-        
-        setTimeout(() => {
-          const removedChars = (currentLineStart + selection).length - outdentedLines.join('\n').length;
-          textarea.selectionStart = Math.max(lineStart, start - (lines[0].length - outdentedLines[0].length));
-          textarea.selectionEnd = end - removedChars;
-        }, 0);
       } else {
         if (start === end) {
           const newContent = value.substring(0, start) + '  ' + value.substring(end);
+          pendingCursorRef.current = { start: start + 2, end: start + 2 };
           onChange(newContent);
-          setTimeout(() => {
-            textarea.selectionStart = textarea.selectionEnd = start + 2;
-          }, 0);
         } else {
           const beforeSelection = value.substring(0, start);
           const selection = value.substring(start, end);
@@ -486,12 +507,11 @@ export function SyntaxHighlightedMarkdown({
           const indentedLines = lines.map(line => '  ' + line);
           
           const newContent = linesBefore + indentedLines.join('\n') + afterSelection;
+          pendingCursorRef.current = {
+            start: start + 2,
+            end: end + (lines.length * 2),
+          };
           onChange(newContent);
-          
-          setTimeout(() => {
-            textarea.selectionStart = start + 2;
-            textarea.selectionEnd = end + (lines.length * 2);
-          }, 0);
         }
       }
     }
@@ -508,7 +528,7 @@ export function SyntaxHighlightedMarkdown({
       <textarea
         ref={textareaRef}
         value={content}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleChange}
         onKeyDown={handleKeyDown}
         onScroll={syncScroll}
         placeholder=""

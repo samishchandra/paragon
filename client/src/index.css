@@ -4950,7 +4950,10 @@ pre.with-line-numbers code .line::before {
   pointer-events: none;
   white-space: pre-wrap;
   word-wrap: break-word;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   color: transparent;
   background: transparent;
   font-family: inherit;
@@ -4999,17 +5002,15 @@ pre.with-line-numbers code .line::before {
 }
 
 .syntax-highlight-overlay .md-heading {
-  font-weight: 700;
+  /* No font-weight change - must match textarea metrics exactly */
 }
 
 .syntax-highlight-overlay .md-h1 {
   color: #e06c75;
-  font-size: 1.1em;
 }
 
 .syntax-highlight-overlay .md-h2 {
   color: #e5c07b;
-  font-size: 1.05em;
 }
 
 .syntax-highlight-overlay .md-h3 {
@@ -5030,40 +5031,30 @@ pre.with-line-numbers code .line::before {
 
 .syntax-highlight-overlay .md-bold {
   color: #e5c07b;
-  font-weight: 700;
 }
 
 .syntax-highlight-overlay .md-italic {
   color: #c678dd;
-  font-style: italic;
 }
 
 .syntax-highlight-overlay .md-bold-italic {
   color: #e06c75;
-  font-weight: 700;
-  font-style: italic;
 }
 
 .syntax-highlight-overlay .md-strikethrough {
   color: var(--muted-foreground);
-  text-decoration: line-through;
 }
 
 .syntax-highlight-overlay .md-code-inline {
   color: #98c379;
-  background: oklch(from var(--foreground) l c h / 0.1);
-  padding: 0.1em 0.3em;
-  border-radius: 3px;
 }
 
 .syntax-highlight-overlay .md-code-block {
   color: #abb2bf;
-  background: oklch(from var(--foreground) l c h / 0.05);
 }
 
 .syntax-highlight-overlay .md-code-lang {
   color: #61afef;
-  font-style: italic;
 }
 
 .syntax-highlight-overlay .md-link {
@@ -5089,10 +5080,6 @@ pre.with-line-numbers code .line::before {
 
 .syntax-highlight-overlay .md-blockquote {
   color: #5c6370;
-  font-style: italic;
-  border-left: 3px solid #5c6370;
-  padding-left: 8px;
-  margin-left: 0;
 }
 
 .syntax-highlight-overlay .md-hr {
@@ -5101,7 +5088,6 @@ pre.with-line-numbers code .line::before {
 
 .syntax-highlight-overlay .md-table-header {
   color: #e5c07b;
-  font-weight: 600;
 }
 
 .syntax-highlight-overlay .md-table-separator {
@@ -5110,6 +5096,10 @@ pre.with-line-numbers code .line::before {
 
 .syntax-highlight-overlay .md-table-cell {
   color: var(--foreground);
+}
+
+.syntax-highlight-overlay .md-date-pill {
+  color: #56b6c2;
 }
 
 /* Light theme overrides */
@@ -5149,14 +5139,16 @@ pre.with-line-numbers code .line::before {
   color: #c41a16;
 }
 
+:root:not(.dark) .syntax-highlight-overlay .md-table-header {
+  color: #c46210;
+}
+
 :root:not(.dark) .syntax-highlight-overlay .md-code-inline {
   color: #2e7d32;
-  background: oklch(from var(--foreground) l c h / 0.08);
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-code-block {
   color: #333;
-  background: oklch(from var(--foreground) l c h / 0.05);
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-code-lang {
@@ -5186,7 +5178,10 @@ pre.with-line-numbers code .line::before {
 
 :root:not(.dark) .syntax-highlight-overlay .md-blockquote {
   color: #666;
-  border-left-color: #999;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .md-date-pill {
+  color: #0277bd;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-hr {
