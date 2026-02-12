@@ -9,6 +9,11 @@ import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
  * Never apply font-size changes to overlay tokens — this causes cursor/text misalignment.
  */
 
+interface SearchMatch {
+  from: number;
+  to: number;
+}
+
 interface SyntaxHighlightedMarkdownProps {
   content: string;
   onChange: (content: string) => void;
@@ -16,6 +21,10 @@ interface SyntaxHighlightedMarkdownProps {
   editable?: boolean;
   autofocus?: boolean;
   className?: string;
+  /** Search matches to highlight in the overlay */
+  searchMatches?: SearchMatch[];
+  /** Index of the current active match (highlighted differently) */
+  currentMatchIndex?: number;
 }
 
 // Token types for markdown syntax highlighting
@@ -326,48 +335,135 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;');
 }
 
-// Render highlighted HTML from tokens
-function renderHighlightedHtml(content: string, tokens: Token[]): string {
-  if (tokens.length === 0) {
+// Wrap a segment of text with search highlight markup
+function wrapSearchHighlight(text: string, isCurrentMatch: boolean): string {
+  const cls = isCurrentMatch ? 'search-highlight search-highlight-current' : 'search-highlight';
+  return `<mark class="${cls}">${text}</mark>`;
+}
+
+// Render highlighted HTML from tokens, with optional search match overlays
+function renderHighlightedHtml(
+  content: string,
+  tokens: Token[],
+  searchMatches?: SearchMatch[],
+  currentMatchIndex?: number
+): string {
+  if (tokens.length === 0 && (!searchMatches || searchMatches.length === 0)) {
     return escapeHtml(content);
   }
 
+  // Build a flat list of segments with their classes
+  // First pass: render with syntax tokens
   let html = '';
   const lines = content.split('\n');
   let lineStart = 0;
 
-  // Group tokens by line for proper newline handling
+  // If no search matches, use the simple token-only rendering
+  if (!searchMatches || searchMatches.length === 0) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const lineEnd = lineStart + line.length;
+      const lineTokens = tokens.filter(t => t.start >= lineStart && t.start < lineEnd);
+      let linePos = lineStart;
+      for (const token of lineTokens) {
+        if (token.start > linePos) {
+          html += escapeHtml(content.substring(linePos, token.start));
+        }
+        html += `<span class="${getTokenClass(token.type)}">${escapeHtml(token.content)}</span>`;
+        linePos = token.end;
+      }
+      if (linePos < lineEnd) {
+        html += escapeHtml(content.substring(linePos, lineEnd));
+      }
+      if (i < lines.length - 1) {
+        html += '\n';
+      }
+      lineStart = lineEnd + 1;
+    }
+    return html;
+  }
+
+  // With search matches: render character by character awareness
+  // Build a map of search match ranges
+  const searchMap = new Map<number, { matchIdx: number; isCurrent: boolean }>();
+  searchMatches.forEach((match, idx) => {
+    for (let pos = match.from; pos < match.to; pos++) {
+      searchMap.set(pos, { matchIdx: idx, isCurrent: idx === currentMatchIndex });
+    }
+  });
+
+  lineStart = 0;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lineEnd = lineStart + line.length;
-    
-    // Find tokens for this line
     const lineTokens = tokens.filter(t => t.start >= lineStart && t.start < lineEnd);
-    
+
+    // Process the line character by character, respecting both tokens and search matches
     let linePos = lineStart;
     for (const token of lineTokens) {
-      // Add any gap before this token
+      // Gap before token
       if (token.start > linePos) {
-        html += escapeHtml(content.substring(linePos, token.start));
+        html += renderSegmentWithSearch(content, linePos, token.start, null, searchMap);
       }
-      html += `<span class="${getTokenClass(token.type)}">${escapeHtml(token.content)}</span>`;
+      // Token content
+      html += renderSegmentWithSearch(content, token.start, token.end, getTokenClass(token.type), searchMap);
       linePos = token.end;
     }
-    
-    // Add any remaining text on this line
+    // Remaining text after last token
     if (linePos < lineEnd) {
-      html += escapeHtml(content.substring(linePos, lineEnd));
+      html += renderSegmentWithSearch(content, linePos, lineEnd, null, searchMap);
     }
-    
-    // Add newline (except for last line)
     if (i < lines.length - 1) {
       html += '\n';
     }
-    
     lineStart = lineEnd + 1;
   }
 
   return html;
+}
+
+// Render a segment of text, splitting it into search-highlighted and non-highlighted parts
+function renderSegmentWithSearch(
+  content: string,
+  from: number,
+  to: number,
+  tokenClass: string | null,
+  searchMap: Map<number, { matchIdx: number; isCurrent: boolean }>
+): string {
+  let result = '';
+  let pos = from;
+
+  while (pos < to) {
+    const searchInfo = searchMap.get(pos);
+    if (searchInfo) {
+      // Collect consecutive chars in the same search match
+      const matchStart = pos;
+      while (pos < to && searchMap.get(pos)?.matchIdx === searchInfo.matchIdx) {
+        pos++;
+      }
+      const text = escapeHtml(content.substring(matchStart, pos));
+      const highlightCls = searchInfo.isCurrent ? 'search-highlight search-highlight-current' : 'search-highlight';
+      if (tokenClass) {
+        result += `<span class="${tokenClass}"><mark class="${highlightCls}">${text}</mark></span>`;
+      } else {
+        result += `<mark class="${highlightCls}">${text}</mark>`;
+      }
+    } else {
+      // Collect consecutive non-search chars
+      const start = pos;
+      while (pos < to && !searchMap.has(pos)) {
+        pos++;
+      }
+      const text = escapeHtml(content.substring(start, pos));
+      if (tokenClass) {
+        result += `<span class="${tokenClass}">${text}</span>`;
+      } else {
+        result += text;
+      }
+    }
+  }
+
+  return result;
 }
 
 export function SyntaxHighlightedMarkdown({
@@ -377,54 +473,74 @@ export function SyntaxHighlightedMarkdown({
   editable = true,
   autofocus = false,
   className = '',
+  searchMatches,
+  currentMatchIndex,
 }: SyntaxHighlightedMarkdownProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingCursorRef = useRef<{ start: number; end: number } | null>(null);
 
-  // Tokenize and render highlighted content
+  // Tokenize and render highlighted content (with optional search highlights)
   const highlightedHtml = useMemo(() => {
     const tokens = tokenizeMarkdown(content);
-    return renderHighlightedHtml(content, tokens);
-  }, [content]);
+    return renderHighlightedHtml(content, tokens, searchMatches, currentMatchIndex);
+  }, [content, searchMatches, currentMatchIndex]);
 
   // Auto-resize textarea to fit content
-  // CRITICAL: Save and restore scrollTop to prevent cursor jumps
+  // The textarea expands to its full scrollHeight so the PARENT (editor-content-wrapper) scrolls.
+  // The overlay is positioned absolutely and sized to match the textarea.
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current;
     const highlight = highlightRef.current;
     const container = containerRef.current;
     if (textarea) {
-      const savedScrollTop = textarea.scrollTop;
-      const savedSelectionStart = textarea.selectionStart;
-      const savedSelectionEnd = textarea.selectionEnd;
+      // Use the scroll container (editor-content-wrapper) height as minimum
+      const scrollParent = container?.parentElement;
+      const parentHeight = scrollParent ? scrollParent.clientHeight : 200;
       
-      // Use the container's height as the minimum so the textarea fills the available space
-      const containerHeight = container ? container.clientHeight : 200;
       textarea.style.height = 'auto';
-      const newHeight = Math.max(textarea.scrollHeight, containerHeight, 200);
+      const newHeight = Math.max(textarea.scrollHeight, parentHeight, 200);
       textarea.style.height = `${newHeight}px`;
       if (highlight) {
         highlight.style.height = `${newHeight}px`;
       }
-      
-      // Restore scroll position and selection after height adjustment
-      textarea.scrollTop = savedScrollTop;
-      if (highlight) {
-        highlight.scrollTop = savedScrollTop;
-      }
     }
   }, []);
 
-  // Sync scroll between textarea and highlight overlay
-  const syncScroll = useCallback(() => {
+  // Forward wheel events from the textarea to the parent scroll container.
+  // The textarea is set to full content height with overflow:hidden, so it doesn't
+  // scroll internally. But it captures wheel events, preventing the parent from scrolling.
+  // This handler manually scrolls the parent editor-content-wrapper.
+  useEffect(() => {
     const textarea = textareaRef.current;
-    const highlight = highlightRef.current;
-    if (textarea && highlight) {
-      highlight.scrollTop = textarea.scrollTop;
-      highlight.scrollLeft = textarea.scrollLeft;
-    }
+    if (!textarea) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Find the parent editor-content-wrapper
+      const scrollContainer = textarea.closest('.editor-content-wrapper');
+      if (!scrollContainer) return;
+
+      // Check if the container can scroll in the requested direction
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+      const atTop = scrollTop <= 0;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+
+      // If we can scroll in the requested direction, prevent default and scroll the container
+      if ((e.deltaY > 0 && !atBottom) || (e.deltaY < 0 && !atTop)) {
+        e.preventDefault();
+        scrollContainer.scrollTop += e.deltaY;
+      }
+      // If at the edge, let the event propagate to scroll the page
+    };
+
+    textarea.addEventListener('wheel', handleWheel, { passive: false });
+    return () => textarea.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  // No-op sync scroll since textarea doesn't scroll internally
+  const syncScroll = useCallback(() => {
+    // No-op: scrolling is handled by the parent container
   }, []);
 
   useEffect(() => {

@@ -25,7 +25,7 @@ import { ResizableImage } from './extensions/ResizableImage';
 import { DatePill, formatDateForMarkdown, parseDateFromMarkdown, getDateVariant } from './extensions/DatePill';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
-import { FindReplace } from './FindReplace';
+import { FindReplace, type SearchMatch } from './FindReplace';
 import { SelectAllActionBar } from './SelectAllActionBar';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useWordCount } from './hooks/useWordCount';
@@ -46,6 +46,7 @@ import { ImageEditPopover } from './ImageEditPopover';
 import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
 import { PerformanceProfiler } from './PerformanceProfiler';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
+import CustomScrollbar from './CustomScrollbar';
 import './PerformanceProfiler.css';
 import { FileText, Eye } from 'lucide-react';
 import { TableOfContents } from './TableOfContents';
@@ -416,6 +417,14 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   
   // Error boundary remount key — incremented to force re-render of editor content
   const [editorErrorKey, setEditorErrorKey] = useState(0);
+  const [rawSearchMatches, setRawSearchMatches] = useState<SearchMatch[]>([]);
+  const [rawSearchCurrentIndex, setRawSearchCurrentIndex] = useState(0);
+  const handleSearchMatchesChange = useCallback((matches: SearchMatch[], currentIndex: number) => {
+    setRawSearchMatches(matches);
+    setRawSearchCurrentIndex(currentIndex);
+  }, []);
+
+  // Old scroll-triggered scrollbar via CSS class removed — replaced by CustomScrollbar component
 
   // Build extensions array - conditionally include problematic extensions on mobile
   const extensions = useMemo(() => {
@@ -609,6 +618,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   const onChangeRef = useRef(onChange);
   const onHTMLChangeRef = useRef(onHTMLChange);
   const onMarkdownChangeRef = useRef(onMarkdownChange);
+  // Ref for turndownService so onUpdate callback can access it (turndownService is created after useEditor)
+  const turndownServiceRef = useRef<TurndownService | null>(null);
   onChangeRef.current = onChange;
   onHTMLChangeRef.current = onHTMLChange;
   onMarkdownChangeRef.current = onMarkdownChange;
@@ -668,10 +679,17 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       }
       onUpdateTimeoutRef.current = setTimeout(() => {
         if (editor.isDestroyed) return;
+        const html = editor.getHTML();
         if (onChangeRef.current || onHTMLChangeRef.current) {
-          const html = editor.getHTML();
           onChangeRef.current?.(html);
           onHTMLChangeRef.current?.(html);
+        }
+        // Keep rawMarkdown in sync with WYSIWYG changes (e.g., image resize)
+        // Only sync when in WYSIWYG mode to avoid overwriting user's raw edits
+        if (editorModeRef.current === 'wysiwyg' && turndownServiceRef.current) {
+          const markdown = turndownServiceRef.current.turndown(html);
+          rawMarkdownRef.current = markdown;
+          onMarkdownChangeRef.current?.(markdown);
         }
       }, 150);
     },
@@ -685,10 +703,16 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         clearTimeout(onUpdateTimeoutRef.current);
         onUpdateTimeoutRef.current = null;
         if (editor && !editor.isDestroyed) {
+          const html = editor.getHTML();
           if (onChangeRef.current || onHTMLChangeRef.current) {
-            const html = editor.getHTML();
             onChangeRef.current?.(html);
             onHTMLChangeRef.current?.(html);
+          }
+          // Flush rawMarkdown sync on blur too
+          if (editorModeRef.current === 'wysiwyg' && turndownServiceRef.current) {
+            const markdown = turndownServiceRef.current.turndown(html);
+            rawMarkdownRef.current = markdown;
+            onMarkdownChangeRef.current?.(markdown);
           }
         }
       }
@@ -711,10 +735,16 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         onUpdateTimeoutRef.current = null;
         // Flush the pending onChange before unmount
         if (editor && !editor.isDestroyed) {
+          const html = editor.getHTML();
           if (onChangeRef.current || onHTMLChangeRef.current) {
-            const html = editor.getHTML();
             onChangeRef.current?.(html);
             onHTMLChangeRef.current?.(html);
+          }
+          // Flush rawMarkdown sync on unmount too
+          if (editorModeRef.current === 'wysiwyg' && turndownServiceRef.current) {
+            const markdown = turndownServiceRef.current.turndown(html);
+            rawMarkdownRef.current = markdown;
+            onMarkdownChangeRef.current?.(markdown);
           }
         }
       }
@@ -930,6 +960,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     
     return td;
   }, []);
+
+  // Keep turndownServiceRef in sync so the onUpdate callback can access it
+  turndownServiceRef.current = turndownService;
 
   // Handle mode switching
   const handleModeSwitch = useCallback((newMode: 'wysiwyg' | 'markdown') => {
@@ -1466,6 +1499,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           editorMode={editorMode}
           rawMarkdown={rawMarkdown}
           onRawMarkdownChange={handleRawMarkdownChange}
+          onMatchesChange={handleSearchMatchesChange}
         />
       )}
       
@@ -1573,9 +1607,12 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             placeholder="Write your markdown here..."
             editable={editable}
             autofocus
+            searchMatches={rawSearchMatches}
+            currentMatchIndex={rawSearchCurrentIndex}
           />
         )}
       </div>
+      <CustomScrollbar scrollContainerRef={editorContentRef} />
       </EditorErrorBoundary>
       {/* TOC sidebar - right position */}
       {showTableOfContents && tocPosition === 'right' && (

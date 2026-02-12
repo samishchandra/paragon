@@ -2995,11 +2995,37 @@ pre.with-line-numbers code .line::before {
   min-height: 0;
   
   /* Performance optimizations for large documents */
-  scrollbar-gutter: stable; /* Prevent layout shift from scrollbar */
-  will-change: scroll-position; /* Hint for smooth scrolling */
+  will-change: scroll-position;
   
   /* CSS containment for better rendering performance */
   contain: layout style;
+  
+  /* Always-visible thin scrollbar - subtle by default, prominent on hover */
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.7 0.01 250 / 0.25) transparent;
+}
+
+/* Webkit/Chromium scrollbar - thin and subtle */
+.editor-content-wrapper::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+
+.editor-content-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.editor-content-wrapper::-webkit-scrollbar-thumb {
+  background: oklch(0.7 0.01 250 / 0.25);
+  border-radius: 3px;
+}
+
+.editor-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.55 0.01 250 / 0.55);
+}
+
+.editor-content-wrapper::-webkit-scrollbar-thumb:active {
+  background: oklch(0.45 0.01 250 / 0.7);
 }
 
 .editor-content {
@@ -3364,6 +3390,19 @@ pre.with-line-numbers code .line::before {
   background: oklch(0.7 0.01 250);
 }
 
+/* Light theme editor scrollbar */
+[data-theme="light"] .editor-content-wrapper {
+  scrollbar-color: oklch(0.7 0.01 250 / 0.2) transparent;
+}
+
+[data-theme="light"] .editor-content-wrapper::-webkit-scrollbar-thumb {
+  background: oklch(0.7 0.01 250 / 0.2);
+}
+
+[data-theme="light"] .editor-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.55 0.01 250 / 0.5);
+}
+
 /* Light theme selection */
 [data-theme="light"] .ProseMirror ::selection {
   background: oklch(0.55 0.08 220 / 0.25);
@@ -3628,6 +3667,22 @@ pre.with-line-numbers code .line::before {
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #4a4e56;
+}
+
+/* Dark theme editor scrollbar */
+[data-theme="dark"] .editor-content-wrapper,
+.dark .editor-content-wrapper {
+  scrollbar-color: rgba(120, 124, 132, 0.2) transparent;
+}
+
+[data-theme="dark"] .editor-content-wrapper::-webkit-scrollbar-thumb,
+.dark .editor-content-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(120, 124, 132, 0.2);
+}
+
+[data-theme="dark"] .editor-content-wrapper::-webkit-scrollbar-thumb:hover,
+.dark .editor-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 144, 152, 0.45);
 }
 
 /* Dark theme selection */
@@ -4570,10 +4625,7 @@ pre.with-line-numbers code .line::before {
 .syntax-highlighted-editor {
   position: relative;
   width: 100%;
-  height: 100%;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
+  min-height: 100%;
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
   font-size: 14px;
   line-height: 1.6;
@@ -4584,15 +4636,11 @@ pre.with-line-numbers code .line::before {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
   padding: 16px;
   pointer-events: none;
   white-space: pre-wrap;
   word-wrap: break-word;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow: hidden;
   color: transparent;
   background: transparent;
   font-family: inherit;
@@ -4606,7 +4654,6 @@ pre.with-line-numbers code .line::before {
 .syntax-textarea {
   position: relative;
   width: 100%;
-  flex: 1;
   min-height: 200px;
   padding: 16px;
   font-family: inherit;
@@ -4620,6 +4667,7 @@ pre.with-line-numbers code .line::before {
   outline: none;
   caret-color: var(--primary);
   -webkit-text-fill-color: transparent;
+  overflow: hidden;
 }
 
 .syntax-textarea:focus {
@@ -4834,6 +4882,32 @@ pre.with-line-numbers code .line::before {
 
 :root:not(.dark) .syntax-highlight-overlay .md-table-separator {
   color: #999;
+}
+
+/* Search highlight in raw markdown overlay */
+.syntax-highlight-overlay .search-highlight {
+  background: oklch(0.9 0.15 95); /* Bright yellow */
+  border-radius: 2px;
+  color: oklch(0.2 0 0) !important;
+  padding: 1px 0;
+}
+
+.syntax-highlight-overlay .search-highlight-current {
+  background: oklch(0.75 0.2 70); /* Orange/amber for current match */
+  border-radius: 2px;
+  color: oklch(0.1 0 0) !important;
+  padding: 1px 0;
+  box-shadow: 0 0 0 1px oklch(0.65 0.2 70);
+}
+
+:root:not(.dark) .syntax-highlight-overlay .search-highlight {
+  background: oklch(0.92 0.15 95);
+  color: oklch(0.2 0 0) !important;
+}
+
+:root:not(.dark) .syntax-highlight-overlay .search-highlight-current {
+  background: oklch(0.8 0.18 70);
+  color: oklch(0.15 0 0) !important;
 }
 
 

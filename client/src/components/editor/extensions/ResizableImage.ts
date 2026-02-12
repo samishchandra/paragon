@@ -414,10 +414,26 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         document.removeEventListener('mouseup', onMouseUp);
         
         const pos = typeof getPos === 'function' ? getPos() : null;
+        const newWidth = img.offsetWidth;
         if (pos !== null && pos !== undefined) {
-          editor.chain().focus().updateAttributes('resizableImage', {
-            width: img.offsetWidth,
-          }).run();
+          // Use setNodeMarkup with explicit position instead of updateAttributes
+          // which relies on the current selection and may fail if focus() moves it
+          try {
+            const { state, dispatch } = editor.view;
+            const node = state.doc.nodeAt(pos);
+            if (node && node.type.name === 'resizableImage') {
+              const tr = state.tr.setNodeMarkup(pos, undefined, {
+                ...node.attrs,
+                width: newWidth,
+              });
+              dispatch(tr);
+            }
+          } catch (e) {
+            // Fallback: try updateAttributes with selection at the node position
+            editor.chain().focus().setNodeSelection(pos).updateAttributes('resizableImage', {
+              width: newWidth,
+            }).run();
+          }
         }
       };
       
