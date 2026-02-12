@@ -3007,8 +3007,9 @@ pre.with-line-numbers code .line::before {
   transition: scrollbar-color 0.3s ease;
 }
 
-/* Show scrollbar on hover */
-.editor-content-wrapper:hover {
+/* Show scrollbar on hover or during active scrolling */
+.editor-content-wrapper:hover,
+.editor-content-wrapper.is-scrolling {
   scrollbar-color: oklch(0.8 0.01 250) transparent;
 }
 
@@ -3027,11 +3028,13 @@ pre.with-line-numbers code .line::before {
   transition: background 0.3s ease;
 }
 
-.editor-content-wrapper:hover::-webkit-scrollbar-thumb {
+.editor-content-wrapper:hover::-webkit-scrollbar-thumb,
+.editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb {
   background: oklch(0.8 0.01 250);
 }
 
-.editor-content-wrapper:hover::-webkit-scrollbar-thumb:hover {
+.editor-content-wrapper:hover::-webkit-scrollbar-thumb:hover,
+.editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb:hover {
   background: oklch(0.7 0.01 250);
 }
 
@@ -3402,7 +3405,8 @@ pre.with-line-numbers code .line::before {
   scrollbar-color: transparent transparent;
 }
 
-[data-theme="light"] .editor-content-wrapper:hover {
+[data-theme="light"] .editor-content-wrapper:hover,
+[data-theme="light"] .editor-content-wrapper.is-scrolling {
   scrollbar-color: oklch(0.8 0.01 250) transparent;
 }
 
@@ -3410,11 +3414,13 @@ pre.with-line-numbers code .line::before {
   background: transparent;
 }
 
-[data-theme="light"] .editor-content-wrapper:hover::-webkit-scrollbar-thumb {
+[data-theme="light"] .editor-content-wrapper:hover::-webkit-scrollbar-thumb,
+[data-theme="light"] .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb {
   background: oklch(0.8 0.01 250);
 }
 
-[data-theme="light"] .editor-content-wrapper:hover::-webkit-scrollbar-thumb:hover {
+[data-theme="light"] .editor-content-wrapper:hover::-webkit-scrollbar-thumb:hover,
+[data-theme="light"] .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb:hover {
   background: oklch(0.7 0.01 250);
 }
 
@@ -3691,7 +3697,9 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-theme="dark"] .editor-content-wrapper:hover,
-.dark .editor-content-wrapper:hover {
+.dark .editor-content-wrapper:hover,
+[data-theme="dark"] .editor-content-wrapper.is-scrolling,
+.dark .editor-content-wrapper.is-scrolling {
   scrollbar-color: #35393e transparent;
 }
 
@@ -3701,12 +3709,16 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-theme="dark"] .editor-content-wrapper:hover::-webkit-scrollbar-thumb,
-.dark .editor-content-wrapper:hover::-webkit-scrollbar-thumb {
+.dark .editor-content-wrapper:hover::-webkit-scrollbar-thumb,
+[data-theme="dark"] .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb,
+.dark .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb {
   background: #35393e;
 }
 
 [data-theme="dark"] .editor-content-wrapper:hover::-webkit-scrollbar-thumb:hover,
-.dark .editor-content-wrapper:hover::-webkit-scrollbar-thumb:hover {
+.dark .editor-content-wrapper:hover::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb:hover,
+.dark .editor-content-wrapper.is-scrolling::-webkit-scrollbar-thumb:hover {
   background: #4a4e56;
 }
 
