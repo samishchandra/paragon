@@ -226,6 +226,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         border-radius: 8px;
         box-shadow: 0 4px 16px oklch(0 0 0 / 0.15);
         z-index: 9999;
+        pointer-events: auto;
       `;
       
       const createMenuItem = (label: string, icon: string, onClick: () => void) => {
@@ -358,7 +359,15 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       container.appendChild(img);
       container.appendChild(resizeHandle);
       container.appendChild(menuButton);
-      document.body.appendChild(dropdown);
+      // Append dropdown to the dialog content if inside a Radix Dialog,
+      // otherwise to document.body. This ensures pointer-events work
+      // because Radix Dialog sets pointer-events:none on <body>.
+      const dialogContent = container.closest('[role="dialog"]');
+      if (dialogContent) {
+        dialogContent.appendChild(dropdown);
+      } else {
+        document.body.appendChild(dropdown);
+      }
       
       // Show handle and menu button on hover
       container.addEventListener('mouseenter', () => {
