@@ -194,9 +194,10 @@
 
 /* TipTap Editor Styles */
 .tiptap-editor {
-  font-family: var(--font-sans);
+  font-family: var(--editor-font-family, var(--font-sans));
+  font-size: var(--editor-font-size, 1rem);
   color: var(--foreground);
-  line-height: 1.35;
+  line-height: var(--editor-line-height, 1.6);
   min-height: 100%;
   padding: 2rem;
   outline: none;
@@ -3039,6 +3040,12 @@ pre.with-line-numbers code .line::before {
   justify-content: center;
   height: 100%;
   color: var(--muted-foreground);
+}
+
+/* Skeleton loading animation for editor pre-init state */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 

@@ -755,6 +755,18 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       bulletListMarker: '-',
       emDelimiter: '*',
       strongDelimiter: '**',
+      // CRITICAL: Handle empty elements that Turndown considers "blank".
+      // TipTap's getHTML() can produce <p></p> (no children) for empty lines.
+      // Turndown's custom rules only run for non-blank nodes.
+      // Blank nodes (empty textContent, no meaningful children) go through
+      // blankReplacement instead. Without this, empty paragraphs are silently
+      // dropped, causing user-intentional blank lines to disappear on reload.
+      blankReplacement: (content: string, node: any) => {
+        if (node.nodeName === 'P') {
+          return '\n\n\u200B\n\n';
+        }
+        return node.isBlock ? '\n\n' : '';
+      },
     });
     
     // Use GFM plugin for tables, strikethrough, and task lists
@@ -791,12 +803,25 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
                node.getAttribute('data-type') === 'taskItem';
       },
       replacement: (content, node) => {
-        const checkbox = (node as HTMLElement).querySelector('input[type="checkbox"]');
-        const checked = checkbox?.hasAttribute('checked') || (checkbox as HTMLInputElement)?.checked;
+        const el = node as HTMLElement;
+        const checkbox = el.querySelector('input[type="checkbox"]');
+        // Check both the checkbox state and the data-checked attribute (TipTap fallback)
+        const checked = checkbox?.hasAttribute('checked') || 
+                       (checkbox as HTMLInputElement)?.checked ||
+                       el.getAttribute('data-checked') === 'true';
+        // Strip extra blank lines from <p> wrappers inside list items
+        content = content
+          .replace(/^\n+/, '')
+          .replace(/\n+$/, '')
+          .replace(/\n\n+/g, '\n\n');
+        // Collapse blank line between text and nested list marker
+        content = content.replace(/\n\n(- |\d+\. )/g, '\n$1');
+        // Strip ZWSP and trim
+        content = content.replace(/\u200B/g, '').trim();
         // Add ZWSP after empty checkboxes so marked parses them correctly
-        const trimmed = content.trim();
-        const text = trimmed || '\u200B';
-        return `- [${checked ? 'x' : ' '}] ${text}\n`;
+        const text = content || '\u200B';
+        const prefix = `- [${checked ? 'x' : ' '}] `;
+        return prefix + text.replace(/\n/gm, '\n    ') + '\n';
       },
     });
     
@@ -1334,7 +1359,14 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   if (!editor) {
     return (
       <div className={`markdown-editor-container ${className}`} data-theme={theme}>
-        <div className="editor-loading">Loading editor...</div>
+        <div className="editor-loading" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ height: '1rem', width: '100%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+          <div style={{ height: '1rem', width: '83%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+          <div style={{ height: '1rem', width: '66%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+          <div style={{ height: '0.75rem' }} />
+          <div style={{ height: '1rem', width: '100%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+          <div style={{ height: '1rem', width: '75%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+        </div>
       </div>
     );
   }
