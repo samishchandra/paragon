@@ -2498,16 +2498,34 @@ pre.with-line-numbers code .line::before {
 
 /* Date picker portal - inherits theme from data-theme attribute */
 .date-picker-portal {
-  animation: datepicker-fade-in 0.15s ease;
+  /* Animation is set inline based on direction */
 }
 
 .date-picker-portal.dark {
   color-scheme: dark;
 }
 
-@keyframes datepicker-fade-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Smart directional animations */
+@keyframes picker-slide-down {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes picker-slide-up {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Arrow pointing from picker to pill */
+.date-picker-arrow {
+  background: var(--popover);
+  border: 1px solid var(--border);
+  clip-path: polygon(0% 0%, 100% 0%, 0% 100%);
+}
+
+.date-picker-portal.dark .date-picker-arrow {
+  background: var(--popover);
+  border-color: var(--border);
 }
 
 /* Date picker popup - Calendar-based (Taskmate style) */

@@ -83,7 +83,7 @@ function PickerUI({
 }: {
   currentDate: string;
   theme: string;
-  position: { top: number; left: number };
+  position: { top: number; left: number; direction: 'below' | 'above'; pillCenter: number };
   onSelectDate: (date: string) => void;
   onClose: () => void;
 }) {
@@ -170,8 +170,27 @@ function PickerUI({
         left: position.left,
         zIndex: 99999,
         pointerEvents: 'auto',
+        animation: position.direction === 'above'
+          ? 'picker-slide-up 0.15s ease-out'
+          : 'picker-slide-down 0.15s ease-out',
+        transformOrigin: position.direction === 'above' ? 'bottom center' : 'top center',
       }}
     >
+      {/* Arrow pointing to the pill */}
+      <div
+        className="date-picker-arrow"
+        style={{
+          position: 'absolute',
+          left: Math.max(12, Math.min(position.pillCenter - position.left, 280)) + 'px',
+          ...(position.direction === 'below'
+            ? { top: '-6px' }
+            : { bottom: '-6px' }),
+          width: '12px',
+          height: '12px',
+          transform: position.direction === 'below' ? 'rotate(45deg)' : 'rotate(225deg)',
+          zIndex: -1,
+        }}
+      />
       <div className="date-picker-popup bg-popover text-popover-foreground border border-border rounded-lg shadow-xl overflow-hidden">
         <div className="flex flex-col">
           <div className="flex justify-center p-1">
@@ -242,23 +261,37 @@ function openPickerForPill(pillEl: HTMLElement, dateAttr: string, theme: string)
   // Close any existing picker
   destroyPicker();
 
-  // Compute position
+  // Compute position with smart direction detection
   const rect = pillEl.getBoundingClientRect();
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
   const pickerWidth = 320;
   const pickerHeight = 420;
+  const gap = 10; // gap between pill and picker
+  const margin = 16; // minimum margin from viewport edges
 
-  let top = rect.bottom + 8;
-  let left = rect.left;
+  // Determine direction: prefer below, but flip above if not enough space
+  const spaceBelow = viewportHeight - rect.bottom - gap - margin;
+  const spaceAbove = rect.top - gap - margin;
+  const direction: 'below' | 'above' =
+    spaceBelow >= pickerHeight ? 'below' :
+    spaceAbove >= pickerHeight ? 'above' :
+    spaceBelow >= spaceAbove ? 'below' : 'above';
 
-  if (left + pickerWidth > viewportWidth - 16) {
-    left = viewportWidth - pickerWidth - 16;
+  let top: number;
+  if (direction === 'below') {
+    top = rect.bottom + gap;
+  } else {
+    top = rect.top - pickerHeight - gap;
   }
-  if (top + pickerHeight > viewportHeight - 16) {
-    top = rect.top - pickerHeight - 8;
+
+  // Horizontal: center on pill, clamp to viewport
+  const pillCenter = rect.left + rect.width / 2;
+  let left = pillCenter - pickerWidth / 2;
+  if (left + pickerWidth > viewportWidth - margin) {
+    left = viewportWidth - pickerWidth - margin;
   }
-  if (left < 16) left = 16;
+  if (left < margin) left = margin;
 
   // Create standalone container - this is the React root boundary.
   // pointer-events: auto overrides the body's pointer-events: none (set by Radix Dialog).
@@ -300,7 +333,7 @@ function openPickerForPill(pillEl: HTMLElement, dateAttr: string, theme: string)
     <PickerUI
       currentDate={dateAttr}
       theme={theme}
-      position={{ top, left }}
+      position={{ top, left, direction, pillCenter }}
       onSelectDate={handleSelectDate}
       onClose={handleClose}
     />
