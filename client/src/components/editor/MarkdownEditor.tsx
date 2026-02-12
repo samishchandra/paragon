@@ -45,6 +45,7 @@ import { ImageDropZone } from './ImageDropZone';
 import { ImageEditPopover } from './ImageEditPopover';
 import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
 import { PerformanceProfiler } from './PerformanceProfiler';
+import { EditorErrorBoundary } from './EditorErrorBoundary';
 import './PerformanceProfiler.css';
 import { FileText, Eye } from 'lucide-react';
 import { TableOfContents } from './TableOfContents';
@@ -317,6 +318,11 @@ export interface MarkdownEditorProps {
   
   /** Callback when the user clicks the close button inside the profiler. The embedding app should set showPerformanceProfiler to false. */
   onPerformanceProfilerClose?: () => void;
+  
+  // === ERROR BOUNDARY ===
+  
+  /** Callback when the editor crashes — useful for external error reporting */
+  onEditorError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(function MarkdownEditor({
@@ -382,6 +388,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   // Performance profiler
   showPerformanceProfiler = false,
   onPerformanceProfilerClose,
+  // Error boundary
+  onEditorError,
 }, ref) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
@@ -398,6 +406,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   
   // Ref for the editor content wrapper (for drag handle overlay)
   const editorContentRef = useRef<HTMLDivElement>(null);
+  
+  // Error boundary remount key — incremented to force re-render of editor content
+  const [editorErrorKey, setEditorErrorKey] = useState(0);
 
   // Build extensions array - conditionally include problematic extensions on mobile
   const extensions = useMemo(() => {
@@ -1431,6 +1442,21 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           scrollContainerRef={editorContentRef as React.RefObject<HTMLElement>}
         />
       )}
+      <EditorErrorBoundary
+        resetKey={`${content}-${editorErrorKey}`}
+        onRetry={() => setEditorErrorKey(k => k + 1)}
+        onClearContent={() => {
+          // Clear the editor content and remount
+          if (editor) {
+            editor.commands.clearContent();
+          }
+          onChange?.('');
+          onHTMLChange?.('');
+          onMarkdownChange?.('');
+          setEditorErrorKey(k => k + 1);
+        }}
+        onError={onEditorError}
+      >
       <div className="editor-content-wrapper" ref={editorContentRef} style={editorContentStyle}>
         {editorMode === 'wysiwyg' ? (
           <>
@@ -1497,6 +1523,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           />
         )}
       </div>
+      </EditorErrorBoundary>
       {/* TOC sidebar - right position */}
       {showTableOfContents && tocPosition === 'right' && (
         <TableOfContents

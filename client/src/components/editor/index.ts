@@ -1,4 +1,5 @@
 export { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
+export { EditorErrorBoundary, type EditorErrorBoundaryProps } from './EditorErrorBoundary';
 export { FloatingToolbar } from './FloatingToolbar';
 export { EditorToolbar } from './EditorToolbar';
 export { SlashCommands } from './SlashCommands';
