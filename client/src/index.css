@@ -2300,72 +2300,64 @@ pre.with-line-numbers code .line::before {
   font-weight: 700;
 }
 
-/* Slash command menu */
-.slash-command-menu {
-  position: absolute;
+/* Slash command menu — Taskmate compact style */
+.slash-menu {
   background: var(--popover);
   border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 4px 20px oklch(0 0 0 / 0.3);
-  padding: 0.5rem;
-  min-width: 200px;
-  width: calc(100vw - 16px);
-  max-width: 280px;
-  max-height: 50vh;
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.25);
+  padding: 4px;
+  min-width: 180px;
+  max-width: 210px;
+  max-height: 320px;
   overflow-y: auto;
-  z-index: 50;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  animation: slash-fade-in 0.12s ease-out;
 }
 
-@media (min-width: 640px) {
-  .slash-command-menu {
-    width: auto;
-    max-width: 320px;
-    max-height: 300px;
-  }
+@keyframes slash-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.slash-command-item {
+.slash-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
-  border-radius: 6px;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 5px;
   cursor: pointer;
-  transition: background 0.1s ease;
+  transition: background 0.08s ease;
   touch-action: manipulation;
+  white-space: nowrap;
 }
 
-@media (min-width: 640px) {
-  .slash-command-item {
-    padding: 0.5rem 0.75rem;
-  }
-}
-
-.slash-command-item:hover,
-.slash-command-item.is-selected {
+.slash-item:hover,
+.slash-item.is-selected {
   background: var(--accent);
 }
 
-.slash-command-item .icon {
-  width: 20px;
-  height: 20px;
+.slash-icon {
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   color: var(--muted-foreground);
 }
 
-.slash-command-item .label {
-  font-size: 0.875rem;
+.slash-item.is-selected .slash-icon {
   color: var(--foreground);
 }
 
-.slash-command-item .shortcut {
-  margin-left: auto;
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-  font-family: var(--font-mono);
+.slash-label {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Word count */
@@ -4094,8 +4086,8 @@ pre.with-line-numbers code .line::before {
 /* Light theme link overrides removed — CSS variables handle theming automatically */
 
 /* Light theme slash command menu */
-[data-theme="light"] .slash-command-menu {
-  box-shadow: 0 4px 20px oklch(0 0 0 / 0.1);
+[data-theme="light"] .slash-menu {
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.1);
 }
 
 /* Light theme date picker popup */

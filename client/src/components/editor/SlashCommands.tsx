@@ -1,4 +1,4 @@
-import { Editor, Extension } from '@tiptap/react';
+import { Editor } from '@tiptap/react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import ImageURLDialog from './ImageURLDialog';
 import {
@@ -24,9 +24,9 @@ import {
 } from 'lucide-react';
 
 /*
- * DESIGN: Dark Mode Craftsman
- * Slash command menu for quick insertions
- * Glassmorphic popup with keyboard navigation
+ * DESIGN: Taskmate-style compact slash command menu
+ * Uses editor transaction monitoring to detect "/" typed at start of line
+ * Single-line items: icon + title only, no descriptions
  */
 
 interface SlashCommandsProps {
@@ -48,7 +48,6 @@ interface SlashCommandsProps {
 
 interface CommandItem {
   title: string;
-  description: string;
   icon: React.ReactNode;
   command: (editor: Editor) => void;
   keywords?: string[];
@@ -58,139 +57,116 @@ interface CommandItem {
 const commands: CommandItem[] = [
   {
     title: 'Paragraph',
-    description: 'Normal text',
-    icon: <Type size={15} />,
+    icon: <Type size={16} />,
     command: (editor) => editor.chain().focus().setParagraph().run(),
     keywords: ['text', 'normal', 'p'],
   },
   {
     title: 'Heading 1',
-    description: 'Large section heading',
-    icon: <Heading1 size={15} />,
+    icon: <Heading1 size={16} />,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
     keywords: ['h1', 'title', 'large'],
   },
   {
     title: 'Heading 2',
-    description: 'Medium section heading',
-    icon: <Heading2 size={15} />,
+    icon: <Heading2 size={16} />,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
     keywords: ['h2', 'subtitle'],
   },
   {
     title: 'Heading 3',
-    description: 'Small section heading',
-    icon: <Heading3 size={15} />,
+    icon: <Heading3 size={16} />,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
     keywords: ['h3', 'subheading'],
   },
   {
     title: 'Bullet List',
-    description: 'Create a simple bullet list',
-    icon: <List size={15} />,
+    icon: <List size={16} />,
     command: (editor) => editor.chain().focus().toggleBulletList().run(),
     keywords: ['ul', 'unordered', 'bullets'],
   },
   {
     title: 'Numbered List',
-    description: 'Create a numbered list',
-    icon: <ListOrdered size={15} />,
+    icon: <ListOrdered size={16} />,
     command: (editor) => editor.chain().focus().toggleOrderedList().run(),
     keywords: ['ol', 'ordered', 'numbers'],
   },
   {
     title: 'Task List',
-    description: 'Create a todo list with checkboxes',
-    icon: <CheckSquare size={15} />,
+    icon: <CheckSquare size={16} />,
     command: (editor) => editor.chain().focus().toggleTaskList().run(),
     keywords: ['todo', 'checkbox', 'tasks'],
   },
   {
     title: 'Quote',
-    description: 'Add a blockquote',
-    icon: <Quote size={15} />,
+    icon: <Quote size={16} />,
     command: (editor) => editor.chain().focus().toggleBlockquote().run(),
     keywords: ['blockquote', 'citation'],
   },
   {
     title: 'Code Block',
-    description: 'Add a code block with syntax highlighting',
-    icon: <Code2 size={15} />,
+    icon: <Code2 size={16} />,
     command: (editor) => editor.chain().focus().toggleCodeBlock().run(),
     keywords: ['code', 'pre', 'syntax'],
   },
   {
     title: 'Table',
-    description: 'Insert a table',
-    icon: <Table size={15} />,
+    icon: <Table size={16} />,
     command: (editor) => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
     keywords: ['grid', 'spreadsheet'],
   },
-  // Image command is handled separately with a dialog
   {
     title: 'Image',
-    description: 'Insert an image from URL',
-    icon: <Image size={15} />,
-    command: () => {
-      // This is a placeholder - actual insertion is handled by the dialog
-      // The command will be intercepted in SlashCommands component
-    },
+    icon: <Image size={16} />,
+    command: () => {},
     keywords: ['picture', 'photo', 'img'],
     isImageCommand: true,
   },
   {
     title: 'Divider',
-    description: 'Add a horizontal rule',
-    icon: <Minus size={15} />,
+    icon: <Minus size={16} />,
     command: (editor) => editor.chain().focus().setHorizontalRule().run(),
     keywords: ['hr', 'separator', 'line'],
   },
   {
     title: 'Info Callout',
-    description: 'Add an info callout box',
-    icon: <Info size={15} className="text-blue-400" />,
+    icon: <Info size={16} className="text-blue-400" />,
     command: (editor) => editor.chain().focus().toggleCallout({ type: 'info' }).run(),
     keywords: ['note', 'tip', 'information'],
   },
   {
     title: 'Note Callout',
-    description: 'Add a note callout box',
-    icon: <StickyNote size={15} className="text-purple-400" />,
+    icon: <StickyNote size={16} className="text-purple-400" />,
     command: (editor) => editor.chain().focus().toggleCallout({ type: 'note' }).run(),
     keywords: ['memo', 'remember'],
   },
   {
     title: 'Prompt Callout',
-    description: 'Add a prompt callout box',
-    icon: <MessageSquareText size={15} className="text-yellow-400" />,
+    icon: <MessageSquareText size={16} className="text-amber-400" />,
     command: (editor) => editor.chain().focus().toggleCallout({ type: 'prompt' }).run(),
     keywords: ['question', 'ask', 'prompt'],
   },
   {
     title: 'Resources Callout',
-    description: 'Add a resources callout box',
-    icon: <BookOpen size={15} className="text-green-400" />,
+    icon: <BookOpen size={16} className="text-green-400" />,
     command: (editor) => editor.chain().focus().toggleCallout({ type: 'resources' }).run(),
     keywords: ['links', 'reference', 'reading'],
   },
   {
     title: 'To-Do Callout',
-    description: 'Add a to-do callout box',
-    icon: <ListTodo size={15} className="text-cyan-400" />,
+    icon: <ListTodo size={16} className="text-cyan-400" />,
     command: (editor) => editor.chain().focus().toggleCallout({ type: 'todo' }).run(),
     keywords: ['task', 'action', 'checklist'],
   },
   {
     title: 'Date',
-    description: 'Insert a date pill (today)',
-    icon: <Calendar size={15} className="text-cyan-400" />,
+    icon: <Calendar size={16} className="text-cyan-400" />,
     command: (editor) => editor.chain().focus().insertDatePill().run(),
     keywords: ['date', 'today', 'calendar', 'time', 'schedule'],
   },
   {
     title: 'Wiki Link',
-    description: 'Insert a [[page name]] link',
-    icon: <Link2 size={15} className="text-cyan-400" />,
+    icon: <Link2 size={16} className="text-cyan-400" />,
     command: (editor) => {
       const pageName = window.prompt('Enter page name:');
       if (pageName) {
@@ -209,30 +185,32 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageDialogPosition, setImageDialogPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
-  // Track the position where the slash was typed
   const slashPosRef = useRef<number>(-1);
+  const isOpenRef = useRef(false);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
 
   const filteredCommands = commands.filter((cmd) => {
+    if (!query) return true;
     const searchText = query.toLowerCase();
     return (
       cmd.title.toLowerCase().includes(searchText) ||
-      cmd.description.toLowerCase().includes(searchText) ||
       cmd.keywords?.some((kw) => kw.includes(searchText))
     );
   });
 
   const deleteSlashAndQuery = useCallback(() => {
-    // Delete from the slash position to the current cursor position
     const { state } = editor;
     const { selection } = state;
     const cursorPos = selection.from;
     const slashPos = slashPosRef.current;
 
-    if (slashPos >= 0 && slashPos < cursorPos) {
-      // Delete the range from slash to current cursor
+    if (slashPos >= 0 && slashPos <= cursorPos) {
       editor.chain().focus().deleteRange({ from: slashPos, to: cursorPos }).run();
     } else {
-      // Fallback: search backward for the slash character
       const { $from } = selection;
       const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc');
       const slashIndex = textBefore.lastIndexOf('/');
@@ -243,13 +221,18 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
     }
   }, [editor]);
 
+  const closeMenu = useCallback(() => {
+    setIsOpen(false);
+    setQuery('');
+    setSelectedIndex(0);
+    slashPosRef.current = -1;
+  }, []);
+
   const executeCommand = useCallback((index: number) => {
     const command = filteredCommands[index];
     if (command) {
-      // First, delete the slash and query text
       deleteSlashAndQuery();
 
-      // Handle image command specially with dialog
       if (command.isImageCommand) {
         const { state } = editor;
         const coords = editor.view.coordsAtPos(state.selection.from);
@@ -259,97 +242,165 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
         });
         setShowImageDialog(true);
       } else {
-        // Now apply the command on the current line (cursor is where slash was)
         command.command(editor);
       }
-      
-      setIsOpen(false);
-      setQuery('');
-      setSelectedIndex(0);
-      slashPosRef.current = -1;
+
+      closeMenu();
     }
-  }, [editor, filteredCommands, deleteSlashAndQuery]);
+  }, [editor, filteredCommands, deleteSlashAndQuery, closeMenu]);
 
   const handleImageInsert = useCallback((url: string, alt: string) => {
     editor.chain().focus().setImage({ src: url, alt }).run();
   }, [editor]);
 
+  // Monitor editor transactions to detect "/" being typed
   useEffect(() => {
     if (!editor) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isOpen) {
-        // Check for slash to open menu
-        if (event.key === '/') {
-          const { state } = editor;
-          const { selection } = state;
-          const { $from } = selection;
-          
-          // Record the position where the slash will be typed
-          // The slash hasn't been inserted yet, so the slash will appear at $from.pos
-          slashPosRef.current = $from.pos;
-          
-          // Get cursor position for menu placement
-          const coords = editor.view.coordsAtPos($from.pos);
-          setPosition({
-            top: coords.bottom + 8,
-            left: coords.left,
-          });
-          
-          // Open menu after a small delay to allow the slash to be typed
-          setTimeout(() => {
-            setIsOpen(true);
-            setQuery('');
-            setSelectedIndex(0);
-          }, 10);
-        }
-        return;
-      }
+    const handleTransaction = () => {
+      if (isOpenRef.current) return; // Already open, don't re-trigger
 
-      // Handle navigation when menu is open
+      const { state } = editor;
+      const { selection } = state;
+      const { $from } = selection;
+
+      // Check if the character just before the cursor is "/"
+      if ($from.parentOffset === 0) return;
+
+      const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc');
+      if (!textBefore.endsWith('/')) return;
+
+      // Only trigger if "/" is at start of line or after whitespace
+      const charBeforeSlash = textBefore.length > 1 ? textBefore.slice(-2, -1) : '';
+      if (charBeforeSlash && charBeforeSlash !== ' ' && charBeforeSlash !== '\n') return;
+
+      // Record the slash position (the character before cursor)
+      slashPosRef.current = $from.pos - 1;
+
+      // Get cursor position for menu placement
+      const coords = editor.view.coordsAtPos($from.pos);
+      
+      // Check if we need to open above (near bottom of viewport)
+      const viewportHeight = window.innerHeight;
+      const menuHeight = 320; // approximate max height
+      const spaceBelow = viewportHeight - coords.bottom;
+      const openAbove = spaceBelow < menuHeight && coords.top > menuHeight;
+      
+      setPosition({
+        top: openAbove ? coords.top - menuHeight - 4 : coords.bottom + 6,
+        left: coords.left,
+      });
+      setIsOpen(true);
+      setQuery('');
+      setSelectedIndex(0);
+    };
+
+    editor.on('update', handleTransaction);
+    return () => {
+      editor.off('update', handleTransaction);
+    };
+  }, [editor]);
+
+  // Handle keyboard navigation and query updates when menu is open
+  useEffect(() => {
+    if (!editor || !isOpen) return;
+
+    const editorElement = editor.view.dom;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isOpenRef.current) return;
+
       if (event.key === 'ArrowDown') {
         event.preventDefault();
+        event.stopPropagation();
         setSelectedIndex((prev) => (prev + 1) % filteredCommands.length);
       } else if (event.key === 'ArrowUp') {
         event.preventDefault();
+        event.stopPropagation();
         setSelectedIndex((prev) => (prev - 1 + filteredCommands.length) % filteredCommands.length);
       } else if (event.key === 'Enter') {
         event.preventDefault();
+        event.stopPropagation();
         executeCommand(selectedIndex);
       } else if (event.key === 'Escape') {
         event.preventDefault();
-        setIsOpen(false);
-        setQuery('');
-        slashPosRef.current = -1;
-      } else if (event.key === 'Backspace') {
-        if (query.length === 0) {
-          setIsOpen(false);
-          slashPosRef.current = -1;
-        } else {
-          setQuery((prev) => prev.slice(0, -1));
-        }
-      } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
-        setQuery((prev) => prev + event.key);
-        setSelectedIndex(0);
+        event.stopPropagation();
+        closeMenu();
       }
     };
+
+    // Listen on the editor element in capture phase to intercept before ProseMirror
+    editorElement.addEventListener('keydown', handleKeyDown, true);
+
+    return () => {
+      editorElement.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [editor, isOpen, selectedIndex, filteredCommands, executeCommand, closeMenu]);
+
+  // Monitor editor updates to track the query text after the slash
+  useEffect(() => {
+    if (!editor || !isOpen) return;
+
+    const handleUpdate = () => {
+      if (!isOpenRef.current || slashPosRef.current < 0) return;
+
+      const { state } = editor;
+      const { selection } = state;
+      const cursorPos = selection.from;
+      const slashPos = slashPosRef.current;
+
+      // If cursor moved before the slash, close menu
+      if (cursorPos <= slashPos) {
+        closeMenu();
+        return;
+      }
+
+      // Extract the text between slash and cursor (the query)
+      try {
+        const queryText = state.doc.textBetween(slashPos + 1, cursorPos, undefined, '\ufffc');
+        
+        // If query contains a space or newline, close menu
+        if (queryText.includes('\n')) {
+          closeMenu();
+          return;
+        }
+
+        setQuery(queryText);
+        setSelectedIndex(0);
+      } catch {
+        closeMenu();
+      }
+    };
+
+    editor.on('update', handleUpdate);
+    editor.on('selectionUpdate', handleUpdate);
+
+    return () => {
+      editor.off('update', handleUpdate);
+      editor.off('selectionUpdate', handleUpdate);
+    };
+  }, [editor, isOpen, closeMenu]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
 
     const handleClick = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setQuery('');
-        slashPosRef.current = -1;
+        closeMenu();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('click', handleClick);
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isOpen, closeMenu]);
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('click', handleClick);
-    };
-  }, [editor, isOpen, query, selectedIndex, filteredCommands, executeCommand]);
+  // Close if no results
+  useEffect(() => {
+    if (isOpen && filteredCommands.length === 0 && query.length > 2) {
+      closeMenu();
+    }
+  }, [isOpen, filteredCommands.length, query, closeMenu]);
 
   // Reset selected index when filtered results change
   useEffect(() => {
@@ -358,7 +409,15 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
     }
   }, [filteredCommands.length, selectedIndex]);
 
-  // Show image dialog even when menu is closed
+  // Scroll selected item into view
+  useEffect(() => {
+    if (!isOpen || !menuRef.current) return;
+    const selected = menuRef.current.querySelector('.slash-item.is-selected');
+    if (selected) {
+      selected.scrollIntoView({ block: 'nearest' });
+    }
+  }, [isOpen, selectedIndex]);
+
   if (showImageDialog) {
     return (
       <ImageURLDialog
@@ -374,37 +433,36 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
     return null;
   }
 
-  // Calculate safe position for mobile
-  const safePosition = {
-    top: position.top,
-    left: Math.min(position.left, typeof window !== 'undefined' ? window.innerWidth - 280 : position.left),
-  };
+  // Calculate safe position
+  const safeLeft = Math.max(8, Math.min(
+    position.left,
+    typeof window !== 'undefined' ? window.innerWidth - 220 : position.left
+  ));
 
   return (
     <div
       ref={menuRef}
-      className="slash-command-menu fixed z-50 max-h-[60vh] overflow-y-auto"
+      className="slash-menu"
       style={{
-        top: safePosition.top,
-        left: Math.max(8, safePosition.left),
+        position: 'fixed',
+        top: position.top,
+        left: safeLeft,
+        zIndex: 9999,
       }}
     >
-      <div className="text-xs text-muted-foreground px-3 py-2 border-b border-border">
-        {query ? `Searching: ${query}` : 'Type to filter...'}
-      </div>
       {filteredCommands.map((cmd, index) => (
         <div
           key={cmd.title}
-          className={`slash-command-item ${index === selectedIndex ? 'is-selected' : ''}`}
-          onClick={() => executeCommand(index)}
+          className={`slash-item ${index === selectedIndex ? 'is-selected' : ''}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            executeCommand(index);
+          }}
           onMouseEnter={() => setSelectedIndex(index)}
-          onTouchStart={() => setSelectedIndex(index)}
         >
-          <div className="icon flex-shrink-0">{cmd.icon}</div>
-          <div className="flex flex-col min-w-0">
-            <span className="label truncate">{cmd.title}</span>
-            <span className="text-xs text-muted-foreground truncate">{cmd.description}</span>
-          </div>
+          <span className="slash-icon">{cmd.icon}</span>
+          <span className="slash-label">{cmd.title}</span>
         </div>
       ))}
     </div>
