@@ -31,15 +31,17 @@ interface FindReplaceProps {
   rawMarkdown?: string;
   /** Callback to update raw markdown (for replace in raw mode) */
   onRawMarkdownChange?: (content: string) => void;
+  /** Callback to report search matches to parent (for visual highlighting in raw mode) */
+  onMatchesChange?: (matches: SearchMatch[], currentIndex: number) => void;
 }
 
-interface SearchMatch {
+export interface SearchMatch {
   from: number;
   to: number;
   text: string;
 }
 
-export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initialSearchQuery, editorMode = 'wysiwyg', rawMarkdown = '', onRawMarkdownChange }: FindReplaceProps) {
+export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initialSearchQuery, editorMode = 'wysiwyg', rawMarkdown = '', onRawMarkdownChange, onMatchesChange }: FindReplaceProps) {
   const isRawMode = editorMode === 'markdown';
   const [searchQuery, setSearchQuery] = useState('');
   const [replaceQuery, setReplaceQuery] = useState('');
@@ -134,30 +136,27 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
     findMatches();
   }, [findMatches]);
 
+  // Report matches to parent for visual highlighting in raw mode overlay
+  useEffect(() => {
+    if (isRawMode && onMatchesChange) {
+      if (isOpen && matches.length > 0) {
+        onMatchesChange(matches, currentMatchIndex);
+      } else {
+        onMatchesChange([], 0);
+      }
+    }
+  }, [isRawMode, isOpen, matches, currentMatchIndex, onMatchesChange]);
+
   // Update search highlighting in the editor
   useEffect(() => {
     if (!editor) return;
     
-    // In raw mode, highlight matches in the textarea via CSS selection
+    // In raw mode, visual highlighting is handled by SyntaxHighlightedMarkdown overlay
     if (isRawMode) {
       // Clear WYSIWYG highlights when in raw mode
       const hasSearchHighlight = typeof editor.commands.clearSearchHighlight === 'function';
       if (hasSearchHighlight) {
         editor.commands.clearSearchHighlight();
-      }
-      // Highlight current match in textarea by selecting it
-      if (isOpen && matches.length > 0 && currentMatchIndex < matches.length) {
-        const match = matches[currentMatchIndex];
-        const textarea = document.querySelector('.syntax-textarea') as HTMLTextAreaElement;
-        if (textarea) {
-          textarea.focus();
-          textarea.setSelectionRange(match.from, match.to);
-          // Scroll the match into view
-          const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 22;
-          const textBefore = rawMarkdown.substring(0, match.from);
-          const lineNumber = textBefore.split('\n').length;
-          textarea.scrollTop = Math.max(0, (lineNumber - 3) * lineHeight);
-        }
       }
       return;
     }
@@ -185,6 +184,10 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
       if (hasSearchHighlight) {
         editor.commands.clearSearchHighlight();
       }
+      // Clear raw mode overlay highlights
+      if (onMatchesChange) {
+        onMatchesChange([], 0);
+      }
       // Only clear select-all-occurrences if the panel was NOT closed by the Select All action
       if (!closedBySelectAllRef.current) {
         const hasClearAll = typeof editor.commands.clearAllOccurrences === 'function';
@@ -195,21 +198,29 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
       }
       closedBySelectAllRef.current = false;
     }
-  }, [isOpen, editor]);
+  }, [isOpen, editor, onMatchesChange]);
 
   // Scroll to current match in editor (without selecting text to avoid floating toolbar)
   useEffect(() => {
     if (matches.length > 0 && currentMatchIndex < matches.length) {
+      const match = matches[currentMatchIndex];
+      
       if (isRawMode) {
-        // In raw mode, scrolling is handled in the highlighting effect above
+        // In raw mode, scroll the textarea to the current match without stealing focus
+        const textarea = document.querySelector('.syntax-textarea') as HTMLTextAreaElement;
+        if (textarea && isNavigatingRef.current) {
+          const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 22;
+          const textBefore = rawMarkdown.substring(0, match.from);
+          const lineNumber = textBefore.split('\n').length;
+          textarea.scrollTop = Math.max(0, (lineNumber - 3) * lineHeight);
+        }
         if (isNavigatingRef.current) {
           isNavigatingRef.current = false;
         }
         return;
       }
-      const match = matches[currentMatchIndex];
       
-      // Scroll to the match
+      // Scroll to the match in WYSIWYG mode
       const domAtPos = editor.view.domAtPos(match.from);
       if (domAtPos.node) {
         const element = domAtPos.node.parentElement;
@@ -221,7 +232,7 @@ export function FindReplace({ editor, isOpen, onClose, focusTrigger = 0, initial
         isNavigatingRef.current = false;
       }
     }
-  }, [currentMatchIndex, matches, editor, isRawMode]);
+  }, [currentMatchIndex, matches, editor, isRawMode, rawMarkdown]);
 
   // Focus search input when opened or when focusTrigger changes
   useEffect(() => {

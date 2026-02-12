@@ -25,7 +25,7 @@ import { ResizableImage } from './extensions/ResizableImage';
 import { DatePill, formatDateForMarkdown, parseDateFromMarkdown, getDateVariant } from './extensions/DatePill';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
-import { FindReplace } from './FindReplace';
+import { FindReplace, type SearchMatch } from './FindReplace';
 import { SelectAllActionBar } from './SelectAllActionBar';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useWordCount } from './hooks/useWordCount';
@@ -416,6 +416,12 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   
   // Error boundary remount key — incremented to force re-render of editor content
   const [editorErrorKey, setEditorErrorKey] = useState(0);
+  const [rawSearchMatches, setRawSearchMatches] = useState<SearchMatch[]>([]);
+  const [rawSearchCurrentIndex, setRawSearchCurrentIndex] = useState(0);
+  const handleSearchMatchesChange = useCallback((matches: SearchMatch[], currentIndex: number) => {
+    setRawSearchMatches(matches);
+    setRawSearchCurrentIndex(currentIndex);
+  }, []);
 
   // Scroll-triggered scrollbar visibility: show scrollbar briefly during active scrolling
   useEffect(() => {
@@ -1485,6 +1491,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           editorMode={editorMode}
           rawMarkdown={rawMarkdown}
           onRawMarkdownChange={handleRawMarkdownChange}
+          onMatchesChange={handleSearchMatchesChange}
         />
       )}
       
@@ -1592,6 +1599,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             placeholder="Write your markdown here..."
             editable={editable}
             autofocus
+            searchMatches={rawSearchMatches}
+            currentMatchIndex={rawSearchCurrentIndex}
           />
         )}
       </div>
