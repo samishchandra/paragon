@@ -1,4 +1,4 @@
-# Manus Markdown Editor
+# Paragon Markdown Editor
 
 A professional, feature-rich markdown editor component designed as a drop-in for note-taking applications like Taskmate, Momentum, and more.
 
