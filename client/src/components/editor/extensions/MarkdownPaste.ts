@@ -191,7 +191,8 @@ function markdownToHtml(markdown: string): string {
   // Links
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
   
-  // Images
+  // Images with optional width: ![alt | width](url) or ![alt](url)
+  html = html.replace(/!\[([^\]]*?)\s*\|\s*(\d+)\]\(([^)]+)\)/g, '<img src="$3" alt="$1" width="$2" style="width: $2px">');
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
   
   // Auto-detect URLs

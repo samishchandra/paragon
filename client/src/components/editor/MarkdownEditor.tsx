@@ -748,7 +748,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       replacement: (content) => `==${content}==`,
     });
     
-    // Custom image rule to preserve width attribute
+    // Custom image rule to preserve width attribute using ![alt | width](url) format
     td.addRule('resizableImage', {
       filter: 'img',
       replacement: (content, node) => {
@@ -757,9 +757,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         const alt = img.getAttribute('alt') || '';
         const width = img.getAttribute('width') || img.style.width?.replace('px', '');
         
-        // If width is set, use HTML img tag to preserve it
+        // Use ![alt | width](url) format to preserve width in markdown
         if (width) {
-          return `<img src="${src}" alt="${alt}" width="${width}" />`;
+          return `![${alt} | ${width}](${src})`;
         }
         
         // Otherwise use standard markdown syntax
@@ -914,6 +914,12 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           const innerHtml = marked.parse(content.trim(), { async: false }) as string;
           return `<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`;
         });
+      });
+      
+      // Convert ![alt | width](url) image format to HTML img tags with width attribute
+      // This preserves image dimensions across mode switches
+      processedMarkdown = processedMarkdown.replace(/!\[([^\]]*)\s*\|\s*(\d+)\]\(([^)]+)\)/g, (match, alt, width, src) => {
+        return `<img src="${src.trim()}" alt="${alt.trim()}" width="${width.trim()}" style="width: ${width.trim()}px" />`;
       });
       
       // Convert date pill markdown format @Mon DD, YYYY@ back to date pill HTML
