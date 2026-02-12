@@ -839,18 +839,22 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       replacement: (content) => `==${content}==`,
     });
     
-    // Custom image rule to preserve width attribute using ![alt | width](url) format
+    // Custom image rule to preserve width attribute using ![alt|width](url) format
     td.addRule('resizableImage', {
       filter: 'img',
       replacement: (content, node) => {
         const img = node as HTMLImageElement;
         const src = img.getAttribute('src') || '';
-        const alt = img.getAttribute('alt') || '';
-        const width = img.getAttribute('width') || img.style.width?.replace('px', '');
+        // Strip any previously embedded width from alt text (e.g. "photo|300")
+        const rawAlt = img.getAttribute('alt') || '';
+        const alt = rawAlt.replace(/\s*\|\s*\d+\s*$/, '').trim();
+        // Only use the explicit width attribute (set by resize handler), not style/computed
+        const widthAttr = img.getAttribute('width');
+        const width = widthAttr ? parseInt(widthAttr, 10) : null;
         
-        // Use ![alt | width](url) format to preserve width in markdown
-        if (width) {
-          return `![${alt} | ${width}](${src})`;
+        // Use ![alt|width](url) format to preserve width in markdown
+        if (width && width > 0) {
+          return `![${alt}|${width}](${src})`;
         }
         
         // Otherwise use standard markdown syntax
@@ -1023,9 +1027,10 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         });
       });
       
-      // Convert ![alt | width](url) image format to HTML img tags with width attribute
+      // Convert ![alt|width](url) image format to HTML img tags with width attribute
       // This preserves image dimensions across mode switches
-      processedMarkdown = processedMarkdown.replace(/!\[([^\]]*)\s*\|\s*(\d+)\]\(([^)]+)\)/g, (match, alt, width, src) => {
+      // Supports both ![alt|300](url) and ![alt | 300](url) formats
+      processedMarkdown = processedMarkdown.replace(/!\[([^\]]*?)\s*\|\s*(\d+)\]\(([^)]+)\)/g, (match, alt, width, src) => {
         return `<img src="${src.trim()}" alt="${alt.trim()}" width="${width.trim()}" style="width: ${width.trim()}px" />`;
       });
       
