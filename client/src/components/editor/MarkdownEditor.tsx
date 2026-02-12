@@ -219,6 +219,23 @@ export interface MarkdownEditorProps {
   onImageUploadComplete?: () => void;
   /** Callback when image upload fails */
   onImageUploadError?: (error: string) => void;
+  /**
+   * External image upload handler.
+   * If provided, images are uploaded via this callback instead of being embedded as base64.
+   * Should return a reference string (e.g. relative path like "../_images/photo.jpg").
+   * If not provided or if it throws, falls back to base64 embedding.
+   */
+  onImageUpload?: (
+    file: File,
+    options: { fileName: string; mimeType: string; fileSize: number; uploadId: string }
+  ) => Promise<string>;
+  /**
+   * Resolve an image src reference to a displayable URL.
+   * Called for images whose src is not a data: URL, blob: URL, or http(s) URL.
+   * Should return a blob: URL or data: URL that the browser can display.
+   * If not provided, the src is used as-is.
+   */
+  resolveImageSrc?: (src: string) => Promise<string>;
   /** Show mode toggle to switch between WYSIWYG and raw markdown (default: true) */
   showModeToggle?: boolean;
   
@@ -352,6 +369,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   onImageUploadStart,
   onImageUploadComplete,
   onImageUploadError,
+  onImageUpload,
+  resolveImageSrc,
   showModeToggle = true,
   // New props
   initialMode = 'wysiwyg',
@@ -568,12 +587,14 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
               position: { x: attrs.rect.left + attrs.rect.width / 2, y: attrs.rect.bottom },
             });
           },
+          resolveImageSrc: resolveImageSrc,
         }),
         ImageUpload.configure({
           maxFileSize: maxImageSize,
           onUploadStart: onImageUploadStart,
           onUploadComplete: onImageUploadComplete,
           onUploadError: onImageUploadError,
+          onImageUpload: onImageUpload,
         })
       );
     }
@@ -611,7 +632,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }
 
     return baseExtensions;
-  }, [placeholder, isMobile, maxImageSize, onImageUploadStart, onImageUploadComplete, onImageUploadError, headingLevels, collapsibleHeadingLevels, disabledFeatures, onWikiLinkClick]);
+  }, [placeholder, isMobile, maxImageSize, onImageUploadStart, onImageUploadComplete, onImageUploadError, onImageUpload, resolveImageSrc, headingLevels, collapsibleHeadingLevels, disabledFeatures, onWikiLinkClick]);
 
   // Debounced onUpdate ref for HTML serialization performance
   const onUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -5,6 +5,12 @@ export interface ResizableImageOptions {
   HTMLAttributes: Record<string, unknown>;
   allowBase64: boolean;
   onImageClick?: (attrs: { src: string; alt: string; pos: number; rect: DOMRect }) => void;
+  /**
+   * Resolve an image src reference to a displayable URL.
+   * Called for images whose src is not a data: URL, blob: URL, or http(s) URL.
+   * Should return a blob: URL or data: URL that the browser can display.
+   */
+  resolveImageSrc?: (src: string) => Promise<string>;
 }
 
 declare module '@tiptap/core' {
@@ -26,6 +32,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       HTMLAttributes: {},
       allowBase64: true,
       onImageClick: undefined,
+      resolveImageSrc: undefined,
     };
   },
 
@@ -145,11 +152,44 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       applyAlignment(node.attrs.align || 'left');
       
       const img = document.createElement('img');
-      img.src = node.attrs.src;
       img.alt = node.attrs.alt || '';
       if (node.attrs.width) {
         img.style.width = `${node.attrs.width}px`;
       }
+
+      // Helper: check if a src needs resolution (not a standard displayable URL)
+      const needsResolution = (src: string) => {
+        if (!src) return false;
+        // Standard displayable URLs don't need resolution
+        if (src.startsWith('data:')) return false;
+        if (src.startsWith('blob:')) return false;
+        if (src.startsWith('http://')) return false;
+        if (src.startsWith('https://')) return false;
+        // Relative paths and custom protocols need resolution
+        return true;
+      };
+
+      // Helper: resolve and set image src
+      const resolveAndSetSrc = (src: string) => {
+        if (needsResolution(src) && extensionOptions.resolveImageSrc) {
+          // Set a loading placeholder while resolving
+          img.style.opacity = '0.5';
+          img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3C/svg%3E';
+          extensionOptions.resolveImageSrc(src).then((resolvedUrl) => {
+            img.src = resolvedUrl;
+            img.style.opacity = '1';
+          }).catch(() => {
+            // Fallback: try using the original src directly
+            img.src = src;
+            img.style.opacity = '1';
+          });
+        } else {
+          img.src = src;
+        }
+      };
+
+      // Set initial src (resolve if needed)
+      resolveAndSetSrc(node.attrs.src);
       
       // Resize handle with diagonal resize icon
       const resizeHandle = document.createElement('div');
@@ -447,7 +487,8 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           }
           // Update the mutable reference so menu actions use latest values
           currentNode = updatedNode;
-          img.src = updatedNode.attrs.src;
+          // Resolve src if it's a relative path or custom protocol
+          resolveAndSetSrc(updatedNode.attrs.src);
           img.alt = updatedNode.attrs.alt || '';
           if (updatedNode.attrs.width) {
             img.style.width = `${updatedNode.attrs.width}px`;

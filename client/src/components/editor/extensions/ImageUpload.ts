@@ -3,7 +3,7 @@ import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 
 export interface ImageUploadOptions {
   /**
-   * Maximum file size in bytes (default: 5MB)
+   * Maximum file size in bytes (default: 10MB)
    */
   maxFileSize: number;
   /**
@@ -34,6 +34,24 @@ export interface ImageUploadOptions {
    * Callback when upload fails
    */
   onUploadError?: (error: string) => void;
+  /**
+   * External image upload handler.
+   * If provided, images are uploaded via this callback instead of being embedded as base64.
+   * The callback receives the compressed File and metadata, and should return
+   * a reference string (e.g. a relative path like "../_images/photo.jpg").
+   * If not provided or if it throws, falls back to base64 embedding.
+   */
+  onImageUpload?: (
+    file: File,
+    options: { fileName: string; mimeType: string; fileSize: number; uploadId: string }
+  ) => Promise<string>;
+}
+
+/**
+ * Generate a short unique ID for upload tracking
+ */
+function generateUploadId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /**
@@ -55,6 +73,21 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 /**
+ * Convert a base64 data URL to a File object
+ */
+function dataUrlToFile(dataUrl: string, fileName: string): File {
+  const [header, base64] = dataUrl.split(',');
+  const mimeMatch = header.match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+  const binary = atob(base64);
+  const array = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    array[i] = binary.charCodeAt(i);
+  }
+  return new File([array], fileName, { type: mime });
+}
+
+/**
  * Validate if a file is an allowed image type
  */
 function isValidImage(file: File, allowedTypes: string[]): boolean {
@@ -66,7 +99,7 @@ function isValidImage(file: File, allowedTypes: string[]): boolean {
  */
 function getImageDimensions(dataUrl: string): Promise<{ width: number; height: number }> {
   return new Promise((resolve) => {
-    const img = new Image();
+    const img = new window.Image();
     img.onload = () => {
       resolve({ width: img.width, height: img.height });
     };
@@ -80,15 +113,15 @@ function getImageDimensions(dataUrl: string): Promise<{ width: number; height: n
 
 /**
  * Compress an image file using canvas
- * Returns a compressed data URL
+ * Returns a compressed data URL and a File object
  */
 async function compressImage(
   file: File,
   maxWidth: number,
   quality: number
-): Promise<{ dataUrl: string; width: number; height: number }> {
+): Promise<{ dataUrl: string; file: File; width: number; height: number }> {
   return new Promise((resolve, reject) => {
-    const img = new Image();
+    const img = new window.Image();
     const reader = new FileReader();
 
     reader.onload = (e) => {
@@ -126,7 +159,6 @@ async function compressImage(
       ctx.drawImage(img, 0, 0, width, height);
 
       // Determine output format
-      // Use JPEG for photos (better compression), PNG for images with transparency
       const isTransparent = file.type === 'image/png' || file.type === 'image/gif';
       const outputType = isTransparent ? 'image/png' : 'image/jpeg';
       const outputQuality = isTransparent ? undefined : quality;
@@ -134,7 +166,10 @@ async function compressImage(
       // Convert to data URL
       const dataUrl = canvas.toDataURL(outputType, outputQuality);
 
-      resolve({ dataUrl, width, height });
+      // Also convert to File for upload
+      const compressedFile = dataUrlToFile(dataUrl, file.name);
+
+      resolve({ dataUrl, file: compressedFile, width, height });
     };
 
     img.onerror = () => reject(new Error('Failed to load image'));
@@ -144,7 +179,9 @@ async function compressImage(
 }
 
 /**
- * Process and insert an image file into the editor
+ * Process and insert an image file into the editor.
+ * If onImageUpload is provided, uploads externally and stores the returned reference.
+ * Otherwise falls back to base64 embedding.
  */
 async function processAndInsertImage(
   file: File,
@@ -165,36 +202,140 @@ async function processAndInsertImage(
     return false;
   }
 
+  const uploadId = generateUploadId();
+
   try {
     options.onUploadStart?.();
 
+    // Step 1: Compress the image (or read as-is)
     let dataUrl: string;
     let displayWidth: number;
+    let compressedFile: File;
 
-    // Check if compression is enabled and file is compressible
     const isCompressible = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
-    
+
     if (options.enableCompression && isCompressible) {
-      // Compress the image
       const compressed = await compressImage(
         file,
         options.maxCompressedWidth,
         options.compressionQuality
       );
       dataUrl = compressed.dataUrl;
-      
-      // Calculate display width (max 600px for editor display)
+      compressedFile = compressed.file;
       const maxDisplayWidth = 600;
       displayWidth = Math.min(compressed.width, maxDisplayWidth);
     } else {
-      // No compression - use original
       dataUrl = await fileToBase64(file);
+      compressedFile = file;
       const dimensions = await getImageDimensions(dataUrl);
       const maxDisplayWidth = 600;
       displayWidth = Math.min(dimensions.width, maxDisplayWidth);
     }
 
-    // Insert the image using the resizableImage command
+    // Step 2: If external upload handler is provided, upload and use the returned reference
+    if (options.onImageUpload) {
+      // Insert a placeholder image (blurred base64 thumbnail) while uploading
+      const placeholderDataUrl = dataUrl;
+      editor.chain().focus().setImage({
+        src: placeholderDataUrl,
+        alt: file.name,
+        width: displayWidth,
+      }).run();
+
+      // Mark the just-inserted image node as uploading
+      // Find the node we just inserted (it's at the current selection - 1)
+      const { state } = editor.view;
+      const pos = state.selection.from - 1;
+      const node = state.doc.nodeAt(pos);
+      if (node && node.type.name === 'resizableImage') {
+        // Add a CSS class to show upload overlay
+        const nodeView = editor.view.nodeDOM(pos);
+        if (nodeView) {
+          const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
+          if (figure) {
+            figure.classList.add('image-uploading');
+          }
+        }
+      }
+
+      try {
+        // Perform the external upload
+        const imageRef = await options.onImageUpload(compressedFile, {
+          fileName: file.name,
+          mimeType: compressedFile.type,
+          fileSize: compressedFile.size,
+          uploadId,
+        });
+
+        // Replace the placeholder src with the returned reference
+        // Find the image node again (position may have changed)
+        let found = false;
+        editor.view.state.doc.descendants((n: any, p: number) => {
+          if (found) return false;
+          if (n.type.name === 'resizableImage' && n.attrs.src === placeholderDataUrl && n.attrs.alt === file.name) {
+            try {
+              const { state: currentState, dispatch } = editor.view;
+              const currentNode = currentState.doc.nodeAt(p);
+              if (currentNode) {
+                const tr = currentState.tr.setNodeMarkup(p, undefined, {
+                  ...currentNode.attrs,
+                  src: imageRef,
+                });
+                dispatch(tr);
+              }
+            } catch (e) {
+              // Fallback: leave the base64 in place
+              console.warn('Failed to replace placeholder with uploaded reference:', e);
+            }
+            found = true;
+            return false;
+          }
+          return true;
+        });
+
+        // Remove uploading class
+        editor.view.state.doc.descendants((n: any, p: number) => {
+          if (n.type.name === 'resizableImage' && n.attrs.src === imageRef) {
+            const nodeView = editor.view.nodeDOM(p);
+            if (nodeView) {
+              const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
+              if (figure) {
+                figure.classList.remove('image-uploading');
+              }
+            }
+            return false;
+          }
+          return true;
+        });
+
+        options.onUploadComplete?.();
+        return true;
+      } catch (uploadError) {
+        // Upload failed — leave the base64 placeholder in place as fallback
+        console.warn('External image upload failed, keeping base64 fallback:', uploadError);
+
+        // Remove uploading class
+        editor.view.state.doc.descendants((n: any, p: number) => {
+          if (n.type.name === 'resizableImage' && n.attrs.src === placeholderDataUrl) {
+            const nodeView = editor.view.nodeDOM(p);
+            if (nodeView) {
+              const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
+              if (figure) {
+                figure.classList.remove('image-uploading');
+              }
+            }
+            return false;
+          }
+          return true;
+        });
+
+        options.onUploadError?.(`Upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}. Image saved as embedded.`);
+        options.onUploadComplete?.();
+        return true; // Still true because the base64 fallback was inserted
+      }
+    }
+
+    // Step 3: No external upload handler — use base64 embedding (original behavior)
     editor.chain().focus().setImage({
       src: dataUrl,
       alt: file.name,
@@ -214,7 +355,7 @@ async function processAndInsertImage(
  */
 function getImageFiles(dataTransfer: DataTransfer): File[] {
   const files: File[] = [];
-  
+
   // Check items first (for drag events)
   if (dataTransfer.items) {
     for (let i = 0; i < dataTransfer.items.length; i++) {
@@ -225,7 +366,7 @@ function getImageFiles(dataTransfer: DataTransfer): File[] {
       }
     }
   }
-  
+
   // Fallback to files array
   if (files.length === 0 && dataTransfer.files) {
     for (let i = 0; i < dataTransfer.files.length; i++) {
@@ -235,7 +376,7 @@ function getImageFiles(dataTransfer: DataTransfer): File[] {
       }
     }
   }
-  
+
   return files;
 }
 
@@ -244,7 +385,7 @@ export const ImageUpload = Extension.create<ImageUploadOptions>({
 
   addOptions() {
     return {
-      maxFileSize: 5 * 1024 * 1024, // 5MB default
+      maxFileSize: 10 * 1024 * 1024, // 10MB default
       allowedMimeTypes: [
         'image/jpeg',
         'image/png',
@@ -252,12 +393,13 @@ export const ImageUpload = Extension.create<ImageUploadOptions>({
         'image/webp',
         'image/svg+xml',
       ],
-      enableCompression: true, // Enable compression by default
-      maxCompressedWidth: 1200, // Max width for compressed images
-      compressionQuality: 0.8, // JPEG quality (0-1)
+      enableCompression: true,
+      maxCompressedWidth: 1200,
+      compressionQuality: 0.8,
       onUploadStart: undefined,
       onUploadComplete: undefined,
       onUploadError: undefined,
+      onImageUpload: undefined,
     };
   },
 
@@ -276,7 +418,7 @@ export const ImageUpload = Extension.create<ImageUploadOptions>({
 
             // Check for image files in clipboard
             const imageFiles = getImageFiles(clipboardData);
-            
+
             if (imageFiles.length === 0) {
               return false; // No images, let other handlers process
             }
@@ -302,7 +444,7 @@ export const ImageUpload = Extension.create<ImageUploadOptions>({
 
             // Check for image files
             const imageFiles = getImageFiles(dataTransfer);
-            
+
             if (imageFiles.length === 0) {
               return false; // No images, let other handlers process
             }
