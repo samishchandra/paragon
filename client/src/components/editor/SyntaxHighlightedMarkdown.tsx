@@ -394,13 +394,16 @@ export function SyntaxHighlightedMarkdown({
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current;
     const highlight = highlightRef.current;
+    const container = containerRef.current;
     if (textarea) {
       const savedScrollTop = textarea.scrollTop;
       const savedSelectionStart = textarea.selectionStart;
       const savedSelectionEnd = textarea.selectionEnd;
       
+      // Use the container's height as the minimum so the textarea fills the available space
+      const containerHeight = container ? container.clientHeight : 200;
       textarea.style.height = 'auto';
-      const newHeight = Math.max(textarea.scrollHeight, 200);
+      const newHeight = Math.max(textarea.scrollHeight, containerHeight, 200);
       textarea.style.height = `${newHeight}px`;
       if (highlight) {
         highlight.style.height = `${newHeight}px`;
