@@ -3006,11 +3006,9 @@ pre.with-line-numbers code .line::before {
   height: 100%;
 }
 
-/* Performance: Use content-visibility for off-screen content in large documents */
-.editor-content .ProseMirror > * {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 50px; /* Estimated height for off-screen elements */
-}
+/* Performance: content-visibility: auto was removed because it causes text to
+   disappear on mobile Safari/WebKit when the cursor is not on that line.
+   The browser incorrectly treats paragraphs as "off-screen" and skips rendering them. */
 
 .editor-content .ProseMirror {
   min-height: 100%;
