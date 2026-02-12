@@ -482,10 +482,59 @@ export function SyntaxHighlightedMarkdown({
   const pendingCursorRef = useRef<{ start: number; end: number } | null>(null);
 
   // Tokenize and render highlighted content (with optional search highlights)
-  const highlightedHtml = useMemo(() => {
+  // For large documents (>5000 chars), debounce tokenization to avoid blocking the main thread
+  // on every keystroke. Small documents tokenize synchronously for instant feedback.
+  const DEBOUNCE_THRESHOLD = 5000;
+  const DEBOUNCE_MS = 80;
+  
+  const [debouncedHtml, setDebouncedHtml] = useState(() => {
     const tokens = tokenizeMarkdown(content);
     return renderHighlightedHtml(content, tokens, searchMatches, currentMatchIndex);
+  });
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Synchronous path for small docs, debounced for large docs
+  const highlightedHtml = useMemo(() => {
+    if (content.length <= DEBOUNCE_THRESHOLD) {
+      // Small doc: tokenize synchronously for instant feedback
+      const tokens = tokenizeMarkdown(content);
+      const html = renderHighlightedHtml(content, tokens, searchMatches, currentMatchIndex);
+      // Also update debounced state to keep in sync
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      return html;
+    }
+    // Large doc: return stale HTML immediately, schedule async update
+    return null; // signal to use debouncedHtml
   }, [content, searchMatches, currentMatchIndex]);
+  
+  // Debounced tokenization for large documents
+  useEffect(() => {
+    if (content.length <= DEBOUNCE_THRESHOLD) {
+      // Small doc: already handled synchronously above
+      const tokens = tokenizeMarkdown(content);
+      setDebouncedHtml(renderHighlightedHtml(content, tokens, searchMatches, currentMatchIndex));
+      return;
+    }
+    // Large doc: debounce the expensive tokenization
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      const tokens = tokenizeMarkdown(content);
+      setDebouncedHtml(renderHighlightedHtml(content, tokens, searchMatches, currentMatchIndex));
+      debounceTimerRef.current = null;
+    }, DEBOUNCE_MS);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [content, searchMatches, currentMatchIndex]);
+  
+  const finalHtml = highlightedHtml ?? debouncedHtml;
 
   // Auto-resize textarea to fit content
   // The textarea expands to its full scrollHeight so the PARENT (editor-content-wrapper) scrolls.
@@ -825,7 +874,7 @@ export function SyntaxHighlightedMarkdown({
       <div 
         ref={highlightRef}
         className="syntax-highlight-overlay"
-        dangerouslySetInnerHTML={{ __html: highlightedHtml || `<span class="md-placeholder">${escapeHtml(placeholder)}</span>` }}
+        dangerouslySetInnerHTML={{ __html: finalHtml || `<span class="md-placeholder">${escapeHtml(placeholder)}</span>` }}
         aria-hidden="true"
       />
       <textarea
