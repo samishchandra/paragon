@@ -556,6 +556,7 @@ export default function Home() {
               autofocus={false}
               showTableOfContents={true}
               tocMaxLevel={4}
+              theme="light"
               showPerformanceProfiler={showInlineProfiler}
               onPerformanceProfilerClose={handleInlineProfilerClose}
               autoReorderChecklist={true}
