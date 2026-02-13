@@ -236,13 +236,7 @@ function PickerUI({
               Next Monday
             </Button>
           </div>
-          <div className="border-t border-border" />
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-          >
-            Close
-          </button>
+
         </div>
       </div>
     </div>
