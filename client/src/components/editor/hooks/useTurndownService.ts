@@ -171,6 +171,21 @@ export function useTurndownService(): TurndownService {
       },
     });
 
+    // Tag pill rule: serialize as #tagname markdown format
+    td.addRule('tagPill', {
+      filter: (node) => {
+        return node.nodeName === 'SPAN' &&
+               (node as HTMLElement).getAttribute('data-type') === 'tag-pill';
+      },
+      replacement: (content, node) => {
+        const tag = (node as HTMLElement).getAttribute('data-tag');
+        if (tag) {
+          return `#${tag}`;
+        }
+        return content;
+      },
+    });
+
     // Custom callout rule to convert callouts to markdown code block syntax
     // e.g., ```ad-info\ncontent\n```
     td.addRule('callout', {

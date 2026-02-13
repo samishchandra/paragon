@@ -24,4 +24,5 @@ export { ImageUpload, type ImageUploadOptions } from './extensions/ImageUpload';
 export { ImageDropZone } from './ImageDropZone';
 export { MixedBulletList, MixedOrderedList, MixedTaskList, MixedTaskItem, MixedListItem } from './extensions/MixedLists';
 export { CollapsibleList } from './extensions/CollapsibleList';
+export { TagPill, type TagPillOptions, isValidTag, normalizeTag } from './extensions/TagPill';
 export type { AIActionDefinition, AIActionHandler, AIState } from './ai/types';

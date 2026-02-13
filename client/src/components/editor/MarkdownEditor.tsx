@@ -23,6 +23,7 @@ import { FloatingToolbar } from './FloatingToolbar';
 import { CalloutWithMenu } from './extensions/CalloutWithMenu';
 import { ResizableImage } from './extensions/ResizableImage';
 import { DatePill, parseDateFromMarkdown, getDateVariant } from './extensions/DatePill';
+import { TagPill, isValidTag, normalizeTag } from './extensions/TagPill';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace, type SearchMatch } from './FindReplace';
@@ -283,6 +284,7 @@ export interface MarkdownEditorProps {
     taskLists?: boolean;
     callouts?: boolean;
     datePills?: boolean;
+    tagPills?: boolean;
     wikiLinks?: boolean;
     collapsibleHeadings?: boolean;
     slashCommands?: boolean;
@@ -666,6 +668,17 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       );
     }
 
+    // Add TagPill if not disabled
+    if (!disabledFeatures.tagPills) {
+      baseExtensions.push(
+        TagPill.configure({
+          HTMLAttributes: {
+            class: 'tag-pill',
+          },
+        })
+      );
+    }
+
     // Conditionally add wiki links
     if (!disabledFeatures.wikiLinks) {
       baseExtensions.push(
@@ -930,6 +943,17 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         return match; // Not a valid date, leave as-is
       });
       
+      // Convert #tagname markdown format back to tag pill HTML
+      // Must be done before marked.parse() to prevent marked from treating # as heading
+      // Match #tag preceded by start-of-line or whitespace, tag must contain at least one letter
+      processedMarkdown = processedMarkdown.replace(/(?:^|(?<=\s))#([a-zA-Z][a-zA-Z0-9_-]*|[a-zA-Z0-9_-]*[a-zA-Z][a-zA-Z0-9_-]*)(?=\s|$|[.,;:!?)\]])/gm, (match, tag) => {
+        const normalized = normalizeTag(tag);
+        if (isValidTag(normalized)) {
+          return `<span data-type="tag-pill" data-tag="${normalized}" class="tag-pill"><span class="tag-icon">#</span><span class="tag-text">${normalized}</span></span>`;
+        }
+        return match;
+      });
+
       const html = marked.parse(processedMarkdown, { async: false }) as string;
       queueMicrotask(() => {
         if (!editor.isDestroyed) {

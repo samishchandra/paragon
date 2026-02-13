@@ -2162,6 +2162,57 @@ pre.with-line-numbers code .line::before {
 }
 
 
+/* ─── Tag Pill Styles ──────────────────────────────────────────────────────── */
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.625rem;
+  background: var(--secondary);
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--foreground);
+  white-space: nowrap;
+  vertical-align: middle;
+  transition: all 0.15s ease;
+  cursor: default;
+  user-select: none;
+}
+
+.tag-pill:hover {
+  background: var(--accent);
+  transform: translateY(-1px);
+}
+
+.tag-pill:active {
+  transform: translateY(0);
+}
+
+.tag-pill .tag-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: oklch(0.65 0.15 280);
+  flex-shrink: 0;
+}
+
+.tag-pill .tag-text {
+  line-height: 1.4;
+}
+
+/* Tag pill selected state */
+.tag-pill.ProseMirror-selectednode {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* Light theme tag pill adjustments */
+[data-theme="light"] .tag-pill .tag-icon {
+  color: oklch(0.5 0.18 280);
+}
+
+
 /* Link Popover Styles */
 .link-popover {
   background: var(--popover);
@@ -2973,6 +3024,10 @@ pre.with-line-numbers code .line::before {
   }
   
   .date-pill {
+    padding: 0.25rem 0.625rem;
+  }
+
+  .tag-pill {
     padding: 0.25rem 0.625rem;
   }
 }
