@@ -222,7 +222,7 @@
     font-size: 2.25rem;
     font-weight: 700;
     line-height: 1.2;
-    margin-top: 2rem;
+    margin-top: 1.25rem; /* 20px */
     margin-bottom: 1rem;
     color: var(--h1-color);
   }
@@ -231,7 +231,7 @@
     font-size: 1.75rem;
     font-weight: 600;
     line-height: 1.3;
-    margin-top: 1.75rem;
+    margin-top: 1.25rem; /* 20px */
     margin-bottom: 0.75rem;
     color: var(--h2-color);
   }
@@ -240,7 +240,7 @@
     font-size: 1.375rem;
     font-weight: 600;
     line-height: 1.4;
-    margin-top: 1.5rem;
+    margin-top: 1.25rem; /* 20px */
     margin-bottom: 0.5rem;
     color: var(--h3-color);
   }
@@ -249,7 +249,7 @@
     font-size: 1.125rem;
     font-weight: 600;
     line-height: 1.4;
-    margin-top: 1.25rem;
+    margin-top: 1.25rem; /* 20px */
     margin-bottom: 0.5rem;
     color: var(--h4-color);
   }
@@ -258,7 +258,7 @@
     font-size: 1rem;
     font-weight: 600;
     line-height: 1.4;
-    margin-top: 1.25rem;
+    margin-top: 1.25rem; /* 20px */
     margin-bottom: 0.5rem;
     color: var(--h5-color);
   }
@@ -267,7 +267,7 @@
     font-size: 0.9rem;
     font-weight: 600;
     line-height: 1.4;
-    margin-top: 1.25rem;
+    margin-top: 1.25rem; /* 20px */
     margin-bottom: 0.5rem;
     color: var(--h6-color);
   }
