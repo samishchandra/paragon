@@ -3111,7 +3111,7 @@ pre.with-line-numbers code .line::before {
 
 .editor-content .ProseMirror {
   min-height: 100%;
-  padding: 2rem;
+  padding: 1.5rem; /* 24px */
 }
 
 .editor-footer {
