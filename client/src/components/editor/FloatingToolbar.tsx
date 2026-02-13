@@ -464,8 +464,8 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
             className="
               flex items-center justify-center w-7 h-7 rounded-md flex-shrink-0
               transition-all duration-100 ease-out touch-manipulation
-              bg-transparent text-amber-400 hover:bg-secondary active:bg-secondary/80
-              hover:text-amber-300
+              bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80
+              hover:text-foreground
             "
           >
             <Sparkles size={iconSize} />

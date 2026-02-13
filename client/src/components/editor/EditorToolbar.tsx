@@ -791,8 +791,8 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
                 className="
                   flex items-center justify-center w-9 h-9 sm:w-8 sm:h-8 rounded-md
                   transition-all duration-100 ease-out touch-manipulation
-                  bg-transparent text-amber-400 hover:bg-secondary active:bg-secondary/80
-                  hover:text-amber-300
+                  bg-transparent text-muted-foreground hover:bg-secondary active:bg-secondary/80
+                  hover:text-foreground
                 "
               >
                 <Sparkles size={18} className="sm:w-4 sm:h-4" />
