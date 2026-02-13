@@ -1,6 +1,6 @@
 import { MarkdownEditor } from '@/components/editor';
 import { useState, useCallback } from 'react';
-import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun, Search, Calendar, ListTree, BookOpen, Shield, ArrowUpDown, FileCode2, Wand2 } from 'lucide-react';
+import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun, Search, Calendar, ListTree, BookOpen, Shield, ArrowUpDown, FileCode2, Wand2, Github } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -396,6 +396,15 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <a
+                href="https://github.com/samishchandra/paragon"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-accent transition-colors"
+              >
+                <Github className="w-4 h-4" />
+                <span className="hidden sm:inline">GitHub</span>
+              </a>
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
                   <Button variant="default" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
