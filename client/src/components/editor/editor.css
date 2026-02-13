@@ -3415,7 +3415,7 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-theme="light"] .callout-note {
-  background: #FEF7EF;
+  background: #F5F3FF; /* Light purple to match #8b5cf6 border */
 }
 
 [data-theme="light"] .callout-prompt {
