@@ -2201,6 +2201,7 @@ pre.with-line-numbers code .line::before {
 
 .tag-pill .tag-text {
   line-height: 1.4;
+  color: var(--primary); /* Accent blue to match # icon */
 }
 
 /* Tag pill selected state */
