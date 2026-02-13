@@ -2164,12 +2164,14 @@ pre.with-line-numbers code .line::before {
 
 /* ─── Tag Pill Styles ──────────────────────────────────────────────────────── */
 
+/* Tag pill background matches code-block background; # icon uses accent blue */
 .tag-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   padding: 0.125rem 0.625rem;
-  background: var(--secondary);
+  background: oklch(0.98 0.005 250); /* Same as code-block background */
+  border: 1px solid oklch(0.92 0.01 250); /* Same border as code-block */
   border-radius: 9999px;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -2182,7 +2184,7 @@ pre.with-line-numbers code .line::before {
 }
 
 .tag-pill:hover {
-  background: var(--accent);
+  background: oklch(0.96 0.01 250);
   transform: translateY(-1px);
 }
 
@@ -2193,7 +2195,7 @@ pre.with-line-numbers code .line::before {
 .tag-pill .tag-icon {
   width: 0.875rem;
   height: 0.875rem;
-  color: oklch(0.65 0.15 280);
+  color: var(--primary); /* Accent blue (#2e80f2) */
   flex-shrink: 0;
 }
 
@@ -2207,9 +2209,24 @@ pre.with-line-numbers code .line::before {
   outline-offset: 1px;
 }
 
-/* Light theme tag pill adjustments */
-[data-theme="light"] .tag-pill .tag-icon {
-  color: oklch(0.5 0.18 280);
+/* Dark theme tag pill - match dark code-block background */
+.dark .tag-pill {
+  background: oklch(0.15 0.01 250); /* Same as dark code-block background */
+  border-color: var(--border); /* Same border as dark code-block */
+}
+
+.dark .tag-pill:hover {
+  background: oklch(0.18 0.01 250);
+}
+
+/* Light theme explicit overrides */
+[data-theme="light"] .tag-pill {
+  background: oklch(0.98 0.005 250);
+  border-color: oklch(0.92 0.01 250);
+}
+
+[data-theme="light"] .tag-pill:hover {
+  background: oklch(0.96 0.01 250);
 }
 
 
