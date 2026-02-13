@@ -104,25 +104,26 @@ export const WikiLinkSafe = Mark.create<WikiLinkOptions>({
     return [
       new InputRule({
         find: wikiLinkRegex,
-        handler: ({ state, range, match }) => {
+        handler: ({ state, range, match, chain }) => {
           try {
             const pageName = match[1];
             if (!pageName) return;
 
-            const { tr } = state;
             const start = range.from;
             const end = range.to;
             
-            // Delete the [[pageName]] text and insert just the page name with the mark
-            tr.delete(start, end);
-            
-            // Create the marked content
-            const mark = markType.create({ pageName });
-            const textNode = state.schema.text(pageName, [mark]);
-            tr.insert(start, textNode);
-            
-            // Dispatch the transaction
-            this.editor.view.dispatch(tr);
+            // Use chain() to apply changes through TipTap's command system
+            // This avoids the "mismatched transaction" error that occurs when
+            // manually dispatching a transaction inside an InputRule handler,
+            // because the InputRule system already manages its own transaction.
+            chain()
+              .deleteRange({ from: start, to: end })
+              .insertContentAt(start, {
+                type: 'text',
+                text: pageName,
+                marks: [{ type: 'wikiLink', attrs: { pageName } }],
+              })
+              .run();
           } catch (error) {
             console.warn('WikiLinkSafe: Error in input rule', error);
           }
