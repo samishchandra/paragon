@@ -1305,22 +1305,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [editor, isMobile, setIsFindReplaceOpen]);
 
-  if (!editor) {
-    return (
-      <div className={`markdown-editor-container ${className}`} data-theme={theme}>
-        <div className="editor-loading" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div style={{ height: '1rem', width: '100%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-          <div style={{ height: '1rem', width: '83%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-          <div style={{ height: '1rem', width: '66%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-          <div style={{ height: '0.75rem' }} />
-          <div style={{ height: '1rem', width: '100%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-          <div style={{ height: '1rem', width: '75%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-        </div>
-      </div>
-    );
-  }
-
   // === AI Writing Assistant Handlers ===
+  // IMPORTANT: These hooks MUST be above the `if (!editor)` early return
+  // to satisfy React's Rules of Hooks (same number of hooks every render).
   const handleAISparklesClick = useCallback((scope: 'selection' | 'document', anchorEl?: HTMLElement) => {
     if (!aiEnabled) {
       onAISetupRequiredRef.current?.();
@@ -1405,6 +1392,21 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       resetAI();
     }
   }, [aiState, resetAI, executeAIAction]);
+
+  if (!editor) {
+    return (
+      <div className={`markdown-editor-container ${className}`} data-theme={theme}>
+        <div className="editor-loading" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ height: '1rem', width: '100%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+          <div style={{ height: '1rem', width: '83%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+          <div style={{ height: '1rem', width: '66%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+          <div style={{ height: '0.75rem' }} />
+          <div style={{ height: '1rem', width: '100%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+          <div style={{ height: '1rem', width: '75%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+        </div>
+      </div>
+    );
+  }
 
   // Default toolbar component
   const defaultToolbar = (
