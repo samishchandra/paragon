@@ -25,6 +25,7 @@ import { ResizableImage } from './extensions/ResizableImage';
 import { DatePill, parseDateFromMarkdown, getDateVariant } from './extensions/DatePill';
 import { TagPill, isValidTag, normalizeTag } from './extensions/TagPill';
 import { SlashCommands } from './SlashCommands';
+import { WikiLinkAutocomplete } from './WikiLinkAutocomplete';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace, type SearchMatch } from './FindReplace';
 import { SelectAllActionBar } from './SelectAllActionBar';
@@ -266,6 +267,10 @@ export interface MarkdownEditorProps {
   onRecover?: (content: string) => void;
   /** Callback when a wiki link is clicked */
   onWikiLinkClick?: (pageName: string) => void;
+  /** Validate whether a wiki link target exists (for valid/invalid styling) */
+  validateWikiLink?: (pageName: string) => boolean;
+  /** Search for wiki link suggestions (for autocomplete dropdown) */
+  onWikiLinkSearch?: (query: string) => Promise<{id: string; title: string; type: string}[]>;
   /** Callback when a link is clicked (return false to prevent default) */
   onLinkClick?: (url: string, event: MouseEvent) => boolean | void;
   /** Show find/replace panel (default: false) - controlled mode */
@@ -410,6 +415,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   onSave,
   onRecover,
   onWikiLinkClick,
+  validateWikiLink,
+  onWikiLinkSearch,
   onLinkClick,
   findReplaceOpen,
   onFindReplaceChange,
@@ -496,12 +503,16 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   const onImageUploadRef = useRef(onImageUpload);
   const resolveImageSrcRef = useRef(resolveImageSrc);
   const onWikiLinkClickRef = useRef(onWikiLinkClick);
+  const validateWikiLinkRef = useRef(validateWikiLink);
+  const onWikiLinkSearchRef = useRef(onWikiLinkSearch);
   onImageUploadStartRef.current = onImageUploadStart;
   onImageUploadCompleteRef.current = onImageUploadComplete;
   onImageUploadErrorRef.current = onImageUploadError;
   onImageUploadRef.current = onImageUpload;
   resolveImageSrcRef.current = resolveImageSrc;
   onWikiLinkClickRef.current = onWikiLinkClick;
+  validateWikiLinkRef.current = validateWikiLink;
+  onWikiLinkSearchRef.current = onWikiLinkSearch;
 
   // Build extensions array - conditionally include problematic extensions on mobile
   const extensions = useMemo(() => {
@@ -686,6 +697,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           onWikiLinkClick: (pageName: string) => {
             console.log('WikiLink clicked:', pageName);
             onWikiLinkClickRef.current?.(pageName);
+          },
+          validateLink: (pageName: string) => {
+            return validateWikiLinkRef.current ? validateWikiLinkRef.current(pageName) : true;
           },
         })
       );
@@ -1609,6 +1623,14 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             
             {/* Slash commands */}
             {!disabledFeatures.slashCommands && <SlashCommands editor={editor} disabledFeatures={disabledFeatures} />}
+            
+            {/* Wiki link autocomplete */}
+            {!disabledFeatures.wikiLinks && onWikiLinkSearchRef.current && (
+              <WikiLinkAutocomplete
+                editor={editor}
+                onSearch={onWikiLinkSearchRef.current}
+              />
+            )}
             
             {/* Link popover */}
             <LinkPopover

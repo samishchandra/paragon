@@ -186,6 +186,21 @@ export function useTurndownService(): TurndownService {
       },
     });
 
+    // Wiki link rule: convert <span data-wiki-link> back to [[title]]
+    td.addRule('wikiLink', {
+      filter: (node) => {
+        return node.nodeName === 'SPAN' &&
+               (node as HTMLElement).hasAttribute('data-wiki-link');
+      },
+      replacement: (content, node) => {
+        const pageName = (node as HTMLElement).getAttribute('data-page-name');
+        if (pageName) {
+          return `[[${pageName}]]`;
+        }
+        return content;
+      },
+    });
+
     // Custom callout rule to convert callouts to markdown code block syntax
     // e.g., ```ad-info\ncontent\n```
     td.addRule('callout', {
