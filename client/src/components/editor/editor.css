@@ -2391,12 +2391,16 @@ pre.with-line-numbers code .line::before {
 /* Wiki Link Styles */
 .wiki-link {
   color: var(--primary);
-  background: oklch(0.58 0.15 220 / 0.15);
-  padding: 0.1em 0.4em;
-  border-radius: 4px;
+  background: none;
+  padding: 0;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.15s ease;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: oklch(0.58 0.15 220 / 0.4);
   font-weight: 500;
 }
 
@@ -2415,18 +2419,22 @@ pre.with-line-numbers code .line::before {
 }
 
 .wiki-link:hover {
-  background: oklch(0.58 0.15 220 / 0.25);
-  color: oklch(0.75 0.15 220);
+  background: none;
+  text-decoration-color: var(--primary);
+  text-decoration-style: solid;
+  color: oklch(0.55 0.18 220);
 }
 
 .wiki-link-invalid {
-  background: oklch(0.5 0.2 25 / 0.15);
+  background: none;
   color: oklch(0.7 0.2 25);
-  border: 1px dashed oklch(0.6 0.2 25 / 0.5);
+  text-decoration-color: oklch(0.6 0.2 25 / 0.5);
+  text-decoration-style: dashed;
 }
 
 .wiki-link-invalid:hover {
-  background: oklch(0.5 0.2 25 / 0.25);
+  background: none;
+  text-decoration-color: oklch(0.6 0.2 25);
 }
 
 /* Wiki Link Autocomplete Menu */
@@ -2436,8 +2444,8 @@ pre.with-line-numbers code .line::before {
   border-radius: 8px;
   box-shadow: 0 4px 16px oklch(0 0 0 / 0.25);
   padding: 4px;
-  min-width: 200px;
-  max-width: 260px;
+  min-width: 240px;
+  max-width: 340px;
   max-height: 240px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -2452,7 +2460,7 @@ pre.with-line-numbers code .line::before {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 8px;
+  padding: 7px 8px;
   border-radius: 5px;
   cursor: pointer;
   transition: background 0.08s ease;
@@ -2478,7 +2486,7 @@ pre.with-line-numbers code .line::before {
 }
 .wikilink-label {
   font-size: 13px;
-  line-height: 1;
+  line-height: 1.3;
   color: var(--foreground);
   overflow: hidden;
   text-overflow: ellipsis;

@@ -1,4 +1,5 @@
 import { Editor } from '@tiptap/react';
+import { TextSelection } from '@tiptap/pm/state';
 import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FileText, Plus } from 'lucide-react';
@@ -16,8 +17,8 @@ interface WikiLinkAutocompleteProps {
   onCreateItem?: (title: string) => void;
 }
 
-const MENU_WIDTH = 260;
-const ITEM_HEIGHT = 32;
+const MENU_WIDTH = 340;
+const ITEM_HEIGHT = 36;
 const MENU_PADDING = 8;
 const MENU_MAX_HEIGHT = 240;
 const VIEWPORT_MARGIN = 8;
@@ -94,6 +95,11 @@ export function WikiLinkAutocomplete({ editor, onSearch, onCreateItem }: WikiLin
         const mark = markType.create({ pageName: title });
         const textNode = state.schema.text(title, [mark]);
         tr.insert(bracketPos, textNode);
+        
+        // Position cursor right after the inserted link and clear stored marks
+        const endPos = bracketPos + title.length;
+        tr.setSelection(TextSelection.create(tr.doc, endPos));
+        tr.removeStoredMark(markType);
       } else {
         // Fallback: insert as [[title]] text
         tr.insertText(`[[${title}]]`, bracketPos);

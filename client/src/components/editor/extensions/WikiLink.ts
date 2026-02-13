@@ -28,6 +28,8 @@ declare module '@tiptap/core' {
 export const WikiLink = Mark.create<WikiLinkOptions>({
   name: 'wikiLink',
 
+  inclusive: false,
+
   addOptions() {
     return {
       HTMLAttributes: {},
