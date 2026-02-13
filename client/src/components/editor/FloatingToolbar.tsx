@@ -16,6 +16,7 @@ import {
   CheckSquare,
   Pilcrow,
   FileCode,
+  Sparkles,
 } from 'lucide-react';
 import { useCallback, useState, useEffect, useRef, memo } from 'react';
 import { createPortal } from 'react-dom';
@@ -33,6 +34,10 @@ export interface FloatingToolbarProps {
   editor: Editor;
   className?: string;
   suppressWhenLinkPopoverOpen?: boolean;
+  /** Whether AI features are available (shows sparkles button) */
+  aiEnabled?: boolean;
+  /** Called when the sparkles button is clicked, with the button element for positioning */
+  onAISparklesClick?: (anchorEl: HTMLElement) => void;
 }
 
 interface ToolbarButtonProps {
@@ -67,7 +72,8 @@ const Divider = () => (
   <div className="w-px h-5 bg-border mx-0.5 flex-shrink-0" />
 );
 
-export const FloatingToolbar = memo(function FloatingToolbar({ editor, className = '', suppressWhenLinkPopoverOpen = false }: FloatingToolbarProps) {
+export const FloatingToolbar = memo(function FloatingToolbar({ editor, className = '', suppressWhenLinkPopoverOpen = false, aiEnabled = false, onAISparklesClick }: FloatingToolbarProps) {
+  const aiButtonRef = useRef<HTMLButtonElement>(null);
   // Performance: Use useEditorState for selective re-renders based on active formatting states
   const editorState = useEditorState({
     editor,
@@ -440,6 +446,32 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
       >
         <FileCode size={iconSize} />
       </ToolbarButton>
+
+      {/* AI Sparkles button (only shown when AI is enabled) */}
+      {aiEnabled && (
+        <>
+          <Divider />
+          <button
+            ref={aiButtonRef}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (aiButtonRef.current) {
+                onAISparklesClick?.(aiButtonRef.current);
+              }
+            }}
+            title="AI Writing Assistant"
+            className="
+              flex items-center justify-center w-7 h-7 rounded-md flex-shrink-0
+              transition-all duration-100 ease-out touch-manipulation
+              bg-transparent text-amber-400 hover:bg-secondary active:bg-secondary/80
+              hover:text-amber-300
+            "
+          >
+            <Sparkles size={iconSize} />
+          </button>
+        </>
+      )}
     </div>
   );
 

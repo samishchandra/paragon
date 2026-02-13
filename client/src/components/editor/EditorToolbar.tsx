@@ -41,6 +41,7 @@ import {
   IndentIncrease,
   IndentDecrease,
   ArrowUpDown,
+  Sparkles,
 } from 'lucide-react';
 import { useCallback, useState, useMemo, useRef, useEffect } from 'react';
 import { ImageURLDialog } from './ImageURLDialog';
@@ -83,6 +84,10 @@ interface EditorToolbarProps {
     dragAndDrop?: boolean;
   };
   autoReorderChecklist?: boolean;
+  /** Whether AI features are available (shows sparkles button) */
+  aiEnabled?: boolean;
+  /** Called when the sparkles button is clicked, with the button element for positioning */
+  onAISparklesClick?: (anchorEl: HTMLElement) => void;
 }
 
 interface ToolbarButtonProps {
@@ -130,7 +135,8 @@ const Divider = () => (
   <div className="w-px h-6 bg-border mx-0.5 hidden sm:block" />
 );
 
-export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '', autoReorderChecklist = false }: EditorToolbarProps) {
+export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '', autoReorderChecklist = false, aiEnabled = false, onAISparklesClick }: EditorToolbarProps) {
+  const aiToolbarButtonRef = useRef<HTMLButtonElement>(null);
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageDialogPosition, setImageDialogPosition] = useState<{ top: number; left: number } | undefined>(undefined);
 
@@ -768,6 +774,36 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
       >
         <ArrowUpDown size={18} className="sm:w-4 sm:h-4" />
       </ToolbarButton>
+
+      {/* AI Sparkles button (document-scope actions) */}
+      {aiEnabled && (
+        <>
+          <Divider />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                ref={aiToolbarButtonRef}
+                onClick={() => {
+                  if (aiToolbarButtonRef.current) {
+                    onAISparklesClick?.(aiToolbarButtonRef.current);
+                  }
+                }}
+                className="
+                  flex items-center justify-center w-9 h-9 sm:w-8 sm:h-8 rounded-md
+                  transition-all duration-100 ease-out touch-manipulation
+                  bg-transparent text-amber-400 hover:bg-secondary active:bg-secondary/80
+                  hover:text-amber-300
+                "
+              >
+                <Sparkles size={18} className="sm:w-4 sm:h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs hidden sm:block">
+              AI Writing Assistant
+            </TooltipContent>
+          </Tooltip>
+        </>
+      )}
 
       {/* Spacer */}
       <div className="flex-1 min-w-2" />

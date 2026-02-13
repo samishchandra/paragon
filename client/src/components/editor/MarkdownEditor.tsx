@@ -48,7 +48,11 @@ import { PerformanceProfiler } from './PerformanceProfiler';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
 import CustomScrollbar from './CustomScrollbar';
 import './PerformanceProfiler.css';
-import { FileText, Eye } from 'lucide-react';
+import { FileText, Eye, Sparkles } from 'lucide-react';
+import type { AIActionDefinition, AIActionHandler, AIState } from './ai/types';
+import { useAIState } from './ai/useAIState';
+import { AIDropdownMenu } from './ai/AIDropdownMenu';
+import { AIResultPopover } from './ai/AIResultPopover';
 import { TableOfContents } from './TableOfContents';
 import { useTurndownService } from './hooks/useTurndownService';
 import type TurndownService from 'turndown';
@@ -346,6 +350,27 @@ export interface MarkdownEditorProps {
   
   /** Callback when the editor crashes — useful for external error reporting */
   onEditorError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  
+  // === AI WRITING ASSISTANT (opt-in, lazy-loaded) ===
+  
+  /**
+   * AI actions to show in the sparkles dropdown menu.
+   * If not provided, the AI sparkles button is hidden — keeping Paragon lean.
+   */
+  aiActions?: AIActionDefinition[];
+  
+  /**
+   * Handler called when the user selects an AI action.
+   * Should return an AsyncIterable<string> for streaming or Promise<string> for non-streaming.
+   * The embedding app is responsible for calling the AI provider.
+   */
+  onAIAction?: AIActionHandler;
+  
+  /**
+   * Called when the user clicks the sparkles button but AI is not configured.
+   * The embedding app should navigate to settings or show a setup dialog.
+   */
+  onAISetupRequired?: () => void;
 }
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(function MarkdownEditor({
@@ -417,6 +442,10 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   autoReorderChecklist = false,
   // Error boundary
   onEditorError,
+  // AI writing assistant
+  aiActions,
+  onAIAction,
+  onAISetupRequired,
 }, ref) {
   // Check if mobile on mount
   const [isMobile] = useState(() => isMobileDevice());
@@ -436,6 +465,16 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   
   // Error boundary remount key — incremented to force re-render of editor content
   const [editorErrorKey, setEditorErrorKey] = useState(0);
+  
+  // === AI Writing Assistant State ===
+  const aiEnabled = !!(aiActions && aiActions.length > 0 && onAIAction);
+  const { state: aiState, executeAction: executeAIAction, abort: abortAI, reset: resetAI } = useAIState(onAIAction);
+  const [aiDropdown, setAIDropdown] = useState<{ scope: 'selection' | 'document'; position: { top: number; left: number } } | null>(null);
+  const [aiPopoverPosition, setAIPopoverPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const onAIActionRef = useRef(onAIAction);
+  onAIActionRef.current = onAIAction;
+  const onAISetupRequiredRef = useRef(onAISetupRequired);
+  onAISetupRequiredRef.current = onAISetupRequired;
   const [rawSearchMatches, setRawSearchMatches] = useState<SearchMatch[]>([]);
   const [rawSearchCurrentIndex, setRawSearchCurrentIndex] = useState(0);
   const handleSearchMatchesChange = useCallback((matches: SearchMatch[], currentIndex: number) => {
@@ -1281,6 +1320,92 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     );
   }
 
+  // === AI Writing Assistant Handlers ===
+  const handleAISparklesClick = useCallback((scope: 'selection' | 'document', anchorEl?: HTMLElement) => {
+    if (!aiEnabled) {
+      onAISetupRequiredRef.current?.();
+      return;
+    }
+    if (!editor) return;
+    
+    // Get position for the dropdown
+    let position = { top: 0, left: 0 };
+    if (anchorEl) {
+      const rect = anchorEl.getBoundingClientRect();
+      position = { top: rect.bottom + 4, left: rect.left };
+    } else {
+      const { from, to } = editor.state.selection;
+      const start = editor.view.coordsAtPos(from);
+      const end = editor.view.coordsAtPos(to);
+      position = { top: end.bottom + 8, left: (start.left + end.left) / 2 };
+    }
+    
+    setAIDropdown({ scope, position });
+  }, [aiEnabled, editor]);
+  
+  const handleAIActionSelect = useCallback((actionId: string, customPrompt?: string) => {
+    if (!editor || !aiActions) return;
+    
+    const action = aiActions.find(a => a.id === actionId);
+    if (!action) return;
+    
+    const { from, to } = editor.state.selection;
+    const selectedText = from !== to
+      ? editor.state.doc.textBetween(from, to, '\n')
+      : '';
+    
+    // For document-scope actions, use the full document text
+    const text = action.scope === 'document' || !selectedText
+      ? editor.getText()
+      : selectedText;
+    
+    // Position the result popover below the selection
+    const coords = editor.view.coordsAtPos(from);
+    setAIPopoverPosition({ top: coords.bottom + 12, left: coords.left });
+    
+    // Close dropdown and start the AI action
+    setAIDropdown(null);
+    executeAIAction(actionId, action.label, text, { from, to }, customPrompt);
+  }, [editor, aiActions, executeAIAction]);
+  
+  const handleAIReplace = useCallback(() => {
+    if (!editor || aiState.status !== 'complete') return;
+    const { selectionRange, result } = aiState;
+    
+    editor.chain()
+      .focus()
+      .setTextSelection(selectionRange)
+      .deleteSelection()
+      .insertContent(result)
+      .run();
+    
+    resetAI();
+  }, [editor, aiState, resetAI]);
+  
+  const handleAIInsert = useCallback(() => {
+    if (!editor || aiState.status !== 'complete') return;
+    const { selectionRange, result } = aiState;
+    
+    editor.chain()
+      .focus()
+      .setTextSelection(selectionRange.to)
+      .insertContent('\n' + result)
+      .run();
+    
+    resetAI();
+  }, [editor, aiState, resetAI]);
+  
+  const handleAIRetry = useCallback(() => {
+    if (aiState.status !== 'complete' && aiState.status !== 'error') return;
+    if (aiState.status === 'complete') {
+      const { action, actionLabel, inputText, selectionRange } = aiState;
+      resetAI();
+      executeAIAction(action, actionLabel, inputText, selectionRange);
+    } else {
+      resetAI();
+    }
+  }, [aiState, resetAI, executeAIAction]);
+
   // Default toolbar component
   const defaultToolbar = (
     <EditorToolbar 
@@ -1293,6 +1418,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       }}
       disabledFeatures={disabledFeatures}
       autoReorderChecklist={autoReorderChecklist}
+      aiEnabled={aiEnabled || !!onAISetupRequired}
+      onAISparklesClick={(anchorEl) => handleAISparklesClick('document', anchorEl)}
     />
   );
 
@@ -1424,7 +1551,30 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             {/* Drag handle overlay removed - drag and reorder functionality disabled */}
             
             {/* Floating toolbar on text selection (desktop only) */}
-            {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} suppressWhenLinkPopoverOpen={isLinkPopoverOpen} />}
+            {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} suppressWhenLinkPopoverOpen={isLinkPopoverOpen} aiEnabled={aiEnabled || !!onAISetupRequired} onAISparklesClick={(anchorEl) => handleAISparklesClick('selection', anchorEl)} />}
+            
+            {/* AI dropdown menu */}
+            {aiDropdown && aiActions && (
+              <AIDropdownMenu
+                actions={aiActions}
+                scope={aiDropdown.scope}
+                position={aiDropdown.position}
+                onAction={handleAIActionSelect}
+                onClose={() => setAIDropdown(null)}
+              />
+            )}
+            
+            {/* AI result popover */}
+            {aiState.status !== 'idle' && (
+              <AIResultPopover
+                state={aiState}
+                position={aiPopoverPosition}
+                onReplace={handleAIReplace}
+                onInsert={handleAIInsert}
+                onRetry={handleAIRetry}
+                onDiscard={() => { abortAI(); resetAI(); }}
+              />
+            )}
             
             {/* Slash commands */}
             {!disabledFeatures.slashCommands && <SlashCommands editor={editor} disabledFeatures={disabledFeatures} />}
