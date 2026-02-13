@@ -22,7 +22,7 @@ import { LinkHoverTooltip } from './LinkHoverTooltip';
 import { FloatingToolbar } from './FloatingToolbar';
 import { CalloutWithMenu } from './extensions/CalloutWithMenu';
 import { ResizableImage } from './extensions/ResizableImage';
-import { DatePill, formatDateForMarkdown, parseDateFromMarkdown, getDateVariant } from './extensions/DatePill';
+import { DatePill, parseDateFromMarkdown, getDateVariant } from './extensions/DatePill';
 import { SlashCommands } from './SlashCommands';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace, type SearchMatch } from './FindReplace';

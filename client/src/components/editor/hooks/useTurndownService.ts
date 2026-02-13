@@ -8,22 +8,7 @@
 import { useMemo } from 'react';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
-
-/**
- * Format a date string for markdown serialization (e.g. "Feb 11, 2025")
- */
-function formatDateForMarkdown(dateStr: string): string {
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  } catch {
-    return dateStr;
-  }
-}
+import { formatDateForMarkdown } from '../extensions/DatePill';
 
 export function useTurndownService(): TurndownService {
   return useMemo(() => {
