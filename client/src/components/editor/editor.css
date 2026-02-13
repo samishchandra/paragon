@@ -337,7 +337,6 @@
     padding-left: 1rem;
     margin: 1rem 0;
     color: var(--things-pelorous, #3eb4bf);
-    font-style: italic;
   }
   
   /* Lists */
@@ -3340,7 +3339,6 @@ pre.with-line-numbers code .line::before {
   border-left-color: var(--things-pelorous, #3eb4bf);
   background: transparent;
   color: var(--things-pelorous, #3eb4bf);
-  font-style: italic;
 }
 
 /* Light theme horizontal rule */
