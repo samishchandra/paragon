@@ -7,10 +7,13 @@
  * - Retry: re-runs the same action
  * - Discard: closes the popover
  * 
+ * Positioning: Centers horizontally on the selection midpoint.
+ * Vertically places below the selection if space allows, otherwise above.
+ * 
  * This component is lazy-loaded — only imported when AI features are enabled.
  */
 
-import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Replace,
@@ -25,8 +28,8 @@ import type { AIState } from './types';
 
 interface AIResultPopoverProps {
   state: AIState;
-  /** Anchor position in viewport coordinates (below the selection) */
-  position: { top: number; left: number };
+  /** Anchor position in viewport coordinates — selection bounds */
+  position: { selectionTop: number; selectionBottom: number; selectionCenterX: number };
   /** Replace the selected text with the AI result */
   onReplace: () => void;
   /** Insert the AI result after the selected text */
@@ -48,6 +51,20 @@ export function AIResultPopover({
   const popoverRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
+  const [popoverHeight, setPopoverHeight] = useState(0);
+
+  // Measure actual popover height for accurate above/below placement
+  useEffect(() => {
+    if (popoverRef.current) {
+      const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setPopoverHeight(entry.contentRect.height);
+        }
+      });
+      observer.observe(popoverRef.current);
+      return () => observer.disconnect();
+    }
+  }, []);
 
   // Auto-scroll to bottom as content streams in
   useEffect(() => {
@@ -65,31 +82,48 @@ export function AIResultPopover({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onDiscard]);
 
-  // Adjust position to stay within viewport
-  const adjustedPosition = useCallback(() => {
+  // Compute adjusted position: centered horizontally, below or above selection
+  const adjustedStyle = useMemo(() => {
     const popoverWidth = 380;
-    const popoverMaxHeight = 320;
+    const gap = 8; // gap between selection and popover
+    const edgePadding = 8; // padding from viewport edges
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    let top = position.top;
-    let left = position.left - popoverWidth / 2;
+    // Center horizontally on selection midpoint
+    let left = position.selectionCenterX - popoverWidth / 2;
 
-    // Clamp horizontally
-    if (left + popoverWidth > viewportWidth - 8) {
-      left = viewportWidth - popoverWidth - 8;
+    // Clamp horizontally within viewport
+    if (left + popoverWidth > viewportWidth - edgePadding) {
+      left = viewportWidth - popoverWidth - edgePadding;
     }
-    if (left < 8) left = 8;
+    if (left < edgePadding) left = edgePadding;
 
-    // If not enough space below, show above
-    if (top + popoverMaxHeight > viewportHeight - 8) {
-      top = Math.max(8, position.top - popoverMaxHeight - 8);
+    // Determine vertical placement: prefer below, fallback to above
+    const spaceBelow = viewportHeight - position.selectionBottom - gap;
+    const spaceAbove = position.selectionTop - gap;
+    const estimatedHeight = popoverHeight || 200; // use measured or estimate
+
+    let top: number;
+    let placedAbove = false;
+
+    if (spaceBelow >= estimatedHeight || spaceBelow >= spaceAbove) {
+      // Place below selection
+      top = position.selectionBottom + gap;
+    } else {
+      // Place above selection
+      top = position.selectionTop - gap - estimatedHeight;
+      placedAbove = true;
     }
 
-    return { top, left };
-  }, [position]);
+    // Clamp vertically
+    if (top < edgePadding) top = edgePadding;
+    if (top + estimatedHeight > viewportHeight - edgePadding) {
+      top = viewportHeight - estimatedHeight - edgePadding;
+    }
 
-  const pos = adjustedPosition();
+    return { top, left, placedAbove };
+  }, [position, popoverHeight]);
 
   const resultText = (state.status === 'streaming' || state.status === 'complete')
     ? (state as Extract<AIState, { status: 'streaming' | 'complete' }>).result
@@ -111,25 +145,29 @@ export function AIResultPopover({
 
   if (state.status === 'idle') return null;
 
+  const slideAnimation = adjustedStyle.placedAbove
+    ? 'animate-in fade-in-0 slide-in-from-bottom-2 duration-150'
+    : 'animate-in fade-in-0 slide-in-from-top-2 duration-150';
+
   const popover = (
     <div
       ref={popoverRef}
       className="ai-result-popover"
       style={{
         position: 'fixed',
-        top: pos.top,
-        left: pos.left,
+        top: adjustedStyle.top,
+        left: adjustedStyle.left,
         zIndex: 10001,
       }}
       onMouseDown={(e) => e.preventDefault()} // Prevent losing editor selection
     >
       <div
-        className="
+        className={`
           bg-popover text-popover-foreground border border-border
           rounded-lg shadow-xl overflow-hidden
           w-[380px] max-w-[calc(100vw-16px)]
-          animate-in fade-in-0 slide-in-from-top-2 duration-150
-        "
+          ${slideAnimation}
+        `}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-secondary/30">

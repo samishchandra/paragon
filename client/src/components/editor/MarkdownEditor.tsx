@@ -470,7 +470,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   const aiEnabled = !!(aiActions && aiActions.length > 0 && onAIAction);
   const { state: aiState, executeAction: executeAIAction, abort: abortAI, reset: resetAI } = useAIState(onAIAction);
   const [aiDropdown, setAIDropdown] = useState<{ scope: 'selection' | 'document'; position: { top: number; left: number } } | null>(null);
-  const [aiPopoverPosition, setAIPopoverPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [aiPopoverPosition, setAIPopoverPosition] = useState<{ selectionTop: number; selectionBottom: number; selectionCenterX: number }>({ selectionTop: 0, selectionBottom: 0, selectionCenterX: 0 });
   const onAIActionRef = useRef(onAIAction);
   onAIActionRef.current = onAIAction;
   const onAISetupRequiredRef = useRef(onAISetupRequired);
@@ -1346,9 +1346,14 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       ? editor.getText()
       : selectedText;
     
-    // Position the result popover below the selection
-    const coords = editor.view.coordsAtPos(from);
-    setAIPopoverPosition({ top: coords.bottom + 12, left: coords.left });
+    // Position the result popover centered on the selection
+    const startCoords = editor.view.coordsAtPos(from);
+    const endCoords = editor.view.coordsAtPos(to);
+    setAIPopoverPosition({
+      selectionTop: startCoords.top,
+      selectionBottom: endCoords.bottom,
+      selectionCenterX: (startCoords.left + endCoords.right) / 2,
+    });
     
     // Close dropdown and start the AI action
     setAIDropdown(null);
