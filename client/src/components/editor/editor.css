@@ -3419,7 +3419,7 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-theme="light"] .callout-prompt {
-  background: #FFFAFF;
+  background: #FFFBEB; /* Light amber to match #f59e0b border */
 }
 
 [data-theme="light"] .callout-resources {
