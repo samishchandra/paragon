@@ -60,7 +60,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 
 /*
  * DESIGN: Dark Mode Craftsman
- * Mobile-responsive toolbar with collapsible groups
+ * Horizontally scrollable toolbar — all options always visible
  * Touch-friendly buttons with proper sizing
  */
 
@@ -104,7 +104,7 @@ const ToolbarButton = ({ onClick, isActive, disabled, children, tooltip }: Toolb
       onClick={onClick}
       disabled={disabled}
       className={`
-        flex items-center justify-center w-9 h-9 sm:w-8 sm:h-8 rounded-md
+        flex items-center justify-center w-8 h-8 rounded-md shrink-0
         transition-all duration-100 ease-out touch-manipulation
         ${isActive 
           ? 'bg-secondary text-foreground' 
@@ -121,7 +121,7 @@ const ToolbarButton = ({ onClick, isActive, disabled, children, tooltip }: Toolb
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs hidden sm:block">
+        <TooltipContent side="bottom" className="text-xs">
           {tooltip}
         </TooltipContent>
       </Tooltip>
@@ -132,7 +132,7 @@ const ToolbarButton = ({ onClick, isActive, disabled, children, tooltip }: Toolb
 };
 
 const Divider = () => (
-  <div className="w-px h-6 bg-border mx-0.5 hidden sm:block" />
+  <div className="w-px h-5 bg-border mx-0.5 shrink-0" />
 );
 
 export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdown, onOpenLinkPopover, className = '', autoReorderChecklist = false, aiEnabled = false, onAISparklesClick }: EditorToolbarProps) {
@@ -313,7 +313,6 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
 
       if (checkboxToggled) {
         setTimeout(() => {
-          if (editor.isDestroyed) return;
           performReorder(editor);
         }, 150);
       }
@@ -323,126 +322,90 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
     return () => {
       editor.off('transaction', handleTransaction);
     };
-  }, [autoReorderChecklist, editor, performReorder]);
+  }, [editor, autoReorderChecklist, performReorder]);
 
-  // Manual reorder function
   const reorderTodoItems = useCallback(() => {
-    if (!editor) return;
     performReorder(editor);
   }, [editor, performReorder]);
 
   return (
-    <div className={`flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1.5 sm:py-2 border-b border-border/50 bg-muted/30 overflow-x-auto scrollbar-hide ${className}`}>
-      {/* Undo/Redo - Always visible */}
+    <div className={`flex items-center gap-0.5 px-2 py-1.5 border-b border-border/50 bg-muted/30 overflow-x-auto scrollbar-hide ${className}`}>
+      {/* Undo/Redo */}
       <ToolbarButton
         onClick={() => editor.chain().focus().undo().run()}
         disabled={!editorState?.canUndo}
         tooltip="Undo (Ctrl+Z)"
       >
-        <Undo size={18} className="sm:w-4 sm:h-4" />
+        <Undo size={16} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().redo().run()}
         disabled={!editorState?.canRedo}
         tooltip="Redo (Ctrl+Shift+Z)"
       >
-        <Redo size={18} className="sm:w-4 sm:h-4" />
+        <Redo size={16} />
       </ToolbarButton>
 
       <Divider />
 
-      {/* Text formatting - Visible on desktop, dropdown on mobile */}
-      <div className="hidden sm:flex items-center gap-0.5">
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          isActive={editorState?.isBold}
-          tooltip="Bold (Ctrl+B)"
-        >
-          <Bold size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          isActive={editorState?.isItalic}
-          tooltip="Italic (Ctrl+I)"
-        >
-          <Italic size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          isActive={editorState?.isUnderline}
-          tooltip="Underline (Ctrl+U)"
-        >
-          <Underline size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          isActive={editorState?.isStrike}
-          tooltip="Strikethrough"
-        >
-          <Strikethrough size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          isActive={editorState?.isCode}
-          tooltip="Inline Code (Ctrl+E)"
-        >
-          <Code size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHighlight().run()}
-          isActive={editorState?.isHighlight}
-          tooltip="Highlight"
-        >
-          <Highlighter size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => onOpenLinkPopover?.()}
-          isActive={editorState?.isLink}
-          tooltip="Link (Ctrl+K)"
-        >
-          <Link size={16} />
-        </ToolbarButton>
-      </div>
-
-      {/* Mobile: Text formatting dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 sm:hidden">
-            <Type size={18} />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleBold().run()}>
-            <Bold size={16} className="mr-2" /> Bold
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleItalic().run()}>
-            <Italic size={16} className="mr-2" /> Italic
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleUnderline().run()}>
-            <Underline size={16} className="mr-2" /> Underline
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleStrike().run()}>
-            <Strikethrough size={16} className="mr-2" /> Strikethrough
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleCode().run()}>
-            <Code size={16} className="mr-2" /> Inline Code
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight().run()}>
-            <Highlighter size={16} className="mr-2" /> Highlight
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onOpenLinkPopover?.()}>
-            <Link size={16} className="mr-2" /> Link
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Text formatting — always visible, scrollable */}
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        isActive={editorState?.isBold}
+        tooltip="Bold (Ctrl+B)"
+      >
+        <Bold size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        isActive={editorState?.isItalic}
+        tooltip="Italic (Ctrl+I)"
+      >
+        <Italic size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        isActive={editorState?.isUnderline}
+        tooltip="Underline (Ctrl+U)"
+      >
+        <Underline size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleStrike().run()}
+        isActive={editorState?.isStrike}
+        tooltip="Strikethrough"
+      >
+        <Strikethrough size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleCode().run()}
+        isActive={editorState?.isCode}
+        tooltip="Inline Code (Ctrl+E)"
+      >
+        <Code size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleHighlight().run()}
+        isActive={editorState?.isHighlight}
+        tooltip="Highlight"
+      >
+        <Highlighter size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => onOpenLinkPopover?.()}
+        isActive={editorState?.isLink}
+        tooltip="Link (Ctrl+K)"
+      >
+        <Link size={16} />
+      </ToolbarButton>
 
       <Divider />
 
       {/* Headings dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-9 sm:h-8 px-1.5 sm:px-2 gap-1">
-            <Heading1 size={18} className="sm:w-4 sm:h-4" />
+          <Button variant="ghost" size="sm" className="h-8 px-1.5 gap-1 shrink-0">
+            <Heading1 size={16} />
             <span className="text-xs hidden sm:inline">Heading</span>
           </Button>
         </DropdownMenuTrigger>
@@ -465,219 +428,116 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
 
       <Divider />
 
-      {/* Lists - Visible on desktop, dropdown on mobile */}
-      <div className="hidden md:flex items-center gap-0.5">
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          isActive={editorState?.isBulletList}
-          tooltip="Bullet List"
-        >
-          <List size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          isActive={editorState?.isOrderedList}
-          tooltip="Numbered List"
-        >
-          <ListOrdered size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleTaskList().run()}
-          isActive={editorState?.isTaskList}
-          tooltip="Task List"
-        >
-          <CheckSquare size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          isActive={editorState?.isBlockquote}
-          tooltip="Quote"
-        >
-          <Quote size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          isActive={editorState?.isCodeBlock}
-          tooltip="Code Block"
-        >
-          <Code2 size={16} />
-        </ToolbarButton>
-        <Divider />
-        <ToolbarButton
-          onClick={() => {
-            // Check if in task list or regular list and indent accordingly
-            if (editorState?.isTaskList) {
-              editor.chain().focus().sinkListItem('taskItem').run();
-            } else if (editorState?.isBulletList || editorState?.isOrderedList) {
-              editor.chain().focus().sinkListItem('listItem').run();
-            }
-          }}
-          disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
-          tooltip="Indent (Tab)"
-        >
-          <IndentIncrease size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => {
-            // Check if in task list or regular list and outdent accordingly
-            if (editorState?.isTaskList) {
-              editor.chain().focus().liftListItem('taskItem').run();
-            } else if (editorState?.isBulletList || editorState?.isOrderedList) {
-              editor.chain().focus().liftListItem('listItem').run();
-            }
-          }}
-          disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
-          tooltip="Outdent (Shift+Tab)"
-        >
-          <IndentDecrease size={16} />
-        </ToolbarButton>
-      </div>
-
-      {/* Mobile: Lists dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 md:hidden">
-            <ListIcon size={18} />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleBulletList().run()}>
-            <List size={16} className="mr-2" /> Bullet List
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleOrderedList().run()}>
-            <ListOrdered size={16} className="mr-2" /> Numbered List
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleTaskList().run()}>
-            <CheckSquare size={16} className="mr-2" /> Task List
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleBlockquote().run()}>
-            <Quote size={16} className="mr-2" /> Quote
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleCodeBlock().run()}>
-            <Code2 size={16} className="mr-2" /> Code Block
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem 
-            onClick={() => {
-              if (editorState?.isTaskList) {
-                editor.chain().focus().sinkListItem('taskItem').run();
-              } else if (editorState?.isBulletList || editorState?.isOrderedList) {
-                editor.chain().focus().sinkListItem('listItem').run();
-              }
-            }}
-            disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
-          >
-            <IndentIncrease size={16} className="mr-2" /> Indent
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={() => {
-              if (editorState?.isTaskList) {
-                editor.chain().focus().liftListItem('taskItem').run();
-              } else if (editorState?.isBulletList || editorState?.isOrderedList) {
-                editor.chain().focus().liftListItem('listItem').run();
-              }
-            }}
-            disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
-          >
-            <IndentDecrease size={16} className="mr-2" /> Outdent
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Lists — always visible, scrollable */}
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        isActive={editorState?.isBulletList}
+        tooltip="Bullet List"
+      >
+        <List size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        isActive={editorState?.isOrderedList}
+        tooltip="Numbered List"
+      >
+        <ListOrdered size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleTaskList().run()}
+        isActive={editorState?.isTaskList}
+        tooltip="Task List"
+      >
+        <CheckSquare size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        isActive={editorState?.isBlockquote}
+        tooltip="Quote"
+      >
+        <Quote size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        isActive={editorState?.isCodeBlock}
+        tooltip="Code Block"
+      >
+        <Code2 size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => {
+          if (editorState?.isTaskList) {
+            editor.chain().focus().sinkListItem('taskItem').run();
+          } else if (editorState?.isBulletList || editorState?.isOrderedList) {
+            editor.chain().focus().sinkListItem('listItem').run();
+          }
+        }}
+        disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
+        tooltip="Indent (Tab)"
+      >
+        <IndentIncrease size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => {
+          if (editorState?.isTaskList) {
+            editor.chain().focus().liftListItem('taskItem').run();
+          } else if (editorState?.isBulletList || editorState?.isOrderedList) {
+            editor.chain().focus().liftListItem('listItem').run();
+          }
+        }}
+        disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
+        tooltip="Outdent (Shift+Tab)"
+      >
+        <IndentDecrease size={16} />
+      </ToolbarButton>
 
       <Divider />
 
-      {/* Insert elements - Inline on large screens, dropdown on smaller screens */}
-      {/* Desktop: Show Table, Image, HR, and Callout buttons inline */}
-      <div className="hidden lg:flex items-center gap-0.5">
-        <ToolbarButton
-          onClick={addTable}
-          tooltip="Insert Table (3×3)"
-        >
-          <Table size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={openImageDialog}
-          tooltip="Insert Image"
-        >
-          <Image size={16} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          tooltip="Horizontal Rule"
-        >
-          <Minus size={16} />
-        </ToolbarButton>
-        {/* Callout dropdown for desktop inline */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className="flex items-center justify-center w-8 h-8 rounded-md transition-all duration-100 ease-out touch-manipulation bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80"
-              title="Insert Callout"
-            >
-              <Info size={16} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => addCallout('info')}>
-              <Info size={16} className="mr-2" style={{ color: '#3F78BB' }} /> Info
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => addCallout('note')}>
-              <BookOpen size={16} className="mr-2" style={{ color: '#FF8200' }} /> Note
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => addCallout('prompt')}>
-              <PenLine size={16} className="mr-2" style={{ color: '#B244B3' }} /> Prompt
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => addCallout('resources')}>
-              <Library size={16} className="mr-2" style={{ color: '#63B148' }} /> Resources
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => addCallout('todo')}>
-              <ListTodo size={16} className="mr-2" style={{ color: '#4479B3' }} /> Todo
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Mobile/Tablet: Insert elements dropdown */}
+      {/* Insert elements — always visible, scrollable */}
+      <ToolbarButton
+        onClick={addTable}
+        tooltip="Insert Table (3×3)"
+      >
+        <Table size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={openImageDialog}
+        tooltip="Insert Image"
+      >
+        <Image size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().setHorizontalRule().run()}
+        tooltip="Horizontal Rule"
+      >
+        <Minus size={16} />
+      </ToolbarButton>
+      {/* Callout dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-9 sm:h-8 px-1.5 sm:px-2 gap-1 lg:hidden">
-            <PlusCircle size={18} className="sm:w-4 sm:h-4" />
-            <span className="text-xs hidden sm:inline">Insert</span>
-          </Button>
+          <button
+            className="flex items-center justify-center w-8 h-8 rounded-md shrink-0 transition-all duration-100 ease-out touch-manipulation bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80"
+            title="Insert Callout"
+          >
+            <Info size={16} />
+          </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
-          <DropdownMenuItem onClick={addTable}>
-            <Table size={16} className="mr-2" /> Table (3×3)
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => addCallout('info')}>
+            <Info size={16} className="mr-2" style={{ color: '#3F78BB' }} /> Info
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={openImageDialog}>
-            <Image size={16} className="mr-2" /> Image
+          <DropdownMenuItem onClick={() => addCallout('note')}>
+            <BookOpen size={16} className="mr-2" style={{ color: '#FF8200' }} /> Note
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setHorizontalRule().run()}>
-            <Minus size={16} className="mr-2" /> Horizontal Rule
+          <DropdownMenuItem onClick={() => addCallout('prompt')}>
+            <PenLine size={16} className="mr-2" style={{ color: '#B244B3' }} /> Prompt
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Info size={16} className="mr-2" /> Callout
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => addCallout('info')}>
-                <Info size={16} className="mr-2" style={{ color: '#3F78BB' }} /> Info
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addCallout('note')}>
-                <BookOpen size={16} className="mr-2" style={{ color: '#FF8200' }} /> Note
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addCallout('prompt')}>
-                <PenLine size={16} className="mr-2" style={{ color: '#B244B3' }} /> Prompt
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addCallout('resources')}>
-                <Library size={16} className="mr-2" style={{ color: '#63B148' }} /> Resources
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addCallout('todo')}>
-                <ListTodo size={16} className="mr-2" style={{ color: '#4479B3' }} /> Todo
-              </DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          <DropdownMenuItem onClick={() => addCallout('resources')}>
+            <Library size={16} className="mr-2" style={{ color: '#63B148' }} /> Resources
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => addCallout('todo')}>
+            <ListTodo size={16} className="mr-2" style={{ color: '#4479B3' }} /> Todo
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -688,9 +548,9 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
             <Button 
               variant="ghost" 
               size="sm" 
-              className="h-9 sm:h-8 px-1.5 sm:px-2 gap-1 bg-primary/10"
+              className="h-8 px-1.5 gap-1 bg-primary/10 shrink-0"
             >
-              <Table size={18} className="sm:w-4 sm:h-4" />
+              <Table size={16} />
               <span className="text-xs hidden sm:inline">Table</span>
             </Button>
           </DropdownMenuTrigger>
@@ -772,7 +632,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
         onClick={reorderTodoItems}
         tooltip="Sort tasks: unchecked first, checked last"
       >
-        <ArrowUpDown size={18} className="sm:w-4 sm:h-4" />
+        <ArrowUpDown size={16} />
       </ToolbarButton>
 
       {/* AI Sparkles button (document-scope actions) */}
@@ -789,16 +649,16 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
                   }
                 }}
                 className="
-                  flex items-center justify-center w-9 h-9 sm:w-8 sm:h-8 rounded-md
+                  flex items-center justify-center w-8 h-8 rounded-md shrink-0
                   transition-all duration-100 ease-out touch-manipulation
                   bg-transparent text-muted-foreground hover:bg-secondary active:bg-secondary/80
                   hover:text-foreground
                 "
               >
-                <Sparkles size={18} className="sm:w-4 sm:h-4" />
+                <Sparkles size={16} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs hidden sm:block">
+            <TooltipContent side="bottom" className="text-xs">
               AI Writing Assistant
             </TooltipContent>
           </Tooltip>
@@ -815,10 +675,10 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
             <Button 
               variant="ghost" 
               size="sm" 
-              className="h-9 sm:h-8 px-2 gap-1 shrink-0" 
+              className="h-8 px-2 gap-1 shrink-0" 
               onClick={onCopyMarkdown}
             >
-              <Copy size={18} className="sm:w-4 sm:h-4" />
+              <Copy size={16} />
               <span className="text-xs hidden md:inline">Copy MD</span>
             </Button>
           </TooltipTrigger>
