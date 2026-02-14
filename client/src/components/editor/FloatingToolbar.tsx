@@ -426,18 +426,7 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
       }}
       onMouseDown={handleToolbarMouseDown}
     >
-      {/* Heading styles dropdown */}
-      <HeadingDropdown
-        editor={editor}
-        isH1={editorState?.isH1 ?? false}
-        isH2={editorState?.isH2 ?? false}
-        isH3={editorState?.isH3 ?? false}
-        executeCommand={executeCommand}
-      />
-
-      <Divider />
-
-      {/* Primary text formatting */}
+      {/* Section 1: Inline text formatting */}
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBold().run())}
         isActive={editorState?.isBold}
@@ -491,7 +480,14 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
 
       <Divider />
 
-      {/* Block elements */}
+      {/* Section 2: Heading dropdown + block elements */}
+      <HeadingDropdown
+        editor={editor}
+        isH1={editorState?.isH1 ?? false}
+        isH2={editorState?.isH2 ?? false}
+        isH3={editorState?.isH3 ?? false}
+        executeCommand={executeCommand}
+      />
       <ToolbarButton
         onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleBlockquote().run())}
         isActive={editorState?.isBlockquote}
