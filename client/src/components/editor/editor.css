@@ -3222,7 +3222,8 @@ pre.with-line-numbers code .line::before {
 .word-count {
   margin-left: auto;
   font-weight: 300;
-  opacity: 0.7;
+  color: oklch(0.65 0.01 250);
+  opacity: 0.85;
 }
 
 .editor-loading {
