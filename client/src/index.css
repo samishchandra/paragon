@@ -133,7 +133,7 @@
   
   /* Editor specific */
   --editor-bg: #ffffff;
-  --editor-selection: rgba(46, 128, 242, 0.15);
+  --editor-selection: rgba(46, 128, 242, 0.20);
   --editor-cursor: #2e80f2;
   --editor-line-number: #cccccc;
   --editor-gutter: #fafafa;
@@ -238,7 +238,7 @@
   
   /* Editor specific */
   --editor-bg: #1c2127;
-  --editor-selection: rgba(46, 128, 242, 0.25);
+  --editor-selection: rgba(46, 128, 242, 0.35);
   --editor-cursor: #2e80f2;
   --editor-line-number: #666666;
   --editor-gutter: #181c20;

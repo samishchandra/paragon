@@ -3574,7 +3574,7 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme selection */
 [data-theme="light"] .ProseMirror ::selection {
-  background: oklch(0.55 0.08 220 / 0.25);
+  background: rgba(46, 128, 242, 0.20);
 }
 
 /* Light theme placeholder */
@@ -3856,7 +3856,7 @@ pre.with-line-numbers code .line::before {
 
 /* Dark theme selection */
 [data-theme="dark"] .ProseMirror ::selection {
-  background: rgba(46, 128, 242, 0.25);
+  background: rgba(46, 128, 242, 0.35);
 }
 
 /* Dark theme placeholder */
