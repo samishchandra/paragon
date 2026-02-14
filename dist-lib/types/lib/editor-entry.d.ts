@@ -9,7 +9,7 @@
  *
  * Or if using the UMD build, include the CSS via a <link> tag.
  */
-export { MarkdownEditor, type MarkdownEditorProps, } from '@/components/editor/MarkdownEditor';
+export { MarkdownEditor, type MarkdownEditorProps, type MarkdownEditorRef, } from '@/components/editor/MarkdownEditor';
 export { FloatingToolbar } from '@/components/editor/FloatingToolbar';
 export { EditorToolbar } from '@/components/editor/EditorToolbar';
 export { SlashCommands } from '@/components/editor/SlashCommands';
@@ -20,13 +20,14 @@ export { CollapsibleHeading } from '@/components/editor/extensions/CollapsibleHe
 export { SearchHighlight } from '@/components/editor/extensions/SearchHighlight';
 export { SelectAllOccurrences } from '@/components/editor/extensions/SelectAllOccurrences';
 export { TabIndent } from '@/components/editor/extensions/TabIndent';
-export { DatePill } from '@/components/editor/extensions/DatePill';
+export { DatePill, parseDateFromMarkdown, getDateVariant } from '@/components/editor/extensions/DatePill';
 export { WikiLinkSafe } from '@/components/editor/extensions/WikiLinkSafe';
 export { MarkdownPasteSafe } from '@/components/editor/extensions/MarkdownPasteSafe';
 export { MarkdownLinkInputRule } from '@/components/editor/extensions/MarkdownLinkInputRule';
 export { CalloutInputRule } from '@/components/editor/extensions/CalloutInputRule';
 export { MixedBulletList, MixedOrderedList, MixedTaskList, MixedTaskItem, MixedListItem } from '@/components/editor/extensions/MixedLists';
 export { CollapsibleList } from '@/components/editor/extensions/CollapsibleList';
+export { TagPill, isValidTag, normalizeTag } from '@/components/editor/extensions/TagPill';
 export { EditorThemeProvider, useEditorTheme } from '@/components/editor/ThemeProvider';
 export { themes, applyTheme, createCustomTheme, darkTheme, lightTheme, sepiaTheme, nordTheme, type EditorTheme, } from '@/components/editor/themes';
 export { useAutoSave, type AutoSaveOptions, type AutoSaveState, type AutoSaveReturn, } from '@/components/editor/hooks/useAutoSave';
@@ -38,5 +39,6 @@ export { lowlight } from '@/components/editor/extensions/CodeBlockWithFeatures';
 export { FindReplace } from '@/components/editor/FindReplace';
 export { SelectAllActionBar } from '@/components/editor/SelectAllActionBar';
 export { TableOfContents } from '@/components/editor/TableOfContents';
+export { type AIActionDefinition, type AIActionHandler } from '@/components/editor/ai/types';
 export { useWordCount } from '@/components/editor/hooks/useWordCount';
 import '@/index.css';

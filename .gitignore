@@ -105,5 +105,5 @@ temp/
 *.sqlite
 *.sqlite3
 
-# Library build output
-dist-lib/
+# Library build output — NOT ignored: committed for GitHub install
+# dist-lib/
