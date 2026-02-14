@@ -180,7 +180,7 @@ const commands: CommandItem[] = [
 ];
 
 // Menu height per item (padding + content)
-const ITEM_HEIGHT = 28; // ~28px per item
+const ITEM_HEIGHT = 32; // ~32px per item
 const MENU_PADDING = 8; // 4px top + 4px bottom
 const MENU_MAX_HEIGHT = 320;
 const MENU_WIDTH = 210;

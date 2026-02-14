@@ -1948,8 +1948,9 @@ pre.with-line-numbers code .line::before {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 8px;
+  padding: 6px 8px;
   border-radius: 5px;
+  min-height: 32px;
   cursor: pointer;
   transition: background 0.08s ease;
   touch-action: manipulation;
@@ -1977,7 +1978,7 @@ pre.with-line-numbers code .line::before {
 
 .slash-label {
   font-size: 13px;
-  line-height: 1;
+  line-height: 1.3;
   color: var(--foreground);
   overflow: hidden;
   text-overflow: ellipsis;
