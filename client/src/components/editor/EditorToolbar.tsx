@@ -211,17 +211,34 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
       });
     });
 
-    doc.descendants((node, pos) => {
+    // Collect all list nodes that need reordering (process deepest first to avoid position shifts)
+    const listsToReorder: { node: any; pos: number; depth: number }[] = [];
+    doc.descendants((node, pos, _parent, index) => {
       if (!listTypes.has(node.type.name)) return true;
 
-      // Check if this list has any taskItem children
-      let hasTaskItems = false;
+      // Check if this list has any DIRECT taskItem children (not nested ones)
+      let hasDirectTaskItems = false;
       node.forEach((child: any) => {
-        if (child.type.name === 'taskItem') hasTaskItems = true;
+        if (child.type.name === 'taskItem') hasDirectTaskItems = true;
       });
-      if (!hasTaskItems) return true;
+      if (!hasDirectTaskItems) return true; // continue into children to find nested lists
 
-      // Separate items into: regular listItems (keep in place), unchecked taskItems, checked taskItems
+      // Calculate depth by counting ancestor list nodes
+      let depth = 0;
+      doc.nodesBetween(0, pos, (n) => {
+        if (listTypes.has(n.type.name)) depth++;
+        return true;
+      });
+
+      listsToReorder.push({ node, pos, depth });
+      return true; // IMPORTANT: continue descending to find nested lists at deeper levels
+    });
+
+    // Sort deepest-first so position mappings stay valid when we modify inner lists before outer ones
+    listsToReorder.sort((a, b) => b.depth - a.depth);
+
+    for (const { node, pos } of listsToReorder) {
+      // Only reorder DIRECT children of this list node (same level)
       const items: { node: any; isTask: boolean; checked: boolean; originalIndex: number }[] = [];
       let idx = 0;
       node.forEach((child: any) => {
@@ -235,22 +252,20 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
 
       // Build reordered list: non-task items stay in relative position,
       // unchecked tasks come before checked tasks, all tasks maintain relative order within their group
-      const nonTaskItems = items.filter(i => !i.isTask);
       const uncheckedTasks = items.filter(i => i.isTask && !i.checked);
       const checkedTasks = items.filter(i => i.isTask && i.checked);
 
       // Reconstruct: place items back by filling task slots in order (unchecked first, checked last)
-      // while keeping non-task items in their original positions
-      const taskSlots = items.map((item, i) => ({ index: i, isTask: item.isTask }));
+      // while keeping non-task items (listItem) in their original positions
       const reordered = [...items]; // clone
-      const taskPositions = taskSlots.filter(s => s.isTask).map(s => s.index);
+      const taskPositions = items.map((item, i) => ({ index: i, isTask: item.isTask })).filter(s => s.isTask).map(s => s.index);
       const orderedTasks = [...uncheckedTasks, ...checkedTasks];
       taskPositions.forEach((slotIdx, i) => {
         reordered[slotIdx] = orderedTasks[i];
       });
 
       const orderChanged = reordered.some((item, i) => item.node !== items[i].node);
-      if (!orderChanged) return false;
+      if (!orderChanged) continue;
 
       const newList = node.type.create(
         node.attrs,
@@ -259,8 +274,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
       const mappedPos = tr.mapping.map(pos);
       tr.replaceWith(mappedPos, mappedPos + node.nodeSize, newList);
       modified = true;
-      return false;
-    });
+    }
 
     if (modified) {
       ed.view.dispatch(tr);
