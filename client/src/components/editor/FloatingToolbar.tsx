@@ -287,21 +287,36 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
         const padding = 8;
         const viewportWidth = window.innerWidth;
         
+        // Detect if inside a transformed container (e.g., Dialog with translate)
+        // CSS transforms create a new containing block for fixed-position elements,
+        // so we need to compensate for the container's offset
+        let offsetX = 0;
+        let offsetY = 0;
+        if (toolbarRef.current) {
+          const el = toolbarRef.current.closest('[data-slot="dialog-content"]') as HTMLElement;
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            offsetX = rect.left;
+            offsetY = rect.top;
+          }
+        }
+        
         // Calculate center position of selection in viewport coords
         const selectionCenterX = (start.left + end.left) / 2;
         
-        // Position horizontally centered on selection
-        let left = selectionCenterX - toolbarWidth / 2;
+        // Position horizontally centered on selection, adjusted for container offset
+        let left = selectionCenterX - toolbarWidth / 2 - offsetX;
         
-        // Clamp to viewport bounds
-        left = Math.max(padding, Math.min(viewportWidth - toolbarWidth - padding, left));
+        // Clamp to viewport bounds (adjusted for container)
+        const maxWidth = offsetX ? (viewportWidth - offsetX) : viewportWidth;
+        left = Math.max(padding, Math.min(maxWidth - toolbarWidth - padding, left));
         
-        // Position above the selection in viewport coords
-        let top = start.top - toolbarHeight - 10;
+        // Position above the selection in viewport coords, adjusted for container offset
+        let top = start.top - toolbarHeight - 10 - offsetY;
         
         // If not enough space above, position below
         if (top < padding) {
-          top = end.bottom + 10;
+          top = end.bottom + 10 - offsetY;
         }
 
         if (!isVisible) {
