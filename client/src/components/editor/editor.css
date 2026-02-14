@@ -466,15 +466,14 @@
     100% { opacity: 1; transform: scale(1); }
   }
   
-  /* Strikethrough for checked task items with smooth animation */
+  /* Checked task items - muted color, no strikethrough */
   /* Only apply to the paragraph inside the div, not the entire div (which contains nested lists) */
   ul[data-type="taskList"] li[data-checked="true"] > div > p {
-    text-decoration: line-through;
+    text-decoration: none;
     color: var(--muted-foreground);
-    animation: task-complete 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  /* Also apply strikethrough to direct text nodes in the div (for items without p tags) */
+  /* Muted color for direct text nodes in the div (for items without p tags) */
   ul[data-type="taskList"] li[data-checked="true"] > div {
     color: var(--muted-foreground);
   }
@@ -516,17 +515,16 @@
     }
   }
   
-  /* Prevent nested unchecked task items from inheriting strikethrough from checked parent */
-  /* Reset text-decoration for all nested task items */
+  /* Reset color for nested unchecked task items */
   ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li > div > p {
     text-decoration: none;
     color: var(--foreground);
   }
   
-  /* Ensure nested checked items still show strikethrough */
+  /* Nested checked items get muted color */
   ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p,
   ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p {
-    text-decoration: line-through !important;
+    text-decoration: none !important;
     color: var(--muted-foreground) !important;
   }
   
@@ -626,11 +624,10 @@
     animation: checkmark-pop 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
   }
 
-  /* Strikethrough for checked task items in mixed lists */
+  /* Checked task items in mixed lists - muted color, no strikethrough */
   li.task-item[data-checked="true"] > div > p {
-    text-decoration: line-through;
+    text-decoration: none;
     color: var(--muted-foreground);
-    animation: task-complete 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   li.task-item[data-checked="true"] > div {
@@ -3254,18 +3251,17 @@ pre.with-line-numbers code .line::before {
   padding-left: 0 !important;
 }
 
-/* Ensure nested unchecked tasks don't inherit strikethrough from checked parent */
-/* Target all nested task items to reset text-decoration */
+/* Reset color for nested unchecked tasks */
 .tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li > div,
 .tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li > div > p {
   text-decoration: none !important;
   color: var(--foreground) !important;
 }
 
-/* Ensure nested checked items still show strikethrough */
+/* Nested checked items get muted color */
 .tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p,
 .tiptap-editor ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p {
-  text-decoration: line-through !important;
+  text-decoration: none !important;
   color: var(--muted-foreground) !important;
 }
 
@@ -3377,8 +3373,7 @@ pre.with-line-numbers code .line::before {
 
 [data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div > p {
   color: #9a9a9a;
-  text-decoration: line-through;
-  text-decoration-color: #cccccc;
+  text-decoration: none;
 }
 
 [data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div {
@@ -3390,18 +3385,17 @@ pre.with-line-numbers code .line::before {
   color: var(--foreground);
 }
 
-/* Ensure nested unchecked items don't have strikethrough in light theme */
+/* Reset color for nested unchecked items in light theme */
 [data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li > div > p {
   text-decoration: none;
   color: var(--foreground);
 }
 
-/* Ensure nested checked items still show strikethrough in light theme */
+/* Nested checked items in light theme */
 [data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p,
 [data-theme="light"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p {
-  text-decoration: line-through !important;
+  text-decoration: none !important;
   color: #9a9a9a !important;
-  text-decoration-color: #cccccc;
 }
 
 /* Light theme task item checkbox (mixed lists - target by class) */
@@ -3422,8 +3416,7 @@ pre.with-line-numbers code .line::before {
 
 [data-theme="light"] li.task-item[data-checked="true"] > div > p {
   color: #9a9a9a;
-  text-decoration: line-through;
-  text-decoration-color: #cccccc;
+  text-decoration: none;
 }
 
 [data-theme="light"] li.task-item[data-checked="true"] > div {
