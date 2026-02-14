@@ -7,16 +7,13 @@ import {
   Code,
   Link,
   Highlighter,
-  Heading1,
-  Heading2,
-  Heading3,
   Quote,
   List,
   ListOrdered,
   CheckSquare,
-  Pilcrow,
   FileCode,
   Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 import { useCallback, useState, useEffect, useRef, memo } from 'react';
 import { createPortal } from 'react-dom';
@@ -71,6 +68,113 @@ const ToolbarButton = ({ onMouseDown, isActive, disabled, children, title }: Too
 const Divider = () => (
   <div className="w-px h-5 bg-border mx-0.5 flex-shrink-0" />
 );
+
+// Heading style options for the dropdown
+const HEADING_STYLES = [
+  { label: 'Paragraph', value: 'paragraph', shortLabel: 'P' },
+  { label: 'Heading 1', value: 'h1', shortLabel: 'H1' },
+  { label: 'Heading 2', value: 'h2', shortLabel: 'H2' },
+  { label: 'Heading 3', value: 'h3', shortLabel: 'H3' },
+] as const;
+
+interface HeadingDropdownProps {
+  editor: Editor;
+  isH1: boolean;
+  isH2: boolean;
+  isH3: boolean;
+  executeCommand: (e: React.MouseEvent, command: () => void) => void;
+}
+
+const HeadingDropdown = memo(function HeadingDropdown({ editor, isH1, isH2, isH3, executeCommand }: HeadingDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Determine current active style
+  const currentStyle = isH1 ? 'h1' : isH2 ? 'h2' : isH3 ? 'h3' : 'paragraph';
+  const currentLabel = HEADING_STYLES.find(s => s.value === currentStyle)?.shortLabel || 'P';
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
+  }, [isOpen]);
+
+  const handleSelect = (e: React.MouseEvent, value: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (value === 'paragraph') {
+      editor.chain().focus().setParagraph().run();
+    } else {
+      const level = parseInt(value.replace('h', '')) as 1 | 2 | 3;
+      editor.chain().focus().toggleHeading({ level }).run();
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <div ref={dropdownRef} className="relative flex-shrink-0">
+      <button
+        onMouseDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        title="Text style"
+        className={`
+          flex items-center gap-0.5 h-7 px-1.5 rounded-md flex-shrink-0
+          transition-all duration-100 ease-out touch-manipulation
+          text-xs font-semibold
+          ${currentStyle !== 'paragraph'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80'
+          }
+        `}
+      >
+        <span className="min-w-[18px] text-center">{currentLabel}</span>
+        <ChevronDown size={12} className={`transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div
+          className="
+            absolute top-full left-0 mt-1.5
+            bg-popover text-popover-foreground
+            border border-border rounded-lg shadow-lg
+            py-1 min-w-[130px] z-[10000]
+          "
+          style={{ animation: 'slash-fade-in-below 0.12s ease-out' }}
+        >
+          {HEADING_STYLES.map((style) => {
+            const isActive = style.value === currentStyle;
+            return (
+              <button
+                key={style.value}
+                onMouseDown={(e) => handleSelect(e, style.value)}
+                className={`
+                  flex items-center gap-2 w-full px-3 py-1.5 text-left text-sm
+                  transition-colors duration-75
+                  ${isActive
+                    ? 'bg-accent text-accent-foreground font-medium'
+                    : 'hover:bg-accent/50'
+                  }
+                `}
+              >
+                <span className="w-6 text-xs font-semibold text-muted-foreground">{style.shortLabel}</span>
+                <span className={style.value !== 'paragraph' ? 'font-semibold' : ''}>{style.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+});
 
 export const FloatingToolbar = memo(function FloatingToolbar({ editor, className = '', suppressWhenLinkPopoverOpen = false, aiEnabled = false, onAISparklesClick }: FloatingToolbarProps) {
   const aiButtonRef = useRef<HTMLButtonElement>(null);
@@ -322,37 +426,14 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
       }}
       onMouseDown={handleToolbarMouseDown}
     >
-      {/* Paragraph style */}
-      <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().setParagraph().run())}
-        isActive={!editorState?.isH1 && !editorState?.isH2 && !editorState?.isH3 && !editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList && !editorState?.isBlockquote && !editorState?.isCodeBlock}
-        title="Paragraph"
-      >
-        <Pilcrow size={iconSize} />
-      </ToolbarButton>
-
-      {/* Headings */}
-      <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 1 }).run())}
-        isActive={editorState?.isH1}
-        title="Heading 1"
-      >
-        <Heading1 size={iconSize} />
-      </ToolbarButton>
-      <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 2 }).run())}
-        isActive={editorState?.isH2}
-        title="Heading 2"
-      >
-        <Heading2 size={iconSize} />
-      </ToolbarButton>
-      <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleHeading({ level: 3 }).run())}
-        isActive={editorState?.isH3}
-        title="Heading 3"
-      >
-        <Heading3 size={iconSize} />
-      </ToolbarButton>
+      {/* Heading styles dropdown */}
+      <HeadingDropdown
+        editor={editor}
+        isH1={editorState?.isH1 ?? false}
+        isH2={editorState?.isH2 ?? false}
+        isH3={editorState?.isH3 ?? false}
+        executeCommand={executeCommand}
+      />
 
       <Divider />
 
