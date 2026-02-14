@@ -3213,7 +3213,7 @@ pre.with-line-numbers code .line::before {
   justify-content: flex-end;
   align-items: center;
   padding: 0.25rem 1rem;
-  border-top: none;
+  border-top: 1px solid var(--border);
   background: var(--card);
   font-size: 0.75rem;
   color: var(--muted-foreground);
@@ -3583,7 +3583,7 @@ pre.with-line-numbers code .line::before {
 /* Light theme editor footer */
 [data-theme="light"] .editor-footer {
   background: oklch(0.98 0.005 250);
-  border-top: none;
+  border-color: oklch(0.93 0.005 250);
   color: oklch(0.45 0.02 250);
 }
 
@@ -3738,7 +3738,7 @@ pre.with-line-numbers code .line::before {
 /* Dark theme footer */
 [data-theme="dark"] .editor-footer {
   background: #1c2127;
-  border-top: none;
+  border-color: rgba(255, 255, 255, 0.06);
   color: #999999;
 }
 
@@ -5100,7 +5100,7 @@ pre.with-line-numbers code .line::before {
 .toc-sidebar {
   display: flex;
   flex-direction: column;
-  border-left: none;
+  border-left: 1px solid oklch(0.95 0.002 250);
   background: oklch(0.98 0.002 250);
   overflow: hidden;
   transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -5111,7 +5111,7 @@ pre.with-line-numbers code .line::before {
 
 .toc-sidebar.toc-left {
   border-left: none;
-  border-right: none;
+  border-right: 1px solid oklch(0.95 0.002 250);
   order: -1;
 }
 
@@ -5397,14 +5397,14 @@ pre.with-line-numbers code .line::before {
 
 [data-theme="dark"] .toc-sidebar,
 .dark .toc-sidebar {
-  border-left: none;
+  border-left-color: rgba(255, 255, 255, 0.06);
   background: oklch(0.13 0.008 250);
 }
 
 [data-theme="dark"] .toc-sidebar.toc-left,
 .dark .toc-sidebar.toc-left {
-  border-left: none;
-  border-right: none;
+  border-left-color: transparent;
+  border-right-color: rgba(255, 255, 255, 0.06);
 }
 
 [data-theme="dark"] .toc-header,
@@ -5529,13 +5529,13 @@ pre.with-line-numbers code .line::before {
    ============================================ */
 
 [data-theme="light"] .toc-sidebar {
-  border-left: none;
+  border-left-color: oklch(0.95 0.002 250);
   background: oklch(0.98 0.002 250);
 }
 
 [data-theme="light"] .toc-sidebar.toc-left {
-  border-left: none;
-  border-right: none;
+  border-left-color: transparent;
+  border-right-color: oklch(0.95 0.002 250);
 }
 
 [data-theme="light"] .toc-header {
