@@ -8,9 +8,6 @@ import {
   Code,
   Link,
   Highlighter,
-  Heading1,
-  Heading2,
-  Heading3,
   Quote,
   List,
   ListOrdered,
@@ -35,13 +32,13 @@ import {
   Palette,
   X,
   MoreHorizontal,
-  Type,
   ListIcon,
   PlusCircle,
   IndentIncrease,
   IndentDecrease,
   ArrowUpDown,
   Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 import { useCallback, useState, useMemo, useRef, useEffect } from 'react';
 import { ImageURLDialog } from './ImageURLDialog';
@@ -401,27 +398,54 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
 
       <Divider />
 
-      {/* Headings dropdown */}
+      {/* Heading styles dropdown — matches floating toolbar pattern */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 px-1.5 gap-1 shrink-0">
-            <Heading1 size={16} />
-            <span className="text-xs hidden sm:inline">Heading</span>
-          </Button>
+          <button
+            className={`
+              flex items-center gap-1 h-8 px-2 rounded-md shrink-0
+              transition-all duration-100 ease-out touch-manipulation
+              text-xs font-semibold
+              ${editorState?.isH1 || editorState?.isH2 || editorState?.isH3
+                ? 'bg-secondary text-foreground'
+                : 'bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80'
+              }
+            `}
+          >
+            <span className="min-w-[18px] text-center">
+              {editorState?.isH1 ? 'H1' : editorState?.isH2 ? 'H2' : editorState?.isH3 ? 'H3' : 'P'}
+            </span>
+            <ChevronDown size={12} strokeWidth={2.5} className="flex-shrink-0" />
+          </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
-            <Heading1 size={16} className="mr-2" /> Heading 1
+        <DropdownMenuContent align="start" className="min-w-[130px]">
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setParagraph().run()}
+            className={!editorState?.isH1 && !editorState?.isH2 && !editorState?.isH3 ? 'bg-accent font-medium' : ''}
+          >
+            <span className="w-6 text-xs font-semibold text-muted-foreground">P</span>
+            Paragraph
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
-            <Heading2 size={16} className="mr-2" /> Heading 2
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={editorState?.isH1 ? 'bg-accent font-medium' : ''}
+          >
+            <span className="w-6 text-xs font-semibold text-muted-foreground">H1</span>
+            <span className="font-semibold">Heading 1</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
-            <Heading3 size={16} className="mr-2" /> Heading 3
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={editorState?.isH2 ? 'bg-accent font-medium' : ''}
+          >
+            <span className="w-6 text-xs font-semibold text-muted-foreground">H2</span>
+            <span className="font-semibold">Heading 2</span>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => editor.chain().focus().setParagraph().run()}>
-            <Type size={16} className="mr-2" /> Paragraph
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={editorState?.isH3 ? 'bg-accent font-medium' : ''}
+          >
+            <span className="w-6 text-xs font-semibold text-muted-foreground">H3</span>
+            <span className="font-semibold">Heading 3</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
