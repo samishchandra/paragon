@@ -968,6 +968,17 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         return match;
       });
 
+      // Convert [[wiki links]] back to wiki link HTML spans
+      // Split by code fences and inline code to avoid converting links inside code
+      const wikiParts = processedMarkdown.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
+      processedMarkdown = wikiParts.map((part, idx) => {
+        // Odd indices are code blocks/inline code - skip them
+        if (idx % 2 === 1) return part;
+        return part.replace(/\[\[([^\[\]]+)\]\]/g, (_match, pageName) => {
+          return `<span data-wiki-link data-page-name="${pageName.trim()}" class="wiki-link">${pageName.trim()}</span>`;
+        });
+      }).join('');
+
       const html = marked.parse(processedMarkdown, { async: false }) as string;
       queueMicrotask(() => {
         if (!editor.isDestroyed) {
