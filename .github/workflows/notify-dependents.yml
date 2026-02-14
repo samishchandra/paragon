@@ -1,0 +1,73 @@
+# Auto-rebuild dist-lib and notify dependent repos when Paragon source changes
+#
+# After a push to master, this workflow:
+# 1. Rebuilds the library (dist-lib/) with the latest source changes
+# 2. Commits and pushes the updated dist-lib/ files
+# 3. Sends a repository_dispatch event to downstream repos (markdown-notes)
+#    so they can auto-update their dependency
+#
+# Requires a PAT (Personal Access Token) stored as DISPATCH_TOKEN secret
+# with repo scope, since GITHUB_TOKEN cannot trigger workflows in other repos.
+
+name: Build & Notify Dependents
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - 'dist-lib/**'
+      - '.github/**'
+      - '*.md'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DISPATCH_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build library
+        run: pnpm run build:lib
+
+      - name: Commit dist-lib changes
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dist-lib/
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            SHORT_SHA="${GITHUB_SHA:0:7}"
+            git commit -m "build: update dist-lib for ${SHORT_SHA}"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Notify markdown-notes
+        if: steps.commit.outputs.changed == 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DISPATCH_TOKEN }}
+          repository: samishchandra/markdown-notes
+          event-type: paragon-updated
+          client-payload: '{"sha": "${{ github.sha }}"}'
