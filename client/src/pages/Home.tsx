@@ -526,7 +526,7 @@ export default function Home() {
             </Dialog>
           </div>
           
-          <div className="h-[400px] sm:h-[600px] rounded-lg overflow-hidden border border-border shadow-2xl shadow-black/20">
+          <div className="h-[600px] sm:h-[800px] rounded-lg overflow-hidden border border-border shadow-2xl shadow-black/20">
             <MarkdownEditor
               content={content}
               onChange={setContent}
