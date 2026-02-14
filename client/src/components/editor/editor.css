@@ -4815,8 +4815,8 @@ pre.with-line-numbers code .line::before {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border: none;
+  border-radius: 0;
   z-index: 1;
 }
 
@@ -4829,9 +4829,9 @@ pre.with-line-numbers code .line::before {
   font-size: inherit;
   line-height: inherit;
   color: var(--foreground);
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
   resize: none;
   outline: none;
   caret-color: var(--primary);
@@ -4840,8 +4840,8 @@ pre.with-line-numbers code .line::before {
 }
 
 .syntax-textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px oklch(from var(--primary) l c h / 0.2);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .syntax-textarea::placeholder {
