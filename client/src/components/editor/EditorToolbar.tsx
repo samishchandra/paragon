@@ -326,7 +326,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
   }, [editor, performReorder]);
 
   return (
-    <div className={`flex items-center gap-0.5 px-2 py-1.5 border-b border-border/50 bg-muted/30 overflow-x-auto scrollbar-hide ${className}`}>
+    <div className={`flex items-center gap-0.5 px-2 py-1.5 border-b border-border/30 bg-muted/30 overflow-x-auto scrollbar-hide ${className}`}>
       {/* Undo/Redo */}
       <ToolbarButton
         onClick={() => editor.chain().focus().undo().run()}

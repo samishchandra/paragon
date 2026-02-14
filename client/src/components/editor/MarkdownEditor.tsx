@@ -1467,7 +1467,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     <EditorToolbar 
       editor={editor} 
       onOpenLinkPopover={() => setIsLinkPopoverOpen(true)}
-      className="flex-1 border-b-0"
+      className="flex-1"
       onOpenFindReplace={() => {
         setIsFindReplaceOpen(true);
         setFindReplaceFocusTrigger(prev => prev + 1);

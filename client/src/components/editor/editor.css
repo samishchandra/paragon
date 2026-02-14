@@ -3527,7 +3527,7 @@ pre.with-line-numbers code .line::before {
 /* Light theme editor toolbar */
 [data-theme="light"] .editor-toolbar {
   background: oklch(0.98 0.005 250);
-  border-color: oklch(0.88 0.01 250);
+  border-color: oklch(0.93 0.005 250);
 }
 
 [data-theme="light"] .toolbar-button {
@@ -3714,7 +3714,7 @@ pre.with-line-numbers code .line::before {
 /* Dark theme toolbar */
 [data-theme="dark"] .editor-toolbar {
   background: #1c2127;
-  border-color: #35393e;
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 [data-theme="dark"] .toolbar-button {
