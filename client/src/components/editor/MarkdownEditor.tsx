@@ -979,7 +979,31 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         });
       }).join('');
 
-      const html = marked.parse(processedMarkdown, { async: false }) as string;
+      let html = marked.parse(processedMarkdown, { async: false }) as string;
+      
+      // Post-process: Convert marked's standard checkbox list HTML to TipTap's task list format.
+      // marked outputs: <ul>\n<li><input type="checkbox" ...> text</li>\n</ul>
+      // TipTap expects: <ul data-type="taskList"><li data-type="taskItem" data-checked="true/false"><p>text</p></li></ul>
+      // 
+      // Strategy: Find <ul> blocks that contain checkbox <li> items and convert them.
+      html = html.replace(/<ul>\n?((?:<li>[\s\S]*?<\/li>\n?)+)<\/ul>/g, (ulMatch, liBlock) => {
+        // Check if this <ul> contains any checkbox items
+        if (!/<li><input.*?type="checkbox"/.test(liBlock)) {
+          return ulMatch; // Not a task list, leave as-is
+        }
+        // Convert each <li> with checkbox to taskItem format
+        const convertedItems = liBlock.replace(
+          /<li><input\s+(?:checked=""\s*)?(?:disabled=""\s*)?type="checkbox"\s*(?:checked=""\s*)?(?:disabled=""\s*)?\/?>\s*([\s\S]*?)<\/li>/g,
+          (liMatch: string, content: string) => {
+            const isChecked = /checked/.test(liMatch);
+            // Wrap content in <p> if not already wrapped
+            const wrappedContent = content.trim().startsWith('<p>') ? content.trim() : `<p>${content.trim()}</p>`;
+            return `<li data-type="taskItem" data-checked="${isChecked}">${wrappedContent}</li>`;
+          }
+        );
+        return `<ul data-type="taskList">${convertedItems}</ul>`;
+      });
+      
       queueMicrotask(() => {
         if (!editor.isDestroyed) {
           editor.commands.setContent(html);
