@@ -127,9 +127,9 @@ const HeadingDropdown = memo(function HeadingDropdown({ editor, isH1, isH2, isH3
         }}
         title="Text style"
         className={`
-          flex items-center gap-0.5 h-7 px-1.5 rounded-md flex-shrink-0
+          flex items-center gap-1 h-7 px-2 rounded-md flex-shrink-0
           transition-all duration-100 ease-out touch-manipulation
-          text-xs font-semibold
+          text-xs font-semibold overflow-visible
           ${currentStyle !== 'paragraph'
             ? 'bg-primary text-primary-foreground'
             : 'bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80'
@@ -137,7 +137,7 @@ const HeadingDropdown = memo(function HeadingDropdown({ editor, isH1, isH2, isH3
         `}
       >
         <span className="min-w-[18px] text-center">{currentLabel}</span>
-        <ChevronDown size={12} className={`transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={12} strokeWidth={2.5} className={`flex-shrink-0 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
