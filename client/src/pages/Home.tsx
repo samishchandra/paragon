@@ -712,6 +712,85 @@ function MyApp() {
                 </table>
               </div>
             </div>
+
+            <div className="mt-8">
+              <h4 className="text-lg font-medium text-foreground mb-2">Standalone Editor Route</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Access a full-page, distraction-free editor at <code className="px-1.5 py-0.5 rounded bg-secondary text-primary font-mono text-xs">/editor</code>. Configure it via URL query parameters:
+              </p>
+              <div className="bg-card border border-border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-secondary/50">
+                      <th className="px-4 py-2 text-left font-medium text-foreground">Parameter</th>
+                      <th className="px-4 py-2 text-left font-medium text-foreground">Values</th>
+                      <th className="px-4 py-2 text-left font-medium text-foreground">Default</th>
+                      <th className="px-4 py-2 text-left font-medium text-foreground">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">theme</td>
+                      <td className="px-4 py-2 text-muted-foreground">dark | light</td>
+                      <td className="px-4 py-2 text-muted-foreground">light</td>
+                      <td className="px-4 py-2 text-muted-foreground">Editor color theme</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">toc</td>
+                      <td className="px-4 py-2 text-muted-foreground">true | false</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Show table of contents sidebar</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">tocMaxLevel</td>
+                      <td className="px-4 py-2 text-muted-foreground">1–6</td>
+                      <td className="px-4 py-2 text-muted-foreground">4</td>
+                      <td className="px-4 py-2 text-muted-foreground">Max heading depth in ToC</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">toolbar</td>
+                      <td className="px-4 py-2 text-muted-foreground">true | false</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Show the top toolbar</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">wordcount</td>
+                      <td className="px-4 py-2 text-muted-foreground">true | false</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Show word count in footer</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">autofocus</td>
+                      <td className="px-4 py-2 text-muted-foreground">true | false</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Auto-focus on page load</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">reorder</td>
+                      <td className="px-4 py-2 text-muted-foreground">true | false</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Auto-sort completed tasks to bottom</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">editable</td>
+                      <td className="px-4 py-2 text-muted-foreground">true | false</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Allow content editing</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">placeholder</td>
+                      <td className="px-4 py-2 text-muted-foreground">any text</td>
+                      <td className="px-4 py-2 text-muted-foreground">Start writing...</td>
+                      <td className="px-4 py-2 text-muted-foreground">Custom placeholder text</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-3">
+                <p className="text-xs text-muted-foreground mb-2">Example:</p>
+                <code className="block px-3 py-2 rounded bg-secondary text-primary font-mono text-xs">/editor?theme=dark&amp;toc=false&amp;toolbar=true</code>
+              </div>
+            </div>
           </div>
         </div>
       </section>
