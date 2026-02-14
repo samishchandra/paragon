@@ -4805,7 +4805,7 @@ pre.with-line-numbers code .line::before {
   top: 0;
   left: 0;
   right: 0;
-  padding: 16px;
+  padding: 1.5rem; /* 24px - matches WYSIWYG editor */
   pointer-events: none;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -4824,7 +4824,7 @@ pre.with-line-numbers code .line::before {
   position: relative;
   width: 100%;
   min-height: 200px;
-  padding: 16px;
+  padding: 1.5rem; /* 24px - matches WYSIWYG editor */
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
