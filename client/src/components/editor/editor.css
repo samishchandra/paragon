@@ -3210,7 +3210,7 @@ pre.with-line-numbers code .line::before {
 .editor-footer {
   flex-shrink: 0;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 0.25rem 1rem;
   border-top: 1px solid var(--border);
@@ -3220,8 +3220,7 @@ pre.with-line-numbers code .line::before {
 }
 
 .word-count {
-  display: flex;
-  gap: 1rem;
+  margin-left: auto;
 }
 
 .editor-loading {

@@ -1482,16 +1482,15 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   // Default footer component
   const defaultFooter = (
     <div className="editor-footer">
-      <div className="word-count">
-        <span>{wordCount.words} words</span>
-        <span>{wordCount.characters} characters</span>
-      </div>
       {autoSave && (
         <AutoSaveIndicator 
           status={autoSaveState.status} 
           lastSaved={autoSaveState.lastSaved}
         />
       )}
+      <div className="word-count">
+        <span>{wordCount.words} words</span>
+      </div>
     </div>
   );
 
