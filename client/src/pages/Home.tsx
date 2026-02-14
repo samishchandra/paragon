@@ -503,28 +503,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="py-6 sm:py-8 border-b border-border bg-card/30">
-        <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="p-3 sm:p-4 rounded-lg bg-card border border-border hover:border-primary/50 transition-colors"
-              >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-primary/10 flex items-center justify-center mb-2 sm:mb-3 text-primary">
-                  {feature.icon}
-                </div>
-                <h3 className="text-sm sm:text-base font-medium text-foreground mb-1">{feature.title}</h3>
-                <p className="text-xs text-muted-foreground line-clamp-2">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Editor Demo */}
-      <section id="demo" className="py-6 sm:py-8">
+      <section id="demo" className="py-6 sm:py-8 border-b border-border">
         <div className="container">
           <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
@@ -561,6 +541,26 @@ export default function Home() {
               onPerformanceProfilerClose={handleInlineProfilerClose}
               autoReorderChecklist={true}
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="py-6 sm:py-8 border-b border-border bg-card/30">
+        <div className="container">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="p-3 sm:p-4 rounded-lg bg-card border border-border hover:border-primary/50 transition-colors"
+              >
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-primary/10 flex items-center justify-center mb-2 sm:mb-3 text-primary">
+                  {feature.icon}
+                </div>
+                <h3 className="text-sm sm:text-base font-medium text-foreground mb-1">{feature.title}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-2">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
