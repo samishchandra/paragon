@@ -190,16 +190,21 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
   const prevCheckedStatesRef = useRef(new Map<number, boolean>());
 
   // Standalone reorder function that operates on an editor instance
+  // Handles taskList, bulletList, and orderedList nodes that contain taskItem children
   const performReorder = useCallback((ed: Editor) => {
     const { doc, tr } = ed.state;
     let modified = false;
 
+    // List types that can contain taskItem children (mixed lists)
+    const listTypes = new Set(['taskList', 'bulletList', 'orderedList']);
+
     // FLIP Step 1: Capture "First" positions before reorder
-    const taskListElements = ed.view.dom.querySelectorAll('ul[data-type="taskList"]');
+    // Select all list containers (taskList, bulletList, orderedList)
+    const allListElements = ed.view.dom.querySelectorAll('ul[data-type="taskList"], ul:not([data-type]), ol');
     firstPositions.current.clear();
-    taskListElements.forEach((taskList, listIdx) => {
-      const items = taskList.querySelectorAll(':scope > li');
-      items.forEach((item, itemIdx) => {
+    allListElements.forEach((listEl, listIdx) => {
+      const items = listEl.querySelectorAll(':scope > li');
+      items.forEach((item) => {
         const li = item as HTMLElement;
         const text = (li.textContent || '').trim().substring(0, 50);
         firstPositions.current.set(`${listIdx}-${text}`, li.getBoundingClientRect());
@@ -207,25 +212,52 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
     });
 
     doc.descendants((node, pos) => {
-      if (node.type.name !== 'taskList') return true;
-      const items: { node: any; checked: boolean }[] = [];
+      if (!listTypes.has(node.type.name)) return true;
+
+      // Check if this list has any taskItem children
+      let hasTaskItems = false;
+      node.forEach((child: any) => {
+        if (child.type.name === 'taskItem') hasTaskItems = true;
+      });
+      if (!hasTaskItems) return true;
+
+      // Separate items into: regular listItems (keep in place), unchecked taskItems, checked taskItems
+      const items: { node: any; isTask: boolean; checked: boolean; originalIndex: number }[] = [];
+      let idx = 0;
       node.forEach((child: any) => {
         items.push({
           node: child,
-          checked: child.attrs.checked === true,
+          isTask: child.type.name === 'taskItem',
+          checked: child.type.name === 'taskItem' && child.attrs.checked === true,
+          originalIndex: idx++,
         });
       });
-      const unchecked = items.filter(i => !i.checked);
-      const checked = items.filter(i => i.checked);
-      const reordered = [...unchecked, ...checked];
-      const orderChanged = reordered.some((item, idx) => item.node !== items[idx].node);
+
+      // Build reordered list: non-task items stay in relative position,
+      // unchecked tasks come before checked tasks, all tasks maintain relative order within their group
+      const nonTaskItems = items.filter(i => !i.isTask);
+      const uncheckedTasks = items.filter(i => i.isTask && !i.checked);
+      const checkedTasks = items.filter(i => i.isTask && i.checked);
+
+      // Reconstruct: place items back by filling task slots in order (unchecked first, checked last)
+      // while keeping non-task items in their original positions
+      const taskSlots = items.map((item, i) => ({ index: i, isTask: item.isTask }));
+      const reordered = [...items]; // clone
+      const taskPositions = taskSlots.filter(s => s.isTask).map(s => s.index);
+      const orderedTasks = [...uncheckedTasks, ...checkedTasks];
+      taskPositions.forEach((slotIdx, i) => {
+        reordered[slotIdx] = orderedTasks[i];
+      });
+
+      const orderChanged = reordered.some((item, i) => item.node !== items[i].node);
       if (!orderChanged) return false;
-      const newTaskList = node.type.create(
+
+      const newList = node.type.create(
         node.attrs,
         reordered.map(i => i.node)
       );
       const mappedPos = tr.mapping.map(pos);
-      tr.replaceWith(mappedPos, mappedPos + node.nodeSize, newTaskList);
+      tr.replaceWith(mappedPos, mappedPos + node.nodeSize, newList);
       modified = true;
       return false;
     });
@@ -234,9 +266,9 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
       ed.view.dispatch(tr);
       // FLIP Step 2: After DOM update, capture "Last" positions and animate
       requestAnimationFrame(() => {
-        const newTaskListElements = ed.view.dom.querySelectorAll('ul[data-type="taskList"]');
-        newTaskListElements.forEach((taskList) => {
-          const items = taskList.querySelectorAll(':scope > li');
+        const newListElements = ed.view.dom.querySelectorAll('ul[data-type="taskList"], ul:not([data-type]), ol');
+        newListElements.forEach((listEl) => {
+          const items = listEl.querySelectorAll(':scope > li');
           const oldByText = new Map<string, DOMRect>();
           firstPositions.current.forEach((rect, key) => {
             const text = key.replace(/^\d+-/, '');
