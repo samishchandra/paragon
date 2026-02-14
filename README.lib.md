@@ -1,4 +1,4 @@
-# @manus/editor
+# @samishkolli/paragon
 
 A professional, feature-rich markdown editor component built with TipTap and React. Drop-in editor for note-taking applications like Taskmate, Momentum, and more.
 
@@ -24,11 +24,11 @@ A professional, feature-rich markdown editor component built with TipTap and Rea
 ## Installation
 
 ```bash
-npm install @manus/editor
+npm install @samishkolli/paragon
 # or
-pnpm add @manus/editor
+pnpm add @samishkolli/paragon
 # or
-yarn add @manus/editor
+yarn add @samishkolli/paragon
 ```
 
 ### Peer Dependencies
@@ -54,8 +54,8 @@ npm install lucide-react
 ## Quick Start
 
 ```tsx
-import { MarkdownEditor } from '@manus/editor';
-import '@manus/editor/style.css';
+import { MarkdownEditor } from '@samishkolli/paragon';
+import '@samishkolli/paragon/style.css';
 
 function App() {
   return (
@@ -117,8 +117,8 @@ function App() {
 ### Built-in Themes
 
 ```tsx
-import { MarkdownEditor, EditorThemeProvider } from '@manus/editor';
-import '@manus/editor/style.css';
+import { MarkdownEditor, EditorThemeProvider } from '@samishkolli/paragon';
+import '@samishkolli/paragon/style.css';
 
 // Use theme prop
 <MarkdownEditor theme="dark" />
@@ -133,7 +133,7 @@ import '@manus/editor/style.css';
 ### Custom Themes
 
 ```tsx
-import { createCustomTheme, applyTheme } from '@manus/editor';
+import { createCustomTheme, applyTheme } from '@samishkolli/paragon';
 
 const myTheme = createCustomTheme('dark', 'my-theme', 'My Custom Theme', {
   '--editor-bg': 'oklch(0.15 0.02 280)',
@@ -178,7 +178,7 @@ The editor bundles 15 languages by default: JavaScript, TypeScript, Python, HTML
 To add more languages:
 
 ```tsx
-import { lowlight } from '@manus/editor';
+import { lowlight } from '@samishkolli/paragon';
 import ruby from 'highlight.js/lib/languages/ruby';
 import php from 'highlight.js/lib/languages/php';
 
@@ -192,7 +192,7 @@ lowlight.register('php', php);
 ### Accessing the Editor Instance
 
 ```tsx
-import { MarkdownEditor } from '@manus/editor';
+import { MarkdownEditor } from '@samishkolli/paragon';
 import type { Editor } from '@tiptap/react';
 
 function MyEditor() {

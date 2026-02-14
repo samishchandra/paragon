@@ -1,7 +1,7 @@
 import { Extension } from '@tiptap/core';
 export interface ImageUploadOptions {
     /**
-     * Maximum file size in bytes (default: 5MB)
+     * Maximum file size in bytes (default: 10MB)
      */
     maxFileSize: number;
     /**
@@ -32,6 +32,19 @@ export interface ImageUploadOptions {
      * Callback when upload fails
      */
     onUploadError?: (error: string) => void;
+    /**
+     * External image upload handler (REQUIRED for image paste/drop to work).
+     * The callback receives the compressed File and metadata, and should return
+     * a reference string (e.g. a relative path like "../_images/photo.jpg").
+     * If not provided, paste/drop of images is silently ignored.
+     * If the upload throws, the placeholder image is removed from the editor.
+     */
+    onImageUpload?: (file: File, options: {
+        fileName: string;
+        mimeType: string;
+        fileSize: number;
+        uploadId: string;
+    }) => Promise<string>;
 }
 export declare const ImageUpload: Extension<ImageUploadOptions, any>;
 export default ImageUpload;

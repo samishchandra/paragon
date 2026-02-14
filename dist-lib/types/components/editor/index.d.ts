@@ -1,4 +1,5 @@
 export { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
+export { EditorErrorBoundary, type EditorErrorBoundaryProps } from './EditorErrorBoundary';
 export { FloatingToolbar } from './FloatingToolbar';
 export { EditorToolbar } from './EditorToolbar';
 export { SlashCommands } from './SlashCommands';
@@ -12,3 +13,7 @@ export { AutoSaveIndicator, type AutoSaveIndicatorProps } from './AutoSaveIndica
 export { RecoveryBanner, type RecoveryBannerProps } from './RecoveryBanner';
 export { ImageUpload, type ImageUploadOptions } from './extensions/ImageUpload';
 export { ImageDropZone } from './ImageDropZone';
+export { MixedBulletList, MixedOrderedList, MixedTaskList, MixedTaskItem, MixedListItem } from './extensions/MixedLists';
+export { CollapsibleList } from './extensions/CollapsibleList';
+export { TagPill, type TagPillOptions, isValidTag, normalizeTag } from './extensions/TagPill';
+export type { AIActionDefinition, AIActionHandler, AIState } from './ai/types';

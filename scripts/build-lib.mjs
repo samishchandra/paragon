@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Build script for @manus/editor npm package
+ * Build script for @samishkolli/paragon npm package
  * 
  * This script:
  * 1. Builds the library bundle using Vite in library mode
@@ -62,9 +62,9 @@ console.log(`   Output: ${DIST}/`);
 console.log('');
 console.log('   Files:');
 const files = [
-  'manus-editor.js',
-  'manus-editor.umd.cjs',
-  'manus-editor.css',
+  'paragon.js',
+  'paragon.umd.cjs',
+  'paragon.css',
   'package.json',
   'types/',
 ];

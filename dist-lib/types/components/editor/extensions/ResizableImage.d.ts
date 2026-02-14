@@ -7,6 +7,12 @@ export interface ResizableImageOptions {
         pos: number;
         rect: DOMRect;
     }) => void;
+    /**
+     * Resolve an image src reference to a displayable URL.
+     * Called for images whose src is not a data: URL, blob: URL, or http(s) URL.
+     * Should return a blob: URL or data: URL that the browser can display.
+     */
+    resolveImageSrc?: (src: string) => Promise<string>;
 }
 declare module '@tiptap/core' {
     interface Commands<ReturnType> {

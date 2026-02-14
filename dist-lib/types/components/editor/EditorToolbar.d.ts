@@ -18,6 +18,11 @@ interface EditorToolbarProps {
         markdownPaste?: boolean;
         dragAndDrop?: boolean;
     };
+    autoReorderChecklist?: boolean;
+    /** Whether AI features are available (shows sparkles button) */
+    aiEnabled?: boolean;
+    /** Called when the sparkles button is clicked, with the button element for positioning */
+    onAISparklesClick?: (anchorEl: HTMLElement) => void;
 }
 export declare const EditorToolbar: import("react").NamedExoticComponent<EditorToolbarProps>;
 export default EditorToolbar;

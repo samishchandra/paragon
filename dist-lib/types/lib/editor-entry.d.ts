@@ -1,11 +1,11 @@
 /**
- * @manus/editor — Public API Entry Point
+ * @samishkolli/paragon — Public API Entry Point
  *
- * This file defines the public surface of the Manus Markdown Editor library.
+ * This file defines the public surface of the Paragon Editor library.
  * Import the CSS file alongside this module in your application:
  *
- *   import { MarkdownEditor } from '@manus/editor';
- *   import '@manus/editor/style.css';
+ *   import { MarkdownEditor } from '@samishkolli/paragon';
+ *   import '@samishkolli/paragon/style.css';
  *
  * Or if using the UMD build, include the CSS via a <link> tag.
  */
@@ -25,6 +25,8 @@ export { WikiLinkSafe } from '@/components/editor/extensions/WikiLinkSafe';
 export { MarkdownPasteSafe } from '@/components/editor/extensions/MarkdownPasteSafe';
 export { MarkdownLinkInputRule } from '@/components/editor/extensions/MarkdownLinkInputRule';
 export { CalloutInputRule } from '@/components/editor/extensions/CalloutInputRule';
+export { MixedBulletList, MixedOrderedList, MixedTaskList, MixedTaskItem, MixedListItem } from '@/components/editor/extensions/MixedLists';
+export { CollapsibleList } from '@/components/editor/extensions/CollapsibleList';
 export { EditorThemeProvider, useEditorTheme } from '@/components/editor/ThemeProvider';
 export { themes, applyTheme, createCustomTheme, darkTheme, lightTheme, sepiaTheme, nordTheme, type EditorTheme, } from '@/components/editor/themes';
 export { useAutoSave, type AutoSaveOptions, type AutoSaveState, type AutoSaveReturn, } from '@/components/editor/hooks/useAutoSave';

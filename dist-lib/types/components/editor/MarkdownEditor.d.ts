@@ -1,4 +1,5 @@
 import './PerformanceProfiler.css';
+import type { AIActionDefinition, AIActionHandler } from './ai/types';
 import type { Editor } from '@tiptap/react';
 /**
  * Editor ref handle - methods exposed via ref for external control
@@ -53,7 +54,7 @@ export interface MarkdownEditorRef {
     /** Insert code block at cursor position */
     insertCodeBlock: (language?: string) => void;
     /** Insert callout at cursor position */
-    insertCallout: (type?: 'info' | 'warning' | 'error' | 'success' | 'note') => void;
+    insertCallout: (type?: 'info' | 'note' | 'prompt' | 'resources' | 'todo') => void;
     /** Insert horizontal rule at cursor position */
     insertHorizontalRule: () => void;
     /** Toggle bold on selection */
@@ -131,7 +132,7 @@ export interface MarkdownEditorProps {
     theme?: 'dark' | 'light';
     /** Enable auto-save to localStorage (default: true) */
     autoSave?: boolean;
-    /** Storage key for auto-save (default: 'manus-editor-content') */
+    /** Storage key for auto-save (default: 'paragon-editor-content') */
     autoSaveKey?: string;
     /** Auto-save debounce delay in ms (default: 1000) */
     autoSaveDelay?: number;
@@ -147,6 +148,25 @@ export interface MarkdownEditorProps {
     onImageUploadComplete?: () => void;
     /** Callback when image upload fails */
     onImageUploadError?: (error: string) => void;
+    /**
+     * External image upload handler (REQUIRED for image paste/drop to work).
+     * Should return a reference string (e.g. relative path like "../_images/photo.jpg").
+     * If not provided, paste/drop of images is silently ignored.
+     * If the upload throws, the placeholder image is removed from the editor.
+     */
+    onImageUpload?: (file: File, options: {
+        fileName: string;
+        mimeType: string;
+        fileSize: number;
+        uploadId: string;
+    }) => Promise<string>;
+    /**
+     * Resolve an image src reference to a displayable URL.
+     * Called for images whose src is not a data: URL, blob: URL, or http(s) URL.
+     * Should return a blob: URL or data: URL that the browser can display.
+     * If not provided, the src is used as-is.
+     */
+    resolveImageSrc?: (src: string) => Promise<string>;
     /** Show mode toggle to switch between WYSIWYG and raw markdown (default: true) */
     showModeToggle?: boolean;
     /** Initial editor mode (default: 'wysiwyg') */
@@ -173,6 +193,14 @@ export interface MarkdownEditorProps {
     onRecover?: (content: string) => void;
     /** Callback when a wiki link is clicked */
     onWikiLinkClick?: (pageName: string) => void;
+    /** Validate whether a wiki link target exists (for valid/invalid styling) */
+    validateWikiLink?: (pageName: string) => boolean;
+    /** Search for wiki link suggestions (for autocomplete dropdown) */
+    onWikiLinkSearch?: (query: string) => Promise<{
+        id: string;
+        title: string;
+        type: string;
+    }[]>;
     /** Callback when a link is clicked (return false to prevent default) */
     onLinkClick?: (url: string, event: MouseEvent) => boolean | void;
     /** Show find/replace panel (default: false) - controlled mode */
@@ -194,6 +222,7 @@ export interface MarkdownEditorProps {
         taskLists?: boolean;
         callouts?: boolean;
         datePills?: boolean;
+        tagPills?: boolean;
         wikiLinks?: boolean;
         collapsibleHeadings?: boolean;
         slashCommands?: boolean;
@@ -254,6 +283,26 @@ export interface MarkdownEditorProps {
     showPerformanceProfiler?: boolean;
     /** Callback when the user clicks the close button inside the profiler. The embedding app should set showPerformanceProfiler to false. */
     onPerformanceProfilerClose?: () => void;
+    /** Automatically reorder checklist items when toggled: move completed to bottom, preserving relative order within each group (default: false) */
+    autoReorderChecklist?: boolean;
+    /** Callback when the editor crashes — useful for external error reporting */
+    onEditorError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+    /**
+     * AI actions to show in the sparkles dropdown menu.
+     * If not provided, the AI sparkles button is hidden — keeping Paragon lean.
+     */
+    aiActions?: AIActionDefinition[];
+    /**
+     * Handler called when the user selects an AI action.
+     * Should return an AsyncIterable<string> for streaming or Promise<string> for non-streaming.
+     * The embedding app is responsible for calling the AI provider.
+     */
+    onAIAction?: AIActionHandler;
+    /**
+     * Called when the user clicks the sparkles button but AI is not configured.
+     * The embedding app should navigate to settings or show a setup dialog.
+     */
+    onAISetupRequired?: () => void;
 }
 export declare const MarkdownEditor: import("react").ForwardRefExoticComponent<MarkdownEditorProps & import("react").RefAttributes<MarkdownEditorRef>>;
 export default MarkdownEditor;

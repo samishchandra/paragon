@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /**
  * Vite Library Mode Configuration
  * 
- * Builds the Manus Markdown Editor as a reusable npm package.
+ * Builds the Paragon Editor as a reusable npm package (@samishkolli/paragon).
  * 
  * Bundle Optimization Strategy:
  * ─────────────────────────────
@@ -24,10 +24,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * 
  * Output:
  *   dist-lib/
- *     manus-editor.js      (ESM bundle)
- *     manus-editor.umd.cjs (UMD bundle)
- *     manus-editor.css      (Extracted styles)
- *     types/                (TypeScript declarations)
+ *     paragon.js         (ESM bundle)
+ *     paragon.umd.cjs    (UMD bundle)
+ *     paragon.css         (Extracted styles)
+ *     types/              (TypeScript declarations)
  */
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -41,23 +41,23 @@ export default defineConfig({
   build: {
     lib: {
       entry: path.resolve(__dirname, 'client/src/lib/editor-entry.ts'),
-      name: 'ManusEditor',
+      name: 'Paragon',
       formats: ['es', 'umd'],
       fileName: (format) => {
-        if (format === 'es') return 'manus-editor.js';
-        if (format === 'umd') return 'manus-editor.umd.cjs';
-        return `manus-editor.${format}.js`;
+        if (format === 'es') return 'paragon.js';
+        if (format === 'umd') return 'paragon.umd.cjs';
+        return `paragon.${format}.js`;
       },
     },
     outDir: path.resolve(__dirname, 'dist-lib'),
     emptyOutDir: true,
-    cssFileName: 'manus-editor',
+    cssFileName: 'paragon',
     sourcemap: true,
     rollupOptions: {
       // Externalize peer dependencies — consumers must provide these
       // This is the primary bundle size optimization: instead of bundling
       // TipTap/ProseMirror (~800 KB), we expect the consuming app to
-      // provide them. Any app using @manus/editor already needs TipTap.
+      // provide them. Any app using @samishkolli/paragon already needs TipTap.
       external: (id) => {
         // React
         if (id === 'react' || id === 'react-dom' || id.startsWith('react/') || id.startsWith('react-dom/')) {
@@ -86,7 +86,7 @@ export default defineConfig({
         // Ensure CSS is extracted
         assetFileNames: (assetInfo) => {
           if (assetInfo.name && assetInfo.name.endsWith('.css')) {
-            return 'manus-editor.css';
+            return 'paragon.css';
           }
           return assetInfo.name || 'asset-[hash][extname]';
         },

@@ -1,11 +1,11 @@
 /**
- * @paragon/editor — Public API Entry Point
+ * @samishkolli/paragon — Public API Entry Point
  * 
  * This file defines the public surface of the Paragon Editor library.
  * Import the CSS file alongside this module in your application:
  * 
- *   import { MarkdownEditor } from '@paragon/editor';
- *   import '@paragon/editor/style.css';
+ *   import { MarkdownEditor } from '@samishkolli/paragon';
+ *   import '@samishkolli/paragon/style.css';
  * 
  * Or if using the UMD build, include the CSS via a <link> tag.
  */

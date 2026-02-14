@@ -1,5 +1,5 @@
 import { Node } from '@tiptap/core';
-export type CalloutType = 'info' | 'warning' | 'error' | 'success' | 'note';
+export type CalloutType = 'info' | 'note' | 'prompt' | 'resources' | 'todo';
 export interface CalloutOptions {
     HTMLAttributes: Record<string, unknown>;
     types: CalloutType[];

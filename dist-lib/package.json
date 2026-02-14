@@ -1,26 +1,26 @@
 {
-  "name": "@manus/editor",
+  "name": "@samishkolli/paragon",
   "version": "1.1.0",
   "description": "A professional, feature-rich markdown editor component built with TipTap and React. Drop-in editor for note-taking applications like Taskmate, Momentum, and more.",
   "type": "module",
   "license": "MIT",
-  "main": "./manus-editor.umd.cjs",
-  "module": "./manus-editor.js",
+  "main": "./paragon.umd.cjs",
+  "module": "./paragon.js",
   "types": "./types/lib/editor-entry.d.ts",
   "exports": {
     ".": {
-      "import": "./manus-editor.js",
-      "require": "./manus-editor.umd.cjs",
+      "import": "./paragon.js",
+      "require": "./paragon.umd.cjs",
       "types": "./types/lib/editor-entry.d.ts"
     },
-    "./style.css": "./manus-editor.css"
+    "./style.css": "./paragon.css"
   },
   "files": [
-    "manus-editor.js",
-    "manus-editor.js.map",
-    "manus-editor.umd.cjs",
-    "manus-editor.umd.cjs.map",
-    "manus-editor.css",
+    "paragon.js",
+    "paragon.js.map",
+    "paragon.umd.cjs",
+    "paragon.umd.cjs.map",
+    "paragon.css",
     "types/"
   ],
   "sideEffects": [
@@ -69,6 +69,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/user/manus-markdown-editor"
+    "url": "https://github.com/samishchandra/paragon.git"
   }
 }
