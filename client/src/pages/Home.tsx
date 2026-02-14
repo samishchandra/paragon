@@ -487,14 +487,12 @@ export default function Home() {
               designed as a drop-in for Taskmate, Momentum, and more.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                  <Button size="lg" className="gap-2">
-                    <Maximize2 className="w-5 h-5" />
-                    Try the Editor
-                  </Button>
-                </DialogTrigger>
-              </Dialog>
+              <Button size="lg" className="gap-2" asChild>
+                <a href="/editor">
+                  <Maximize2 className="w-5 h-5" />
+                  Try the Editor
+                </a>
+              </Button>
               <Button variant="outline" size="lg" asChild>
                 <a href="#demo">View Demo Below</a>
               </Button>
