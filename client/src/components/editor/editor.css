@@ -1576,10 +1576,6 @@
   flex: 1;
   min-width: 0;
 }
-
-.callout-content > div > p:first-child {
-  margin-top: 8px;
-}
 /* IMPORTANT: Do NOT use `display: contents` here.
  * NodeViewContent renders a wrapper <div> that ProseMirror manages.
  * `display: contents` removes it from the layout tree, causing text to
