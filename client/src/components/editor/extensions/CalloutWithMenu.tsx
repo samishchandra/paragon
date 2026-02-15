@@ -104,12 +104,21 @@ function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
 
   return (
     <NodeViewWrapper className={`callout callout-${type}${collapsed ? ' callout-collapsed' : ''}`} data-callout="" data-type={type}>
-      {/* Header row: icon + label + dropdown trigger + collapse chevron */}
-      <div className="callout-header" contentEditable={false}>
+      {/* Header row: clicking empty area toggles collapse, dropdown button changes type */}
+      <div
+        className="callout-header"
+        contentEditable={false}
+        onClick={handleToggleCollapse}
+        style={{ cursor: 'pointer' }}
+        title={collapsed ? 'Click to expand' : 'Click to collapse'}
+      >
         <button
           ref={buttonRef}
           className="callout-header-button"
-          onClick={handleToggleDropdown}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent header click (collapse) from firing
+            handleToggleDropdown();
+          }}
           title={editor.isEditable ? "Click to change callout type" : config.label}
           style={{ color: config.borderColor }}
           contentEditable={false}
@@ -118,15 +127,12 @@ function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
           <span className="callout-label">{config.label}</span>
           {editor.isEditable && <ChevronDown size={12} className="callout-type-chevron" />}
         </button>
-        <button
-          className="callout-collapse-toggle"
-          onClick={handleToggleCollapse}
-          title={collapsed ? 'Expand callout' : 'Collapse callout'}
-          contentEditable={false}
+        <div
+          className="callout-collapse-indicator"
           style={{ color: config.borderColor }}
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-        </button>
+        </div>
         
         {showDropdown && editor.isEditable && dropdownPos && createPortal(
           <div

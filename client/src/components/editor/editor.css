@@ -1368,10 +1368,26 @@
   margin-bottom: 8px;
   user-select: none;
   gap: 2px;
+  border-radius: 6px;
+  padding: 2px;
+  margin: -2px -2px 8px -2px;
+  transition: background 0.15s ease;
 }
 
-/* Push collapse toggle to the right */
-.callout-collapse-toggle {
+.callout-header:hover {
+  background: oklch(0 0 0 / 0.04);
+}
+
+.dark .callout-header:hover {
+  background: oklch(1 0 0 / 0.04);
+}
+
+.callout-header:hover .callout-collapse-indicator {
+  opacity: 1;
+}
+
+/* Push collapse indicator to the right */
+.callout-collapse-indicator {
   margin-left: auto;
 }
 
@@ -1413,8 +1429,8 @@
   opacity: 0.8;
 }
 
-/* ===== Callout collapse toggle ===== */
-.callout-collapse-toggle {
+/* ===== Callout collapse indicator ===== */
+.callout-collapse-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1423,19 +1439,10 @@
   border: none;
   background: transparent;
   border-radius: 4px;
-  cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
   opacity: 0.6;
-}
-
-.callout-collapse-toggle:hover {
-  opacity: 1;
-  background: oklch(0 0 0 / 0.06);
-}
-
-.dark .callout-collapse-toggle:hover {
-  background: oklch(1 0 0 / 0.08);
+  pointer-events: none; /* clicks pass through to the header row */
 }
 
 /* ===== Callout collapsed state ===== */
