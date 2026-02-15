@@ -13,6 +13,8 @@ interface RawMarkdownEditorProps {
   editable?: boolean;
   autofocus?: boolean;
   className?: string;
+  /** Enable auto-closing of markdown pairs (backticks, asterisks, brackets, etc.) (default: true) */
+  autoClosePairs?: boolean;
 }
 
 export function RawMarkdownEditor({

@@ -449,6 +449,11 @@ export interface MarkdownEditorProps {
   /** Show TOC toggle button (default: true) */
   tocShowToggleButton?: boolean;
   
+  // === RAW MARKDOWN EDITOR ===
+  
+  /** Enable auto-closing of markdown pairs (backticks, asterisks, brackets, etc.) in the raw markdown editor (default: true) */
+  autoClosePairs?: boolean;
+  
   // === PERFORMANCE PROFILER ===
   
   /** Whether the performance profiler panel is visible. Fully controlled by the embedding application. (default: false) */
@@ -553,6 +558,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   onTocItemClick,
   renderTocItem,
   tocShowToggleButton = true,
+  // Raw markdown editor
+  autoClosePairs = true,
   // Performance profiler
   showPerformanceProfiler = false,
   onPerformanceProfilerClose,
@@ -1835,6 +1842,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             autofocus
             searchMatches={rawSearchMatches}
             currentMatchIndex={rawSearchCurrentIndex}
+            autoClosePairs={autoClosePairs}
           />
         )}
       </div>

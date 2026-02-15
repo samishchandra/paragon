@@ -25,6 +25,8 @@ interface SyntaxHighlightedMarkdownProps {
   searchMatches?: SearchMatch[];
   /** Index of the current active match (highlighted differently) */
   currentMatchIndex?: number;
+  /** Enable auto-closing of markdown pairs (backticks, asterisks, brackets, etc.) (default: true) */
+  autoClosePairs?: boolean;
 }
 
 // Token types for markdown syntax highlighting
@@ -475,6 +477,7 @@ export function SyntaxHighlightedMarkdown({
   className = '',
   searchMatches,
   currentMatchIndex,
+  autoClosePairs = true,
 }: SyntaxHighlightedMarkdownProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -630,7 +633,8 @@ export function SyntaxHighlightedMarkdown({
     const value = textarea.value;
     const hasSelection = start !== end;
 
-    // --- Markdown autocomplete pairs ---
+    // --- Markdown autocomplete pairs (gated by autoClosePairs prop) ---
+    if (autoClosePairs) {
 
     // Backtick: auto-close ` or wrap selection
     if (e.key === '`' && !e.ctrlKey && !e.metaKey) {
@@ -811,6 +815,8 @@ export function SyntaxHighlightedMarkdown({
       }
     }
 
+    } // end autoClosePairs guard
+
     // --- Tab key for indentation ---
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -867,7 +873,7 @@ export function SyntaxHighlightedMarkdown({
         }
       }
     }
-  }, [onChange]);
+  }, [onChange, autoClosePairs]);
 
   return (
     <div ref={containerRef} className={`syntax-highlighted-editor ${className}`}>
