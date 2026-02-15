@@ -704,7 +704,7 @@
   table {
     border-collapse: collapse;
     width: auto;
-    margin: 0.75rem 0;
+    margin: 8px 0;
     overflow: hidden;
     border-radius: 4px;
     border: 1px solid var(--border);
@@ -777,7 +777,7 @@
   /* Table resize handle */
   .tableWrapper {
     overflow-x: auto;
-    margin: 0.75rem 0;
+    margin: 8px 0;
   }
   
   .resize-cursor {
