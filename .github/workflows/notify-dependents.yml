@@ -46,7 +46,7 @@ jobs:
         run: pnpm install
 
       - name: Build library
-        run: pnpm run build:lib
+        run: pnpm run build:lib to run: NODE_ENV=production pnpm run build:lib
 
       - name: Commit dist-lib changes
         id: commit
