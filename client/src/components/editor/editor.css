@@ -197,7 +197,7 @@
   font-family: var(--editor-font-family, var(--font-sans));
   font-size: var(--editor-font-size, 1rem);
   color: var(--foreground);
-  line-height: var(--editor-line-height, 1.6);
+  line-height: var(--editor-line-height, 1.5);
   min-height: 100%;
   padding: 2rem;
   outline: none;
@@ -360,7 +360,7 @@
     margin: 0;
     margin-bottom: 0.35rem; /* Add spacing between list items for better readability with inline code */
     padding: 0;
-    line-height: 1.6; /* Slightly increased line height */
+    line-height: 1.5;
   }
   
   /* Remove bottom margin from last list item */
@@ -397,7 +397,7 @@
     margin: 0;
     margin-bottom: 0.35rem; /* Add spacing between task items for better readability with inline code */
     padding: 0;
-    line-height: 1.6; /* Slightly increased line height */
+    line-height: 1.5;
   }
   
   /* Remove bottom margin from last task item */
@@ -416,7 +416,7 @@
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    height: 1.5em; /* Match line-height to vertically center checkbox */
+    height: 1.5em; /* Match line-height (1.5) to vertically center checkbox */
     margin-top: 0.05em; /* Fine-tune vertical alignment with text - adjusted to align better with text */
   }
   
@@ -592,7 +592,7 @@
     margin: 0;
     margin-bottom: 0.35rem; /* Match regular li spacing */
     padding: 0;
-    line-height: 1.6; /* Match regular li line-height */
+    line-height: 1.5;
   }
 
   /* Remove bottom margin from last task item in mixed lists */
@@ -612,7 +612,7 @@
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    height: 1.5em;
+    height: 1.5em; /* Match line-height (1.5) */
     margin-top: 0.05em;
   }
 
