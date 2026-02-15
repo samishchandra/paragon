@@ -161,11 +161,26 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   
   dropdown.style.cssText = 'position:fixed;top:' + viewportTop + 'px;left:' + viewportLeft + 'px;z-index:99999;display:flex;flex-direction:column;gap:2px;min-width:170px;max-width:220px;width:auto;padding:6px;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.15),0 2px 6px rgba(0,0,0,0.1);color:' + textColor + ';font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;pointer-events:auto;';
   
+  // Check if the current table has a header row
+  const resolvedPos = editor.state.doc.resolve(pos);
+  let hasHeaderRow = false;
+  for (let d = resolvedPos.depth; d >= 0; d--) {
+    if (resolvedPos.node(d).type.name === 'table') {
+      const tableNode = resolvedPos.node(d);
+      if (tableNode.firstChild?.firstChild?.type.name === 'tableHeader') {
+        hasHeaderRow = true;
+      }
+      break;
+    }
+  }
+
   const menuItems = [
     { label: 'Insert Column Left', icon: 'col-left', action: () => editor.chain().focus().setTextSelection(pos + 1).addColumnBefore().run() },
     { label: 'Insert Column Right', icon: 'col-right', action: () => editor.chain().focus().setTextSelection(pos + 1).addColumnAfter().run() },
     { label: 'Insert Row Above', icon: 'row-up', action: () => editor.chain().focus().setTextSelection(pos + 1).addRowBefore().run() },
     { label: 'Insert Row Below', icon: 'row-down', action: () => editor.chain().focus().setTextSelection(pos + 1).addRowAfter().run() },
+    { label: 'divider' },
+    { label: hasHeaderRow ? '✓ Header Row' : '  Header Row', icon: 'toggle-header', action: () => editor.chain().focus().setTextSelection(pos + 1).toggleHeaderRow().run() },
     { label: 'divider' },
     { label: 'Delete Column', icon: 'delete', action: () => editor.chain().focus().setTextSelection(pos + 1).deleteColumn().run(), destructive: true },
     { label: 'Delete Row', icon: 'delete', action: () => editor.chain().focus().setTextSelection(pos + 1).deleteRow().run(), destructive: true },
@@ -182,6 +197,7 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
     'delete': '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>',
     'table-delete': '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="21" y1="15" x2="15" y2="21"/></svg>',
     'copy': '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    'toggle-header': '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="9"/><line x1="15" y1="3" x2="15" y2="9"/></svg>',
   };
   
   const hoverBgColor = isDark ? '#2a2a2a' : '#f5f5f5';
