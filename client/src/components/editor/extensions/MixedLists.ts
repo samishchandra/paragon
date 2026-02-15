@@ -20,6 +20,9 @@ import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
+import { InputRule } from '@tiptap/core';
+import { findWrapping } from '@tiptap/pm/transform';
+import { canJoin } from '@tiptap/pm/transform';
 
 /**
  * Extended BulletList that accepts both listItem and taskItem children
@@ -202,10 +205,53 @@ export const MixedTaskList = TaskList.extend({
 });
 
 /**
- * Extended TaskItem with nested content always enabled for mixed list support
+ * Extended TaskItem with nested content always enabled for mixed list support.
+ * 
+ * Overrides addInputRules to explicitly wrap in taskList when typing []<space>.
+ * The default wrappingInputRule uses findWrapping which, with mixed content specs,
+ * may find bulletList as a valid wrapper for taskItem (since MixedBulletList accepts
+ * taskItem children). We fix this by explicitly specifying the taskList wrapping.
  */
 export const MixedTaskItem = TaskItem.extend({
   content: 'paragraph block*',
+
+  addInputRules() {
+    const inputRegex = /^\s*(\[([( |x])?\])\s$/;
+    
+    return [
+      new InputRule({
+        find: inputRegex,
+        handler: ({ state, range, match }) => {
+          const attributes = { checked: match[match.length - 1] === 'x' };
+          const tr = state.tr.delete(range.from, range.to);
+          const $start = tr.doc.resolve(range.from);
+          const blockRange = $start.blockRange();
+          if (!blockRange) return null;
+
+          // Explicitly build the wrapping: taskList > taskItem
+          // Instead of using findWrapping which might pick bulletList
+          const taskListType = state.schema.nodes.taskList;
+          const taskItemType = this.type;
+          
+          if (!taskListType || !taskItemType) return null;
+
+          // Try explicit wrapping with taskList > taskItem
+          const wrapping = [
+            { type: taskListType, attrs: {} },
+            { type: taskItemType, attrs: attributes },
+          ];
+
+          tr.wrap(blockRange, wrapping);
+
+          // Join with adjacent taskList if possible
+          const before = tr.doc.resolve(range.from - 1).nodeBefore;
+          if (before && before.type === taskListType && canJoin(tr.doc, range.from - 1)) {
+            tr.join(range.from - 1);
+          }
+        },
+      }),
+    ];
+  },
 });
 
 /**
