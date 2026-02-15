@@ -1293,6 +1293,10 @@
   min-height: 2.5rem;
 }
 
+.callout > div:first-child {
+  margin-top: 8px;
+}
+
 .callout > div,
 .callout > p {
   margin: 0;
@@ -1360,7 +1364,7 @@
 .callout-header {
   display: flex;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0;
   padding-bottom: 0.25rem;
   user-select: none;
   gap: 2px;
