@@ -1360,8 +1360,8 @@
 .callout-header {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
-  padding-bottom: 0;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
   user-select: none;
   gap: 2px;
 }
