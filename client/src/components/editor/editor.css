@@ -1402,21 +1402,21 @@
   border-bottom-color: oklch(1 0 0 / 0.12);
 }
 
-/* Per-type callout header separator colors — uses border color at 30% opacity */
+/* Per-type callout header separator colors — slightly darkened version of callout bg */
 .callout-info .callout-header {
-  border-bottom-color: color-mix(in oklch, var(--callout-info-border) 30%, transparent);
+  border-bottom-color: color-mix(in oklch, var(--callout-info-bg) 80%, black);
 }
 .callout-note .callout-header {
-  border-bottom-color: color-mix(in oklch, var(--callout-note-border) 30%, transparent);
+  border-bottom-color: color-mix(in oklch, var(--callout-note-bg) 80%, black);
 }
 .callout-prompt .callout-header {
-  border-bottom-color: color-mix(in oklch, var(--callout-prompt-border) 30%, transparent);
+  border-bottom-color: color-mix(in oklch, var(--callout-prompt-bg) 80%, black);
 }
 .callout-resources .callout-header {
-  border-bottom-color: color-mix(in oklch, var(--callout-resources-border) 30%, transparent);
+  border-bottom-color: color-mix(in oklch, var(--callout-resources-bg) 80%, black);
 }
 .callout-todo .callout-header {
-  border-bottom-color: color-mix(in oklch, var(--callout-todo-border) 30%, transparent);
+  border-bottom-color: color-mix(in oklch, var(--callout-todo-bg) 80%, black);
 }
 
 .callout-label {
