@@ -300,14 +300,15 @@
     font-style: italic;
   }
   
-  /* Inline code - Things theme styling */
+  /* Inline code - neutral gray styling */
   code {
     font-family: var(--font-mono);
     font-size: 0.875em;
-    background: var(--secondary);
+    background: oklch(0.95 0.005 250);
     padding: 0.2em 0.4em;
     border-radius: 4px;
-    color: var(--syntax-variable);
+    border: 1px solid oklch(0.88 0.01 250);
+    color: oklch(0.35 0.02 250);
   }
   
   /* Code blocks */
@@ -3489,9 +3490,9 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme inline code */
 [data-theme="light"] .tiptap-editor code:not(pre code) {
-  background: #fdf2f2;
-  color: #e04674;
-  border: 1px solid #fce8e8;
+  background: oklch(0.95 0.005 250);
+  color: oklch(0.35 0.02 250);
+  border: 1px solid oklch(0.88 0.01 250);
 }
 
 /* Light theme links */
@@ -3831,9 +3832,9 @@ pre.with-line-numbers code .line::before {
 
 /* Dark theme inline code */
 [data-theme="dark"] code:not(pre code) {
-  background: #2c313c;
-  color: #e06c75;
-  border: 1px solid #35393e;
+  background: oklch(0.25 0.01 250);
+  color: oklch(0.75 0.02 250);
+  border: 1px solid oklch(0.32 0.01 250);
 }
 
 /* Dark theme keyboard shortcut badges */
@@ -3956,9 +3957,9 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme inline code in tips */
 [data-theme="light"] code:not(pre code) {
-  background: oklch(0.92 0.01 250);
-  color: oklch(0.35 0.1 25);
-  border: 1px solid oklch(0.85 0.01 250);
+  background: oklch(0.95 0.005 250);
+  color: oklch(0.35 0.02 250);
+  border: 1px solid oklch(0.88 0.01 250);
 }
 
 /* Light theme keyboard shortcut badges */
