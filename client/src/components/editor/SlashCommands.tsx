@@ -541,6 +541,8 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
         zIndex: 99999,
         pointerEvents: 'auto',
       }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       {filteredCommands.map((cmd, index) => (
         <div

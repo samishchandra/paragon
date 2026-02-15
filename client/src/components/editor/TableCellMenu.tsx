@@ -237,8 +237,12 @@ export function TableCellMenu({ editor }: TableCellMenuProps) {
             position: 'fixed',
             top: `${dropdownPos.top}px`,
             left: `${dropdownPos.left}px`,
-            zIndex: 9999,
+            zIndex: 99999,
+            pointerEvents: 'auto',
           }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           {menuItems.map((item, index) => (
             <div key={item.label}>

@@ -370,9 +370,11 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
         position: 'fixed',
         top: position.top, 
         left: position.left,
-        zIndex: 9999,
+        zIndex: 99999,
+        pointerEvents: 'auto',
       }}
-      onMouseDown={handleToolbarMouseDown}
+      onMouseDown={(e) => { e.stopPropagation(); handleToolbarMouseDown(e); }}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 px-2 w-[280px] sm:w-auto">
         <input
@@ -437,9 +439,11 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
         position: 'fixed',
         top: position.top, 
         left: position.left,
-        zIndex: 9999,
+        zIndex: 99999,
+        pointerEvents: 'auto',
       }}
-      onMouseDown={handleToolbarMouseDown}
+      onMouseDown={(e) => { e.stopPropagation(); handleToolbarMouseDown(e); }}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       {/* Section 1: Inline text formatting */}
       <ToolbarButton

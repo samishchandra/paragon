@@ -133,8 +133,12 @@ export function LinkPopover({ editor, isOpen, onClose }: LinkPopoverProps) {
         position: 'fixed',
         top: `${position.top}px`,
         left: `${position.left}px`,
-        zIndex: 9999,
+        zIndex: 99999,
+        pointerEvents: 'auto',
       }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       <form onSubmit={handleSubmit} className="link-popover-form">
         <div className="link-popover-input-wrapper">

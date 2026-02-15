@@ -361,6 +361,8 @@ export function WikiLinkAutocomplete({ editor, onSearch, onCreateItem }: WikiLin
         zIndex: 99999,
         pointerEvents: 'auto',
       }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       {isLoading && results.length === 0 && (
         <div className="wikilink-item wikilink-loading">

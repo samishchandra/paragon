@@ -137,8 +137,12 @@ function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
               position: 'fixed',
               top: dropdownPos.top,
               left: dropdownPos.left,
-              zIndex: 9999,
+              zIndex: 99999,
+              pointerEvents: 'auto',
             }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             {(Object.keys(calloutConfig) as CalloutType[]).map((calloutType) => {
               const typeConfig = calloutConfig[calloutType];
@@ -147,7 +151,11 @@ function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
                 <button
                   key={calloutType}
                   className={`callout-type-option ${calloutType === type ? 'active' : ''}`}
-                  onClick={() => handleTypeChange(calloutType)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTypeChange(calloutType);
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
                   style={{ '--callout-option-color': typeConfig.color } as React.CSSProperties}
                 >
                   <TypeIcon size={16} style={{ color: typeConfig.borderColor }} />

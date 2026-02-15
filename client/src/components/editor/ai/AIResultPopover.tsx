@@ -157,9 +157,12 @@ export function AIResultPopover({
         position: 'fixed',
         top: adjustedStyle.top,
         left: adjustedStyle.left,
-        zIndex: 10001,
+        zIndex: 99999,
+        pointerEvents: 'auto',
       }}
-      onMouseDown={(e) => e.preventDefault()} // Prevent losing editor selection
+      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       <div
         className={`

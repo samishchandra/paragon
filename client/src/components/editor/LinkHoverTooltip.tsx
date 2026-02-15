@@ -233,8 +233,12 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
         position: 'fixed',
         top: `${tooltip.position.top}px`,
         left: `${tooltip.position.left}px`,
-        zIndex: 9999,
+        zIndex: 99999,
+        pointerEvents: 'auto',
       }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
       onMouseEnter={keepTooltipVisible}
       onMouseLeave={hideTooltip}
     >

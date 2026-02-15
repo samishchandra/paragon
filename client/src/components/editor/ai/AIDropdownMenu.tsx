@@ -126,9 +126,12 @@ export function AIDropdownMenu({ actions, scope, onAction, onClose, position }: 
         position: 'fixed',
         top: pos.top,
         left: pos.left,
-        zIndex: 10000,
+        zIndex: 99999,
+        pointerEvents: 'auto',
       }}
-      onMouseDown={(e) => e.preventDefault()} // Prevent losing editor selection
+      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       <div
         className="
