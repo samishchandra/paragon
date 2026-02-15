@@ -1367,7 +1367,7 @@
   align-items: center;
   margin-bottom: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid oklch(0 0 0 / 0.08);
+  border-bottom: 1px solid oklch(0 0 0 / 0.12);
   user-select: none;
   gap: 2px;
 }
@@ -1399,7 +1399,24 @@
 }
 
 .dark .callout-header {
-  border-bottom-color: oklch(1 0 0 / 0.1);
+  border-bottom-color: oklch(1 0 0 / 0.12);
+}
+
+/* Per-type callout header separator colors — uses border color at 30% opacity */
+.callout-info .callout-header {
+  border-bottom-color: color-mix(in oklch, var(--callout-info-border) 30%, transparent);
+}
+.callout-note .callout-header {
+  border-bottom-color: color-mix(in oklch, var(--callout-note-border) 30%, transparent);
+}
+.callout-prompt .callout-header {
+  border-bottom-color: color-mix(in oklch, var(--callout-prompt-border) 30%, transparent);
+}
+.callout-resources .callout-header {
+  border-bottom-color: color-mix(in oklch, var(--callout-resources-border) 30%, transparent);
+}
+.callout-todo .callout-header {
+  border-bottom-color: color-mix(in oklch, var(--callout-todo-border) 30%, transparent);
 }
 
 .callout-label {
