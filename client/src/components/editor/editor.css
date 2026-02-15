@@ -697,7 +697,7 @@
   hr {
     border: none;
     border-top: 2px dotted var(--muted-foreground);
-    margin: 2rem 0;
+    margin: 16px 0;
   }
   
   /* Tables - Compact styling with header support */
