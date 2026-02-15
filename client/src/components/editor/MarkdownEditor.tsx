@@ -1444,10 +1444,10 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             return;
           }
           
-          // Task list - use direct ProseMirror transaction to create taskList > taskItem
-          // because toggleTaskList() has a bug where it creates bulletList first then converts,
-          // which can fail silently
+          // Task list shortcut
           // Supports: [], [ ], [x], -[], -[ ], -[x], - [], - [ ], - [x]
+          // Uses direct ProseMirror transaction for checked state support,
+          // with toggleTaskList() as fallback (now fixed to use single transaction)
           const taskMatch = /^(-\s*)?\[([ x])?\]$/.exec(textBefore);
           if (taskMatch) {
             event.preventDefault();
@@ -1471,7 +1471,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
                 return;
               }
             }
-            // Fallback to toggleTaskList if direct approach fails
+            // Fallback to toggleTaskList (single-transaction implementation)
             editor.chain().focus().deleteRange({ from: $from.pos - textBefore.length, to: $from.pos }).toggleTaskList().run();
             return;
           }
