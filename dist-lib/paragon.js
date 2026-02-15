@@ -1457,75 +1457,84 @@ function Nh({ node: e, updateAttributes: t, editor: n }) {
     b.stopPropagation(), a((k) => !k);
   }, []);
   return /* @__PURE__ */ A(kr, { className: `callout callout-${d}${s ? " callout-collapsed" : ""}`, "data-callout": "", "data-type": d, children: [
-    /* @__PURE__ */ A("div", { className: "callout-header", contentEditable: !1, children: [
-      /* @__PURE__ */ A(
-        "button",
-        {
-          ref: c,
-          className: "callout-header-button",
-          onClick: g,
-          title: n.isEditable ? "Click to change callout type" : p.label,
-          style: { color: p.borderColor },
-          contentEditable: !1,
-          children: [
-            /* @__PURE__ */ f(h, { size: 18 }),
-            /* @__PURE__ */ f("span", { className: "callout-label", children: p.label }),
-            n.isEditable && /* @__PURE__ */ f(Ut, { size: 12, className: "callout-type-chevron" })
-          ]
-        }
-      ),
-      /* @__PURE__ */ f(
-        "button",
-        {
-          className: "callout-collapse-toggle",
-          onClick: v,
-          title: s ? "Expand callout" : "Collapse callout",
-          contentEditable: !1,
-          style: { color: p.borderColor },
-          children: s ? /* @__PURE__ */ f(Xl, { size: 16 }) : /* @__PURE__ */ f(Ut, { size: 16 })
-        }
-      ),
-      r && n.isEditable && i && Kt(
-        /* @__PURE__ */ f(
-          "div",
-          {
-            ref: u,
-            className: "callout-type-dropdown",
-            contentEditable: !1,
-            style: {
-              position: "fixed",
-              top: i.top,
-              left: i.left,
-              zIndex: 99999,
-              pointerEvents: "auto"
-            },
-            onMouseDown: (b) => b.stopPropagation(),
-            onPointerDown: (b) => b.stopPropagation(),
-            onClick: (b) => b.stopPropagation(),
-            children: Object.keys(Wr).map((b) => {
-              const k = Wr[b], E = k.icon;
-              return /* @__PURE__ */ A(
-                "button",
-                {
-                  className: `callout-type-option ${b === d ? "active" : ""}`,
-                  onClick: (w) => {
-                    w.stopPropagation(), y(b);
-                  },
-                  onMouseDown: (w) => w.stopPropagation(),
-                  style: { "--callout-option-color": k.color },
-                  children: [
-                    /* @__PURE__ */ f(E, { size: 16, style: { color: k.borderColor } }),
-                    /* @__PURE__ */ f("span", { children: k.label })
-                  ]
+    /* @__PURE__ */ A(
+      "div",
+      {
+        className: "callout-header",
+        contentEditable: !1,
+        onClick: v,
+        style: { cursor: "pointer" },
+        title: s ? "Click to expand" : "Click to collapse",
+        children: [
+          /* @__PURE__ */ A(
+            "button",
+            {
+              ref: c,
+              className: "callout-header-button",
+              onClick: (b) => {
+                b.stopPropagation(), g();
+              },
+              title: n.isEditable ? "Click to change callout type" : p.label,
+              style: { color: p.borderColor },
+              contentEditable: !1,
+              children: [
+                /* @__PURE__ */ f(h, { size: 18 }),
+                /* @__PURE__ */ f("span", { className: "callout-label", children: p.label }),
+                n.isEditable && /* @__PURE__ */ f(Ut, { size: 12, className: "callout-type-chevron" })
+              ]
+            }
+          ),
+          /* @__PURE__ */ f(
+            "div",
+            {
+              className: "callout-collapse-indicator",
+              style: { color: p.borderColor },
+              children: s ? /* @__PURE__ */ f(Xl, { size: 16 }) : /* @__PURE__ */ f(Ut, { size: 16 })
+            }
+          ),
+          r && n.isEditable && i && Kt(
+            /* @__PURE__ */ f(
+              "div",
+              {
+                ref: u,
+                className: "callout-type-dropdown",
+                contentEditable: !1,
+                style: {
+                  position: "fixed",
+                  top: i.top,
+                  left: i.left,
+                  zIndex: 99999,
+                  pointerEvents: "auto"
                 },
-                b
-              );
-            })
-          }
-        ),
-        document.body
-      )
-    ] }),
+                onMouseDown: (b) => b.stopPropagation(),
+                onPointerDown: (b) => b.stopPropagation(),
+                onClick: (b) => b.stopPropagation(),
+                children: Object.keys(Wr).map((b) => {
+                  const k = Wr[b], E = k.icon;
+                  return /* @__PURE__ */ A(
+                    "button",
+                    {
+                      className: `callout-type-option ${b === d ? "active" : ""}`,
+                      onClick: (w) => {
+                        w.stopPropagation(), y(b);
+                      },
+                      onMouseDown: (w) => w.stopPropagation(),
+                      style: { "--callout-option-color": k.color },
+                      children: [
+                        /* @__PURE__ */ f(E, { size: 16, style: { color: k.borderColor } }),
+                        /* @__PURE__ */ f("span", { children: k.label })
+                      ]
+                    },
+                    b
+                  );
+                })
+              }
+            ),
+            document.body
+          )
+        ]
+      }
+    ),
     /* @__PURE__ */ f("div", { className: `callout-content${s ? " callout-content-hidden" : ""}`, children: /* @__PURE__ */ f(ia, {}) })
   ] });
 }
