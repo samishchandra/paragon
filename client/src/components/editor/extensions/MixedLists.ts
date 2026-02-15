@@ -25,17 +25,155 @@ import { findWrapping } from '@tiptap/pm/transform';
 import { canJoin } from '@tiptap/pm/transform';
 
 /**
- * Extended BulletList that accepts both listItem and taskItem children
+ * Helper: Convert a list at a given position from one type to another,
+ * also converting child item types (taskItem <-> listItem).
+ */
+function convertListType(
+  tr: any,
+  listPos: number,
+  targetListType: any,
+  targetItemType: any,
+  sourceItemType: any,
+  targetItemAttrs: Record<string, any> = {},
+): boolean {
+  const listNode = tr.doc.nodeAt(listPos);
+  if (!listNode) return false;
+
+  // Change the list type
+  tr.setNodeMarkup(listPos, targetListType, listNode.attrs);
+
+  // Convert child items that need conversion
+  const updatedListNode = tr.doc.nodeAt(listPos);
+  if (!updatedListNode) return false;
+
+  const positions: number[] = [];
+  updatedListNode.forEach((child: any, childOffset: number) => {
+    if (child.type === sourceItemType) {
+      positions.push(listPos + 1 + childOffset);
+    }
+  });
+
+  // Apply in reverse to preserve positions
+  for (let i = positions.length - 1; i >= 0; i--) {
+    const pos = positions[i];
+    const node = tr.doc.nodeAt(pos);
+    if (node && node.type === sourceItemType) {
+      tr.setNodeMarkup(pos, targetItemType, targetItemAttrs);
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Extended BulletList that accepts both listItem and taskItem children.
+ * 
+ * Overrides toggleBulletList to properly convert taskItem children to listItem
+ * when switching from a taskList. The default toggleList uses setNodeMarkup
+ * which changes the list type but leaves taskItem children unconverted.
  */
 export const MixedBulletList = BulletList.extend({
   content: '(listItem | taskItem)+',
+
+  addCommands() {
+    return {
+      toggleBulletList: () => ({ commands, state, tr, dispatch }) => {
+        const { selection } = state;
+        const { $from } = selection;
+        
+        const bulletListType = state.schema.nodes.bulletList;
+        const taskListType = state.schema.nodes.taskList;
+        const orderedListType = state.schema.nodes.orderedList;
+        const listItemType = state.schema.nodes.listItem;
+        const taskItemType = state.schema.nodes.taskItem;
+
+        // Find the parent list
+        let parentListType = null;
+        let parentListPos = -1;
+        for (let d = $from.depth; d > 0; d--) {
+          const node = $from.node(d);
+          if (node.type === bulletListType || node.type === taskListType || node.type === orderedListType) {
+            parentListType = node.type;
+            parentListPos = $from.before(d);
+            break;
+          }
+        }
+
+        // If already in a bulletList, lift out (toggle off)
+        if (parentListType === bulletListType) {
+          return commands.liftListItem('listItem');
+        }
+
+        // If in a taskList or orderedList, convert to bulletList and convert items
+        if (parentListType === taskListType || parentListType === orderedListType) {
+          if (!dispatch) return true;
+          const success = convertListType(tr, parentListPos, bulletListType, listItemType, taskItemType, {});
+          if (success) {
+            dispatch(tr);
+            return true;
+          }
+        }
+
+        // Not in any list — use default behavior
+        return commands.toggleList(this.name, this.options.itemTypeName);
+      },
+    };
+  },
 });
 
 /**
- * Extended OrderedList that accepts both listItem and taskItem children
+ * Extended OrderedList that accepts both listItem and taskItem children.
+ * 
+ * Overrides toggleOrderedList to properly convert taskItem children to listItem
+ * when switching from a taskList.
  */
 export const MixedOrderedList = OrderedList.extend({
   content: '(listItem | taskItem)+',
+
+  addCommands() {
+    return {
+      toggleOrderedList: () => ({ commands, state, tr, dispatch }) => {
+        const { selection } = state;
+        const { $from } = selection;
+        
+        const bulletListType = state.schema.nodes.bulletList;
+        const taskListType = state.schema.nodes.taskList;
+        const orderedListType = state.schema.nodes.orderedList;
+        const listItemType = state.schema.nodes.listItem;
+        const taskItemType = state.schema.nodes.taskItem;
+
+        // Find the parent list
+        let parentListType = null;
+        let parentListPos = -1;
+        for (let d = $from.depth; d > 0; d--) {
+          const node = $from.node(d);
+          if (node.type === bulletListType || node.type === taskListType || node.type === orderedListType) {
+            parentListType = node.type;
+            parentListPos = $from.before(d);
+            break;
+          }
+        }
+
+        // If already in an orderedList, lift out (toggle off)
+        if (parentListType === orderedListType) {
+          return commands.liftListItem('listItem');
+        }
+
+        // If in a taskList or bulletList, convert to orderedList and convert items
+        if (parentListType === taskListType || parentListType === bulletListType) {
+          if (!dispatch) return true;
+          const success = convertListType(tr, parentListPos, orderedListType, listItemType, taskItemType, {});
+          if (success) {
+            dispatch(tr);
+            return true;
+          }
+        }
+
+        // Not in any list — use default behavior
+        return commands.toggleList(this.name, this.options.itemTypeName);
+      },
+    };
+  },
 });
 
 /**
