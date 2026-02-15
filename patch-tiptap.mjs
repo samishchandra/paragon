@@ -2,6 +2,16 @@ import fs from 'fs';
 import path from 'path';
 
 const filePath = path.join(process.cwd(), 'node_modules/@tiptap/react/dist/index.js');
+
+// Gracefully skip patching if @tiptap/react is not installed locally.
+// This happens when Paragon is installed as a dependency in another project
+// (e.g., Mighty) where @tiptap/react lives in the host's node_modules, not
+// inside Paragon's nested node_modules.
+if (!fs.existsSync(filePath)) {
+  console.log('Skipping @tiptap/react patch: file not found at', filePath);
+  process.exit(0);
+}
+
 let code = fs.readFileSync(filePath, 'utf-8');
 
 // Pattern 1: Original unpatched version

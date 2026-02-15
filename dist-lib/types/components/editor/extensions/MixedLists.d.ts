@@ -15,19 +15,38 @@
  * StarterKit and add these mixed versions instead.
  */
 /**
- * Extended BulletList that accepts both listItem and taskItem children
+ * Extended BulletList that accepts both listItem and taskItem children.
+ *
+ * Overrides toggleBulletList to properly convert taskItem children to listItem
+ * when switching from a taskList. The default toggleList uses setNodeMarkup
+ * which changes the list type but leaves taskItem children unconverted.
  */
 export declare const MixedBulletList: import("@tiptap/core").Node<import("@tiptap/extension-bullet-list").BulletListOptions, any>;
 /**
- * Extended OrderedList that accepts both listItem and taskItem children
+ * Extended OrderedList that accepts both listItem and taskItem children.
+ *
+ * Overrides toggleOrderedList to properly convert taskItem children to listItem
+ * when switching from a taskList.
  */
 export declare const MixedOrderedList: import("@tiptap/core").Node<import("@tiptap/extension-ordered-list").OrderedListOptions, any>;
 /**
- * Extended TaskList that accepts both taskItem and listItem children
+ * Extended TaskList that accepts both taskItem and listItem children.
+ *
+ * Overrides toggleTaskList to handle multi-paragraph selection properly.
+ * The default toggleList + wrapInList from ProseMirror fails when the
+ * content spec is "(taskItem | listItem)+" because wrapInList can't
+ * determine which item type to use for wrapping. We fix this by:
+ * 1. First wrapping in a bulletList (which always works with listItem)
+ * 2. Then converting the bulletList to a taskList and listItems to taskItems
  */
 export declare const MixedTaskList: import("@tiptap/core").Node<import("@tiptap/extension-task-list").TaskListOptions, any>;
 /**
- * Extended TaskItem with nested content always enabled for mixed list support
+ * Extended TaskItem with nested content always enabled for mixed list support.
+ *
+ * Overrides addInputRules to explicitly wrap in taskList when typing []<space>.
+ * The default wrappingInputRule uses findWrapping which, with mixed content specs,
+ * may find bulletList as a valid wrapper for taskItem (since MixedBulletList accepts
+ * taskItem children). We fix this by explicitly specifying the taskList wrapping.
  */
 export declare const MixedTaskItem: import("@tiptap/core").Node<import("@tiptap/extension-task-item").TaskItemOptions, any>;
 /**
