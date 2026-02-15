@@ -1367,7 +1367,6 @@
   align-items: center;
   margin-bottom: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid oklch(0 0 0 / 0.12);
   user-select: none;
   gap: 2px;
 }
@@ -1398,26 +1397,6 @@
   background: oklch(1 0 0 / 0.1);
 }
 
-.dark .callout-header {
-  border-bottom-color: oklch(1 0 0 / 0.12);
-}
-
-/* Per-type callout header separator colors — slightly darkened version of callout bg */
-.callout-info .callout-header {
-  border-bottom-color: color-mix(in oklch, var(--callout-info-bg) 80%, black);
-}
-.callout-note .callout-header {
-  border-bottom-color: color-mix(in oklch, var(--callout-note-bg) 80%, black);
-}
-.callout-prompt .callout-header {
-  border-bottom-color: color-mix(in oklch, var(--callout-prompt-bg) 80%, black);
-}
-.callout-resources .callout-header {
-  border-bottom-color: color-mix(in oklch, var(--callout-resources-bg) 80%, black);
-}
-.callout-todo .callout-header {
-  border-bottom-color: color-mix(in oklch, var(--callout-todo-bg) 80%, black);
-}
 
 .callout-label {
   font-size: 0.875rem;
@@ -1468,7 +1447,6 @@
 .callout-collapsed .callout-header {
   margin-bottom: 0;
   padding-bottom: 0;
-  border-bottom: none;
 }
 
 .callout-content-hidden {
