@@ -305,7 +305,7 @@
     font-family: var(--font-mono);
     font-size: 0.875em;
     background: oklch(0.95 0.005 250);
-    padding: 0.2em 0.4em;
+    padding: 0.05em 0.4em;
     border-radius: 4px;
     border: 1px solid oklch(0.88 0.01 250);
     color: oklch(0.35 0.02 250);
