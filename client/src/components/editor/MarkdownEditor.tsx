@@ -70,6 +70,115 @@ import type { Editor } from '@tiptap/react';
 
 
 
+/**
+ * Convert marked's standard checkbox list HTML to TipTap's task list format.
+ * Uses DOM parsing for robust handling of nested/mixed lists with inline formatting.
+ * 
+ * marked outputs: <ul><li><input disabled="" type="checkbox"> text</li></ul>
+ * TipTap expects: <ul data-type="taskList"><li data-type="taskItem" data-checked="true/false"><p>text</p></li></ul>
+ * 
+ * Handles:
+ * - Nested lists (bullet inside task, task inside bullet)
+ * - Mixed lists (some items are checkboxes, some are regular bullets)
+ * - Inline formatting (bold, italic, strikethrough) inside list items
+ * - Various attribute orderings from marked
+ */
+function convertCheckboxListsToTaskLists(html: string): string {
+  // Use DOMParser for robust HTML manipulation
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+  const container = doc.body.firstElementChild as HTMLElement;
+  if (!container) return html;
+
+  // Process all <ul> elements bottom-up (deepest first) to handle nesting
+  const processUl = (ul: HTMLUListElement) => {
+    // First, recursively process any nested <ul> inside this one
+    const nestedUls = Array.from(ul.querySelectorAll('ul')) as HTMLUListElement[];
+    nestedUls.forEach(processUl);
+
+    // Check each <li> in this <ul> for checkboxes
+    const items = Array.from(ul.children).filter(el => el.tagName === 'LI') as HTMLLIElement[];
+    let hasCheckbox = false;
+    let hasRegular = false;
+
+    items.forEach(li => {
+      const firstInput = li.querySelector(':scope > input[type="checkbox"]');
+      if (firstInput) {
+        hasCheckbox = true;
+      } else {
+        hasRegular = true;
+      }
+    });
+
+    if (!hasCheckbox) return; // No checkboxes, nothing to convert
+
+    // Convert checkbox <li> items to taskItem format
+    items.forEach(li => {
+      const checkbox = li.querySelector(':scope > input[type="checkbox"]');
+      if (checkbox) {
+        const isChecked = checkbox.hasAttribute('checked');
+        li.setAttribute('data-type', 'taskItem');
+        li.setAttribute('data-checked', String(isChecked));
+        
+        // Remove the checkbox input element
+        checkbox.remove();
+        
+        // Get the remaining content of the <li>
+        // We need to separate inline content from nested block elements (like <ul>)
+        const childNodes = Array.from(li.childNodes);
+        const inlineContent: Node[] = [];
+        const blockContent: Node[] = [];
+        
+        childNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const el = node as HTMLElement;
+            if (el.tagName === 'UL' || el.tagName === 'OL' || el.tagName === 'P') {
+              blockContent.push(node);
+            } else {
+              inlineContent.push(node);
+            }
+          } else {
+            // Text nodes go to inline content
+            inlineContent.push(node);
+          }
+        });
+        
+        // Clear the <li> and rebuild with proper structure
+        li.innerHTML = '';
+        
+        // Wrap inline content in <p> if there is any
+        if (inlineContent.length > 0) {
+          const p = doc.createElement('p');
+          inlineContent.forEach(node => p.appendChild(node));
+          // Trim leading whitespace from the first text node (space after checkbox)
+          if (p.firstChild && p.firstChild.nodeType === Node.TEXT_NODE) {
+            p.firstChild.textContent = (p.firstChild.textContent || '').replace(/^\s+/, '');
+          }
+          li.appendChild(p);
+        }
+        
+        // Re-append block content (nested lists, etc.)
+        blockContent.forEach(node => li.appendChild(node));
+      }
+    });
+
+    // If ALL items are checkboxes, convert the <ul> to a taskList
+    // If mixed, keep as <ul> (TipTap's mixed list extension handles this)
+    if (hasCheckbox && !hasRegular) {
+      ul.setAttribute('data-type', 'taskList');
+    } else if (hasCheckbox) {
+      // Mixed list: keep as <ul> but task items are already marked with data-type="taskItem"
+      // TipTap's MixedBulletList extension will handle this
+    }
+  };
+
+  // Process all top-level <ul> elements
+  const topUls = Array.from(container.querySelectorAll(':scope > ul')) as HTMLUListElement[];
+  topUls.forEach(processUl);
+
+  return container.innerHTML;
+}
+
 // Detect if we're on a mobile/touch device
 // Note: maxTouchPoints can be > 0 on desktop browsers with touch simulation
 // So we prioritize checking for actual touch events and screen width
@@ -982,27 +1091,15 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       let html = marked.parse(processedMarkdown, { async: false }) as string;
       
       // Post-process: Convert marked's standard checkbox list HTML to TipTap's task list format.
-      // marked outputs: <ul>\n<li><input type="checkbox" ...> text</li>\n</ul>
+      // marked outputs: <ul>\n<li><input disabled="" type="checkbox"> text</li>\n</ul>
       // TipTap expects: <ul data-type="taskList"><li data-type="taskItem" data-checked="true/false"><p>text</p></li></ul>
-      // 
-      // Strategy: Find <ul> blocks that contain checkbox <li> items and convert them.
-      html = html.replace(/<ul>\n?((?:<li>[\s\S]*?<\/li>\n?)+)<\/ul>/g, (ulMatch, liBlock) => {
-        // Check if this <ul> contains any checkbox items
-        if (!/<li><input.*?type="checkbox"/.test(liBlock)) {
-          return ulMatch; // Not a task list, leave as-is
-        }
-        // Convert each <li> with checkbox to taskItem format
-        const convertedItems = liBlock.replace(
-          /<li><input\s+(?:checked=""\s*)?(?:disabled=""\s*)?type="checkbox"\s*(?:checked=""\s*)?(?:disabled=""\s*)?\/?>\s*([\s\S]*?)<\/li>/g,
-          (liMatch: string, content: string) => {
-            const isChecked = /checked/.test(liMatch);
-            // Wrap content in <p> if not already wrapped
-            const wrappedContent = content.trim().startsWith('<p>') ? content.trim() : `<p>${content.trim()}</p>`;
-            return `<li data-type="taskItem" data-checked="${isChecked}">${wrappedContent}</li>`;
-          }
-        );
-        return `<ul data-type="taskList">${convertedItems}</ul>`;
-      });
+      //
+      // We use DOM parsing instead of regex to correctly handle:
+      // - Nested lists (bullet inside task, task inside bullet)
+      // - Mixed lists (some items are checkboxes, some are regular)
+      // - Inline formatting (bold, italic, strikethrough) inside list items
+      // - Various attribute orderings from marked (disabled before/after type)
+      html = convertCheckboxListsToTaskLists(html);
       
       queueMicrotask(() => {
         if (!editor.isDestroyed) {
