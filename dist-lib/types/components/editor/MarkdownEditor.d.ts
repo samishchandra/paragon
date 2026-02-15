@@ -279,6 +279,8 @@ export interface MarkdownEditorProps {
     }, isActive: boolean, onClick: () => void) => React.ReactNode;
     /** Show TOC toggle button (default: true) */
     tocShowToggleButton?: boolean;
+    /** Enable auto-closing of markdown pairs (backticks, asterisks, brackets, etc.) in the raw markdown editor (default: true) */
+    autoClosePairs?: boolean;
     /** Whether the performance profiler panel is visible. Fully controlled by the embedding application. (default: false) */
     showPerformanceProfiler?: boolean;
     /** Callback when the user clicks the close button inside the profiler. The embedding app should set showPerformanceProfiler to false. */
