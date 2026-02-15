@@ -71,3 +71,13 @@ jobs:
           repository: samishchandra/markdown-notes
           event-type: paragon-updated
           client-payload: '{"sha": "${{ github.sha }}"}'
+
+      - name: Notify mighty
+        if: steps.commit.outputs.changed == 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DISPATCH_TOKEN }}
+          repository: samishchandra/mighty
+          event-type: paragon-updated
+          client-payload: '{"sha": "${{ github.sha }}"}'
+
