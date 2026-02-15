@@ -3640,7 +3640,7 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme mark/highlight */
 [data-theme="light"] .tiptap-editor mark {
-  background: #FEE07D;
+  background: #FEE89F;
   color: oklch(0.25 0.02 250);
 }
 
@@ -3910,7 +3910,7 @@ pre.with-line-numbers code .line::before {
 
 /* Dark theme mark/highlight */
 [data-theme="dark"] .tiptap-editor mark {
-  background: #FEE07D40;
+  background: #FEE89F40;
   color: #dadada;
 }
 
