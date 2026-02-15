@@ -12,6 +12,7 @@
 name: Build & Notify Dependents
 
 on:
+  workflow_dispatch:
   push:
     branches: [master]
     paths-ignore:
@@ -33,8 +34,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
