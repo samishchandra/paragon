@@ -1437,9 +1437,34 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             return;
           }
           
-          // Task list
-          if (textBefore === '[]' || textBefore === '[ ]') {
+          // Task list - use direct ProseMirror transaction to create taskList > taskItem
+          // because toggleTaskList() has a bug where it creates bulletList first then converts,
+          // which can fail silently
+          // Supports: [], [ ], [x], -[], -[ ], -[x], - [], - [ ], - [x]
+          const taskMatch = /^(-\s*)?\[([ x])?\]$/.exec(textBefore);
+          if (taskMatch) {
             event.preventDefault();
+            const checked = taskMatch[2] === 'x';
+            const taskListType = state.schema.nodes.taskList;
+            const taskItemType = state.schema.nodes.taskItem;
+            if (taskListType && taskItemType) {
+              const tr = state.tr;
+              const deleteFrom = $from.pos - textBefore.length;
+              const deleteTo = $from.pos;
+              tr.delete(deleteFrom, deleteTo);
+              const $start = tr.doc.resolve(deleteFrom);
+              const blockRange = $start.blockRange();
+              if (blockRange) {
+                const wrapping = [
+                  { type: taskListType, attrs: {} },
+                  { type: taskItemType, attrs: { checked } },
+                ];
+                tr.wrap(blockRange, wrapping);
+                editor.view.dispatch(tr);
+                return;
+              }
+            }
+            // Fallback to toggleTaskList if direct approach fails
             editor.chain().focus().deleteRange({ from: $from.pos - textBefore.length, to: $from.pos }).toggleTaskList().run();
             return;
           }

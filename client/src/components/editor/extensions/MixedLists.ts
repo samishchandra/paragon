@@ -23,6 +23,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import { InputRule } from '@tiptap/core';
 import { findWrapping } from '@tiptap/pm/transform';
 import { canJoin } from '@tiptap/pm/transform';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 
 /**
  * Helper: Convert a list at a given position from one type to another,
@@ -354,38 +355,75 @@ export const MixedTaskItem = TaskItem.extend({
   content: 'paragraph block*',
 
   addInputRules() {
-    const inputRegex = /^\s*(\[([( |x])?\])\s$/;
+    // Return empty array - task item input rules are handled by the document-level
+    // handleKeyDown in MarkdownEditor.tsx, which intercepts space key presses and
+    // directly creates taskList > taskItem using ProseMirror transactions.
+    // The default wrappingInputRule from the base TaskItem uses findWrapping which
+    // picks bulletList (since MixedBulletList accepts taskItem children).
+    return [];
+  },
+
+  addProseMirrorPlugins() {
+    // Backup ProseMirror plugin for task item creation via handleTextInput.
+    // The primary handler is the document-level handleKeyDown in MarkdownEditor.tsx.
+    // This plugin serves as a fallback for cases where text input reaches ProseMirror
+    // (e.g., paste, IME composition, or if the document handler is bypassed).
+    const taskItemType = this.type;
+    const taskListType = this.editor.schema.nodes.taskList;
     
     return [
-      new InputRule({
-        find: inputRegex,
-        handler: ({ state, range, match }) => {
-          const attributes = { checked: match[match.length - 1] === 'x' };
-          const tr = state.tr.delete(range.from, range.to);
-          const $start = tr.doc.resolve(range.from);
-          const blockRange = $start.blockRange();
-          if (!blockRange) return null;
-
-          // Explicitly build the wrapping: taskList > taskItem
-          // Instead of using findWrapping which might pick bulletList
-          const taskListType = state.schema.nodes.taskList;
-          const taskItemType = this.type;
-          
-          if (!taskListType || !taskItemType) return null;
-
-          // Try explicit wrapping with taskList > taskItem
-          const wrapping = [
-            { type: taskListType, attrs: {} },
-            { type: taskItemType, attrs: attributes },
-          ];
-
-          tr.wrap(blockRange, wrapping);
-
-          // Join with adjacent taskList if possible
-          const before = tr.doc.resolve(range.from - 1).nodeBefore;
-          if (before && before.type === taskListType && canJoin(tr.doc, range.from - 1)) {
-            tr.join(range.from - 1);
-          }
+      new Plugin({
+        key: new PluginKey('taskItemInputRule'),
+        props: {
+          handleTextInput(view, from, to, text) {
+            if (text !== ' ') return false;
+            
+            const { state } = view;
+            const $from = state.doc.resolve(from);
+            
+            const textBefore = $from.parent.textBetween(
+              0,
+              $from.parentOffset,
+              undefined,
+              '\ufffc'
+            );
+            
+            // Match patterns: [] , [ ] , [x] , - [] , - [ ] , - [x]
+            const inputRegex = /^\s*(-\s*)?\[([( |x])?\]$/;
+            const match = inputRegex.exec(textBefore);
+            
+            if (!match) return false;
+            
+            const checked = match[2] === 'x';
+            
+            const matchStart = $from.start() + (match.index || 0);
+            const matchEnd = from;
+            
+            const tr = state.tr;
+            tr.delete(matchStart, matchEnd);
+            
+            const $start = tr.doc.resolve(matchStart);
+            const blockRange = $start.blockRange();
+            
+            if (!blockRange || !taskListType || !taskItemType) return false;
+            
+            const wrapping = [
+              { type: taskListType, attrs: {} },
+              { type: taskItemType, attrs: { checked } },
+            ];
+            
+            tr.wrap(blockRange, wrapping);
+            
+            if (matchStart > 1) {
+              const before = tr.doc.resolve(matchStart - 1).nodeBefore;
+              if (before && before.type === taskListType && canJoin(tr.doc, matchStart - 1)) {
+                tr.join(matchStart - 1);
+              }
+            }
+            
+            view.dispatch(tr);
+            return true;
+          },
         },
       }),
     ];
