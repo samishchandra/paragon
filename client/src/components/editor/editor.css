@@ -1283,7 +1283,7 @@
 .callout {
   border-radius: 8px;
   padding: 1rem 1.25rem;
-  margin: 1rem 0;
+  margin: 8px 0;
   border: none;
   border-left: 4px solid var(--callout-info-border);
   background: var(--callout-info-bg);
