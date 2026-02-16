@@ -2,7 +2,7 @@ import { MarkdownEditor } from '@/components/editor';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import SiteHeader from '@/components/SiteHeader';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Trash2 } from 'lucide-react';
+import { Moon, Sun, FilePlus } from 'lucide-react';
 
 /*
  * Standalone editor page — just the editor, nothing else.
@@ -134,10 +134,10 @@ export default function EditorPage() {
         variant="ghost"
         size="sm"
         onClick={handleClearContent}
-        className="gap-1.5 h-8 text-muted-foreground hover:text-destructive"
-        title="Clear saved content"
+        className="gap-1.5 h-8 text-muted-foreground hover:text-foreground"
+        title="New document"
       >
-        <Trash2 className="w-4 h-4" />
+        <FilePlus className="w-4 h-4" />
         <span className="hidden sm:inline">New</span>
       </Button>
       <Button
