@@ -3941,6 +3941,291 @@ pre.with-line-numbers code .line::before {
 }
 
 /* ============================================
+   DARK THEME - CODE BLOCKS
+   Mirror .dark overrides for [data-theme="dark"]
+   ============================================ */
+
+[data-theme="dark"] .code-block-wrapper {
+  border: 1px solid var(--border);
+  background: oklch(0.15 0.01 250);
+}
+
+[data-theme="dark"] .code-block-language-label {
+  color: var(--muted-foreground);
+}
+
+[data-theme="dark"] .code-block-language-wrapper:hover .code-block-language-label {
+  color: var(--foreground);
+}
+
+[data-theme="dark"] .code-block-copy-btn {
+  color: var(--muted-foreground);
+}
+
+[data-theme="dark"] .code-block-copy-btn:hover {
+  background: var(--secondary);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+[data-theme="dark"] .code-block-pre code {
+  color: var(--foreground);
+}
+
+/* ============================================
+   DARK THEME - BLOCKQUOTE
+   ============================================ */
+
+[data-theme="dark"] .tiptap-editor blockquote {
+  border-left-color: #56b6c2;
+  background: oklch(0.18 0.015 200);
+  color: #8be0e8;
+}
+
+/* ============================================
+   DARK THEME - TABLES
+   ============================================ */
+
+[data-theme="dark"] .tiptap-editor table {
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .tiptap-editor th,
+[data-theme="dark"] .tiptap-editor td[data-header="true"],
+[data-theme="dark"] .tiptap-editor .table-header-cell {
+  background: var(--table-header-bg) !important;
+  border-color: var(--border);
+  color: var(--table-header-text) !important;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .tiptap-editor thead th,
+[data-theme="dark"] .tiptap-editor tr:first-child th {
+  background: var(--table-header-bg) !important;
+  color: var(--table-header-text) !important;
+  border-bottom: 2px solid var(--primary);
+}
+
+[data-theme="dark"] .tiptap-editor td {
+  border-color: var(--border);
+  background: var(--table-cell-bg) !important;
+  color: var(--table-cell-text) !important;
+}
+
+[data-theme="dark"] .tiptap-editor tbody tr:nth-child(odd) td {
+  background: var(--table-row-odd) !important;
+}
+
+[data-theme="dark"] .tiptap-editor tbody tr:nth-child(even) td {
+  background: var(--table-row-even) !important;
+}
+
+[data-theme="dark"] .tiptap-editor tbody tr:hover td {
+  background: var(--table-row-hover) !important;
+}
+
+[data-theme="dark"] .tiptap-editor th.sortable-header:hover,
+[data-theme="dark"] .tiptap-editor th[data-sortable="true"]:hover {
+  background: #353b47 !important;
+}
+
+/* ============================================
+   DARK THEME - SYNTAX HIGHLIGHTING (hljs)
+   Mirror .dark overrides for [data-theme="dark"]
+   ============================================ */
+
+[data-theme="dark"] .hljs-keyword,
+[data-theme="dark"] .hljs-selector-tag,
+[data-theme="dark"] .hljs-built_in {
+  color: var(--syntax-keyword);
+}
+
+[data-theme="dark"] .hljs-name,
+[data-theme="dark"] .hljs-tag {
+  color: var(--syntax-variable);
+}
+
+[data-theme="dark"] .hljs-string,
+[data-theme="dark"] .hljs-title,
+[data-theme="dark"] .hljs-section,
+[data-theme="dark"] .hljs-attribute,
+[data-theme="dark"] .hljs-literal,
+[data-theme="dark"] .hljs-template-tag,
+[data-theme="dark"] .hljs-template-variable,
+[data-theme="dark"] .hljs-addition {
+  color: var(--syntax-string);
+}
+
+[data-theme="dark"] .hljs-type {
+  color: var(--syntax-type);
+}
+
+[data-theme="dark"] .hljs-number,
+[data-theme="dark"] .hljs-symbol,
+[data-theme="dark"] .hljs-bullet,
+[data-theme="dark"] .hljs-link,
+[data-theme="dark"] .hljs-meta,
+[data-theme="dark"] .hljs-selector-id {
+  color: var(--syntax-number);
+}
+
+[data-theme="dark"] .hljs-title.function_,
+[data-theme="dark"] .hljs-function {
+  color: var(--syntax-function);
+}
+
+[data-theme="dark"] .hljs-comment,
+[data-theme="dark"] .hljs-quote,
+[data-theme="dark"] .hljs-deletion {
+  color: var(--syntax-comment);
+  font-style: italic;
+}
+
+[data-theme="dark"] .hljs-variable,
+[data-theme="dark"] .hljs-attr {
+  color: var(--syntax-variable);
+}
+
+[data-theme="dark"] .hljs-operator {
+  color: var(--syntax-operator);
+}
+
+/* ============================================
+   DARK THEME - CALLOUTS
+   ============================================ */
+
+[data-theme="dark"] .callout-info {
+  background: var(--callout-info-bg);
+}
+
+[data-theme="dark"] .callout-note {
+  background: var(--callout-note-bg);
+}
+
+[data-theme="dark"] .callout-prompt {
+  background: var(--callout-prompt-bg);
+}
+
+[data-theme="dark"] .callout-resources {
+  background: var(--callout-resources-bg);
+}
+
+[data-theme="dark"] .callout-todo {
+  background: var(--callout-todo-bg);
+}
+
+[data-theme="dark"] .callout-header:hover {
+  background: oklch(1 0 0 / 0.04);
+}
+
+[data-theme="dark"] .callout-header-button:hover {
+  background: oklch(1 0 0 / 0.1);
+}
+
+[data-theme="dark"] .callout-type-dropdown {
+  background: oklch(0.19 0.015 250);
+  border-color: oklch(0.35 0.01 250);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.3);
+}
+
+[data-theme="dark"] .callout-type-option:hover {
+  background: oklch(1 0 0 / 0.08);
+}
+
+[data-theme="dark"] .callout-type-option.active {
+  background: oklch(1 0 0 / 0.1);
+}
+
+/* ============================================
+   DARK THEME - LINKS
+   ============================================ */
+
+[data-theme="dark"] .tiptap-editor a {
+  color: #61afef;
+}
+
+[data-theme="dark"] .tiptap-editor a:hover {
+  color: #7dc4ff;
+}
+
+/* ============================================
+   DARK THEME - HORIZONTAL RULE
+   ============================================ */
+
+[data-theme="dark"] .tiptap-editor hr {
+  border-color: var(--muted-foreground);
+}
+
+/* ============================================
+   DARK THEME - TASK LIST CHECKBOXES
+   ============================================ */
+
+[data-theme="dark"] ul[data-type="taskList"] li > label input[type="checkbox"] {
+  border-color: #666666;
+  border-radius: 50%;
+}
+
+[data-theme="dark"] ul[data-type="taskList"] li > label input[type="checkbox"]:hover {
+  border-color: #2e80f2;
+  background: rgba(46, 128, 242, 0.15);
+}
+
+[data-theme="dark"] ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+  background: #2e80f2;
+  border-color: #2e80f2;
+}
+
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div > p {
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--muted-foreground);
+}
+
+/* Reset color for nested task lists in dark theme */
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div ul[data-type="taskList"] {
+  color: var(--foreground);
+}
+
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li > div > p {
+  text-decoration: none;
+  color: var(--foreground);
+}
+
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p,
+[data-theme="dark"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p {
+  text-decoration: none !important;
+  color: var(--muted-foreground) !important;
+}
+
+/* Dark theme task item checkbox (mixed lists) */
+[data-theme="dark"] li.task-item > label input[type="checkbox"] {
+  border-color: #666666;
+  border-radius: 50%;
+}
+
+[data-theme="dark"] li.task-item > label input[type="checkbox"]:hover {
+  border-color: #2e80f2;
+  background: rgba(46, 128, 242, 0.15);
+}
+
+[data-theme="dark"] li.task-item > label input[type="checkbox"]:checked {
+  background: #2e80f2;
+  border-color: #2e80f2;
+}
+
+[data-theme="dark"] li.task-item[data-checked="true"] > div > p {
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+
+[data-theme="dark"] li.task-item[data-checked="true"] > div {
+  color: var(--muted-foreground);
+}
+
+/* ============================================
    LIGHT THEME MODAL HEADER FIXES
    ============================================ */
 
