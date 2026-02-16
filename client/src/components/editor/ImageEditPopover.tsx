@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Check, Link, Type, Trash2 } from 'lucide-react';
 
 /*
  * DESIGN: Dark Mode Craftsman
  * Image edit popover with clean, minimal design
  * Matches the editor's professional aesthetic
+ * Uses createPortal to document.body to avoid Radix Dialog transform issues
  */
 
 interface ImageEditPopoverProps {
@@ -17,7 +19,7 @@ interface ImageEditPopoverProps {
    */
   alt: string;
   /**
-   * Position of the popover
+   * Position of the popover (viewport coordinates from getBoundingClientRect)
    */
   position: { x: number; y: number };
   /**
@@ -93,13 +95,14 @@ export function ImageEditPopover({
   };
 
   // Calculate position to keep popover in viewport
+  // position.x and position.y are already viewport coordinates
   const calculatePosition = () => {
     const popoverWidth = 320;
-    const popoverHeight = 200;
+    const popoverHeight = 280;
     const padding = 16;
 
-    let x = position.x;
-    let y = position.y + 10; // Offset below the click point
+    let x = position.x - popoverWidth / 2; // Center horizontally on the anchor point
+    let y = position.y + 10; // Offset below the anchor point
 
     // Keep within horizontal bounds
     if (x + popoverWidth > window.innerWidth - padding) {
@@ -113,13 +116,16 @@ export function ImageEditPopover({
     if (y + popoverHeight > window.innerHeight - padding) {
       y = position.y - popoverHeight - 10; // Show above instead
     }
+    if (y < padding) {
+      y = padding;
+    }
 
     return { left: x, top: y };
   };
 
   const pos = calculatePosition();
 
-  return (
+  const popover = (
     <div
       ref={popoverRef}
       className="image-edit-popover"
@@ -127,8 +133,12 @@ export function ImageEditPopover({
         position: 'fixed',
         left: pos.left,
         top: pos.top,
-        zIndex: 1000,
+        zIndex: 99999,
+        pointerEvents: 'auto',
       }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div className="image-edit-popover-header">
@@ -204,4 +214,6 @@ export function ImageEditPopover({
       </div>
     </div>
   );
+
+  return createPortal(popover, document.body);
 }
