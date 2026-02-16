@@ -1,7 +1,7 @@
 import { Editor } from '@tiptap/react';
 import { TextSelection } from '@tiptap/pm/state';
 import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { DialogSafePortal } from './DialogSafePortal';
 import { FileText, Plus } from 'lucide-react';
 
 /*
@@ -350,7 +350,8 @@ export function WikiLinkAutocomplete({ editor, onSearch, onCreateItem }: WikiLin
   const showCreateOption = query.trim() && !results.some(r => r.title.toLowerCase() === query.trim().toLowerCase());
   const animationClass = placement === 'below' ? 'slash-menu-below' : 'slash-menu-above';
 
-  return createPortal(
+  return (
+    <DialogSafePortal>
     <div
       ref={menuRef}
       className={`wikilink-menu ${animationClass}`}
@@ -358,11 +359,7 @@ export function WikiLinkAutocomplete({ editor, onSearch, onCreateItem }: WikiLin
         position: 'fixed',
         top: 0,
         left: 0,
-        zIndex: 99999,
-        pointerEvents: 'auto',
       }}
-      onMouseDown={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
     >
       {isLoading && results.length === 0 && (
         <div className="wikilink-item wikilink-loading">
@@ -411,8 +408,8 @@ export function WikiLinkAutocomplete({ editor, onSearch, onCreateItem }: WikiLin
           <span className="wikilink-label" style={{ color: 'var(--muted-foreground)' }}>Type to search items...</span>
         </div>
       )}
-    </div>,
-    document.body
+    </div>
+    </DialogSafePortal>
   );
 }
 

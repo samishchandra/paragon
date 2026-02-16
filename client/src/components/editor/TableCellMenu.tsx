@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { DialogSafePortal } from './DialogSafePortal';
 import { Editor } from '@tiptap/react';
 import { 
   MoreVertical, 
@@ -229,7 +229,8 @@ export function TableCellMenu({ editor }: TableCellMenuProps) {
         <MoreVertical size={14} />
       </button>
       
-      {isOpen && createPortal(
+      {isOpen && (
+        <DialogSafePortal>
         <div 
           ref={menuRef}
           className="table-cell-menu-dropdown"
@@ -237,12 +238,7 @@ export function TableCellMenu({ editor }: TableCellMenuProps) {
             position: 'fixed',
             top: `${dropdownPos.top}px`,
             left: `${dropdownPos.left}px`,
-            zIndex: 99999,
-            pointerEvents: 'auto',
           }}
-          onMouseDown={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
         >
           {menuItems.map((item, index) => (
             <div key={item.label}>
@@ -262,8 +258,8 @@ export function TableCellMenu({ editor }: TableCellMenuProps) {
               )}
             </div>
           ))}
-        </div>,
-        document.body
+        </div>
+        </DialogSafePortal>
       )}
     </>
   );

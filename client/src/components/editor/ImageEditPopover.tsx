@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { DialogSafePortal } from './DialogSafePortal';
 import { X, Check, Link, Type, Trash2 } from 'lucide-react';
 
 /*
@@ -133,12 +133,7 @@ export function ImageEditPopover({
         position: 'fixed',
         left: pos.left,
         top: pos.top,
-        zIndex: 99999,
-        pointerEvents: 'auto',
       }}
-      onMouseDown={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div className="image-edit-popover-header">
@@ -215,5 +210,5 @@ export function ImageEditPopover({
     </div>
   );
 
-  return createPortal(popover, document.body);
+  return <DialogSafePortal>{popover}</DialogSafePortal>;
 }

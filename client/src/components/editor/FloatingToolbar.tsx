@@ -16,7 +16,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useCallback, useState, useEffect, useRef, memo } from 'react';
-import { createPortal } from 'react-dom';
+import { DialogSafePortal } from './DialogSafePortal';
 import { useEditorState } from '@tiptap/react';
 
 /*
@@ -371,11 +371,8 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
         position: 'fixed',
         top: position.top, 
         left: position.left,
-        zIndex: 99999,
-        pointerEvents: 'auto',
       }}
-      onMouseDown={(e) => { e.stopPropagation(); handleToolbarMouseDown(e); }}
-      onPointerDown={(e) => e.stopPropagation()}
+      onMouseDown={handleToolbarMouseDown}
     >
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 px-2 w-[280px] sm:w-auto">
         <input
@@ -440,11 +437,8 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
         position: 'fixed',
         top: position.top, 
         left: position.left,
-        zIndex: 99999,
-        pointerEvents: 'auto',
-      }}
-      onMouseDown={(e) => { e.stopPropagation(); handleToolbarMouseDown(e); }}
-      onPointerDown={(e) => e.stopPropagation()}
+        }}
+      onMouseDown={handleToolbarMouseDown}
     >
       {/* Section 1: Inline text formatting */}
       <ToolbarButton
@@ -572,7 +566,11 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
     </div>
   );
 
-  return createPortal(toolbarContent, document.body);
+  return (
+    <DialogSafePortal onMouseDown={handleToolbarMouseDown}>
+      {toolbarContent}
+    </DialogSafePortal>
+  );
 });
 
 export default FloatingToolbar;

@@ -2,7 +2,7 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import type { CommandProps } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper, NodeViewContent, NodeViewProps } from '@tiptap/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { DialogSafePortal } from '../DialogSafePortal';
 import { Info, StickyNote, MessageSquareText, BookOpen, ListTodo, ChevronDown, ChevronRight } from 'lucide-react';
 
 export type CalloutType = 'info' | 'note' | 'prompt' | 'resources' | 'todo';
@@ -134,7 +134,8 @@ function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
           {collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
         </div>
         
-        {showDropdown && editor.isEditable && dropdownPos && createPortal(
+        {showDropdown && editor.isEditable && dropdownPos && (
+          <DialogSafePortal>
           <div
             ref={dropdownRef}
             className="callout-type-dropdown"
@@ -143,12 +144,7 @@ function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
               position: 'fixed',
               top: dropdownPos.top,
               left: dropdownPos.left,
-              zIndex: 99999,
-              pointerEvents: 'auto',
             }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
           >
             {(Object.keys(calloutConfig) as CalloutType[]).map((calloutType) => {
               const typeConfig = calloutConfig[calloutType];
@@ -169,8 +165,8 @@ function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
                 </button>
               );
             })}
-          </div>,
-          document.body
+          </div>
+          </DialogSafePortal>
         )}
       </div>
 

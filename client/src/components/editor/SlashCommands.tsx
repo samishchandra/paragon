@@ -1,6 +1,6 @@
 import { Editor } from '@tiptap/react';
 import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { DialogSafePortal } from './DialogSafePortal';
 import ImageURLDialog from './ImageURLDialog';
 import {
   Heading1,
@@ -528,9 +528,10 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
 
   const animationClass = placement === 'below' ? 'slash-menu-below' : 'slash-menu-above';
 
-  // Render via portal to document.body so position:fixed works correctly
+  // Render via DialogSafePortal so position:fixed works correctly
   // regardless of parent overflow/transform contexts
-  return createPortal(
+  return (
+    <DialogSafePortal>
     <div
       ref={menuRef}
       className={`slash-menu ${animationClass}`}
@@ -538,11 +539,7 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
         position: 'fixed',
         top: 0,
         left: 0,
-        zIndex: 99999,
-        pointerEvents: 'auto',
       }}
-      onMouseDown={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
     >
       {filteredCommands.map((cmd, index) => (
         <div
@@ -559,8 +556,8 @@ export function SlashCommands({ editor }: SlashCommandsProps) {
           <span className="slash-label">{cmd.title}</span>
         </div>
       ))}
-    </div>,
-    document.body
+    </div>
+    </DialogSafePortal>
   );
 }
 

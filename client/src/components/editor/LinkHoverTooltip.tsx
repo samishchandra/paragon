@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { DialogSafePortal } from './DialogSafePortal';
 import { Editor } from '@tiptap/react';
 import { Pencil, Copy, Unlink, Check, ExternalLink } from 'lucide-react';
 
@@ -233,12 +233,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
         position: 'fixed',
         top: `${tooltip.position.top}px`,
         left: `${tooltip.position.left}px`,
-        zIndex: 99999,
-        pointerEvents: 'auto',
       }}
-      onMouseDown={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
       onMouseEnter={keepTooltipVisible}
       onMouseLeave={hideTooltip}
     >
@@ -286,8 +281,8 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     </div>
   );
 
-  // Render via portal to avoid overflow clipping
-  return createPortal(tooltipContent, document.body);
+  // Render via DialogSafePortal to avoid overflow clipping and Radix Dialog issues
+  return <DialogSafePortal>{tooltipContent}</DialogSafePortal>;
 }
 
 export default LinkHoverTooltip;

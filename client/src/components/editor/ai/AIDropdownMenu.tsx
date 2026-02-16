@@ -8,7 +8,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { DialogSafePortal } from '../DialogSafePortal';
 import {
   SpellCheck,
   RefreshCw,
@@ -126,12 +126,7 @@ export function AIDropdownMenu({ actions, scope, onAction, onClose, position }: 
         position: 'fixed',
         top: pos.top,
         left: pos.left,
-        zIndex: 99999,
-        pointerEvents: 'auto',
       }}
-      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-      onPointerDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
     >
       <div
         className="
@@ -198,5 +193,9 @@ export function AIDropdownMenu({ actions, scope, onAction, onClose, position }: 
     </div>
   );
 
-  return createPortal(menu, document.body);
+  return (
+    <DialogSafePortal onMouseDown={(e) => e.preventDefault()}>
+      {menu}
+    </DialogSafePortal>
+  );
 }

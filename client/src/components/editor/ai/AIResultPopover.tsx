@@ -14,7 +14,7 @@
  */
 
 import { useRef, useEffect, useCallback, useState, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+import { DialogSafePortal } from '../DialogSafePortal';
 import {
   Replace,
   Plus,
@@ -157,12 +157,7 @@ export function AIResultPopover({
         position: 'fixed',
         top: adjustedStyle.top,
         left: adjustedStyle.left,
-        zIndex: 99999,
-        pointerEvents: 'auto',
       }}
-      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-      onPointerDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
     >
       <div
         className={`
@@ -261,7 +256,11 @@ export function AIResultPopover({
     </div>
   );
 
-  return createPortal(popover, document.body);
+  return (
+    <DialogSafePortal onMouseDown={(e) => e.preventDefault()}>
+      {popover}
+    </DialogSafePortal>
+  );
 }
 
 // ─── Internal Button Component ────────────────────────────────────────────────
