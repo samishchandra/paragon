@@ -253,12 +253,13 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
         const { selection } = editor.state;
         const { empty, from, to } = selection;
 
-        // Hide if selection is empty or in code block (but show for image node selections)
+        // Hide if selection is empty, in code block, or an image is selected
+        // (images have their own 3-dot menu; formatting options don't apply)
         const isNodeSelection = 'node' in selection && (selection as any).node;
-        const selectedNode = isNodeSelection ? (selection as any).node : editor.state.doc.nodeAt(from);
+        const selectedNode = isNodeSelection ? (selection as any).node : null;
         const isImageSelected = selectedNode?.type?.name === 'resizableImage';
         
-        if ((empty && !isImageSelected) || editor.isActive('codeBlock')) {
+        if (empty || isImageSelected || editor.isActive('codeBlock')) {
           if (showTimeoutRef.current) {
             clearTimeout(showTimeoutRef.current);
             showTimeoutRef.current = null;
