@@ -62,6 +62,16 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+          
+      - name: Notify momentum
+        if: steps.commit.outputs.changed == 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DISPATCH_TOKEN }}
+          repository: samishchandra/momentum
+          event-type: paragon-updated
+          client-payload: '{"sha": "${{ github.sha }}"}'
+
       - name: Notify markdown-notes
         if: steps.commit.outputs.changed == 'true'
         uses: peter-evans/repository-dispatch@v3
