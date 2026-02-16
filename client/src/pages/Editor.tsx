@@ -1,8 +1,17 @@
 import { MarkdownEditor } from '@/components/editor';
+import type { MarkdownEditorRef } from '@/components/editor/MarkdownEditor';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import SiteHeader from '@/components/SiteHeader';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, FilePlus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { FilePlus, Download, Sun, Moon } from 'lucide-react';
 
 /*
  * Standalone editor page — just the editor, nothing else.
@@ -83,7 +92,9 @@ export default function EditorPage() {
 
   const [content, setContent] = useState(() => loadSavedContent());
   const [theme, setTheme] = useState(() => loadSavedTheme(config.theme));
+  const [showNewConfirm, setShowNewConfirm] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorRef = useRef<MarkdownEditorRef>(null);
 
   // Debounced save to localStorage on content change
   const handleContentChange = useCallback((newContent: string) => {
@@ -111,7 +122,7 @@ export default function EditorPage() {
     });
   }, []);
 
-  // Clear saved content and reset to default
+  // Clear saved content and reset to default (after confirmation)
   const handleClearContent = useCallback(() => {
     try {
       localStorage.removeItem(STORAGE_KEY_CONTENT);
@@ -119,6 +130,21 @@ export default function EditorPage() {
       // Silently fail
     }
     setContent(DEFAULT_CONTENT);
+    setShowNewConfirm(false);
+  }, []);
+
+  // Export content as .md file
+  const handleExport = useCallback(() => {
+    const markdown = editorRef.current?.getMarkdown?.() || '';
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'document.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }, []);
 
   // Flush pending save on unmount
@@ -130,27 +156,56 @@ export default function EditorPage() {
 
   const headerActions = (
     <>
+      {/* New document button — opens confirmation dialog */}
       <Button
         variant="ghost"
         size="sm"
-        onClick={handleClearContent}
+        onClick={() => setShowNewConfirm(true)}
         className="gap-1.5 h-8 text-foreground"
         title="New document"
       >
         <FilePlus className="w-4 h-4" />
         <span className="hidden sm:inline">New</span>
       </Button>
+
+      {/* Theme toggle — pill-shaped switch with sun/moon icons */}
+      <button
+        onClick={handleThemeToggle}
+        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        className="relative inline-flex h-7 w-[52px] shrink-0 items-center rounded-full border border-border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        style={{
+          background: theme === 'dark' ? 'var(--muted)' : 'var(--muted)',
+        }}
+        role="switch"
+        aria-checked={theme === 'dark'}
+      >
+        {/* Track icons — sun on left, moon on right */}
+        <Sun className="absolute left-1.5 w-3.5 h-3.5 text-amber-500 opacity-40" />
+        <Moon className="absolute right-1.5 w-3.5 h-3.5 text-blue-400 opacity-40" />
+        {/* Sliding thumb */}
+        <span
+          className="pointer-events-none flex items-center justify-center h-5 w-5 rounded-full bg-background shadow-sm ring-1 ring-border/50 transition-transform duration-200"
+          style={{
+            transform: theme === 'dark' ? 'translateX(28px)' : 'translateX(4px)',
+          }}
+        >
+          {theme === 'dark' ? (
+            <Moon className="w-3 h-3 text-blue-400" />
+          ) : (
+            <Sun className="w-3 h-3 text-amber-500" />
+          )}
+        </span>
+      </button>
+
+      {/* Export / Download as .md — icon only */}
       <Button
         variant="ghost"
-        size="sm"
-        onClick={handleThemeToggle}
-        className="gap-1.5 h-8"
+        size="icon"
+        onClick={handleExport}
+        className="h-8 w-8"
+        title="Download as Markdown"
       >
-        {theme === 'dark' ? (
-          <><Sun className="w-4 h-4" /> Light</>
-        ) : (
-          <><Moon className="w-4 h-4" /> Dark</>
-        )}
+        <Download className="w-4 h-4" />
       </Button>
     </>
   );
@@ -160,6 +215,7 @@ export default function EditorPage() {
       <SiteHeader actions={headerActions} />
       <div className="flex-1 overflow-hidden">
         <MarkdownEditor
+          ref={editorRef}
           content={content}
           onChange={handleContentChange}
           placeholder={config.placeholder}
@@ -173,6 +229,32 @@ export default function EditorPage() {
           editable={config.editable}
         />
       </div>
+
+      {/* Confirmation dialog for New document */}
+      <Dialog open={showNewConfirm} onOpenChange={setShowNewConfirm}>
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Create new document?</DialogTitle>
+            <DialogDescription>
+              Your current content will be lost. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowNewConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleClearContent}
+            >
+              Discard &amp; Create New
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
