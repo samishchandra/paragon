@@ -191,12 +191,29 @@ function markdownToHtml(markdown: string): string {
   // Highlight ==text==
   html = html.replace(/(?<!`)==((?:(?!==)[^\n])+)==(?!`)/g, '<mark>$1</mark>');
   
+  // Images MUST be processed before links since ![...] would also match [...]
+  // Images with optional alignment and width: ![alt|alignment|width](url), ![alt|width](url), or ![alt](url)
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match: string, metadata: string, src: string) => {
+    const parts = metadata.split('|').map((p: string) => p.trim());
+    let alt = '', align = 'left', width: string | null = null;
+    if (parts.length === 1) {
+      alt = parts[0];
+    } else if (parts.length === 2) {
+      alt = parts[0];
+      if (/^\d+$/.test(parts[1])) { width = parts[1]; }
+      else if (['left','center','right'].includes(parts[1])) { align = parts[1]; }
+      else { alt = metadata; }
+    } else if (parts.length === 3) {
+      alt = parts[0];
+      if (['left','center','right'].includes(parts[1])) { align = parts[1]; }
+      if (/^\d+$/.test(parts[2])) { width = parts[2]; }
+    } else { alt = metadata; }
+    const w = width ? ` width="${width}" style="width: ${width}px"` : '';
+    return `<img src="${src.trim()}" alt="${alt}" data-align="${align}"${w}>`;
+  });
+  
   // Links
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-  
-  // Images with optional width: ![alt | width](url) or ![alt](url)
-  html = html.replace(/!\[([^\]]*?)\s*\|\s*(\d+)\]\(([^)]+)\)/g, '<img src="$3" alt="$1" width="$2" style="width: $2px">');
-  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
   
   // Auto-detect URLs
   html = html.replace(/(?<!["\(])(https?:\/\/[^\s<]+)(?!["\)])/g, '<a href="$1">$1</a>');

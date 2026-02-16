@@ -1050,11 +1050,46 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         });
       });
       
-      // Convert ![alt|width](url) image format to HTML img tags with width attribute
-      // This preserves image dimensions across mode switches
-      // Supports both ![alt|300](url) and ![alt | 300](url) formats
-      processedMarkdown = processedMarkdown.replace(/!\[([^\]]*?)\s*\|\s*(\d+)\]\(([^)]+)\)/g, (match, alt, width, src) => {
-        return `<img src="${src.trim()}" alt="${alt.trim()}" width="${width.trim()}" style="width: ${width.trim()}px" />`;
+      // Convert ![alt|alignment|width](url) and ![alt|width](url) image format to HTML img tags
+      // This preserves image dimensions and alignment across mode switches
+      // Supports: ![alt|center|300](url), ![alt|center](url), ![alt|300](url), ![alt | center | 300](url)
+      processedMarkdown = processedMarkdown.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, metadata, src) => {
+        // Parse the metadata: alt | alignment | width
+        const parts = metadata.split('|').map((p: string) => p.trim());
+        let alt = '';
+        let align = 'left';
+        let width: string | null = null;
+
+        if (parts.length === 1) {
+          // ![alt](url) — no alignment or width
+          alt = parts[0];
+        } else if (parts.length === 2) {
+          // Could be ![alt|width](url) or ![alt|alignment](url)
+          alt = parts[0];
+          if (/^\d+$/.test(parts[1])) {
+            width = parts[1];
+          } else if (['left', 'center', 'right'].includes(parts[1])) {
+            align = parts[1];
+          } else {
+            alt = metadata; // Not a recognized format, treat entire thing as alt
+          }
+        } else if (parts.length === 3) {
+          // ![alt|alignment|width](url)
+          alt = parts[0];
+          if (['left', 'center', 'right'].includes(parts[1])) {
+            align = parts[1];
+          }
+          if (/^\d+$/.test(parts[2])) {
+            width = parts[2];
+          }
+        } else {
+          // More than 3 parts — treat as alt text with pipes
+          alt = metadata;
+        }
+
+        const widthAttr = width ? ` width="${width}" style="width: ${width}px"` : '';
+        const alignAttr = ` data-align="${align}"`;
+        return `<img src="${src.trim()}" alt="${alt}"${alignAttr}${widthAttr} />`;
       });
       
       // Convert ==text== highlight format to <mark> tags

@@ -41,26 +41,36 @@ export function useTurndownService(): TurndownService {
       replacement: (content) => `==${content}==`,
     });
 
-    // Custom image rule to preserve width attribute using ![alt|width](url) format
+    // Custom image rule to preserve width and alignment using ![alt|alignment|width](url) format
     td.addRule('resizableImage', {
       filter: 'img',
       replacement: (content, node) => {
         const img = node as HTMLImageElement;
         const src = img.getAttribute('src') || '';
-        // Strip any previously embedded width from alt text (e.g. "photo|300")
+        // Strip any previously embedded metadata from alt text (e.g. "photo|center|300" or "photo|300")
         const rawAlt = img.getAttribute('alt') || '';
-        const alt = rawAlt.replace(/\s*\|\s*\d+\s*$/, '').trim();
+        const alt = rawAlt.replace(/\s*\|\s*(?:left|center|right)?\s*(?:\|\s*\d+)?\s*$/, '').trim();
         // Only use the explicit width attribute (set by resize handler), not style/computed
         const widthAttr = img.getAttribute('width');
         const width = widthAttr ? parseInt(widthAttr, 10) : null;
+        // Get alignment from data-align attribute
+        const align = img.getAttribute('data-align') || 'left';
 
-        // Use ![alt|width](url) format to preserve width in markdown
-        if (width && width > 0) {
-          return `![${alt}|${width}](${src})`;
+        // Build metadata parts: alignment and width
+        // Format: ![alt|alignment|width](url)
+        // Only include alignment if non-default, only include width if set
+        const parts: string[] = [alt];
+        const hasNonDefaultAlign = align && align !== 'left';
+        const hasWidth = width && width > 0;
+
+        if (hasNonDefaultAlign || hasWidth) {
+          parts.push(hasNonDefaultAlign ? align : 'left');
+        }
+        if (hasWidth) {
+          parts.push(String(width));
         }
 
-        // Otherwise use standard markdown syntax
-        return `![${alt}](${src})`;
+        return `![${parts.join(' | ')}](${src})`;
       },
     });
 

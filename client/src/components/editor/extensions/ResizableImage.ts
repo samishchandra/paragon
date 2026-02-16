@@ -259,7 +259,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         position: fixed;
         display: none;
         flex-direction: column;
-        min-width: 140px;
+        min-width: 200px;
         padding: 4px;
         background: oklch(0.99 0 0);
         border: 1px solid oklch(0.9 0 0);
@@ -368,6 +368,130 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           document.body.removeChild(link);
         }, 100);
       }));
+
+      // --- Alignment toggle (3-button segmented control) ---
+      const alignSeparator = document.createElement('div');
+      alignSeparator.style.cssText = `
+        height: 1px;
+        background: oklch(0.92 0 0);
+        margin: 4px 8px;
+      `;
+      dropdown.appendChild(alignSeparator);
+
+      const alignLabel = document.createElement('div');
+      alignLabel.style.cssText = `
+        font-size: 11px;
+        font-weight: 500;
+        color: oklch(0.55 0 0);
+        padding: 4px 12px 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      `;
+      alignLabel.textContent = 'Alignment';
+      dropdown.appendChild(alignLabel);
+
+      const alignContainer = document.createElement('div');
+      alignContainer.style.cssText = `
+        display: flex;
+        margin: 4px 8px 4px;
+        background: oklch(0.94 0 0);
+        border-radius: 8px;
+        padding: 3px;
+        gap: 2px;
+      `;
+
+      const alignOptions: Array<{ value: string; label: string; icon: string }> = [
+        {
+          value: 'left',
+          label: 'Left',
+          icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>`,
+        },
+        {
+          value: 'center',
+          label: 'Center',
+          icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="18" y1="18" x2="6" y2="18"></line></svg>`,
+        },
+        {
+          value: 'right',
+          label: 'Right',
+          icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>`,
+        },
+      ];
+
+      const alignButtons: HTMLButtonElement[] = [];
+
+      const updateAlignButtons = (activeAlign: string) => {
+        alignButtons.forEach((btn) => {
+          const val = btn.getAttribute('data-align-value') || 'left';
+          if (val === activeAlign) {
+            btn.style.background = 'oklch(1 0 0)';
+            btn.style.boxShadow = '0 1px 3px oklch(0 0 0 / 0.1)';
+            btn.style.color = 'oklch(0.25 0 0)';
+            btn.style.fontWeight = '600';
+          } else {
+            btn.style.background = 'transparent';
+            btn.style.boxShadow = 'none';
+            btn.style.color = 'oklch(0.5 0 0)';
+            btn.style.fontWeight = '400';
+          }
+        });
+      };
+
+      alignOptions.forEach(({ value, label, icon }) => {
+        const btn = document.createElement('button');
+        btn.setAttribute('type', 'button');
+        btn.setAttribute('data-align-value', value);
+        btn.setAttribute('title', `Align ${label.toLowerCase()}`);
+        btn.style.cssText = `
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          padding: 5px 8px;
+          font-size: 12px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        `;
+        btn.innerHTML = `${icon}<span>${label}</span>`;
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const pos = typeof getPos === 'function' ? getPos() : null;
+          if (pos !== null && pos !== undefined) {
+            try {
+              const { state, dispatch } = editor.view;
+              const nodeAtPos = state.doc.nodeAt(pos);
+              if (nodeAtPos && nodeAtPos.type.name === 'resizableImage') {
+                const tr = state.tr.setNodeMarkup(pos, undefined, {
+                  ...nodeAtPos.attrs,
+                  align: value,
+                });
+                dispatch(tr);
+              }
+            } catch {
+              editor.chain().focus().setNodeSelection(pos).updateAttributes('resizableImage', {
+                align: value,
+              }).run();
+            }
+          }
+          updateAlignButtons(value);
+          // Don't close dropdown — let user see the change
+        });
+        alignButtons.push(btn);
+        alignContainer.appendChild(btn);
+      });
+
+      dropdown.appendChild(alignContainer);
+
+      // Update alignment buttons when dropdown opens
+      const refreshAlignState = () => {
+        const currentAlign = currentNode.attrs.align || 'left';
+        updateAlignButtons(currentAlign);
+      };
       
       // Toggle dropdown on button click
       let isDropdownOpen = false;
@@ -380,7 +504,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           isDropdownOpen = false;
         } else {
           const btnRect = menuButton.getBoundingClientRect();
-          const dropdownWidth = 140;
+          const dropdownWidth = 200;
           
           // If dropdown is inside a dialog, we need to offset by the dialog's position
           // because position:fixed inside a transformed element is relative to that element
@@ -418,6 +542,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           dropdown.style.left = `${left}px`;
           dropdown.style.display = 'flex';
           isDropdownOpen = true;
+          refreshAlignState();
         }
       });
       

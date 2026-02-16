@@ -1235,6 +1235,20 @@
     display: block;
     margin: 0;
   }
+
+  /* Image alignment via data-align attribute on the img */
+  .image-resizer img[data-align="left"],
+  .image-resizer img:not([data-align]) {
+    /* Left is the default */
+  }
+  
+  .image-resizer img[data-align="center"] {
+    /* Centering is handled by the figure wrapper margin */
+  }
+  
+  .image-resizer img[data-align="right"] {
+    /* Right alignment is handled by the figure wrapper margin */
+  }
   
   .image-resizer.ProseMirror-selectednode {
     outline: 2px solid var(--primary);
