@@ -8,7 +8,7 @@ interface ImageEditPopoverProps {
      */
     alt: string;
     /**
-     * Position of the popover
+     * Position of the popover (viewport coordinates from getBoundingClientRect)
      */
     position: {
         x: number;
@@ -27,5 +27,5 @@ interface ImageEditPopoverProps {
      */
     onClose: () => void;
 }
-export declare function ImageEditPopover({ src, alt, position, onSave, onDelete, onClose, }: ImageEditPopoverProps): import("react").JSX.Element;
+export declare function ImageEditPopover({ src, alt, position, onSave, onDelete, onClose, }: ImageEditPopoverProps): import("react").ReactPortal;
 export {};
