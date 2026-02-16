@@ -134,7 +134,7 @@ export default function EditorPage() {
         variant="ghost"
         size="sm"
         onClick={handleClearContent}
-        className="gap-1.5 h-8 text-muted-foreground hover:text-foreground"
+        className="gap-1.5 h-8 text-foreground"
         title="New document"
       >
         <FilePlus className="w-4 h-4" />
