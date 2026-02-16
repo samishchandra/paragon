@@ -1154,8 +1154,8 @@ const tt = ({ onMouseDown: e, isActive: t, disabled: n, children: r, title: o })
     const T = () => {
       if (!t.isDestroyed)
         try {
-          const { selection: x } = t.state, { empty: D, from: R, to: L } = x, H = ("node" in x && x.node ? x.node : t.state.doc.nodeAt(R))?.type?.name === "resizableImage";
-          if (D && !H || t.isActive("codeBlock")) {
+          const { selection: x } = t.state, { empty: D, from: R, to: L } = x, H = ("node" in x && x.node ? x.node : null)?.type?.name === "resizableImage";
+          if (D || H || t.isActive("codeBlock")) {
             b.current && (clearTimeout(b.current), b.current = null), v.current && clearTimeout(v.current), v.current = setTimeout(() => {
               h(!1), u(!1);
             }, 150);
