@@ -1,6 +1,6 @@
 import { MarkdownEditor } from '@/components/editor';
 import { useState, useCallback } from 'react';
-import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun, Search, Calendar, ListTree, BookOpen, Shield, ArrowUpDown, FileCode2, Wand2, Github } from 'lucide-react';
+import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun, Search, Calendar, ListTree, BookOpen, Shield, ArrowUpDown, FileCode2, Wand2, Github, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import SiteHeader from '@/components/SiteHeader';
@@ -386,14 +386,14 @@ export default function Home() {
       {/* Header */}
       <SiteHeader actions={
         <>
+          <Button variant="default" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3" asChild>
+            <a href="/editor">
+              <ExternalLink className="w-4 h-4" />
+              <span className="hidden sm:inline">Try the Editor</span>
+              <span className="sm:hidden">Try</span>
+            </a>
+          </Button>
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="default" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
-                <Maximize2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Try Full Screen</span>
-                <span className="sm:hidden">Try</span>
-              </Button>
-            </DialogTrigger>
                 <DialogContent className={`max-w-[98vw] sm:max-w-[95vw] w-full sm:w-[1200px] h-[95vh] sm:h-[90vh] p-0 gap-0 border-border overflow-hidden ${modalTheme === 'light' ? 'bg-white' : 'bg-background'}`} data-theme={modalTheme}>
                   <DialogHeader className="px-6 py-4 border-b border-border bg-card/50 flex-shrink-0">
                     <div className="flex items-center justify-between">
@@ -463,12 +463,14 @@ export default function Home() {
               designed as a drop-in for Taskmate, Momentum, and more.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <Button size="lg" className="gap-2" asChild>
-                <a href="/editor">
-                  <Maximize2 className="w-5 h-5" />
-                  Try the Editor
-                </a>
-              </Button>
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button size="lg" className="gap-2">
+                    <Maximize2 className="w-5 h-5" />
+                    Try Full Screen
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
               <Button variant="outline" size="lg" asChild>
                 <a href="#demo">View Demo Below</a>
               </Button>

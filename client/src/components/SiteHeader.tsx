@@ -3,6 +3,7 @@ import { FileText, Github } from 'lucide-react';
 
 /**
  * Shared site header bar used on both the Home page and the /editor page.
+ * Element order (left to right): Paragon title | GitHub | actions | v2.0.0
  * The Paragon Editor title component navigates to the home page.
  * Right-side actions can be customized via the `actions` render prop.
  */
@@ -21,6 +22,7 @@ export default function SiteHeader({ actions }: { actions?: React.ReactNode }) {
             </div>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* 1. GitHub link */}
             <a
               href="https://github.com/samishchandra/paragon"
               target="_blank"
@@ -30,7 +32,9 @@ export default function SiteHeader({ actions }: { actions?: React.ReactNode }) {
               <Github className="w-4 h-4" />
               <span className="hidden sm:inline">GitHub</span>
             </a>
+            {/* 2. Page-specific actions */}
             {actions}
+            {/* 3. Version badge (always last) */}
             <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full hidden sm:inline">
               v2.0.0
             </span>
