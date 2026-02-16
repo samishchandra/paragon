@@ -13098,7 +13098,7 @@ const De = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
   const w = U(() => {
     M(t);
   }, [t, M]);
-  return /* @__PURE__ */ P("div", { className: `flex items-center gap-0.5 px-2 py-1.5 border-b border-border/30 bg-muted/30 overflow-x-auto scrollbar-hide ${o}`, children: [
+  return /* @__PURE__ */ P("div", { className: `flex items-center gap-0.5 px-2 py-1.5 border-b border-border/30 bg-muted/30 overflow-x-auto scrollbar-hide editor-toolbar ${o}`, children: [
     /* @__PURE__ */ f(
       De,
       {
