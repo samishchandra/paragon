@@ -27,5 +27,5 @@ interface ImageEditPopoverProps {
      */
     onClose: () => void;
 }
-export declare function ImageEditPopover({ src, alt, position, onSave, onDelete, onClose, }: ImageEditPopoverProps): import("react").ReactPortal;
+export declare function ImageEditPopover({ src, alt, position, onSave, onDelete, onClose, }: ImageEditPopoverProps): import("react").JSX.Element;
 export {};

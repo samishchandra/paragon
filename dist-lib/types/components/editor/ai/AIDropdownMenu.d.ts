@@ -18,5 +18,5 @@ interface AIDropdownMenuProps {
         left: number;
     };
 }
-export declare function AIDropdownMenu({ actions, scope, onAction, onClose, position }: AIDropdownMenuProps): import("react").ReactPortal;
+export declare function AIDropdownMenu({ actions, scope, onAction, onClose, position }: AIDropdownMenuProps): import("react").JSX.Element;
 export {};

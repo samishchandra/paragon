@@ -30,5 +30,5 @@ interface AIResultPopoverProps {
     /** Discard / close */
     onDiscard: () => void;
 }
-export declare function AIResultPopover({ state, position, onReplace, onInsert, onRetry, onDiscard, }: AIResultPopoverProps): import("react").ReactPortal | null;
+export declare function AIResultPopover({ state, position, onReplace, onInsert, onRetry, onDiscard, }: AIResultPopoverProps): import("react").JSX.Element | null;
 export {};

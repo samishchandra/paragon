@@ -4,5 +4,5 @@ interface LinkPopoverProps {
     isOpen: boolean;
     onClose: () => void;
 }
-export declare function LinkPopover({ editor, isOpen, onClose }: LinkPopoverProps): import("react").ReactPortal | null;
+export declare function LinkPopover({ editor, isOpen, onClose }: LinkPopoverProps): import("react").JSX.Element | null;
 export default LinkPopover;

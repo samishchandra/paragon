@@ -8,5 +8,5 @@ interface WikiLinkAutocompleteProps {
     }>>;
     onCreateItem?: (title: string) => void;
 }
-export declare function WikiLinkAutocomplete({ editor, onSearch, onCreateItem }: WikiLinkAutocompleteProps): import("react").ReactPortal | null;
+export declare function WikiLinkAutocomplete({ editor, onSearch, onCreateItem }: WikiLinkAutocompleteProps): import("react").JSX.Element | null;
 export default WikiLinkAutocomplete;
