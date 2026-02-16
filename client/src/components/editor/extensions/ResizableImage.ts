@@ -380,8 +380,42 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           isDropdownOpen = false;
         } else {
           const btnRect = menuButton.getBoundingClientRect();
-          dropdown.style.top = `${btnRect.bottom + 4}px`;
-          dropdown.style.left = `${btnRect.right - 140}px`;
+          const dropdownWidth = 140;
+          
+          // If dropdown is inside a dialog, we need to offset by the dialog's position
+          // because position:fixed inside a transformed element is relative to that element
+          const dialogContent = dropdown.closest('[role="dialog"]');
+          let offsetX = 0;
+          let offsetY = 0;
+          if (dialogContent) {
+            const dialogRect = dialogContent.getBoundingClientRect();
+            offsetX = dialogRect.left;
+            offsetY = dialogRect.top;
+          }
+          
+          let top = btnRect.bottom + 4 - offsetY;
+          let left = btnRect.right - dropdownWidth - offsetX;
+          
+          // Viewport boundary clamping
+          const viewportHeight = window.innerHeight;
+          const viewportWidth = window.innerWidth;
+          const estimatedDropdownHeight = 200; // approximate max height
+          
+          // If dropdown would go below viewport, position above the button
+          if (btnRect.bottom + 4 + estimatedDropdownHeight > viewportHeight) {
+            top = btnRect.top - estimatedDropdownHeight - 4 - offsetY;
+          }
+          
+          // Clamp left to stay within viewport
+          if (left + offsetX < 8) {
+            left = 8 - offsetX;
+          }
+          if (left + dropdownWidth + offsetX > viewportWidth - 8) {
+            left = viewportWidth - dropdownWidth - 8 - offsetX;
+          }
+          
+          dropdown.style.top = `${top}px`;
+          dropdown.style.left = `${left}px`;
           dropdown.style.display = 'flex';
           isDropdownOpen = true;
         }
