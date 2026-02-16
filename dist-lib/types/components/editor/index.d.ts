@@ -17,3 +17,4 @@ export { MixedBulletList, MixedOrderedList, MixedTaskList, MixedTaskItem, MixedL
 export { CollapsibleList } from './extensions/CollapsibleList';
 export { TagPill, type TagPillOptions, isValidTag, normalizeTag } from './extensions/TagPill';
 export type { AIActionDefinition, AIActionHandler, AIState } from './ai/types';
+export declare const PARAGON_BUILD_ID = "workflow-test-20260216";
