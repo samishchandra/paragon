@@ -1,6 +1,6 @@
 import { MarkdownEditor } from '@/components/editor';
 import { useState, useCallback } from 'react';
-import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun, Search, Calendar, ListTree, BookOpen, Shield, ArrowUpDown, FileCode2, Wand2, Github, ExternalLink } from 'lucide-react';
+import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun, Search, Calendar, ListTree, BookOpen, Shield, ArrowUpDown, FileCode2, Wand2, Github, PenLine } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import SiteHeader from '@/components/SiteHeader';
@@ -388,7 +388,7 @@ export default function Home() {
         <>
           <Button variant="default" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3" asChild>
             <a href="/editor">
-              <ExternalLink className="w-4 h-4" />
+              <PenLine className="w-4 h-4" />
               <span className="hidden sm:inline">Try the Editor</span>
               <span className="sm:hidden">Try</span>
             </a>
