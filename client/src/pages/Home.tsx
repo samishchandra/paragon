@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun, Search, Calendar, ListTree, BookOpen, Shield, ArrowUpDown, FileCode2, Wand2, Github } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import SiteHeader from '@/components/SiteHeader';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -383,36 +384,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container py-3 sm:py-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">Paragon Editor</h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">Drop-in markdown editor for note-taking apps</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <a
-                href="https://github.com/samishchandra/paragon"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-accent transition-colors"
-              >
-                <Github className="w-4 h-4" />
-                <span className="hidden sm:inline">GitHub</span>
-              </a>
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="default" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
-                    <Maximize2 className="w-4 h-4" />
-                    <span className="hidden sm:inline">Try Full Screen</span>
-                    <span className="sm:hidden">Try</span>
-                  </Button>
-                </DialogTrigger>
+      <SiteHeader actions={
+        <>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="default" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
+                <Maximize2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Try Full Screen</span>
+                <span className="sm:hidden">Try</span>
+              </Button>
+            </DialogTrigger>
                 <DialogContent className={`max-w-[98vw] sm:max-w-[95vw] w-full sm:w-[1200px] h-[95vh] sm:h-[90vh] p-0 gap-0 border-border overflow-hidden ${modalTheme === 'light' ? 'bg-white' : 'bg-background'}`} data-theme={modalTheme}>
                   <DialogHeader className="px-6 py-4 border-b border-border bg-card/50 flex-shrink-0">
                     <div className="flex items-center justify-between">
@@ -461,14 +442,9 @@ export default function Home() {
                     />
                   </div>
                 </DialogContent>
-              </Dialog>
-              <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full hidden sm:inline">
-                v2.0.0
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
+          </Dialog>
+        </>
+      } />
 
       {/* Hero Section */}
       <section className="py-8 sm:py-12 border-b border-border">

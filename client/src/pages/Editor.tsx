@@ -1,5 +1,8 @@
 import { MarkdownEditor } from '@/components/editor';
 import { useState, useMemo } from 'react';
+import SiteHeader from '@/components/SiteHeader';
+import { Button } from '@/components/ui/button';
+import { Moon, Sun } from 'lucide-react';
 
 /*
  * Standalone editor page — just the editor, nothing else.
@@ -24,7 +27,7 @@ function parseBool(value: string | null, defaultValue: boolean): boolean {
   return value !== 'false' && value !== '0';
 }
 
-function parseInt(value: string | null, defaultValue: number, min: number, max: number): number {
+function parseIntSafe(value: string | null, defaultValue: number, min: number, max: number): number {
   if (value === null) return defaultValue;
   const n = Number(value);
   if (isNaN(n)) return defaultValue;
@@ -44,7 +47,7 @@ export default function EditorPage() {
     return {
       theme: (params.get('theme') === 'dark' ? 'dark' : 'light') as 'dark' | 'light',
       showTableOfContents: parseBool(params.get('toc'), true),
-      tocMaxLevel: parseInt(params.get('tocMaxLevel'), 4, 1, 6),
+      tocMaxLevel: parseIntSafe(params.get('tocMaxLevel'), 4, 1, 6),
       showToolbar: parseBool(params.get('toolbar'), true),
       showWordCount: parseBool(params.get('wordcount'), true),
       autofocus: parseBool(params.get('autofocus'), true),
@@ -54,21 +57,41 @@ export default function EditorPage() {
     };
   }, []);
 
+  const [theme, setTheme] = useState(config.theme);
+
+  const headerActions = (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      className="gap-1.5 h-8"
+    >
+      {theme === 'dark' ? (
+        <><Sun className="w-4 h-4" /> Light</>
+      ) : (
+        <><Moon className="w-4 h-4" /> Dark</>
+      )}
+    </Button>
+  );
+
   return (
-    <div className="h-screen w-screen overflow-hidden">
-      <MarkdownEditor
-        content={content}
-        onChange={setContent}
-        placeholder={config.placeholder}
-        showToolbar={config.showToolbar}
-        showWordCount={config.showWordCount}
-        autofocus={config.autofocus}
-        showTableOfContents={config.showTableOfContents}
-        tocMaxLevel={config.tocMaxLevel}
-        theme={config.theme}
-        autoReorderChecklist={config.autoReorderChecklist}
-        editable={config.editable}
-      />
+    <div className="h-screen w-screen overflow-hidden flex flex-col">
+      <SiteHeader actions={headerActions} />
+      <div className="flex-1 overflow-hidden">
+        <MarkdownEditor
+          content={content}
+          onChange={setContent}
+          placeholder={config.placeholder}
+          showToolbar={config.showToolbar}
+          showWordCount={config.showWordCount}
+          autofocus={config.autofocus}
+          showTableOfContents={config.showTableOfContents}
+          tocMaxLevel={config.tocMaxLevel}
+          theme={theme}
+          autoReorderChecklist={config.autoReorderChecklist}
+          editable={config.editable}
+        />
+      </div>
     </div>
   );
 }
