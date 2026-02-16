@@ -9,7 +9,7 @@ import { FileText, Github } from 'lucide-react';
  */
 export default function SiteHeader({ actions }: { actions?: React.ReactNode }) {
   return (
-    <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+    <header className="border-b border-border bg-card/50 dark:bg-[#1c2127] backdrop-blur-sm sticky top-0 z-40">
       <div className="container py-3 sm:py-4">
         <div className="flex items-center justify-between gap-2">
           <Link href="/" className="flex items-center gap-2 sm:gap-3 min-w-0 no-underline hover:opacity-80 transition-opacity cursor-pointer">

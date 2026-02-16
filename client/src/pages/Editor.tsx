@@ -211,7 +211,7 @@ export default function EditorPage() {
   );
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col">
+    <div className={`h-screen w-screen overflow-hidden flex flex-col ${theme === 'dark' ? 'dark' : ''}`}>
       <SiteHeader actions={headerActions} />
       <div className="flex-1 overflow-hidden">
         <MarkdownEditor
