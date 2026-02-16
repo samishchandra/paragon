@@ -3784,6 +3784,10 @@ pre.with-line-numbers code .line::before {
    ============================================ */
 
 /* Dark theme toolbar */
+[data-theme="dark"] .editor-toolbar-wrapper {
+  background: #1c2127 !important;
+}
+
 [data-theme="dark"] .editor-toolbar {
   background: #1c2127;
   border-color: rgba(255, 255, 255, 0.06);
