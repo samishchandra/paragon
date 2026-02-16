@@ -3877,7 +3877,7 @@ pre.with-line-numbers code .line::before {
 
 /* Dark theme mode toggle */
 [data-theme="dark"] .editor-mode-toggle {
-  background: #282c34;
+  background: #1c2127;
   border-color: #35393e;
 }
 
