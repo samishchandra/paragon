@@ -19684,7 +19684,7 @@ const FC = () => {
         onDismiss: Ct.dismissRecovery
       }
     ),
-    u && /* @__PURE__ */ P("div", { className: "flex items-center bg-card/50", children: [
+    u && /* @__PURE__ */ P("div", { className: "flex items-center bg-card/50 editor-toolbar-wrapper", children: [
       ne ? ne($, ki) : ki,
       D && /* @__PURE__ */ P("div", { className: "editor-mode-toggle mr-2 sm:mr-3", children: [
         /* @__PURE__ */ f(
