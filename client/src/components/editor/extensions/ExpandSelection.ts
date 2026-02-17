@@ -1,5 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey, AllSelection } from '@tiptap/pm/state';
+import { Node as PMNode } from '@tiptap/pm/model';
 
 /*
  * ExpandSelection Extension
@@ -7,14 +8,22 @@ import { Plugin, PluginKey, AllSelection } from '@tiptap/pm/state';
  * Provides progressive "Expand Selection" functionality on Cmd+A / Ctrl+A.
  * 
  * Instead of immediately selecting all content, each Cmd+A press progressively
- * expands the selection to the next parent node in the ProseMirror document tree.
+ * expands the selection to the next meaningful content boundary, skipping
+ * intermediate wrapper nodes (listItem, bulletList, orderedList, etc.) that
+ * are not user-facing.
  * 
- * Progression example for a nested list item:
- *   Cmd+A 1: Select current text node / inline content
- *   Cmd+A 2: Select entire paragraph inside the list item
- *   Cmd+A 3: Select the full list item (including bullet/checkbox)
- *   Cmd+A 4: Select the entire list (all items)
- *   Cmd+A 5: Select the entire document
+ * Progression example:
+ *   Given:
+ *     ## Header 2
+ *     ### Header 3
+ *     * something great is going on
+ *     * everything wonderful
+ * 
+ *   Cursor at "something":
+ *     Cmd+A 1: Select text "something great is going on" (current line/textblock)
+ *     Cmd+A 2: Select entire Header 3 section (heading + all content until next same-or-higher heading)
+ *     Cmd+A 3: Select entire Header 2 section (heading + all nested content)
+ *     Cmd+A 4: Select the entire document
  * 
  * The expansion state resets when:
  *   - The user clicks somewhere
@@ -47,10 +56,20 @@ function resetStorage(storage: ExpandSelectionStorage) {
   storage.isExpanding = false;
 }
 
+// Node types that are considered intermediate wrappers (not user-facing boundaries)
+const WRAPPER_TYPES = new Set([
+  'listItem',
+  'bulletList',
+  'orderedList',
+  'taskList',
+  'taskItem',
+  'mixedList',
+]);
+
 /**
- * Get the initial expansion — select the content of the current node (paragraph/textblock).
+ * Get the initial expansion — select the content of the current textblock (paragraph/heading).
  */
-function selectCurrentNodeContent(doc: any, from: number, to: number): { from: number; to: number } | null {
+function selectCurrentTextblock(doc: PMNode, from: number, to: number): { from: number; to: number } | null {
   const $from = doc.resolve(from);
 
   for (let d = $from.depth; d >= 1; d--) {
@@ -67,28 +86,127 @@ function selectCurrentNodeContent(doc: any, from: number, to: number): { from: n
 }
 
 /**
- * Find the next expansion range by walking up the document tree.
+ * Represents a heading section in the document: from the heading node
+ * to just before the next heading of equal or higher level (or end of doc).
  */
-function findNextExpansion(doc: any, from: number, to: number): { from: number; to: number } | null {
+interface HeadingSection {
+  level: number;
+  from: number;  // Start of the heading node
+  to: number;    // End of the section (before next same-or-higher heading, or end of doc)
+}
+
+/**
+ * Build a flat list of heading sections from the document.
+ * Each section spans from the heading to just before the next heading
+ * of the same or higher level.
+ */
+function buildHeadingSections(doc: PMNode): HeadingSection[] {
+  const headings: { level: number; from: number }[] = [];
+
+  doc.forEach((node, offset) => {
+    if (node.type.name === 'heading') {
+      headings.push({ level: node.attrs.level, from: offset });
+    }
+  });
+
+  if (headings.length === 0) return [];
+
+  const sections: HeadingSection[] = [];
+
+  for (let i = 0; i < headings.length; i++) {
+    const heading = headings[i];
+    // Find the end: next heading of same or higher (lower number) level
+    let sectionEnd = doc.content.size;
+    for (let j = i + 1; j < headings.length; j++) {
+      if (headings[j].level <= heading.level) {
+        sectionEnd = headings[j].from;
+        break;
+      }
+    }
+    sections.push({
+      level: heading.level,
+      from: heading.from,
+      to: sectionEnd,
+    });
+  }
+
+  return sections;
+}
+
+/**
+ * Find the smallest heading section that fully contains the given range.
+ * Returns sections in order from smallest to largest.
+ */
+function findContainingHeadingSections(
+  sections: HeadingSection[],
+  from: number,
+  to: number
+): HeadingSection[] {
+  // Filter sections that fully contain the range
+  const containing = sections.filter(s => s.from <= from && s.to >= to);
+  // Sort by size (smallest first) — the most specific section first
+  containing.sort((a, b) => (a.to - a.from) - (b.to - b.from));
+  return containing;
+}
+
+/**
+ * Find the next meaningful expansion range.
+ * 
+ * Strategy:
+ * 1. First, try to expand to the nearest parent that is NOT a wrapper type
+ *    (skipping listItem, bulletList, etc.)
+ * 2. Then, expand to heading sections (smallest containing section first)
+ * 3. Finally, select all
+ */
+function findNextMeaningfulExpansion(
+  doc: PMNode,
+  from: number,
+  to: number
+): { from: number; to: number } | null {
   const $from = doc.resolve(from);
   const $to = doc.resolve(to);
 
+  // Step 1: Try expanding to the next non-wrapper parent node
+  // Walk up from the current selection, skipping wrapper types
   const maxDepth = Math.max($from.depth, $to.depth);
 
   for (let depth = maxDepth; depth >= 1; depth--) {
-    const fromDepth = Math.max(1, Math.min(depth, $from.depth));
-    const toDepth = Math.max(1, Math.min(depth, $to.depth));
+    const fromDepth = Math.min(depth, $from.depth);
+    const toDepth = Math.min(depth, $to.depth);
 
-    if (fromDepth > $from.depth || toDepth > $to.depth) continue;
+    if (fromDepth < 1 || toDepth < 1) continue;
 
     const rangeFrom = $from.before(fromDepth);
     const rangeTo = $to.after(toDepth);
 
-    if (rangeFrom < from || rangeTo > to) {
-      return { from: rangeFrom, to: rangeTo };
+    // Skip if this doesn't actually expand the selection
+    if (rangeFrom >= from && rangeTo <= to) continue;
+
+    // Check if the node at this depth is a wrapper type
+    const nodeAtDepth = $from.node(fromDepth);
+    if (WRAPPER_TYPES.has(nodeAtDepth.type.name)) {
+      // Skip this wrapper — don't offer it as an expansion step
+      continue;
+    }
+
+    // This is a meaningful non-wrapper expansion
+    return { from: rangeFrom, to: rangeTo };
+  }
+
+  // Step 2: Try heading-section-based expansion
+  const sections = buildHeadingSections(doc);
+  if (sections.length > 0) {
+    const containingSections = findContainingHeadingSections(sections, from, to);
+
+    for (const section of containingSections) {
+      // Only offer this section if it actually expands the selection
+      if (section.from < from || section.to > to) {
+        return { from: section.from, to: section.to };
+      }
     }
   }
 
+  // Step 3: Select all
   if (from > 0 || to < doc.content.size) {
     return { from: 0, to: doc.content.size };
   }
@@ -138,7 +256,7 @@ export const ExpandSelection = Extension.create<{}, ExpandSelectionStorage>({
 
         // First expansion: select the content of the current textblock
         if (storage.expansionDepth === 0) {
-          const textblockRange = selectCurrentNodeContent(doc, from, to);
+          const textblockRange = selectCurrentTextblock(doc, from, to);
           if (textblockRange && (textblockRange.from < from || textblockRange.to > to)) {
             storage.lastExpandedFrom = textblockRange.from;
             storage.lastExpandedTo = textblockRange.to;
@@ -155,8 +273,8 @@ export const ExpandSelection = Extension.create<{}, ExpandSelectionStorage>({
           }
         }
 
-        // Progressive expansion: find the next larger range
-        const nextRange = findNextExpansion(doc, from, to);
+        // Progressive expansion: find the next meaningful range (skipping wrappers)
+        const nextRange = findNextMeaningfulExpansion(doc, from, to);
         if (nextRange) {
           storage.lastExpandedFrom = nextRange.from;
           storage.lastExpandedTo = nextRange.to;
