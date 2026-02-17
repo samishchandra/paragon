@@ -21,9 +21,10 @@ import { Node as PMNode } from '@tiptap/pm/model';
  * 
  *   Cursor at "something":
  *     Cmd+A 1: Select text "something great is going on" (current line/textblock)
- *     Cmd+A 2: Select entire Header 3 section (heading + all content until next same-or-higher heading)
- *     Cmd+A 3: Select entire Header 2 section (heading + all nested content)
- *     Cmd+A 4: Select the entire document
+ *     Cmd+A 2: Select all list items text (content of the entire list)
+ *     Cmd+A 3: Select entire Header 3 section (heading + all content until next same-or-higher heading)
+ *     Cmd+A 4: Select entire Header 2 section (heading + all nested content)
+ *     Cmd+A 5: Select the entire document
  * 
  * The expansion state resets when:
  *   - The user clicks somewhere
@@ -56,7 +57,21 @@ function resetStorage(storage: ExpandSelectionStorage) {
   storage.isExpanding = false;
 }
 
-// Node types that are considered intermediate wrappers (not user-facing boundaries)
+// Node types that are list containers (the outermost list wrapper)
+const LIST_CONTAINER_TYPES = new Set([
+  'bulletList',
+  'orderedList',
+  'taskList',
+  'mixedList',
+]);
+
+// Node types that are individual list item wrappers
+const LIST_ITEM_TYPES = new Set([
+  'listItem',
+  'taskItem',
+]);
+
+// All wrapper types that should be skipped in the generic parent walk
 const WRAPPER_TYPES = new Set([
   'listItem',
   'bulletList',
@@ -82,6 +97,40 @@ function selectCurrentTextblock(doc: PMNode, from: number, to: number): { from: 
       }
     }
   }
+  return null;
+}
+
+/**
+ * Find the outermost list container that contains the current selection.
+ * Returns the content range of the list (all list items' text content).
+ * This selects from the start of the first list item's content to the end
+ * of the last list item's content, effectively selecting "all list items text".
+ */
+function findListContentRange(doc: PMNode, from: number, to: number): { from: number; to: number } | null {
+  const $from = doc.resolve(from);
+
+  // Walk up to find the outermost list container
+  let listDepth = -1;
+  for (let d = $from.depth; d >= 1; d--) {
+    const node = $from.node(d);
+    if (LIST_CONTAINER_TYPES.has(node.type.name)) {
+      listDepth = d;
+      // Don't break — keep going up to find the outermost list
+      // (in case of nested lists, we want the top-level one)
+    }
+  }
+
+  if (listDepth === -1) return null;
+
+  // Get the range that covers the entire list container's content
+  const listStart = $from.start(listDepth);
+  const listEnd = $from.end(listDepth);
+
+  // Only return if this actually expands the selection
+  if (listStart < from || listEnd > to) {
+    return { from: listStart, to: listEnd };
+  }
+
   return null;
 }
 
@@ -150,68 +199,60 @@ function findContainingHeadingSections(
 }
 
 /**
- * Find the next meaningful expansion range.
+ * Build the ordered list of expansion steps from the current selection.
  * 
- * Strategy:
- * 1. First, try to expand to the nearest parent that is NOT a wrapper type
- *    (skipping listItem, bulletList, etc.)
- * 2. Then, expand to heading sections (smallest containing section first)
- * 3. Finally, select all
+ * Steps:
+ * 1. Current textblock content (line text)
+ * 2. List content (all list items) — only if cursor is inside a list
+ * 3. Heading sections (smallest to largest)
+ * 4. Entire document
+ * 
+ * Each step is only included if it actually expands beyond the previous step.
  */
-function findNextMeaningfulExpansion(
+function buildExpansionSteps(
   doc: PMNode,
-  from: number,
-  to: number
-): { from: number; to: number } | null {
-  const $from = doc.resolve(from);
-  const $to = doc.resolve(to);
+  initialFrom: number,
+  initialTo: number
+): Array<{ from: number; to: number }> {
+  const steps: Array<{ from: number; to: number }> = [];
+  let currentFrom = initialFrom;
+  let currentTo = initialTo;
 
-  // Step 1: Try expanding to the next non-wrapper parent node
-  // Walk up from the current selection, skipping wrapper types
-  const maxDepth = Math.max($from.depth, $to.depth);
-
-  for (let depth = maxDepth; depth >= 1; depth--) {
-    const fromDepth = Math.min(depth, $from.depth);
-    const toDepth = Math.min(depth, $to.depth);
-
-    if (fromDepth < 1 || toDepth < 1) continue;
-
-    const rangeFrom = $from.before(fromDepth);
-    const rangeTo = $to.after(toDepth);
-
-    // Skip if this doesn't actually expand the selection
-    if (rangeFrom >= from && rangeTo <= to) continue;
-
-    // Check if the node at this depth is a wrapper type
-    const nodeAtDepth = $from.node(fromDepth);
-    if (WRAPPER_TYPES.has(nodeAtDepth.type.name)) {
-      // Skip this wrapper — don't offer it as an expansion step
-      continue;
-    }
-
-    // This is a meaningful non-wrapper expansion
-    return { from: rangeFrom, to: rangeTo };
+  // Step 1: Current textblock content
+  const textblockRange = selectCurrentTextblock(doc, currentFrom, currentTo);
+  if (textblockRange && (textblockRange.from < currentFrom || textblockRange.to > currentTo)) {
+    steps.push(textblockRange);
+    currentFrom = textblockRange.from;
+    currentTo = textblockRange.to;
   }
 
-  // Step 2: Try heading-section-based expansion
+  // Step 2: List content (all items in the list)
+  const listRange = findListContentRange(doc, currentFrom, currentTo);
+  if (listRange && (listRange.from < currentFrom || listRange.to > currentTo)) {
+    steps.push(listRange);
+    currentFrom = listRange.from;
+    currentTo = listRange.to;
+  }
+
+  // Step 3: Heading sections (smallest to largest)
   const sections = buildHeadingSections(doc);
   if (sections.length > 0) {
-    const containingSections = findContainingHeadingSections(sections, from, to);
-
+    const containingSections = findContainingHeadingSections(sections, currentFrom, currentTo);
     for (const section of containingSections) {
-      // Only offer this section if it actually expands the selection
-      if (section.from < from || section.to > to) {
-        return { from: section.from, to: section.to };
+      if (section.from < currentFrom || section.to > currentTo) {
+        steps.push({ from: section.from, to: section.to });
+        currentFrom = section.from;
+        currentTo = section.to;
       }
     }
   }
 
-  // Step 3: Select all
-  if (from > 0 || to < doc.content.size) {
-    return { from: 0, to: doc.content.size };
+  // Step 4: Entire document
+  if (currentFrom > 0 || currentTo < doc.content.size) {
+    steps.push({ from: 0, to: doc.content.size });
   }
 
-  return null;
+  return steps;
 }
 
 export const ExpandSelection = Extension.create<{}, ExpandSelectionStorage>({
@@ -254,39 +295,30 @@ export const ExpandSelection = Extension.create<{}, ExpandSelectionStorage>({
           return true;
         }
 
-        // First expansion: select the content of the current textblock
-        if (storage.expansionDepth === 0) {
-          const textblockRange = selectCurrentTextblock(doc, from, to);
-          if (textblockRange && (textblockRange.from < from || textblockRange.to > to)) {
-            storage.lastExpandedFrom = textblockRange.from;
-            storage.lastExpandedTo = textblockRange.to;
-            storage.expansionDepth = 1;
-            storage.isExpanding = true;
+        // Build all expansion steps from the current position
+        const steps = buildExpansionSteps(doc, from, to);
 
-            editor.commands.setTextSelection({
-              from: textblockRange.from,
-              to: textblockRange.to,
-            });
-
-            storage.isExpanding = false;
-            return true;
+        // Find the next step that actually expands beyond current selection
+        let nextStep: { from: number; to: number } | null = null;
+        for (const step of steps) {
+          if (step.from < from || step.to > to) {
+            nextStep = step;
+            break;
           }
         }
 
-        // Progressive expansion: find the next meaningful range (skipping wrappers)
-        const nextRange = findNextMeaningfulExpansion(doc, from, to);
-        if (nextRange) {
-          storage.lastExpandedFrom = nextRange.from;
-          storage.lastExpandedTo = nextRange.to;
+        if (nextStep) {
+          storage.lastExpandedFrom = nextStep.from;
+          storage.lastExpandedTo = nextStep.to;
           storage.expansionDepth++;
           storage.isExpanding = true;
 
-          if (nextRange.from === 0 && nextRange.to === doc.content.size) {
+          if (nextStep.from === 0 && nextStep.to === doc.content.size) {
             editor.commands.selectAll();
           } else {
             editor.commands.setTextSelection({
-              from: nextRange.from,
-              to: nextRange.to,
+              from: nextStep.from,
+              to: nextStep.to,
             });
           }
 
