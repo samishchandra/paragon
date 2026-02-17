@@ -1448,10 +1448,20 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           const { $from } = selection;
           const textBefore = $from.nodeBefore?.textContent || '';
           
-          // Heading shortcuts
-          if (textBefore === '#') {
+          // Heading shortcuts (check longest first to avoid partial matches)
+          if (textBefore === '#####') {
             event.preventDefault();
-            editor.chain().focus().deleteRange({ from: $from.pos - 1, to: $from.pos }).setHeading({ level: 1 }).run();
+            editor.chain().focus().deleteRange({ from: $from.pos - 5, to: $from.pos }).setHeading({ level: 5 }).run();
+            return;
+          }
+          if (textBefore === '####') {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - 4, to: $from.pos }).setHeading({ level: 4 }).run();
+            return;
+          }
+          if (textBefore === '###') {
+            event.preventDefault();
+            editor.chain().focus().deleteRange({ from: $from.pos - 3, to: $from.pos }).setHeading({ level: 3 }).run();
             return;
           }
           if (textBefore === '##') {
@@ -1459,9 +1469,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             editor.chain().focus().deleteRange({ from: $from.pos - 2, to: $from.pos }).setHeading({ level: 2 }).run();
             return;
           }
-          if (textBefore === '###') {
+          if (textBefore === '#') {
             event.preventDefault();
-            editor.chain().focus().deleteRange({ from: $from.pos - 3, to: $from.pos }).setHeading({ level: 3 }).run();
+            editor.chain().focus().deleteRange({ from: $from.pos - 1, to: $from.pos }).setHeading({ level: 1 }).run();
             return;
           }
           

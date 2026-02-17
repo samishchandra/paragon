@@ -6,6 +6,8 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
+  Heading5,
   List,
   ListOrdered,
   CheckSquare,
@@ -80,6 +82,18 @@ const commands: CommandItem[] = [
     icon: <Heading3 size={16} />,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
     keywords: ['h3', 'subheading'],
+  },
+  {
+    title: 'Heading 4',
+    icon: <Heading4 size={16} />,
+    command: (editor) => editor.chain().focus().toggleHeading({ level: 4 }).run(),
+    keywords: ['h4', 'small heading'],
+  },
+  {
+    title: 'Heading 5',
+    icon: <Heading5 size={16} />,
+    command: (editor) => editor.chain().focus().toggleHeading({ level: 5 }).run(),
+    keywords: ['h5', 'minor heading'],
   },
   {
     title: 'Bullet List',
