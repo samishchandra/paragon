@@ -61,8 +61,8 @@
   --table-header-text: #e2e8f0;
   --table-cell-bg: #282c34;
   --table-cell-text: #dadada;
-  --table-row-odd: #282c34;
-  --table-row-even: #2d323c;
+  --table-row-odd: #2d323c;
+  --table-row-even: #282c34;
   --table-row-hover: #353b47;
   
   /* Callout colors - dark mode */
@@ -158,7 +158,7 @@
   --table-cell-bg: #ffffff;
   --table-cell-text: #333333;
   --table-row-odd: #ffffff;
-  --table-row-even: #f8fafc;
+  --table-row-even: #f1f5f9;
   --table-row-hover: #f1f5f9;
   
   /* Callout colors - light mode */
@@ -756,6 +756,7 @@
   }
   
   /* Alternating row colors for better readability */
+  /* Odd rows (1st, 3rd...) are lighter to contrast with header; even rows (2nd, 4th...) are greyish */
   tbody tr:nth-child(odd) td {
     background: var(--table-row-odd, var(--card));
   }
