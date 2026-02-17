@@ -43,6 +43,61 @@ function looksLikeMarkdown(text: string): boolean {
   return false;
 }
 
+/**
+ * Convert markdown image syntax and inline formatting in a table cell to HTML.
+ * Handles: ![alt|align|width](url) → <figure class="image-resizer"><img .../></figure>
+ * Falls back to wrapping in <p> for non-image content.
+ */
+function convertCellContent(cellText: string): string {
+  // Check if the cell contains a markdown image
+  const imgMatch = cellText.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+  if (imgMatch) {
+    const metadata = imgMatch[1];
+    const src = imgMatch[2].trim();
+    // Parse metadata: alt | alignment | width (with escaped pipes from table serialization)
+    const parts = metadata.split(/\s*\\?\|\s*/).map((p: string) => p.trim());
+    let alt = '';
+    let align = 'left';
+    let width: string | null = null;
+
+    if (parts.length === 1) {
+      alt = parts[0];
+    } else if (parts.length === 2) {
+      alt = parts[0];
+      if (/^\d+$/.test(parts[1])) {
+        width = parts[1];
+      } else if (['left', 'center', 'right'].includes(parts[1])) {
+        align = parts[1];
+      }
+    } else if (parts.length === 3) {
+      alt = parts[0];
+      if (['left', 'center', 'right'].includes(parts[1])) align = parts[1];
+      if (/^\d+$/.test(parts[2])) width = parts[2];
+    }
+
+    const wrapperStyle = {
+      left: 'margin-right: auto;',
+      center: 'margin-left: auto; margin-right: auto;',
+      right: 'margin-left: auto;',
+    }[align] || 'margin-right: auto;';
+    const widthAttr = width ? ` width="${width}" style="width: ${width}px"` : '';
+    return `<figure class="image-resizer" style="${wrapperStyle}"><img src="${src}" alt="${alt}" data-align="${align}"${widthAttr} /></figure>`;
+  }
+
+  // Check if cell contains an image mixed with text
+  const inlineImgRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  if (inlineImgRegex.test(cellText)) {
+    // Replace inline images within the text
+    const converted = cellText.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, alt, src) => {
+      return `<img src="${src.trim()}" alt="${alt}" data-align="left" />`;
+    });
+    return `<p>${converted}</p>`;
+  }
+
+  // Plain text content
+  return `<p>${cellText}</p>`;
+}
+
 // Parse markdown table to HTML
 function parseMarkdownTable(tableText: string): string {
   const lines = tableText.trim().split('\n');
@@ -68,7 +123,7 @@ function parseMarkdownTable(tableText: string): string {
   let html = '<table><thead><tr>';
   
   for (const cell of headerCells) {
-    html += '<th><p>' + cell + '</p></th>';
+    html += '<th>' + convertCellContent(cell) + '</th>';
   }
   
   html += '</tr></thead><tbody>';
@@ -93,7 +148,7 @@ function parseMarkdownTable(tableText: string): string {
     
     for (let i = 0; i < headerCells.length; i++) {
       const cellContent = filteredCells[i] || '';
-      html += '<td><p>' + cellContent + '</p></td>';
+      html += '<td>' + convertCellContent(cellContent) + '</td>';
     }
     
     html += '</tr>';

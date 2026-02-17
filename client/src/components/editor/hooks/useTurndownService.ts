@@ -127,6 +127,49 @@ export function useTurndownService(): TurndownService {
       },
     });
 
+    // Helper: serialize a table cell's content to inline markdown
+    // Handles text, images, and mixed content within cells
+    function serializeTableCell(cell: Element): string {
+      const parts: string[] = [];
+      const walk = (node: Node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent || '';
+          if (text.trim()) {
+            parts.push(text.trim().replace(/\|/g, '\\|'));
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          if (el.nodeName === 'IMG') {
+            const src = el.getAttribute('src') || '';
+            const rawAlt = el.getAttribute('alt') || '';
+            const alt = rawAlt.replace(/\s*\|\s*(?:left|center|right)?\s*(?:\|\s*\d+)?\s*$/, '').trim();
+            const widthAttr = el.getAttribute('width');
+            const width = widthAttr ? parseInt(widthAttr, 10) : null;
+            const align = el.getAttribute('data-align') || 'left';
+            const imgParts: string[] = [alt];
+            const hasNonDefaultAlign = align && align !== 'left';
+            const hasWidth = width && width > 0;
+            if (hasNonDefaultAlign || hasWidth) {
+              imgParts.push(hasNonDefaultAlign ? align : 'left');
+            }
+            if (hasWidth) {
+              imgParts.push(String(width));
+            }
+            parts.push(`![${imgParts.join(' \\| ')}](${src})`);
+          } else {
+            // Recurse into child nodes (p, span, etc.)
+            for (const child of Array.from(el.childNodes)) {
+              walk(child);
+            }
+          }
+        }
+      };
+      for (const child of Array.from(cell.childNodes)) {
+        walk(child);
+      }
+      return parts.join(' ') || '';
+    }
+
     // Custom table rule to handle TipTap's table structure
     td.addRule('table', {
       filter: 'table',
@@ -139,11 +182,7 @@ export function useTurndownService(): TurndownService {
 
         rows.forEach((row, rowIndex) => {
           const cells = Array.from(row.querySelectorAll('th, td'));
-          const cellContents = cells.map(cell => {
-            // Get text content, handling nested p tags
-            const text = cell.textContent?.trim() || '';
-            return text.replace(/\|/g, '\\|'); // Escape pipes
-          });
+          const cellContents = cells.map(cell => serializeTableCell(cell));
 
           result.push('| ' + cellContents.join(' | ') + ' |');
 

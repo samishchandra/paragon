@@ -1177,6 +1177,23 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       // - Various attribute orderings from marked (disabled before/after type)
       html = convertCheckboxListsToTaskLists(html);
       
+      // Post-process: Wrap standalone <img> tags inside <td>/<th> with <figure class="image-resizer">
+      // so TipTap's DOMParser correctly recognizes them as resizableImage block nodes.
+      // Without this, images inside table cells are dropped during schema enforcement.
+      html = html.replace(/(<t[dh][^>]*>)(\s*(?:<p>\s*)?)(\s*<img\s[^>]*>\s*)((?:\s*<\/p>)?\s*)(<\/t[dh]>)/gi, 
+        (match, tdOpen, beforeImg, imgTag, afterImg, tdClose) => {
+          // Extract align from data-align attribute if present
+          const alignMatch = imgTag.match(/data-align="([^"]*)"/); 
+          const align = (alignMatch ? alignMatch[1] : 'left') as 'left' | 'center' | 'right';
+          const wrapperStyle: string = {
+            left: 'margin-right: auto;',
+            center: 'margin-left: auto; margin-right: auto;',
+            right: 'margin-left: auto;',
+          }[align] || 'margin-right: auto;';
+          return `${tdOpen}<figure class="image-resizer" style="${wrapperStyle}">${imgTag.trim()}</figure>${tdClose}`;
+        }
+      );
+      
       queueMicrotask(() => {
         if (!editor.isDestroyed) {
           editor.commands.setContent(html);
@@ -1439,15 +1456,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       // Skip if editor is destroyed
       if (editor.isDestroyed) return;
 
-      // Cmd/Ctrl+Shift+/ to toggle between WYSIWYG and raw markdown mode
-      // Note: Shift+/ produces '?' on most keyboard layouts, so we check for both
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && (event.key === '/' || event.key === '?' || event.code === 'Slash')) {
-        event.preventDefault();
-        event.stopPropagation();
-        const newMode = editorModeRef.current === 'wysiwyg' ? 'markdown' : 'wysiwyg';
-        handleModeSwitch(newMode);
-        return;
-      }
       
 // Cmd/Ctrl+K for link popover
       if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
@@ -1594,7 +1602,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     // Use capture: true to intercept Tab key before browser default behavior
     document.addEventListener('keydown', handleKeyDown, true);
     return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [editor, isMobile, setIsFindReplaceOpen, handleModeSwitch]);
+  }, [editor, isMobile, setIsFindReplaceOpen]);
 
   // === AI Writing Assistant Handlers ===
   // IMPORTANT: These hooks MUST be above the `if (!editor)` early return
