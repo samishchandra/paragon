@@ -287,6 +287,8 @@ export interface MarkdownEditorProps {
     onPerformanceProfilerClose?: () => void;
     /** Automatically reorder checklist items when toggled: move completed to bottom, preserving relative order within each group (default: false) */
     autoReorderChecklist?: boolean;
+    /** Enable progressive Cmd+A / Ctrl+A selection that expands to parent nodes instead of immediately selecting all (default: false) */
+    progressiveSelectAll?: boolean;
     /** Callback when the editor crashes — useful for external error reporting */
     onEditorError?: (error: Error, errorInfo: React.ErrorInfo) => void;
     /**
