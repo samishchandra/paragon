@@ -23,7 +23,8 @@ import TaskItem from '@tiptap/extension-task-item';
 import { InputRule } from '@tiptap/core';
 import { findWrapping } from '@tiptap/pm/transform';
 import { canJoin } from '@tiptap/pm/transform';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import { Fragment, Slice } from '@tiptap/pm/model';
 
 /**
  * Helper: Convert a list at a given position from one type to another,
@@ -365,6 +366,88 @@ export const MixedTaskList = TaskList.extend({
  */
 export const MixedTaskItem = TaskItem.extend({
   content: 'paragraph block*',
+
+  addKeyboardShortcuts() {
+    const parentShortcuts = this.parent?.() || {};
+
+    return {
+      ...parentShortcuts,
+      Enter: () => {
+        const { editor } = this;
+        const { state } = editor;
+        const { $from, $to } = state.selection;
+
+        // Only handle if cursor is collapsed (no range selection)
+        if (!$from.sameParent($to) || $from.pos !== $to.pos) {
+          return editor.commands.splitListItem(this.name);
+        }
+
+        // Check if we're inside a taskItem
+        let taskItemDepth = -1;
+        for (let d = $from.depth; d >= 1; d--) {
+          if ($from.node(d).type.name === 'taskItem') {
+            taskItemDepth = d;
+            break;
+          }
+        }
+
+        if (taskItemDepth === -1) {
+          return editor.commands.splitListItem(this.name);
+        }
+
+        const taskItemNode = $from.node(taskItemDepth);
+        const isChecked = taskItemNode.attrs.checked;
+
+        // Only apply special behavior when:
+        // 1. The task item is checked
+        // 2. Cursor is at the very beginning of the task item's text content
+        if (!isChecked) {
+          return editor.commands.splitListItem(this.name);
+        }
+
+        // Check if cursor is at the beginning of the first textblock in the taskItem
+        const taskItemStart = $from.start(taskItemDepth);
+        const firstChild = taskItemNode.firstChild;
+        if (!firstChild || !firstChild.isTextblock) {
+          return editor.commands.splitListItem(this.name);
+        }
+
+        // The cursor position relative to the start of the taskItem content
+        const cursorOffsetInTaskItem = $from.pos - taskItemStart;
+
+        // If cursor is at position 0 within the first paragraph (beginning of text),
+        // we need to insert a new unchecked item ABOVE and keep this one checked
+        if (cursorOffsetInTaskItem <= 1) {
+          // Position before the taskItem node
+          const taskItemPos = $from.before(taskItemDepth);
+
+          const { tr } = state;
+          const taskItemType = state.schema.nodes.taskItem;
+          const paragraphType = state.schema.nodes.paragraph;
+
+          // Create a new empty unchecked task item
+          const newTaskItem = taskItemType.create(
+            { checked: false },
+            paragraphType.create()
+          );
+
+          // Insert the new item before the current one
+          tr.insert(taskItemPos, newTaskItem);
+
+          // Set cursor to the new empty item
+          const newPos = taskItemPos + 1; // Inside the new paragraph
+          tr.setSelection(TextSelection.create(tr.doc, newPos));
+          tr.scrollIntoView();
+
+          editor.view.dispatch(tr);
+          return true;
+        }
+
+        // Default: use standard splitListItem
+        return editor.commands.splitListItem(this.name);
+      },
+    };
+  },
 
   addInputRules() {
     // Return empty array - task item input rules are handled by the document-level
