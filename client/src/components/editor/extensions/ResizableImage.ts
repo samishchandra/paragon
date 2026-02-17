@@ -588,13 +588,145 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         menuButton.style.background = 'oklch(0.98 0 0 / 0.95)';
       });
 
-      
+      // --- Image lightbox (click to enlarge) ---
+      img.style.cursor = 'zoom-in';
+      let isResizing = false;
+
+      const openLightbox = (e: MouseEvent) => {
+        // Don't open lightbox if we just finished resizing or if dropdown is open
+        if (isResizing || isDropdownOpen) return;
+        // Don't open if click was on the menu button or resize handle
+        if (menuButton.contains(e.target as Node) || resizeHandle.contains(e.target as Node)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+          position: fixed;
+          inset: 0;
+          z-index: 99999;
+          background: rgba(0, 0, 0, 0.85);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: zoom-out;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+          padding: 24px;
+        `;
+
+        const lightboxImg = document.createElement('img');
+        lightboxImg.src = img.src;
+        lightboxImg.alt = img.alt || '';
+        lightboxImg.style.cssText = `
+          max-width: 95vw;
+          max-height: 92vh;
+          object-fit: contain;
+          border-radius: 8px;
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+          transform: scale(0.92);
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          cursor: default;
+        `;
+
+        // Close button
+        const closeBtn = document.createElement('button');
+        closeBtn.setAttribute('type', 'button');
+        closeBtn.setAttribute('aria-label', 'Close');
+        closeBtn.style.cssText = `
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: none;
+          background: rgba(255, 255, 255, 0.15);
+          color: white;
+          font-size: 20px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s ease;
+          z-index: 1;
+        `;
+        closeBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+        closeBtn.addEventListener('mouseenter', () => { closeBtn.style.background = 'rgba(255, 255, 255, 0.25)'; });
+        closeBtn.addEventListener('mouseleave', () => { closeBtn.style.background = 'rgba(255, 255, 255, 0.15)'; });
+
+        // Alt text caption
+        const altText = currentNode.attrs.alt;
+        let caption: HTMLElement | null = null;
+        if (altText && altText.trim()) {
+          caption = document.createElement('div');
+          caption.style.cssText = `
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 80vw;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.6);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            border-radius: 6px;
+            text-align: center;
+            pointer-events: none;
+          `;
+          caption.textContent = altText;
+        }
+
+        const closeLightbox = () => {
+          overlay.style.opacity = '0';
+          lightboxImg.style.transform = 'scale(0.92)';
+          setTimeout(() => overlay.remove(), 200);
+        };
+
+        overlay.addEventListener('click', (ev) => {
+          if (ev.target === overlay) closeLightbox();
+        });
+        closeBtn.addEventListener('click', closeLightbox);
+
+        // Close on Escape key
+        const onKeyDown = (ev: KeyboardEvent) => {
+          if (ev.key === 'Escape') {
+            closeLightbox();
+            document.removeEventListener('keydown', onKeyDown);
+          }
+        };
+        document.addEventListener('keydown', onKeyDown);
+
+        overlay.appendChild(lightboxImg);
+        overlay.appendChild(closeBtn);
+        if (caption) overlay.appendChild(caption);
+
+        // Append to dialog if inside one, otherwise to body
+        const dialogEl = container.closest('[role="dialog"]');
+        if (dialogEl) {
+          dialogEl.appendChild(overlay);
+        } else {
+          document.body.appendChild(overlay);
+        }
+
+        // Animate in
+        requestAnimationFrame(() => {
+          overlay.style.opacity = '1';
+          lightboxImg.style.transform = 'scale(1)';
+        });
+      };
+
+      img.addEventListener('click', openLightbox);
+
       // Resize logic
       let startX: number;
       let startWidth: number;
       
       const onMouseDown = (e: MouseEvent) => {
         e.preventDefault();
+        isResizing = true;
         startX = e.clientX;
         startWidth = img.offsetWidth;
         
@@ -611,6 +743,8 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       const onMouseUp = () => {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
+        // Delay clearing the flag so the click event from mouseup doesn't trigger lightbox
+        setTimeout(() => { isResizing = false; }, 100);
         
         const pos = typeof getPos === 'function' ? getPos() : null;
         const newWidth = img.offsetWidth;
@@ -658,6 +792,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         },
         destroy: () => {
           resizeHandle.removeEventListener('mousedown', onMouseDown);
+          img.removeEventListener('click', openLightbox);
           document.removeEventListener('click', closeDropdown);
           dropdown.remove();
         },
