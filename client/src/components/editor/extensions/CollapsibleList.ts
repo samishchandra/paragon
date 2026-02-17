@@ -124,8 +124,10 @@ function buildDecorations(
         paragraphEndPos,
         () => {
           // Reuse existing button if possible
+          // Use CSS.escape to handle special characters (quotes, brackets, etc.) in itemId
+          const escapedItemId = CSS.escape(itemId);
           const existingButton = document.querySelector(
-            `button.collapsible-list-chevron[data-list-item-id="${itemId}"]`
+            `button.collapsible-list-chevron[data-list-item-id="${escapedItemId}"]`
           ) as HTMLButtonElement | null;
 
           if (existingButton) {
