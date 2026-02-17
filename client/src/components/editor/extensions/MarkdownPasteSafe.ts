@@ -48,54 +48,63 @@ function looksLikeMarkdown(text: string): boolean {
  * Handles: ![alt|align|width](url) → <figure class="image-resizer"><img .../></figure>
  * Falls back to wrapping in <p> for non-image content.
  */
+function parseImageMetadata(metadata: string): { alt: string; align: string; width: string | null } {
+  const parts = metadata.split(/\s*\\?\|\s*/).map((p: string) => p.trim());
+  let alt = '', align = 'left', width: string | null = null;
+  if (parts.length === 1) {
+    alt = parts[0];
+  } else if (parts.length === 2) {
+    alt = parts[0];
+    if (/^\d+$/.test(parts[1])) width = parts[1];
+    else if (['left', 'center', 'right'].includes(parts[1])) align = parts[1];
+  } else if (parts.length === 3) {
+    alt = parts[0];
+    if (['left', 'center', 'right'].includes(parts[1])) align = parts[1];
+    if (/^\d+$/.test(parts[2])) width = parts[2];
+  }
+  return { alt, align, width };
+}
+
+function imageToFigure(metadata: string, src: string): string {
+  const { alt, align, width } = parseImageMetadata(metadata);
+  const wrapperStyle = {
+    left: 'margin-right: auto;',
+    center: 'margin-left: auto; margin-right: auto;',
+    right: 'margin-left: auto;',
+  }[align] || 'margin-right: auto;';
+  const widthAttr = width ? ` width="${width}" style="width: ${width}px"` : '';
+  return `<figure class="image-resizer" style="${wrapperStyle}"><img src="${src.trim()}" alt="${alt}" data-align="${align}"${widthAttr} /></figure>`;
+}
+
+/**
+ * Convert markdown cell content (text, images, or mixed) to HTML blocks.
+ * Each image becomes a <figure> block, text becomes <p> blocks.
+ * Supports mixed content like: "Some text ![alt](url) more text"
+ */
 function convertCellContent(cellText: string): string {
-  // Check if the cell contains a markdown image
-  const imgMatch = cellText.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-  if (imgMatch) {
-    const metadata = imgMatch[1];
-    const src = imgMatch[2].trim();
-    // Parse metadata: alt | alignment | width (with escaped pipes from table serialization)
-    const parts = metadata.split(/\s*\\?\|\s*/).map((p: string) => p.trim());
-    let alt = '';
-    let align = 'left';
-    let width: string | null = null;
-
-    if (parts.length === 1) {
-      alt = parts[0];
-    } else if (parts.length === 2) {
-      alt = parts[0];
-      if (/^\d+$/.test(parts[1])) {
-        width = parts[1];
-      } else if (['left', 'center', 'right'].includes(parts[1])) {
-        align = parts[1];
-      }
-    } else if (parts.length === 3) {
-      alt = parts[0];
-      if (['left', 'center', 'right'].includes(parts[1])) align = parts[1];
-      if (/^\d+$/.test(parts[2])) width = parts[2];
+  if (!cellText.trim()) return '<p></p>';
+  
+  // Check if cell contains any markdown images
+  const hasImages = /!\[[^\]]*\]\([^)]+\)/.test(cellText);
+  if (!hasImages) {
+    return `<p>${cellText}</p>`;
+  }
+  
+  // Split content around image patterns, keeping the images
+  const imgPattern = /(!\[[^\]]*\]\([^)]+\))/g;
+  const segments = cellText.split(imgPattern).filter(s => s.trim());
+  
+  const blocks: string[] = [];
+  for (const segment of segments) {
+    const imgMatch = segment.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imgMatch) {
+      blocks.push(imageToFigure(imgMatch[1], imgMatch[2]));
+    } else {
+      blocks.push(`<p>${segment.trim()}</p>`);
     }
-
-    const wrapperStyle = {
-      left: 'margin-right: auto;',
-      center: 'margin-left: auto; margin-right: auto;',
-      right: 'margin-left: auto;',
-    }[align] || 'margin-right: auto;';
-    const widthAttr = width ? ` width="${width}" style="width: ${width}px"` : '';
-    return `<figure class="image-resizer" style="${wrapperStyle}"><img src="${src}" alt="${alt}" data-align="${align}"${widthAttr} /></figure>`;
   }
-
-  // Check if cell contains an image mixed with text
-  const inlineImgRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
-  if (inlineImgRegex.test(cellText)) {
-    // Replace inline images within the text
-    const converted = cellText.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, alt, src) => {
-      return `<img src="${src.trim()}" alt="${alt}" data-align="left" />`;
-    });
-    return `<p>${converted}</p>`;
-  }
-
-  // Plain text content
-  return `<p>${cellText}</p>`;
+  
+  return blocks.join('');
 }
 
 // Parse markdown table to HTML

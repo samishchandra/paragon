@@ -1177,20 +1177,48 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       // - Various attribute orderings from marked (disabled before/after type)
       html = convertCheckboxListsToTaskLists(html);
       
-      // Post-process: Wrap standalone <img> tags inside <td>/<th> with <figure class="image-resizer">
+      // Post-process: Wrap <img> tags inside <td>/<th> with <figure class="image-resizer">
       // so TipTap's DOMParser correctly recognizes them as resizableImage block nodes.
-      // Without this, images inside table cells are dropped during schema enforcement.
-      html = html.replace(/(<t[dh][^>]*>)(\s*(?:<p>\s*)?)(\s*<img\s[^>]*>\s*)((?:\s*<\/p>)?\s*)(<\/t[dh]>)/gi, 
-        (match, tdOpen, beforeImg, imgTag, afterImg, tdClose) => {
-          // Extract align from data-align attribute if present
-          const alignMatch = imgTag.match(/data-align="([^"]*)"/); 
-          const align = (alignMatch ? alignMatch[1] : 'left') as 'left' | 'center' | 'right';
-          const wrapperStyle: string = {
-            left: 'margin-right: auto;',
-            center: 'margin-left: auto; margin-right: auto;',
-            right: 'margin-left: auto;',
-          }[align] || 'margin-right: auto;';
-          return `${tdOpen}<figure class="image-resizer" style="${wrapperStyle}">${imgTag.trim()}</figure>${tdClose}`;
+      // Handles mixed content: text + images in the same cell.
+      // Strategy: find all <td>/<th> elements that contain <img> tags, and restructure
+      // so each image becomes a <figure> block and text stays in <p> blocks.
+      html = html.replace(/(<t[dh][^>]*>)([\s\S]*?)(<\/t[dh]>)/gi,
+        (match, tdOpen: string, cellContent: string, tdClose: string) => {
+          // Only process cells that contain <img> tags
+          if (!/<img\s/i.test(cellContent)) return match;
+          
+          // Strip wrapping <p> tags to get raw cell content
+          let inner = cellContent.trim();
+          // Remove outer <p>...</p> wrapper if present
+          inner = inner.replace(/^<p>([\s\S]*)<\/p>$/i, '$1').trim();
+          
+          // Split content into segments: text parts and image parts
+          // Use a regex to split around <img> tags while keeping them
+          const imgRegex = /(<img\s[^>]*\/?>)/gi;
+          const segments = inner.split(imgRegex).filter(s => s.trim());
+          
+          const blocks: string[] = [];
+          for (const segment of segments) {
+            if (imgRegex.lastIndex = 0, /^<img\s/i.test(segment)) {
+              // Image segment — wrap in figure
+              const alignMatch = segment.match(/data-align="([^"]*)"/);
+              const align = (alignMatch ? alignMatch[1] : 'left') as 'left' | 'center' | 'right';
+              const wrapperStyle: string = {
+                left: 'margin-right: auto;',
+                center: 'margin-left: auto; margin-right: auto;',
+                right: 'margin-left: auto;',
+              }[align] || 'margin-right: auto;';
+              blocks.push(`<figure class="image-resizer" style="${wrapperStyle}">${segment.trim()}</figure>`);
+            } else {
+              // Text segment — wrap in <p>
+              const text = segment.trim();
+              if (text) {
+                blocks.push(`<p>${text}</p>`);
+              }
+            }
+          }
+          
+          return `${tdOpen}${blocks.join('')}${tdClose}`;
         }
       );
       

@@ -11,33 +11,50 @@ export const markdownPastePluginKey = new PluginKey('markdownPaste');
  * Convert markdown image syntax in a table cell to HTML.
  * Handles: ![alt|align|width](url) → <figure class="image-resizer"><img .../></figure>
  */
+function parseImageMetadata(metadata: string): { alt: string; align: string; width: string | null } {
+  const parts = metadata.split(/\s*\\?\|\s*/).map((p: string) => p.trim());
+  let alt = '', align = 'left', width: string | null = null;
+  if (parts.length === 1) { alt = parts[0]; }
+  else if (parts.length === 2) {
+    alt = parts[0];
+    if (/^\d+$/.test(parts[1])) width = parts[1];
+    else if (['left', 'center', 'right'].includes(parts[1])) align = parts[1];
+  } else if (parts.length === 3) {
+    alt = parts[0];
+    if (['left', 'center', 'right'].includes(parts[1])) align = parts[1];
+    if (/^\d+$/.test(parts[2])) width = parts[2];
+  }
+  return { alt, align, width };
+}
+
+function imageToFigure(metadata: string, src: string): string {
+  const { alt, align, width } = parseImageMetadata(metadata);
+  const wrapperStyle = { left: 'margin-right: auto;', center: 'margin-left: auto; margin-right: auto;', right: 'margin-left: auto;' }[align] || 'margin-right: auto;';
+  const widthAttr = width ? ` width="${width}" style="width: ${width}px"` : '';
+  return `<figure class="image-resizer" style="${wrapperStyle}"><img src="${src.trim()}" alt="${alt}" data-align="${align}"${widthAttr} /></figure>`;
+}
+
+/**
+ * Convert markdown cell content (text, images, or mixed) to HTML blocks.
+ * Each image becomes a <figure> block, text becomes <p> blocks.
+ */
 function convertCellContent(cellText: string): string {
-  const imgMatch = cellText.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-  if (imgMatch) {
-    const metadata = imgMatch[1];
-    const src = imgMatch[2].trim();
-    const parts = metadata.split(/\s*\\?\|\s*/).map((p: string) => p.trim());
-    let alt = '', align = 'left', width: string | null = null;
-    if (parts.length === 1) { alt = parts[0]; }
-    else if (parts.length === 2) {
-      alt = parts[0];
-      if (/^\d+$/.test(parts[1])) width = parts[1];
-      else if (['left', 'center', 'right'].includes(parts[1])) align = parts[1];
-    } else if (parts.length === 3) {
-      alt = parts[0];
-      if (['left', 'center', 'right'].includes(parts[1])) align = parts[1];
-      if (/^\d+$/.test(parts[2])) width = parts[2];
+  if (!cellText.trim()) return '<p></p>';
+  const hasImages = /!\[[^\]]*\]\([^)]+\)/.test(cellText);
+  if (!hasImages) return `<p>${cellText}</p>`;
+  
+  const imgPattern = /(!\[[^\]]*\]\([^)]+\))/g;
+  const segments = cellText.split(imgPattern).filter(s => s.trim());
+  const blocks: string[] = [];
+  for (const segment of segments) {
+    const imgMatch = segment.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imgMatch) {
+      blocks.push(imageToFigure(imgMatch[1], imgMatch[2]));
+    } else {
+      blocks.push(`<p>${segment.trim()}</p>`);
     }
-    const wrapperStyle = { left: 'margin-right: auto;', center: 'margin-left: auto; margin-right: auto;', right: 'margin-left: auto;' }[align] || 'margin-right: auto;';
-    const widthAttr = width ? ` width="${width}" style="width: ${width}px"` : '';
-    return `<figure class="image-resizer" style="${wrapperStyle}"><img src="${src}" alt="${alt}" data-align="${align}"${widthAttr} /></figure>`;
   }
-  const inlineImgRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
-  if (inlineImgRegex.test(cellText)) {
-    const converted = cellText.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, src) => `<img src="${src.trim()}" alt="${alt}" data-align="left" />`);
-    return `<p>${converted}</p>`;
-  }
-  return `<p>${cellText}</p>`;
+  return blocks.join('');
 }
 
 // Parse a markdown table and convert to HTML
