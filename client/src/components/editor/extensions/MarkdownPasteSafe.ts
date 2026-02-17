@@ -77,23 +77,14 @@ function imageToFigure(metadata: string, src: string): string {
 }
 
 /**
- * Convert markdown cell content (text, images, or mixed) to HTML blocks.
- * Each image becomes a <figure> block, text becomes <p> blocks.
- * Supports mixed content like: "Some text ![alt](url) more text"
+ * Convert a single line (no <br>) that may contain images to HTML blocks.
  */
-function convertCellContent(cellText: string): string {
-  if (!cellText.trim()) return '<p></p>';
+function convertLineToBlocks(line: string): string {
+  const hasImages = /!\[[^\]]*\]\([^)]+\)/.test(line);
+  if (!hasImages) return `<p>${line}</p>`;
   
-  // Check if cell contains any markdown images
-  const hasImages = /!\[[^\]]*\]\([^)]+\)/.test(cellText);
-  if (!hasImages) {
-    return `<p>${cellText}</p>`;
-  }
-  
-  // Split content around image patterns, keeping the images
   const imgPattern = /(!\[[^\]]*\]\([^)]+\))/g;
-  const segments = cellText.split(imgPattern).filter(s => s.trim());
-  
+  const segments = line.split(imgPattern).filter(s => s.trim());
   const blocks: string[] = [];
   for (const segment of segments) {
     const imgMatch = segment.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
@@ -103,7 +94,85 @@ function convertCellContent(cellText: string): string {
       blocks.push(`<p>${segment.trim()}</p>`);
     }
   }
+  return blocks.join('');
+}
+
+/**
+ * Convert markdown cell content (text, images, lists, or mixed) to HTML blocks.
+ * Supports: images, unordered lists (- item), ordered lists (1. item),
+ * task lists (- [x] item), and mixed content with <br> separators.
+ */
+function convertCellContent(cellText: string): string {
+  if (!cellText.trim()) return '<p></p>';
   
+  // Check if cell has <br> separators (multi-line content)
+  const hasBr = /<br\s*\/?>/i.test(cellText);
+  const hasListMarker = /(?:^|<br\s*\/?>)\s*(?:- |\d+\. )/i.test(cellText);
+  
+  if (!hasBr && !hasListMarker) {
+    return convertLineToBlocks(cellText);
+  }
+  
+  // Split by <br> separators
+  const lines = cellText.split(/<br\s*\/?>/i).map(l => l.trim()).filter(Boolean);
+  
+  const blocks: string[] = [];
+  let currentList: { type: 'ul' | 'ol' | 'task'; items: string[] } | null = null;
+  
+  const flushList = () => {
+    if (!currentList) return;
+    if (currentList.type === 'task') {
+      blocks.push(`<ul data-type="taskList">${currentList.items.join('')}</ul>`);
+    } else {
+      blocks.push(`<${currentList.type}>${currentList.items.join('')}</${currentList.type}>`);
+    }
+    currentList = null;
+  };
+  
+  for (const line of lines) {
+    // Task list item: - [x] text or - [ ] text
+    const taskMatch = line.match(/^-\s*\[(x| )\]\s*(.*)$/);
+    if (taskMatch) {
+      const checked = taskMatch[1] === 'x';
+      const text = taskMatch[2].trim();
+      if (!currentList || currentList.type !== 'task') {
+        flushList();
+        currentList = { type: 'task', items: [] };
+      }
+      currentList.items.push(`<li data-type="taskItem" data-checked="${checked}"><p>${text}</p></li>`);
+      continue;
+    }
+    
+    // Unordered list item: - text
+    const ulMatch = line.match(/^-\s+(.+)$/);
+    if (ulMatch) {
+      const text = ulMatch[1].trim();
+      if (!currentList || currentList.type !== 'ul') {
+        flushList();
+        currentList = { type: 'ul', items: [] };
+      }
+      currentList.items.push(`<li><p>${text}</p></li>`);
+      continue;
+    }
+    
+    // Ordered list item: 1. text
+    const olMatch = line.match(/^\d+\.\s+(.+)$/);
+    if (olMatch) {
+      const text = olMatch[1].trim();
+      if (!currentList || currentList.type !== 'ol') {
+        flushList();
+        currentList = { type: 'ol', items: [] };
+      }
+      currentList.items.push(`<li><p>${text}</p></li>`);
+      continue;
+    }
+    
+    // Not a list item — flush pending list and add as text/image block
+    flushList();
+    blocks.push(convertLineToBlocks(line));
+  }
+  
+  flushList();
   return blocks.join('');
 }
 

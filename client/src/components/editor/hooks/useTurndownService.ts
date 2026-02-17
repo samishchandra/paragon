@@ -127,47 +127,128 @@ export function useTurndownService(): TurndownService {
       },
     });
 
-    // Helper: serialize a table cell's content to inline markdown
-    // Handles text, images, and mixed content within cells
-    function serializeTableCell(cell: Element): string {
-      const parts: string[] = [];
-      const walk = (node: Node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          const text = node.textContent || '';
-          if (text.trim()) {
-            parts.push(text.trim().replace(/\|/g, '\\|'));
-          }
-        } else if (node.nodeType === Node.ELEMENT_NODE) {
-          const el = node as HTMLElement;
-          if (el.nodeName === 'IMG') {
-            const src = el.getAttribute('src') || '';
-            const rawAlt = el.getAttribute('alt') || '';
-            const alt = rawAlt.replace(/\s*\|\s*(?:left|center|right)?\s*(?:\|\s*\d+)?\s*$/, '').trim();
-            const widthAttr = el.getAttribute('width');
-            const width = widthAttr ? parseInt(widthAttr, 10) : null;
-            const align = el.getAttribute('data-align') || 'left';
-            const imgParts: string[] = [alt];
-            const hasNonDefaultAlign = align && align !== 'left';
-            const hasWidth = width && width > 0;
-            if (hasNonDefaultAlign || hasWidth) {
-              imgParts.push(hasNonDefaultAlign ? align : 'left');
-            }
-            if (hasWidth) {
-              imgParts.push(String(width));
-            }
-            parts.push(`![${imgParts.join(' \\| ')}](${src})`);
-          } else {
-            // Recurse into child nodes (p, span, etc.)
-            for (const child of Array.from(el.childNodes)) {
-              walk(child);
-            }
-          }
-        }
-      };
-      for (const child of Array.from(cell.childNodes)) {
-        walk(child);
+    // Helper: serialize an image element to markdown
+    function serializeImage(el: HTMLElement): string {
+      const src = el.getAttribute('src') || '';
+      const rawAlt = el.getAttribute('alt') || '';
+      const alt = rawAlt.replace(/\s*\|\s*(?:left|center|right)?\s*(?:\|\s*\d+)?\s*$/, '').trim();
+      const widthAttr = el.getAttribute('width');
+      const width = widthAttr ? parseInt(widthAttr, 10) : null;
+      const align = el.getAttribute('data-align') || 'left';
+      const imgParts: string[] = [alt];
+      const hasNonDefaultAlign = align && align !== 'left';
+      const hasWidth = width && width > 0;
+      if (hasNonDefaultAlign || hasWidth) {
+        imgParts.push(hasNonDefaultAlign ? align : 'left');
       }
-      return parts.join(' ') || '';
+      if (hasWidth) {
+        imgParts.push(String(width));
+      }
+      return `![${imgParts.join(' \\| ')}](${src})`;
+    }
+
+    // Helper: get inline text content from a node (handles bold, italic, etc.)
+    function getInlineText(node: Node): string {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return (node.textContent || '').replace(/\|/g, '\\|');
+      }
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement;
+        if (el.nodeName === 'IMG') return serializeImage(el);
+        if (el.nodeName === 'BR') return '';
+        // Recurse for inline elements (strong, em, code, span, a, etc.)
+        let text = '';
+        for (const child of Array.from(el.childNodes)) {
+          text += getInlineText(child);
+        }
+        // Wrap with markdown formatting
+        if (el.nodeName === 'STRONG' || el.nodeName === 'B') return `**${text}**`;
+        if (el.nodeName === 'EM' || el.nodeName === 'I') return `*${text}*`;
+        if (el.nodeName === 'S' || el.nodeName === 'DEL') return `~~${text}~~`;
+        if (el.nodeName === 'CODE') return `\`${text}\``;
+        if (el.nodeName === 'MARK') return `==${text}==`;
+        if (el.nodeName === 'A') {
+          const href = el.getAttribute('href') || '';
+          return `[${text}](${href})`;
+        }
+        return text;
+      }
+      return '';
+    }
+
+    // Helper: serialize a table cell's content to inline markdown
+    // Handles text, images, lists, and mixed content within cells.
+    // Uses <br> as line separator for multi-line content (lists, multiple paragraphs).
+    function serializeTableCell(cell: Element): string {
+      const blocks: string[] = [];
+      
+      for (const child of Array.from(cell.childNodes)) {
+        if (child.nodeType !== Node.ELEMENT_NODE) {
+          const text = (child.textContent || '').trim();
+          if (text) blocks.push(text.replace(/\|/g, '\\|'));
+          continue;
+        }
+        
+        const el = child as HTMLElement;
+        const tag = el.nodeName;
+        
+        // Handle lists (ul, ol) — serialize each item with marker
+        if (tag === 'UL' || tag === 'OL') {
+          const items = Array.from(el.querySelectorAll(':scope > li'));
+          items.forEach((li, idx) => {
+            const isTask = li.getAttribute('data-type') === 'taskItem';
+            const isChecked = li.getAttribute('data-checked') === 'true';
+            let text = '';
+            // Get text from the li's paragraph children
+            for (const liChild of Array.from(li.childNodes)) {
+              if (liChild.nodeType === Node.ELEMENT_NODE) {
+                const liEl = liChild as HTMLElement;
+                if (liEl.nodeName === 'P' || liEl.nodeName === 'DIV' || liEl.nodeName === 'SPAN') {
+                  text += getInlineText(liEl);
+                } else if (liEl.nodeName === 'LABEL' || liEl.nodeName === 'INPUT') {
+                  // Skip checkbox input elements (handled by isTask/isChecked)
+                } else {
+                  text += getInlineText(liEl);
+                }
+              } else {
+                text += getInlineText(liChild);
+              }
+            }
+            text = text.trim();
+            
+            if (isTask) {
+              blocks.push(`- [${isChecked ? 'x' : ' '}] ${text}`);
+            } else if (tag === 'OL') {
+              blocks.push(`${idx + 1}. ${text}`);
+            } else {
+              blocks.push(`- ${text}`);
+            }
+          });
+          continue;
+        }
+        
+        // Handle images (figure wrapper or direct img)
+        if (tag === 'FIGURE') {
+          const img = el.querySelector('img');
+          if (img) {
+            blocks.push(serializeImage(img));
+          }
+          continue;
+        }
+        
+        if (tag === 'IMG') {
+          blocks.push(serializeImage(el));
+          continue;
+        }
+        
+        // Handle paragraphs and other block elements
+        const text = getInlineText(el).trim();
+        if (text) {
+          blocks.push(text);
+        }
+      }
+      
+      return blocks.join(' <br> ') || '';
     }
 
     // Custom table rule to handle TipTap's table structure

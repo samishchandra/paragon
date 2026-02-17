@@ -1177,46 +1177,141 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       // - Various attribute orderings from marked (disabled before/after type)
       html = convertCheckboxListsToTaskLists(html);
       
-      // Post-process: Wrap <img> tags inside <td>/<th> with <figure class="image-resizer">
-      // so TipTap's DOMParser correctly recognizes them as resizableImage block nodes.
-      // Handles mixed content: text + images in the same cell.
-      // Strategy: find all <td>/<th> elements that contain <img> tags, and restructure
-      // so each image becomes a <figure> block and text stays in <p> blocks.
+      // Post-process: Reconstruct rich content inside table cells.
+      // Handles: images (→ <figure>), lists (- item <br> → <ul><li>), 
+      // ordered lists (1. item <br> → <ol><li>), task lists (- [x] → <ul data-type>),
+      // and mixed content (text + images + lists in same cell).
+      // The turndown serializer encodes multi-line content with " <br> " separators.
       html = html.replace(/(<t[dh][^>]*>)([\s\S]*?)(<\/t[dh]>)/gi,
         (match, tdOpen: string, cellContent: string, tdClose: string) => {
-          // Only process cells that contain <img> tags
-          if (!/<img\s/i.test(cellContent)) return match;
+          // Only process cells that need reconstruction
+          const hasImages = /<img\s/i.test(cellContent);
+          const hasBr = /<br\s*\/?>/i.test(cellContent);
+          const hasListMarker = /(?:^|<br\s*\/?>)\s*(?:- |\d+\. )/i.test(cellContent);
+          
+          if (!hasImages && !hasBr && !hasListMarker) return match;
           
           // Strip wrapping <p> tags to get raw cell content
           let inner = cellContent.trim();
-          // Remove outer <p>...</p> wrapper if present
           inner = inner.replace(/^<p>([\s\S]*)<\/p>$/i, '$1').trim();
           
-          // Split content into segments: text parts and image parts
-          // Use a regex to split around <img> tags while keeping them
-          const imgRegex = /(<img\s[^>]*\/?>)/gi;
-          const segments = inner.split(imgRegex).filter(s => s.trim());
+          // Split by <br> separators
+          const lines = inner.split(/<br\s*\/?>\s*/i).map(l => l.trim()).filter(Boolean);
           
-          const blocks: string[] = [];
-          for (const segment of segments) {
-            if (imgRegex.lastIndex = 0, /^<img\s/i.test(segment)) {
-              // Image segment — wrap in figure
-              const alignMatch = segment.match(/data-align="([^"]*)"/);
-              const align = (alignMatch ? alignMatch[1] : 'left') as 'left' | 'center' | 'right';
-              const wrapperStyle: string = {
-                left: 'margin-right: auto;',
-                center: 'margin-left: auto; margin-right: auto;',
-                right: 'margin-left: auto;',
-              }[align] || 'margin-right: auto;';
-              blocks.push(`<figure class="image-resizer" style="${wrapperStyle}">${segment.trim()}</figure>`);
-            } else {
-              // Text segment — wrap in <p>
-              const text = segment.trim();
-              if (text) {
-                blocks.push(`<p>${text}</p>`);
+          // If no br splits and just images, handle the simple image case
+          if (lines.length <= 1 && !hasListMarker) {
+            if (!hasImages) return match;
+            // Single line with image(s) — split around img tags
+            const imgSplitRegex = /(<img\s[^>]*\/?>)/gi;
+            const segments = inner.split(imgSplitRegex).filter(s => s.trim());
+            const blocks: string[] = [];
+            for (const seg of segments) {
+              if (/^<img\s/i.test(seg)) {
+                const alignMatch = seg.match(/data-align="([^"]*)"/); 
+                const align = (alignMatch ? alignMatch[1] : 'left') as 'left' | 'center' | 'right';
+                const wrapperStyle: string = {
+                  left: 'margin-right: auto;',
+                  center: 'margin-left: auto; margin-right: auto;',
+                  right: 'margin-left: auto;',
+                }[align] || 'margin-right: auto;';
+                blocks.push(`<figure class="image-resizer" style="${wrapperStyle}">${seg.trim()}</figure>`);
+              } else if (seg.trim()) {
+                blocks.push(`<p>${seg.trim()}</p>`);
               }
             }
+            return `${tdOpen}${blocks.join('')}${tdClose}`;
           }
+          
+          // Process multi-line content: group consecutive list items, 
+          // and convert text/images to appropriate blocks
+          const blocks: string[] = [];
+          let currentList: { type: 'ul' | 'ol' | 'task'; items: string[] } | null = null;
+          
+          const flushList = () => {
+            if (!currentList) return;
+            if (currentList.type === 'task') {
+              blocks.push(`<ul data-type="taskList">${currentList.items.join('')}</ul>`);
+            } else {
+              blocks.push(`<${currentList.type}>${currentList.items.join('')}</${currentList.type}>`);
+            }
+            currentList = null;
+          };
+          
+          for (const line of lines) {
+            // Task list item: - [x] text or - [ ] text
+            const taskMatch = line.match(/^-\s*\[(x| )\]\s*(.*)$/);
+            if (taskMatch) {
+              const checked = taskMatch[1] === 'x';
+              const text = taskMatch[2].trim();
+              if (!currentList || currentList.type !== 'task') {
+                flushList();
+                currentList = { type: 'task', items: [] };
+              }
+              currentList.items.push(`<li data-type="taskItem" data-checked="${checked}"><p>${text}</p></li>`);
+              continue;
+            }
+            
+            // Unordered list item: - text
+            const ulMatch = line.match(/^-\s+(.+)$/);
+            if (ulMatch) {
+              const text = ulMatch[1].trim();
+              if (!currentList || currentList.type !== 'ul') {
+                flushList();
+                currentList = { type: 'ul', items: [] };
+              }
+              currentList.items.push(`<li><p>${text}</p></li>`);
+              continue;
+            }
+            
+            // Ordered list item: 1. text
+            const olMatch = line.match(/^\d+\.\s+(.+)$/);
+            if (olMatch) {
+              const text = olMatch[1].trim();
+              if (!currentList || currentList.type !== 'ol') {
+                flushList();
+                currentList = { type: 'ol', items: [] };
+              }
+              currentList.items.push(`<li><p>${text}</p></li>`);
+              continue;
+            }
+            
+            // Not a list item — flush any pending list
+            flushList();
+            
+            // Check if line contains an image
+            if (/<img\s/i.test(line)) {
+              const imgSplitRegex = /(<img\s[^>]*\/?>)/gi;
+              const segments = line.split(imgSplitRegex).filter(s => s.trim());
+              for (const seg of segments) {
+                if (/^<img\s/i.test(seg)) {
+                  const alignMatch = seg.match(/data-align="([^"]*)"/); 
+                  const align = (alignMatch ? alignMatch[1] : 'left') as 'left' | 'center' | 'right';
+                  const wrapperStyle: string = {
+                    left: 'margin-right: auto;',
+                    center: 'margin-left: auto; margin-right: auto;',
+                    right: 'margin-left: auto;',
+                  }[align] || 'margin-right: auto;';
+                  blocks.push(`<figure class="image-resizer" style="${wrapperStyle}">${seg.trim()}</figure>`);
+                } else if (seg.trim()) {
+                  blocks.push(`<p>${seg.trim()}</p>`);
+                }
+              }
+            } else if (/^!\[/.test(line)) {
+              // Markdown image syntax that wasn't pre-processed
+              const imgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+              if (imgMatch) {
+                const alt = imgMatch[1];
+                const src = imgMatch[2];
+                blocks.push(`<figure class="image-resizer" style="margin-right: auto;"><img src="${src}" alt="${alt}" data-align="left" /></figure>`);
+              } else {
+                blocks.push(`<p>${line}</p>`);
+              }
+            } else {
+              blocks.push(`<p>${line}</p>`);
+            }
+          }
+          
+          flushList();
           
           return `${tdOpen}${blocks.join('')}${tdClose}`;
         }

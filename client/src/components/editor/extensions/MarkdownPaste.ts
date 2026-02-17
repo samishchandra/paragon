@@ -35,25 +35,64 @@ function imageToFigure(metadata: string, src: string): string {
 }
 
 /**
- * Convert markdown cell content (text, images, or mixed) to HTML blocks.
- * Each image becomes a <figure> block, text becomes <p> blocks.
+ * Convert a single line (no <br>) that may contain images to HTML blocks.
  */
-function convertCellContent(cellText: string): string {
-  if (!cellText.trim()) return '<p></p>';
-  const hasImages = /!\[[^\]]*\]\([^)]+\)/.test(cellText);
-  if (!hasImages) return `<p>${cellText}</p>`;
-  
+function convertLineToBlocks(line: string): string {
+  const hasImages = /!\[[^\]]*\]\([^)]+\)/.test(line);
+  if (!hasImages) return `<p>${line}</p>`;
   const imgPattern = /(!\[[^\]]*\]\([^)]+\))/g;
-  const segments = cellText.split(imgPattern).filter(s => s.trim());
+  const segments = line.split(imgPattern).filter(s => s.trim());
   const blocks: string[] = [];
   for (const segment of segments) {
     const imgMatch = segment.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-    if (imgMatch) {
-      blocks.push(imageToFigure(imgMatch[1], imgMatch[2]));
-    } else {
-      blocks.push(`<p>${segment.trim()}</p>`);
-    }
+    if (imgMatch) blocks.push(imageToFigure(imgMatch[1], imgMatch[2]));
+    else blocks.push(`<p>${segment.trim()}</p>`);
   }
+  return blocks.join('');
+}
+
+/**
+ * Convert markdown cell content (text, images, lists, or mixed) to HTML blocks.
+ * Supports: images, unordered lists, ordered lists, task lists, and mixed content.
+ */
+function convertCellContent(cellText: string): string {
+  if (!cellText.trim()) return '<p></p>';
+  const hasBr = /<br\s*\/?>/i.test(cellText);
+  const hasListMarker = /(?:^|<br\s*\/?>)\s*(?:- |\d+\. )/i.test(cellText);
+  if (!hasBr && !hasListMarker) return convertLineToBlocks(cellText);
+  
+  const lines = cellText.split(/<br\s*\/?>/i).map(l => l.trim()).filter(Boolean);
+  const blocks: string[] = [];
+  let currentList: { type: 'ul' | 'ol' | 'task'; items: string[] } | null = null;
+  const flushList = () => {
+    if (!currentList) return;
+    if (currentList.type === 'task') blocks.push(`<ul data-type="taskList">${currentList.items.join('')}</ul>`);
+    else blocks.push(`<${currentList.type}>${currentList.items.join('')}</${currentList.type}>`);
+    currentList = null;
+  };
+  for (const line of lines) {
+    const taskMatch = line.match(/^-\s*\[(x| )\]\s*(.*)$/);
+    if (taskMatch) {
+      if (!currentList || currentList.type !== 'task') { flushList(); currentList = { type: 'task', items: [] }; }
+      currentList.items.push(`<li data-type="taskItem" data-checked="${taskMatch[1] === 'x'}"><p>${taskMatch[2].trim()}</p></li>`);
+      continue;
+    }
+    const ulMatch = line.match(/^-\s+(.+)$/);
+    if (ulMatch) {
+      if (!currentList || currentList.type !== 'ul') { flushList(); currentList = { type: 'ul', items: [] }; }
+      currentList.items.push(`<li><p>${ulMatch[1].trim()}</p></li>`);
+      continue;
+    }
+    const olMatch = line.match(/^\d+\.\s+(.+)$/);
+    if (olMatch) {
+      if (!currentList || currentList.type !== 'ol') { flushList(); currentList = { type: 'ol', items: [] }; }
+      currentList.items.push(`<li><p>${olMatch[1].trim()}</p></li>`);
+      continue;
+    }
+    flushList();
+    blocks.push(convertLineToBlocks(line));
+  }
+  flushList();
   return blocks.join('');
 }
 
