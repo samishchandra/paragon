@@ -271,6 +271,25 @@ export const ExpandSelection = Extension.create<{}, ExpandSelectionStorage>({
   addKeyboardShortcuts() {
     return {
       // Expand selection (Cmd+A / Ctrl+A)
+      // Move cursor to beginning of document (Cmd+Up / Ctrl+Up)
+      'Mod-ArrowUp': ({ editor }) => {
+        editor.commands.setTextSelection(0);
+        // Scroll to top
+        const view = editor.view;
+        view.dispatch(view.state.tr.scrollIntoView());
+        return true;
+      },
+
+      // Move cursor to end of document (Cmd+Down / Ctrl+Down)
+      'Mod-ArrowDown': ({ editor }) => {
+        const endPos = editor.state.doc.content.size;
+        editor.commands.setTextSelection(endPos);
+        // Scroll to bottom
+        const view = editor.view;
+        view.dispatch(view.state.tr.scrollIntoView());
+        return true;
+      },
+
       'Mod-a': ({ editor }) => {
         const storage = this.storage;
         const { doc, selection } = editor.state;
