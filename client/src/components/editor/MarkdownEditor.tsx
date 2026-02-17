@@ -1006,12 +1006,33 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     },
   });
 
-  // Create TurndownService for HTML to Markdown conversion (extracted to hook)
+   // Create TurndownService for HTML to Markdown conversion (extracted to hook)
   const turndownService = useTurndownService();
-
   // Keep turndownServiceRef in sync so the onUpdate callback can access it
   turndownServiceRef.current = turndownService;
-
+  
+  // Initialize rawMarkdown from editor content when mounting in markdown mode.
+  // Without this, rawMarkdown starts as '' (empty string) and the raw markdown
+  // editor shows empty content when initialMode='markdown'. This effect runs
+  // once after the editor and turndownService are both available, converting
+  // the HTML content to markdown for the raw editor display.
+  const rawMarkdownInitializedRef = useRef(false);
+  useEffect(() => {
+    if (
+      !rawMarkdownInitializedRef.current &&
+      initialMode === 'markdown' &&
+      editor &&
+      !editor.isDestroyed &&
+      turndownService
+    ) {
+      const html = editor.getHTML();
+      const markdown = turndownService.turndown(html);
+      setRawMarkdown(markdown);
+      rawMarkdownRef.current = markdown;
+      rawMarkdownInitializedRef.current = true;
+    }
+  }, [editor, turndownService, initialMode]);
+  
   // Handle mode switching
   const handleModeSwitch = useCallback((newMode: 'wysiwyg' | 'markdown') => {
     if (!editor) return;
