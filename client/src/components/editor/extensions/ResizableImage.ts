@@ -555,7 +555,46 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       };
       document.addEventListener('click', closeDropdown);
       
+      // --- Magnifier button (bottom-left, to the left of resize handle) ---
+      const magnifyBtn = document.createElement('button');
+      magnifyBtn.setAttribute('type', 'button');
+      magnifyBtn.setAttribute('title', 'View full size');
+      magnifyBtn.style.cssText = `
+        position: absolute;
+        bottom: 4px;
+        left: 4px;
+        width: 24px;
+        height: 24px;
+        background: oklch(0.98 0 0 / 0.95);
+        border: 1px solid oklch(0.85 0 0);
+        border-radius: 6px;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.15s ease, background 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px oklch(0 0 0 / 0.15);
+        z-index: 10;
+        padding: 0;
+      `;
+      magnifyBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.4 0 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="11" y1="8" x2="11" y2="14"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      `;
+      magnifyBtn.addEventListener('mouseenter', () => {
+        magnifyBtn.style.background = 'oklch(0.95 0 0)';
+      });
+      magnifyBtn.addEventListener('mouseleave', () => {
+        magnifyBtn.style.background = 'oklch(0.98 0 0 / 0.95)';
+      });
+
       container.appendChild(img);
+      container.appendChild(magnifyBtn);
       container.appendChild(resizeHandle);
       container.appendChild(menuButton);
       // Append dropdown to the dialog content if inside a Radix Dialog,
@@ -568,13 +607,15 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         document.body.appendChild(dropdown);
       }
       
-      // Show handle and menu button on hover
+      // Show handle, menu button, and magnify button on hover
       container.addEventListener('mouseenter', () => {
         resizeHandle.style.opacity = '1';
         menuButton.style.opacity = '1';
+        magnifyBtn.style.opacity = '1';
       });
       container.addEventListener('mouseleave', () => {
         resizeHandle.style.opacity = '0';
+        magnifyBtn.style.opacity = '0';
         if (!isDropdownOpen) {
           menuButton.style.opacity = '0';
         }
@@ -588,16 +629,9 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         menuButton.style.background = 'oklch(0.98 0 0 / 0.95)';
       });
 
-      // --- Image lightbox (click to enlarge) ---
-      img.style.cursor = 'zoom-in';
       let isResizing = false;
 
       const openLightbox = (e: MouseEvent) => {
-        // Don't open lightbox if we just finished resizing or if dropdown is open
-        if (isResizing || isDropdownOpen) return;
-        // Don't open if click was on the menu button or resize handle
-        if (menuButton.contains(e.target as Node) || resizeHandle.contains(e.target as Node)) return;
-
         e.preventDefault();
         e.stopPropagation();
 
@@ -718,7 +752,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         });
       };
 
-      img.addEventListener('click', openLightbox);
+      magnifyBtn.addEventListener('click', openLightbox);
 
       // Resize logic
       let startX: number;
@@ -792,7 +826,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         },
         destroy: () => {
           resizeHandle.removeEventListener('mousedown', onMouseDown);
-          img.removeEventListener('click', openLightbox);
+          magnifyBtn.removeEventListener('click', openLightbox);
           document.removeEventListener('click', closeDropdown);
           dropdown.remove();
         },
