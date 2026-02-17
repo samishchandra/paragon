@@ -98,9 +98,85 @@ function convertLineToBlocks(line: string): string {
 }
 
 /**
- * Convert markdown cell content (text, images, lists, or mixed) to HTML blocks.
+ * Parse a list line and return its type, depth, and content.
+ * Indentation is 2 spaces per level.
+ */
+type ListLineInfo = { type: 'ul' | 'ol' | 'task'; depth: number; text: string; checked?: boolean };
+function parseListLine(rawLine: string): ListLineInfo | null {
+  const indentMatch = rawLine.match(/^( *)/);
+  const spaces = indentMatch ? indentMatch[1].length : 0;
+  const depth = Math.floor(spaces / 2);
+  const trimmed = rawLine.trimStart();
+  
+  const taskMatch = trimmed.match(/^-\s*\[(x| )\]\s*(.*)$/);
+  if (taskMatch) {
+    return { type: 'task', depth, text: taskMatch[2].trim(), checked: taskMatch[1] === 'x' };
+  }
+  const ulMatch = trimmed.match(/^-\s+(.+)$/);
+  if (ulMatch) {
+    return { type: 'ul', depth, text: ulMatch[1].trim() };
+  }
+  const olMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+  if (olMatch) {
+    return { type: 'ol', depth, text: olMatch[2].trim() };
+  }
+  return null;
+}
+
+/**
+ * Build nested list HTML from a sequence of parsed list lines.
+ */
+function buildNestedListHtml(items: ListLineInfo[]): string {
+  if (items.length === 0) return '';
+  
+  const buildLevel = (startIdx: number, parentDepth: number): { html: string; nextIdx: number } => {
+    let html = '';
+    let i = startIdx;
+    const listType = items[i]?.type || 'ul';
+    const isTask = listType === 'task';
+    const openTag = isTask ? '<ul data-type="taskList">' : `<${listType === 'ol' ? 'ol' : 'ul'}>`;
+    const closeTag = isTask ? '</ul>' : `</${listType === 'ol' ? 'ol' : 'ul'}>`;
+    
+    html += openTag;
+    
+    while (i < items.length && items[i].depth >= parentDepth) {
+      const item = items[i];
+      
+      if (item.depth === parentDepth) {
+        if (isTask) {
+          html += `<li data-type="taskItem" data-checked="${item.checked || false}"><p>${item.text}</p>`;
+        } else {
+          html += `<li><p>${item.text}</p>`;
+        }
+        
+        if (i + 1 < items.length && items[i + 1].depth > parentDepth) {
+          const child = buildLevel(i + 1, items[i + 1].depth);
+          html += child.html;
+          i = child.nextIdx;
+        } else {
+          i++;
+        }
+        
+        html += '</li>';
+      } else {
+        i++;
+      }
+    }
+    
+    html += closeTag;
+    return { html, nextIdx: i };
+  };
+  
+  const minDepth = Math.min(...items.map(it => it.depth));
+  const result = buildLevel(0, minDepth);
+  return result.html;
+}
+
+/**
+ * Convert markdown cell content (text, images, lists with nesting, or mixed) to HTML blocks.
  * Supports: images, unordered lists (- item), ordered lists (1. item),
- * task lists (- [x] item), and mixed content with <br> separators.
+ * task lists (- [x] item), nested sub-lists (indented with 2 spaces per level),
+ * and mixed content with <br> separators.
  */
 function convertCellContent(cellText: string): string {
   if (!cellText.trim()) return '<p></p>';
@@ -113,63 +189,33 @@ function convertCellContent(cellText: string): string {
     return convertLineToBlocks(cellText);
   }
   
-  // Split by <br> separators
-  const lines = cellText.split(/<br\s*\/?>/i).map(l => l.trim()).filter(Boolean);
+  // Split by <br> separators — preserve leading spaces for indentation
+  const rawLines = cellText.split(/<br\s*\/?>/i).filter(l => l.trim());
   
   const blocks: string[] = [];
-  let currentList: { type: 'ul' | 'ol' | 'task'; items: string[] } | null = null;
+  let pendingListItems: ListLineInfo[] = [];
   
   const flushList = () => {
-    if (!currentList) return;
-    if (currentList.type === 'task') {
-      blocks.push(`<ul data-type="taskList">${currentList.items.join('')}</ul>`);
-    } else {
-      blocks.push(`<${currentList.type}>${currentList.items.join('')}</${currentList.type}>`);
-    }
-    currentList = null;
+    if (pendingListItems.length === 0) return;
+    blocks.push(buildNestedListHtml(pendingListItems));
+    pendingListItems = [];
   };
   
-  for (const line of lines) {
-    // Task list item: - [x] text or - [ ] text
-    const taskMatch = line.match(/^-\s*\[(x| )\]\s*(.*)$/);
-    if (taskMatch) {
-      const checked = taskMatch[1] === 'x';
-      const text = taskMatch[2].trim();
-      if (!currentList || currentList.type !== 'task') {
-        flushList();
-        currentList = { type: 'task', items: [] };
-      }
-      currentList.items.push(`<li data-type="taskItem" data-checked="${checked}"><p>${text}</p></li>`);
-      continue;
-    }
+  for (const rawLine of rawLines) {
+    const listInfo = parseListLine(rawLine);
     
-    // Unordered list item: - text
-    const ulMatch = line.match(/^-\s+(.+)$/);
-    if (ulMatch) {
-      const text = ulMatch[1].trim();
-      if (!currentList || currentList.type !== 'ul') {
-        flushList();
-        currentList = { type: 'ul', items: [] };
+    if (listInfo) {
+      if (pendingListItems.length > 0) {
+        const firstType = pendingListItems[0].type;
+        if (listInfo.depth === 0 && listInfo.type !== firstType) {
+          flushList();
+        }
       }
-      currentList.items.push(`<li><p>${text}</p></li>`);
-      continue;
+      pendingListItems.push(listInfo);
+    } else {
+      flushList();
+      blocks.push(convertLineToBlocks(rawLine.trim()));
     }
-    
-    // Ordered list item: 1. text
-    const olMatch = line.match(/^\d+\.\s+(.+)$/);
-    if (olMatch) {
-      const text = olMatch[1].trim();
-      if (!currentList || currentList.type !== 'ol') {
-        flushList();
-        currentList = { type: 'ol', items: [] };
-      }
-      currentList.items.push(`<li><p>${text}</p></li>`);
-      continue;
-    }
-    
-    // Not a list item — flush pending list and add as text/image block
-    flushList();
-    blocks.push(convertLineToBlocks(line));
   }
   
   flushList();

@@ -1178,10 +1178,121 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       html = convertCheckboxListsToTaskLists(html);
       
       // Post-process: Reconstruct rich content inside table cells.
-      // Handles: images (→ <figure>), lists (- item <br> → <ul><li>), 
-      // ordered lists (1. item <br> → <ol><li>), task lists (- [x] → <ul data-type>),
-      // and mixed content (text + images + lists in same cell).
-      // The turndown serializer encodes multi-line content with " <br> " separators.
+      // Handles: images (→ <figure>), lists with nesting (- item <br>   - nested),
+      // ordered lists, task lists, and mixed content.
+      // The turndown serializer encodes multi-line content with " <br> " separators,
+      // and nested lists use 2-space indentation per level.
+      
+      // Helper: convert an image tag to a figure block
+      const imgToFigure = (imgTag: string): string => {
+        const alignMatch = imgTag.match(/data-align="([^"]*)"/); 
+        const align = (alignMatch ? alignMatch[1] : 'left') as 'left' | 'center' | 'right';
+        const wrapperStyle: string = {
+          left: 'margin-right: auto;',
+          center: 'margin-left: auto; margin-right: auto;',
+          right: 'margin-left: auto;',
+        }[align] || 'margin-right: auto;';
+        return `<figure class="image-resizer" style="${wrapperStyle}">${imgTag.trim()}</figure>`;
+      };
+      
+      // Helper: convert a line that may contain images to HTML blocks
+      const lineToBlocks = (line: string): string => {
+        if (/<img\s/i.test(line)) {
+          const imgSplitRegex = /(<img\s[^>]*\/?>)/gi;
+          const segments = line.split(imgSplitRegex).filter(s => s.trim());
+          return segments.map(seg => {
+            if (/^<img\s/i.test(seg)) return imgToFigure(seg);
+            if (seg.trim()) return `<p>${seg.trim()}</p>`;
+            return '';
+          }).join('');
+        }
+        if (/^!\[/.test(line)) {
+          const imgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+          if (imgMatch) {
+            return `<figure class="image-resizer" style="margin-right: auto;"><img src="${imgMatch[2]}" alt="${imgMatch[1]}" data-align="left" /></figure>`;
+          }
+        }
+        return `<p>${line}</p>`;
+      };
+      
+      // Helper: parse a list line and return its type, depth, and content
+      type ListLineInfo = { type: 'ul' | 'ol' | 'task'; depth: number; text: string; checked?: boolean; index?: number };
+      const parseListLine = (rawLine: string): ListLineInfo | null => {
+        // Count leading spaces for indentation (2 spaces per level)
+        const indentMatch = rawLine.match(/^( *)/);
+        const spaces = indentMatch ? indentMatch[1].length : 0;
+        const depth = Math.floor(spaces / 2);
+        const trimmed = rawLine.trimStart();
+        
+        // Task list: - [x] text or - [ ] text
+        const taskMatch = trimmed.match(/^-\s*\[(x| )\]\s*(.*)$/);
+        if (taskMatch) {
+          return { type: 'task', depth, text: taskMatch[2].trim(), checked: taskMatch[1] === 'x' };
+        }
+        // Unordered: - text
+        const ulMatch = trimmed.match(/^-\s+(.+)$/);
+        if (ulMatch) {
+          return { type: 'ul', depth, text: ulMatch[1].trim() };
+        }
+        // Ordered: 1. text
+        const olMatch = trimmed.match(/^(\d+)\.\s+(.+)$/);
+        if (olMatch) {
+          return { type: 'ol', depth, text: olMatch[2].trim(), index: parseInt(olMatch[1], 10) };
+        }
+        return null;
+      };
+      
+      // Helper: build nested list HTML from a sequence of parsed list lines
+      const buildNestedListHtml = (items: ListLineInfo[]): string => {
+        if (items.length === 0) return '';
+        
+        const buildLevel = (startIdx: number, parentDepth: number): { html: string; nextIdx: number } => {
+          let html = '';
+          let i = startIdx;
+          // Determine list type from the first item at this depth
+          const listType = items[i]?.type || 'ul';
+          const isTask = listType === 'task';
+          const openTag = isTask ? '<ul data-type="taskList">' : `<${listType === 'ol' ? 'ol' : 'ul'}>`;
+          const closeTag = isTask ? '</ul>' : `</${listType === 'ol' ? 'ol' : 'ul'}>`;
+          
+          html += openTag;
+          
+          while (i < items.length && items[i].depth >= parentDepth) {
+            const item = items[i];
+            
+            if (item.depth === parentDepth) {
+              // This item is at the current level
+              if (isTask) {
+                html += `<li data-type="taskItem" data-checked="${item.checked || false}"><p>${item.text}</p>`;
+              } else {
+                html += `<li><p>${item.text}</p>`;
+              }
+              
+              // Check if next items are children (deeper depth)
+              if (i + 1 < items.length && items[i + 1].depth > parentDepth) {
+                const child = buildLevel(i + 1, items[i + 1].depth);
+                html += child.html;
+                i = child.nextIdx;
+              } else {
+                i++;
+              }
+              
+              html += '</li>';
+            } else {
+              // Deeper item without a parent at this level — skip forward
+              i++;
+            }
+          }
+          
+          html += closeTag;
+          return { html, nextIdx: i };
+        };
+        
+        const minDepth = Math.min(...items.map(it => it.depth));
+        const result = buildLevel(0, minDepth);
+        return result.html;
+      };
+      
       html = html.replace(/(<t[dh][^>]*>)([\s\S]*?)(<\/t[dh]>)/gi,
         (match, tdOpen: string, cellContent: string, tdClose: string) => {
           // Only process cells that need reconstruction
@@ -1195,119 +1306,43 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           let inner = cellContent.trim();
           inner = inner.replace(/^<p>([\s\S]*)<\/p>$/i, '$1').trim();
           
-          // Split by <br> separators
-          const lines = inner.split(/<br\s*\/?>\s*/i).map(l => l.trim()).filter(Boolean);
+          // Split by <br> separators — preserve leading spaces for indentation
+          const rawLines = inner.split(/<br\s*\/?>/i).filter(l => l.trim());
           
           // If no br splits and just images, handle the simple image case
-          if (lines.length <= 1 && !hasListMarker) {
+          if (rawLines.length <= 1 && !hasListMarker) {
             if (!hasImages) return match;
-            // Single line with image(s) — split around img tags
-            const imgSplitRegex = /(<img\s[^>]*\/?>)/gi;
-            const segments = inner.split(imgSplitRegex).filter(s => s.trim());
-            const blocks: string[] = [];
-            for (const seg of segments) {
-              if (/^<img\s/i.test(seg)) {
-                const alignMatch = seg.match(/data-align="([^"]*)"/); 
-                const align = (alignMatch ? alignMatch[1] : 'left') as 'left' | 'center' | 'right';
-                const wrapperStyle: string = {
-                  left: 'margin-right: auto;',
-                  center: 'margin-left: auto; margin-right: auto;',
-                  right: 'margin-left: auto;',
-                }[align] || 'margin-right: auto;';
-                blocks.push(`<figure class="image-resizer" style="${wrapperStyle}">${seg.trim()}</figure>`);
-              } else if (seg.trim()) {
-                blocks.push(`<p>${seg.trim()}</p>`);
-              }
-            }
-            return `${tdOpen}${blocks.join('')}${tdClose}`;
+            return `${tdOpen}${lineToBlocks(inner)}${tdClose}`;
           }
           
-          // Process multi-line content: group consecutive list items, 
+          // Process multi-line content: group consecutive list items (with nesting),
           // and convert text/images to appropriate blocks
           const blocks: string[] = [];
-          let currentList: { type: 'ul' | 'ol' | 'task'; items: string[] } | null = null;
+          let pendingListItems: ListLineInfo[] = [];
           
           const flushList = () => {
-            if (!currentList) return;
-            if (currentList.type === 'task') {
-              blocks.push(`<ul data-type="taskList">${currentList.items.join('')}</ul>`);
-            } else {
-              blocks.push(`<${currentList.type}>${currentList.items.join('')}</${currentList.type}>`);
-            }
-            currentList = null;
+            if (pendingListItems.length === 0) return;
+            blocks.push(buildNestedListHtml(pendingListItems));
+            pendingListItems = [];
           };
           
-          for (const line of lines) {
-            // Task list item: - [x] text or - [ ] text
-            const taskMatch = line.match(/^-\s*\[(x| )\]\s*(.*)$/);
-            if (taskMatch) {
-              const checked = taskMatch[1] === 'x';
-              const text = taskMatch[2].trim();
-              if (!currentList || currentList.type !== 'task') {
-                flushList();
-                currentList = { type: 'task', items: [] };
-              }
-              currentList.items.push(`<li data-type="taskItem" data-checked="${checked}"><p>${text}</p></li>`);
-              continue;
-            }
+          for (const rawLine of rawLines) {
+            const listInfo = parseListLine(rawLine);
             
-            // Unordered list item: - text
-            const ulMatch = line.match(/^-\s+(.+)$/);
-            if (ulMatch) {
-              const text = ulMatch[1].trim();
-              if (!currentList || currentList.type !== 'ul') {
-                flushList();
-                currentList = { type: 'ul', items: [] };
-              }
-              currentList.items.push(`<li><p>${text}</p></li>`);
-              continue;
-            }
-            
-            // Ordered list item: 1. text
-            const olMatch = line.match(/^\d+\.\s+(.+)$/);
-            if (olMatch) {
-              const text = olMatch[1].trim();
-              if (!currentList || currentList.type !== 'ol') {
-                flushList();
-                currentList = { type: 'ol', items: [] };
-              }
-              currentList.items.push(`<li><p>${text}</p></li>`);
-              continue;
-            }
-            
-            // Not a list item — flush any pending list
-            flushList();
-            
-            // Check if line contains an image
-            if (/<img\s/i.test(line)) {
-              const imgSplitRegex = /(<img\s[^>]*\/?>)/gi;
-              const segments = line.split(imgSplitRegex).filter(s => s.trim());
-              for (const seg of segments) {
-                if (/^<img\s/i.test(seg)) {
-                  const alignMatch = seg.match(/data-align="([^"]*)"/); 
-                  const align = (alignMatch ? alignMatch[1] : 'left') as 'left' | 'center' | 'right';
-                  const wrapperStyle: string = {
-                    left: 'margin-right: auto;',
-                    center: 'margin-left: auto; margin-right: auto;',
-                    right: 'margin-left: auto;',
-                  }[align] || 'margin-right: auto;';
-                  blocks.push(`<figure class="image-resizer" style="${wrapperStyle}">${seg.trim()}</figure>`);
-                } else if (seg.trim()) {
-                  blocks.push(`<p>${seg.trim()}</p>`);
+            if (listInfo) {
+              // Check if this continues the same top-level list type or starts a new one
+              if (pendingListItems.length > 0) {
+                const firstType = pendingListItems[0].type;
+                // If top-level type changes, flush and start new list
+                if (listInfo.depth === 0 && listInfo.type !== firstType) {
+                  flushList();
                 }
               }
-            } else if (/^!\[/.test(line)) {
-              // Markdown image syntax that wasn't pre-processed
-              const imgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-              if (imgMatch) {
-                const alt = imgMatch[1];
-                const src = imgMatch[2];
-                blocks.push(`<figure class="image-resizer" style="margin-right: auto;"><img src="${src}" alt="${alt}" data-align="left" /></figure>`);
-              } else {
-                blocks.push(`<p>${line}</p>`);
-              }
+              pendingListItems.push(listInfo);
             } else {
-              blocks.push(`<p>${line}</p>`);
+              // Not a list item — flush pending list and add as text/image block
+              flushList();
+              blocks.push(lineToBlocks(rawLine.trim()));
             }
           }
           

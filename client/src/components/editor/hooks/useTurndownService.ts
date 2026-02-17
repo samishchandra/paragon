@@ -176,9 +176,66 @@ export function useTurndownService(): TurndownService {
       return '';
     }
 
+    // Helper: serialize a list item's text content (excluding nested lists)
+    function getListItemText(li: Element): string {
+      let text = '';
+      for (const liChild of Array.from(li.childNodes)) {
+        if (liChild.nodeType === Node.ELEMENT_NODE) {
+          const liEl = liChild as HTMLElement;
+          const tag = liEl.nodeName;
+          // Skip nested lists — they're handled recursively
+          if (tag === 'UL' || tag === 'OL') continue;
+          // Skip checkbox input elements (handled by isTask/isChecked)
+          if (tag === 'LABEL' || tag === 'INPUT') continue;
+          if (tag === 'P' || tag === 'DIV' || tag === 'SPAN') {
+            text += getInlineText(liEl);
+          } else {
+            text += getInlineText(liEl);
+          }
+        } else {
+          text += getInlineText(liChild);
+        }
+      }
+      return text.trim();
+    }
+
+    // Helper: recursively serialize a list (ul/ol) with indentation for nesting
+    // Each indent level adds 2 spaces to the prefix.
+    function serializeList(listEl: Element, blocks: string[], depth: number = 0): void {
+      const indent = '  '.repeat(depth); // 2 spaces per level
+      const tag = listEl.nodeName;
+      const directItems = Array.from(listEl.childNodes).filter(
+        (n) => n.nodeType === Node.ELEMENT_NODE && (n as HTMLElement).nodeName === 'LI'
+      ) as HTMLElement[];
+      
+      directItems.forEach((li, idx) => {
+        const isTask = li.getAttribute('data-type') === 'taskItem';
+        const isChecked = li.getAttribute('data-checked') === 'true';
+        const text = getListItemText(li);
+        
+        if (isTask) {
+          blocks.push(`${indent}- [${isChecked ? 'x' : ' '}] ${text}`);
+        } else if (tag === 'OL') {
+          blocks.push(`${indent}${idx + 1}. ${text}`);
+        } else {
+          blocks.push(`${indent}- ${text}`);
+        }
+        
+        // Recurse into nested lists within this li
+        const nestedLists = Array.from(li.childNodes).filter(
+          (n) => n.nodeType === Node.ELEMENT_NODE && 
+                 ((n as HTMLElement).nodeName === 'UL' || (n as HTMLElement).nodeName === 'OL')
+        ) as HTMLElement[];
+        for (const nestedList of nestedLists) {
+          serializeList(nestedList, blocks, depth + 1);
+        }
+      });
+    }
+
     // Helper: serialize a table cell's content to inline markdown
-    // Handles text, images, lists, and mixed content within cells.
+    // Handles text, images, lists (with nesting), and mixed content within cells.
     // Uses <br> as line separator for multi-line content (lists, multiple paragraphs).
+    // Nested lists use indentation: "- item <br>   - nested <br>     - deeper"
     function serializeTableCell(cell: Element): string {
       const blocks: string[] = [];
       
@@ -192,38 +249,9 @@ export function useTurndownService(): TurndownService {
         const el = child as HTMLElement;
         const tag = el.nodeName;
         
-        // Handle lists (ul, ol) — serialize each item with marker
+        // Handle lists (ul, ol) — recursively serialize with indentation
         if (tag === 'UL' || tag === 'OL') {
-          const items = Array.from(el.querySelectorAll(':scope > li'));
-          items.forEach((li, idx) => {
-            const isTask = li.getAttribute('data-type') === 'taskItem';
-            const isChecked = li.getAttribute('data-checked') === 'true';
-            let text = '';
-            // Get text from the li's paragraph children
-            for (const liChild of Array.from(li.childNodes)) {
-              if (liChild.nodeType === Node.ELEMENT_NODE) {
-                const liEl = liChild as HTMLElement;
-                if (liEl.nodeName === 'P' || liEl.nodeName === 'DIV' || liEl.nodeName === 'SPAN') {
-                  text += getInlineText(liEl);
-                } else if (liEl.nodeName === 'LABEL' || liEl.nodeName === 'INPUT') {
-                  // Skip checkbox input elements (handled by isTask/isChecked)
-                } else {
-                  text += getInlineText(liEl);
-                }
-              } else {
-                text += getInlineText(liChild);
-              }
-            }
-            text = text.trim();
-            
-            if (isTask) {
-              blocks.push(`- [${isChecked ? 'x' : ' '}] ${text}`);
-            } else if (tag === 'OL') {
-              blocks.push(`${idx + 1}. ${text}`);
-            } else {
-              blocks.push(`- ${text}`);
-            }
-          });
+          serializeList(el, blocks, 0);
           continue;
         }
         
