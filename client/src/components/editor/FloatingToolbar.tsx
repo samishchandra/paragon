@@ -75,6 +75,8 @@ const HEADING_STYLES = [
   { label: 'Heading 1', value: 'h1', shortLabel: 'H1' },
   { label: 'Heading 2', value: 'h2', shortLabel: 'H2' },
   { label: 'Heading 3', value: 'h3', shortLabel: 'H3' },
+  { label: 'Heading 4', value: 'h4', shortLabel: 'H4' },
+  { label: 'Heading 5', value: 'h5', shortLabel: 'H5' },
 ] as const;
 
 interface HeadingDropdownProps {
@@ -82,15 +84,17 @@ interface HeadingDropdownProps {
   isH1: boolean;
   isH2: boolean;
   isH3: boolean;
+  isH4: boolean;
+  isH5: boolean;
   executeCommand: (e: React.MouseEvent, command: () => void) => void;
 }
 
-const HeadingDropdown = memo(function HeadingDropdown({ editor, isH1, isH2, isH3, executeCommand }: HeadingDropdownProps) {
+const HeadingDropdown = memo(function HeadingDropdown({ editor, isH1, isH2, isH3, isH4, isH5, executeCommand }: HeadingDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Determine current active style
-  const currentStyle = isH1 ? 'h1' : isH2 ? 'h2' : isH3 ? 'h3' : 'paragraph';
+  const currentStyle = isH1 ? 'h1' : isH2 ? 'h2' : isH3 ? 'h3' : isH4 ? 'h4' : isH5 ? 'h5' : 'paragraph';
   const currentLabel = HEADING_STYLES.find(s => s.value === currentStyle)?.shortLabel || 'P';
 
   // Close dropdown when clicking outside
@@ -111,7 +115,7 @@ const HeadingDropdown = memo(function HeadingDropdown({ editor, isH1, isH2, isH3
     if (value === 'paragraph') {
       editor.chain().focus().setParagraph().run();
     } else {
-      const level = parseInt(value.replace('h', '')) as 1 | 2 | 3;
+      const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5;
       editor.chain().focus().toggleHeading({ level }).run();
     }
     setIsOpen(false);
@@ -192,6 +196,8 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
       isH1: e.isActive('heading', { level: 1 }),
       isH2: e.isActive('heading', { level: 2 }),
       isH3: e.isActive('heading', { level: 3 }),
+      isH4: e.isActive('heading', { level: 4 }),
+      isH5: e.isActive('heading', { level: 5 }),
       isBulletList: e.isActive('bulletList'),
       isOrderedList: e.isActive('orderedList'),
       isTaskList: e.isActive('taskList'),
@@ -500,6 +506,8 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
         isH1={editorState?.isH1 ?? false}
         isH2={editorState?.isH2 ?? false}
         isH3={editorState?.isH3 ?? false}
+        isH4={editorState?.isH4 ?? false}
+        isH5={editorState?.isH5 ?? false}
         executeCommand={executeCommand}
       />
       <ToolbarButton

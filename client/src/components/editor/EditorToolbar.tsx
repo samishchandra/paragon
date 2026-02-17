@@ -153,6 +153,8 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
       isH1: e.isActive('heading', { level: 1 }),
       isH2: e.isActive('heading', { level: 2 }),
       isH3: e.isActive('heading', { level: 3 }),
+      isH4: e.isActive('heading', { level: 4 }),
+      isH5: e.isActive('heading', { level: 5 }),
       isBlockquote: e.isActive('blockquote'),
       isBulletList: e.isActive('bulletList'),
       isOrderedList: e.isActive('orderedList'),
@@ -452,14 +454,14 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
               flex items-center gap-1 h-8 px-2 rounded-md shrink-0
               transition-all duration-100 ease-out touch-manipulation
               text-xs font-semibold
-              ${editorState?.isH1 || editorState?.isH2 || editorState?.isH3
+              ${editorState?.isH1 || editorState?.isH2 || editorState?.isH3 || editorState?.isH4 || editorState?.isH5
                 ? 'bg-secondary text-foreground'
                 : 'bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80'
               }
             `}
           >
             <span className="min-w-[18px] text-center">
-              {editorState?.isH1 ? 'H1' : editorState?.isH2 ? 'H2' : editorState?.isH3 ? 'H3' : 'P'}
+              {editorState?.isH1 ? 'H1' : editorState?.isH2 ? 'H2' : editorState?.isH3 ? 'H3' : editorState?.isH4 ? 'H4' : editorState?.isH5 ? 'H5' : 'P'}
             </span>
             <ChevronDown size={12} strokeWidth={2.5} className="flex-shrink-0" />
           </button>
@@ -467,7 +469,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
         <DropdownMenuContent align="start" className="min-w-[130px]">
           <DropdownMenuItem
             onClick={() => editor.chain().focus().setParagraph().run()}
-            className={!editorState?.isH1 && !editorState?.isH2 && !editorState?.isH3 ? 'bg-accent font-medium' : ''}
+            className={!editorState?.isH1 && !editorState?.isH2 && !editorState?.isH3 && !editorState?.isH4 && !editorState?.isH5 ? 'bg-accent font-medium' : ''}
           >
             <span className="w-6 text-xs font-semibold text-muted-foreground">P</span>
             Paragraph
@@ -492,6 +494,20 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
           >
             <span className="w-6 text-xs font-semibold text-muted-foreground">H3</span>
             <span className="font-semibold">Heading 3</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+            className={editorState?.isH4 ? 'bg-accent font-medium' : ''}
+          >
+            <span className="w-6 text-xs font-semibold text-muted-foreground">H4</span>
+            <span className="font-semibold">Heading 4</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 5 }).run()}
+            className={editorState?.isH5 ? 'bg-accent font-medium' : ''}
+          >
+            <span className="w-6 text-xs font-semibold text-muted-foreground">H5</span>
+            <span className="font-semibold">Heading 5</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
