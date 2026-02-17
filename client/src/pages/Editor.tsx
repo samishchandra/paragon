@@ -50,8 +50,164 @@ function parseIntSafe(value: string | null, defaultValue: number, min: number, m
 }
 
 const DEFAULT_CONTENT = `
-<h1>Start Writing</h1>
-<p>This is a clean, distraction-free writing space. Use the toolbar above or type <code>/</code> for commands.</p>
+<h1>Welcome to Paragon Editor</h1>
+<p>A <strong>professional</strong>, feature-rich markdown editor designed as a drop-in component for note-taking applications. Built with <a href="https://tiptap.dev">TipTap</a> and <strong>React</strong>.</p>
+
+<h2>Quick Tips</h2>
+<ul>
+  <li>Type <code>/</code> to open the <strong>command palette</strong> for quick actions</li>
+  <li>Select text to see the <strong>floating toolbar</strong> with formatting options</li>
+  <li>Use <code>Ctrl+H</code> to open <strong>Find &amp; Replace</strong></li>
+  <li>Type <code>@today</code> to insert a <strong>date pill</strong></li>
+  <li>Press <code>Tab</code> to indent list items and <code>Shift+Tab</code> to outdent</li>
+  <li>Toggle between <strong>WYSIWYG</strong> and <strong>raw markdown</strong> mode in the toolbar</li>
+</ul>
+
+<h2>Text Formatting</h2>
+<p>Paragon supports all standard formatting options:</p>
+<ul>
+  <li><strong>Bold text</strong> for emphasis</li>
+  <li><em>Italic text</em> for subtle emphasis</li>
+  <li><s>Strikethrough</s> for corrections</li>
+  <li><code>inline code</code> for technical terms</li>
+  <li><mark>Highlighted text</mark> for important notes</li>
+  <li><u>Underlined text</u> for additional emphasis</li>
+</ul>
+
+<h2>Task Lists</h2>
+<p>Interactive checkboxes with auto-reorder &mdash; completed items automatically move to the bottom:</p>
+<ul data-type="taskList">
+  <li data-type="taskItem" data-checked="true">Set up the development environment</li>
+  <li data-type="taskItem" data-checked="false">Implement core features</li>
+  <li data-type="taskItem" data-checked="false">Write documentation</li>
+  <li data-type="taskItem" data-checked="false">Deploy to production</li>
+</ul>
+
+<h2>Code Blocks</h2>
+<p>Syntax highlighting for 20+ languages with copy-to-clipboard:</p>
+<pre><code class="language-typescript">// Using Paragon Editor in your app
+import { MarkdownEditor } from '@paragon/editor';
+
+function App() {
+  const [content, setContent] = useState('');
+
+  return (
+    <MarkdownEditor
+      content={content}
+      onChange={setContent}
+      showToolbar={true}
+      showWordCount={true}
+      autoReorderChecklist={true}
+    />
+  );
+}</code></pre>
+
+<h2>Tables</h2>
+<p>Full table support with resizable columns:</p>
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Status</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>WYSIWYG + Raw Mode</td>
+      <td>\u2705</td>
+      <td>Toggle between visual and markdown editing</td>
+    </tr>
+    <tr>
+      <td>AI Writing Assistant</td>
+      <td>\u2705</td>
+      <td>Provider-agnostic, streaming support</td>
+    </tr>
+    <tr>
+      <td>Find &amp; Replace</td>
+      <td>\u2705</td>
+      <td>Works in both WYSIWYG and raw mode</td>
+    </tr>
+    <tr>
+      <td>Date Pills</td>
+      <td>\u2705</td>
+      <td>Inline date tracking with smart detection</td>
+    </tr>
+    <tr>
+      <td>Table of Contents</td>
+      <td>\u2705</td>
+      <td>Auto-generated sidebar with scroll sync</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Blockquotes</h2>
+<blockquote>
+  <p>"The best way to predict the future is to invent it."</p>
+  <p>&mdash; Alan Kay</p>
+</blockquote>
+
+<h2>Callouts</h2>
+<p>Five callout types for structured notes. Type <code>/callout</code> or use <code>Ctrl+Shift+C</code>:</p>
+<div data-callout="true" data-type="info"><p>This is an <strong>info</strong> callout &mdash; great for tips and helpful context.</p></div>
+<div data-callout="true" data-type="todo"><p>This is a <strong>todo</strong> callout &mdash; use it for action items and reminders.</p></div>
+
+<h2>Collapsible Lists</h2>
+<p>Click the chevron icon to collapse/expand nested items:</p>
+<ul>
+  <li>Frontend Architecture
+    <ul>
+      <li>React Components
+        <ul>
+          <li>Layout components (Header, Sidebar, Footer)</li>
+          <li>Form components (Input, Select, DatePicker)</li>
+          <li>Data display (Table, Card, Chart)</li>
+        </ul>
+      </li>
+      <li>State Management
+        <ul>
+          <li>Context API for theme and auth</li>
+          <li>React Query for server state</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Backend Services
+    <ul>
+      <li>API Layer
+        <ul>
+          <li>REST endpoints</li>
+          <li>WebSocket connections</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Keyboard Shortcuts</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Action</th>
+      <th>Shortcut</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Bold</td><td>Ctrl+B</td></tr>
+    <tr><td>Italic</td><td>Ctrl+I</td></tr>
+    <tr><td>Underline</td><td>Ctrl+U</td></tr>
+    <tr><td>Inline Code</td><td>Ctrl+E</td></tr>
+    <tr><td>Link</td><td>Ctrl+K</td></tr>
+    <tr><td>Find &amp; Replace</td><td>Ctrl+H</td></tr>
+    <tr><td>Date Pill</td><td>Ctrl+Shift+D</td></tr>
+    <tr><td>Callout</td><td>Ctrl+Shift+C</td></tr>
+    <tr><td>Expand Selection</td><td>Ctrl+A / Cmd+A</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<p>Try typing <code>/</code> to open the command palette, or switch to raw markdown mode using the toolbar toggle!</p>
 `;
 
 function loadSavedContent(): string {
@@ -122,8 +278,19 @@ export default function EditorPage() {
     });
   }, []);
 
-  // Clear saved content and reset to default (after confirmation)
+  // Clear saved content and reset to blank (after confirmation)
   const handleClearContent = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY_CONTENT);
+    } catch {
+      // Silently fail
+    }
+    setContent('<h1>Untitled</h1><p></p>');
+    setShowNewConfirm(false);
+  }, []);
+
+  // Load the template content (after confirmation)
+  const handleLoadTemplate = useCallback(() => {
     try {
       localStorage.removeItem(STORAGE_KEY_CONTENT);
     } catch {
@@ -235,12 +402,12 @@ export default function EditorPage() {
       <Dialog open={showNewConfirm} onOpenChange={setShowNewConfirm}>
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Create new document?</DialogTitle>
+            <DialogTitle>Start fresh?</DialogTitle>
             <DialogDescription>
-              Your current content will be lost. This action cannot be undone.
+              Choose to start with a blank document or load the example template. Your current content will be replaced.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-0 flex-col sm:flex-row">
             <Button
               variant="outline"
               onClick={() => setShowNewConfirm(false)}
@@ -248,10 +415,16 @@ export default function EditorPage() {
               Cancel
             </Button>
             <Button
+              variant="outline"
+              onClick={handleLoadTemplate}
+            >
+              Load Template
+            </Button>
+            <Button
               variant="destructive"
               onClick={handleClearContent}
             >
-              Discard &amp; Create New
+              Blank Document
             </Button>
           </DialogFooter>
         </DialogContent>
