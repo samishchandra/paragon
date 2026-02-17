@@ -27,6 +27,15 @@ const DEMO_CONTENT = `
   <li><u>Underlined text</u> for additional emphasis</li>
 </ul>
 
+<h2>Heading Levels</h2>
+<p>Paragon supports multiple heading levels for organizing your content hierarchy:</p>
+<h3>This is a Heading 3</h3>
+<p>Use H3 for subsections within a major section.</p>
+<h4>This is a Heading 4</h4>
+<p>Use H4 for grouping related content under a subsection.</p>
+<h5>This is a Heading 5</h5>
+<p>Use H5 for fine-grained structure within a group. Type <code>####</code> or <code>#####</code> followed by space to create H4 and H5.</p>
+
 <h2>Task Lists</h2>
 <p>Interactive checkboxes with auto-reorder — completed items automatically move to the bottom:</p>
 <ul data-type="taskList">
