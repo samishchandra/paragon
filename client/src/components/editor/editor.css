@@ -821,6 +821,7 @@
   box-sizing: border-box;
   position: relative;
   vertical-align: middle; /* Vertically center text in cells */
+  padding: 4px;
 }
 
 /* Ensure paragraph inside table cells is also centered */
