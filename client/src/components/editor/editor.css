@@ -153,12 +153,12 @@
   --checkbox-checked-foreground: var(--primary-foreground);
   
   /* Table colors - Light mode */
-  --table-header-bg: #f8fafc;
+  --table-header-bg: #F1F5F9;
   --table-header-text: #334155;
   --table-cell-bg: #ffffff;
   --table-cell-text: #333333;
-  --table-row-odd: #ffffff;
-  --table-row-even: #f1f5f9;
+  --table-row-odd: #FFFFFF;
+  --table-row-even: #F9FAFC;
   --table-row-hover: #f1f5f9;
   
   /* Callout colors - light mode */
