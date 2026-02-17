@@ -1438,6 +1438,15 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     const handleKeyDown = (event: KeyboardEvent) => {
       // Skip if editor is destroyed
       if (editor.isDestroyed) return;
+
+      // Cmd/Ctrl+Shift+/ to toggle between WYSIWYG and raw markdown mode
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === '/') {
+        event.preventDefault();
+        event.stopPropagation();
+        const newMode = editorModeRef.current === 'wysiwyg' ? 'markdown' : 'wysiwyg';
+        handleModeSwitch(newMode);
+        return;
+      }
       
 // Cmd/Ctrl+K for link popover
       if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
@@ -1584,7 +1593,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     // Use capture: true to intercept Tab key before browser default behavior
     document.addEventListener('keydown', handleKeyDown, true);
     return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [editor, isMobile, setIsFindReplaceOpen]);
+  }, [editor, isMobile, setIsFindReplaceOpen, handleModeSwitch]);
 
   // === AI Writing Assistant Handlers ===
   // IMPORTANT: These hooks MUST be above the `if (!editor)` early return
