@@ -1440,7 +1440,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       if (editor.isDestroyed) return;
 
       // Cmd/Ctrl+Shift+/ to toggle between WYSIWYG and raw markdown mode
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === '/') {
+      // Note: Shift+/ produces '?' on most keyboard layouts, so we check for both
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && (event.key === '/' || event.key === '?' || event.code === 'Slash')) {
         event.preventDefault();
         event.stopPropagation();
         const newMode = editorModeRef.current === 'wysiwyg' ? 'markdown' : 'wysiwyg';
