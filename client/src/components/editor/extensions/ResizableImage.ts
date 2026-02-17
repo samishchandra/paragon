@@ -555,16 +555,16 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       };
       document.addEventListener('click', closeDropdown);
       
-      // --- Magnifier button (bottom-left, to the left of resize handle) ---
+      // --- Magnifier button (top-right, to the left of 3-dot menu) ---
       const magnifyBtn = document.createElement('button');
       magnifyBtn.setAttribute('type', 'button');
       magnifyBtn.setAttribute('title', 'View full size');
       magnifyBtn.style.cssText = `
         position: absolute;
-        bottom: 4px;
-        left: 4px;
-        width: 24px;
-        height: 24px;
+        top: 8px;
+        right: 40px;
+        width: 28px;
+        height: 28px;
         background: oklch(0.98 0 0 / 0.95);
         border: 1px solid oklch(0.85 0 0);
         border-radius: 6px;
