@@ -792,8 +792,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       );
     }
 
-    // Only add DatePill on desktop and if not disabled
-    if (!isMobile && !disabledFeatures.datePills) {
+    // Add DatePill if not disabled (works on both desktop and mobile)
+    if (!disabledFeatures.datePills) {
       baseExtensions.push(
         DatePill.configure({
           HTMLAttributes: {
