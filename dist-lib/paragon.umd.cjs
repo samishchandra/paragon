@@ -141,10 +141,10 @@
           white-space: nowrap;
         `,G.innerHTML=`${X}<span>${V}</span>`,G.addEventListener("click",Z=>{Z.preventDefault(),Z.stopPropagation();const ee=typeof r=="function"?r():null;if(ee!=null)try{const{state:z,dispatch:F}=n.view,j=z.doc.nodeAt(ee);if(j&&j.type.name==="resizableImage"){const Q=z.tr.setNodeMarkup(ee,void 0,{...j.attrs,align:L});F(Q)}}catch{n.chain().focus().setNodeSelection(ee).updateAttributes("resizableImage",{align:L}).run()}N(L)}),T.push(G),M.appendChild(G)}),p.appendChild(M);const C=()=>{const L=o.attrs.align||"left";N(L)};let E=!1;f.addEventListener("click",L=>{if(L.preventDefault(),L.stopPropagation(),E)p.style.display="none",E=!1;else{const V=f.getBoundingClientRect(),X=200,G=p.closest('[role="dialog"]');let Z=0,ee=0;if(G){const ge=G.getBoundingClientRect();Z=ge.left,ee=ge.top}let z=V.bottom+4-ee,F=V.right-X-Z;const j=window.innerHeight,Q=window.innerWidth,ue=200;V.bottom+4+ue>j&&(z=V.top-ue-4-ee),F+Z<8&&(F=8-Z),F+X+Z>Q-8&&(F=Q-X-8-Z),p.style.top=`${z}px`,p.style.left=`${F}px`,p.style.display="flex",E=!0,C()}});const D=L=>{!p.contains(L.target)&&!f.contains(L.target)&&(p.style.display="none",E=!1)};document.addEventListener("click",D);const A=document.createElement("button");A.setAttribute("type","button"),A.setAttribute("title","View full size"),A.style.cssText=`
         position: absolute;
-        bottom: 4px;
-        left: 4px;
-        width: 24px;
-        height: 24px;
+        top: 8px;
+        right: 40px;
+        width: 28px;
+        height: 28px;
         background: oklch(0.98 0 0 / 0.95);
         border: 1px solid oklch(0.85 0 0);
         border-radius: 6px;

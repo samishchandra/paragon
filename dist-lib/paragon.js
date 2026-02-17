@@ -1958,10 +1958,10 @@ const Hh = Mo.create({
       const N = document.createElement("button");
       N.setAttribute("type", "button"), N.setAttribute("title", "View full size"), N.style.cssText = `
         position: absolute;
-        bottom: 4px;
-        left: 4px;
-        width: 24px;
-        height: 24px;
+        top: 8px;
+        right: 40px;
+        width: 28px;
+        height: 28px;
         background: oklch(0.98 0 0 / 0.95);
         border: 1px solid oklch(0.85 0 0);
         border-radius: 6px;
