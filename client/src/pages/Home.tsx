@@ -120,6 +120,18 @@ function App() {
 
 <hr>
 
+<h2>Smart Selection</h2>
+<p>Paragon includes a progressive selection feature inspired by professional code editors. Instead of immediately selecting all content, <code>Ctrl+A</code> (or <code>Cmd+A</code> on Mac) progressively expands the selection to the next parent node in the document tree:</p>
+<ol>
+  <li><strong>First press</strong> — selects all text in the current paragraph</li>
+  <li><strong>Second press</strong> — expands to the parent block (e.g., list item)</li>
+  <li><strong>Third press</strong> — expands to the containing list or blockquote</li>
+  <li><strong>Subsequent presses</strong> — continues expanding until the entire document is selected</li>
+</ol>
+<p>The selection state resets when you click, type, or press Escape — so you can quickly expand to the scope you need, then continue editing.</p>
+
+<hr>
+
 <h2>Keyboard Shortcuts</h2>
 <table>
   <thead>
@@ -137,6 +149,8 @@ function App() {
     <tr><td>Find &amp; Replace</td><td>Ctrl+H</td></tr>
     <tr><td>Date Pill</td><td>Ctrl+Shift+D</td></tr>
     <tr><td>Callout</td><td>Ctrl+Shift+C</td></tr>
+    <tr><td>Expand Selection</td><td>Ctrl+A / Cmd+A</td></tr>
+
   </tbody>
 </table>
 
