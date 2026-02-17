@@ -37,16 +37,31 @@ function imageToFigure(metadata: string, src: string): string {
 /**
  * Convert a single line (no <br>) that may contain images to HTML blocks.
  */
+/**
+ * Convert inline markdown formatting to HTML.
+ * Handles: **bold**, *italic*, ~~strike~~, `code`, ==highlight==, [link](url)
+ */
+function inlineMarkdownToHtml(text: string): string {
+  let result = text;
+  result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  result = result.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+  result = result.replace(/~~(.+?)~~/g, '<s>$1</s>');
+  result = result.replace(/`([^`]+)`/g, '<code>$1</code>');
+  result = result.replace(/==(.+?)==/g, '<mark>$1</mark>');
+  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  return result;
+}
+
 function convertLineToBlocks(line: string): string {
   const hasImages = /!\[[^\]]*\]\([^)]+\)/.test(line);
-  if (!hasImages) return `<p>${line}</p>`;
+  if (!hasImages) return `<p>${inlineMarkdownToHtml(line)}</p>`;
   const imgPattern = /(!\[[^\]]*\]\([^)]+\))/g;
   const segments = line.split(imgPattern).filter(s => s.trim());
   const blocks: string[] = [];
   for (const segment of segments) {
     const imgMatch = segment.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
     if (imgMatch) blocks.push(imageToFigure(imgMatch[1], imgMatch[2]));
-    else blocks.push(`<p>${segment.trim()}</p>`);
+    else blocks.push(`<p>${inlineMarkdownToHtml(segment.trim())}</p>`);
   }
   return blocks.join('');
 }
@@ -87,8 +102,8 @@ function buildNestedListHtml(items: ListLineInfo[]): string {
     while (i < items.length && items[i].depth >= parentDepth) {
       const item = items[i];
       if (item.depth === parentDepth) {
-        if (isTask) html += `<li data-type="taskItem" data-checked="${item.checked || false}"><p>${item.text}</p>`;
-        else html += `<li><p>${item.text}</p>`;
+        if (isTask) html += `<li data-type="taskItem" data-checked="${item.checked || false}"><p>${inlineMarkdownToHtml(item.text)}</p>`;
+        else html += `<li><p>${inlineMarkdownToHtml(item.text)}</p>`;
         if (i + 1 < items.length && items[i + 1].depth > parentDepth) {
           const child = buildLevel(i + 1, items[i + 1].depth);
           html += child.html;

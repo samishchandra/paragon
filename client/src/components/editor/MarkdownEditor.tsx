@@ -1183,6 +1183,25 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       // The turndown serializer encodes multi-line content with " <br> " separators,
       // and nested lists use 2-space indentation per level.
       
+      // Helper: convert inline markdown formatting to HTML
+      // Handles: **bold**, *italic*, ~~strike~~, `code`, ==highlight==, [link](url), __underline__
+      const inlineMarkdownToHtml = (text: string): string => {
+        let result = text;
+        // Bold: **text** or __text__ (but __text__ is used for underline below)
+        result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        // Italic: *text*
+        result = result.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+        // Strikethrough: ~~text~~
+        result = result.replace(/~~(.+?)~~/g, '<s>$1</s>');
+        // Code: `text`
+        result = result.replace(/`([^`]+)`/g, '<code>$1</code>');
+        // Highlight: ==text==
+        result = result.replace(/==(.+?)==/g, '<mark>$1</mark>');
+        // Links: [text](url)
+        result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+        return result;
+      };
+
       // Helper: convert an image tag to a figure block
       const imgToFigure = (imgTag: string): string => {
         const alignMatch = imgTag.match(/data-align="([^"]*)"/); 
@@ -1202,7 +1221,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           const segments = line.split(imgSplitRegex).filter(s => s.trim());
           return segments.map(seg => {
             if (/^<img\s/i.test(seg)) return imgToFigure(seg);
-            if (seg.trim()) return `<p>${seg.trim()}</p>`;
+            if (seg.trim()) return `<p>${inlineMarkdownToHtml(seg.trim())}</p>`;
             return '';
           }).join('');
         }
@@ -1212,7 +1231,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             return `<figure class="image-resizer" style="margin-right: auto;"><img src="${imgMatch[2]}" alt="${imgMatch[1]}" data-align="left" /></figure>`;
           }
         }
-        return `<p>${line}</p>`;
+        return `<p>${inlineMarkdownToHtml(line)}</p>`;
       };
       
       // Helper: parse a list line and return its type, depth, and content
@@ -1263,9 +1282,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             if (item.depth === parentDepth) {
               // This item is at the current level
               if (isTask) {
-                html += `<li data-type="taskItem" data-checked="${item.checked || false}"><p>${item.text}</p>`;
+                html += `<li data-type="taskItem" data-checked="${item.checked || false}"><p>${inlineMarkdownToHtml(item.text)}</p>`;
               } else {
-                html += `<li><p>${item.text}</p>`;
+                html += `<li><p>${inlineMarkdownToHtml(item.text)}</p>`;
               }
               
               // Check if next items are children (deeper depth)
