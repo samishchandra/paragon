@@ -15086,6 +15086,19 @@ const p1 = ut.create({
   addKeyboardShortcuts() {
     return {
       // Expand selection (Cmd+A / Ctrl+A)
+      // Move cursor to beginning of document (Cmd+Up / Ctrl+Up)
+      "Mod-ArrowUp": ({ editor: e }) => {
+        e.commands.setTextSelection(0);
+        const t = e.view;
+        return t.dispatch(t.state.tr.scrollIntoView()), !0;
+      },
+      // Move cursor to end of document (Cmd+Down / Ctrl+Down)
+      "Mod-ArrowDown": ({ editor: e }) => {
+        const t = e.state.doc.content.size;
+        e.commands.setTextSelection(t);
+        const n = e.view;
+        return n.dispatch(n.state.tr.scrollIntoView()), !0;
+      },
       "Mod-a": ({ editor: e }) => {
         const t = this.storage, { doc: n, selection: r } = e.state, { from: o, to: s } = r;
         if (t.expansionDepth > 0 && o === t.lastExpandedFrom && s === t.lastExpandedTo || (t.expansionDepth = 0), r instanceof Gf || o === 0 && s === n.content.size)
