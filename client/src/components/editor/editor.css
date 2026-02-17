@@ -756,13 +756,13 @@
   }
   
   /* Alternating row colors for better readability */
-  /* Odd rows (1st, 3rd...) are lighter to contrast with header; even rows (2nd, 4th...) are greyish */
+  /* Odd rows (1st, 3rd...) get tinted bg to contrast with header; even rows (2nd, 4th...) get plain bg */
   tbody tr:nth-child(odd) td {
-    background: var(--table-row-odd, var(--card));
-  }
-  
-  tbody tr:nth-child(even) td {
     background: var(--table-row-even, oklch(0.22 0.01 220));
+  }
+
+  tbody tr:nth-child(even) td {
+    background: var(--table-row-odd, var(--card));
   }
   
   /* Subtle hover effect */
@@ -3561,11 +3561,11 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme alternating rows */
 [data-theme="light"] .tiptap-editor tbody tr:nth-child(odd) td {
-  background: var(--table-row-odd) !important;
+  background: var(--table-row-even) !important;
 }
 
 [data-theme="light"] .tiptap-editor tbody tr:nth-child(even) td {
-  background: var(--table-row-even) !important;
+  background: var(--table-row-odd) !important;
 }
 
 [data-theme="light"] .tiptap-editor tbody tr:hover td {
@@ -4019,11 +4019,11 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-theme="dark"] .tiptap-editor tbody tr:nth-child(odd) td {
-  background: var(--table-row-odd) !important;
+  background: var(--table-row-even) !important;
 }
 
 [data-theme="dark"] .tiptap-editor tbody tr:nth-child(even) td {
-  background: var(--table-row-even) !important;
+  background: var(--table-row-odd) !important;
 }
 
 [data-theme="dark"] .tiptap-editor tbody tr:hover td {
