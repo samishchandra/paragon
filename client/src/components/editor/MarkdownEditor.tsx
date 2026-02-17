@@ -41,6 +41,7 @@ import { MarkdownLinkInputRule } from './extensions/MarkdownLinkInputRule';
 import { CalloutInputRule } from './extensions/CalloutInputRule';
 import { SearchHighlight } from './extensions/SearchHighlight';
 import { TabIndent } from './extensions/TabIndent';
+import { ExpandSelection } from './extensions/ExpandSelection';
 import { SelectAllOccurrences } from './extensions/SelectAllOccurrences';
 import { ImageUpload } from './extensions/ImageUpload';
 import { ImageDropZone } from './ImageDropZone';
@@ -467,6 +468,11 @@ export interface MarkdownEditorProps {
   /** Automatically reorder checklist items when toggled: move completed to bottom, preserving relative order within each group (default: false) */
   autoReorderChecklist?: boolean;
   
+  // === EXPAND SELECTION ===
+  
+  /** Enable progressive Cmd+A / Ctrl+A selection that expands to parent nodes instead of immediately selecting all (default: false) */
+  progressiveSelectAll?: boolean;
+  
   // === ERROR BOUNDARY ===
   
   /** Callback when the editor crashes — useful for external error reporting */
@@ -565,6 +571,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   onPerformanceProfilerClose,
   // Auto reorder checklist
   autoReorderChecklist = false,
+  // Expand selection
+  progressiveSelectAll = false,
   // Error boundary
   onEditorError,
   // AI writing assistant
@@ -821,6 +829,11 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       );
     }
 
+    // Conditionally add progressive Cmd+A expand selection
+    if (progressiveSelectAll) {
+      baseExtensions.push(ExpandSelection);
+    }
+
     // Conditionally add markdown paste
     if (!disabledFeatures.markdownPaste) {
       baseExtensions.push(
@@ -833,7 +846,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     return baseExtensions;
   // Dependencies: only stable values (primitives, objects compared by reference that don't change).
   // Callback props are accessed via refs, so they don't need to be in the deps array.
-  }, [placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures]);
+  }, [placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures, progressiveSelectAll]);
 
   // Debounced onUpdate ref for HTML serialization performance
   const onUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

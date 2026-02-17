@@ -227,6 +227,7 @@ export default function EditorPage() {
           theme={theme}
           autoReorderChecklist={config.autoReorderChecklist}
           editable={config.editable}
+          progressiveSelectAll={true}
         />
       </div>
 
