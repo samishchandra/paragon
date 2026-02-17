@@ -580,24 +580,24 @@ function fs(e, t, n) {
       const u = s + 1 + l.nodeSize - 1, c = it.widget(
         u,
         () => {
-          const d = document.querySelector(
-            `button.collapsible-list-chevron[data-list-item-id="${a}"]`
+          const d = CSS.escape(a), p = document.querySelector(
+            `button.collapsible-list-chevron[data-list-item-id="${d}"]`
           );
-          if (d) {
-            d.classList.contains("collapsed") !== i && (d.classList.remove("collapsed", "expanded"), d.classList.add(i ? "collapsed" : "expanded"), d.title = i ? "Click to expand" : "Click to collapse");
-            const y = d.parentElement;
-            if (y) return y;
+          if (p) {
+            p.classList.contains("collapsed") !== i && (p.classList.remove("collapsed", "expanded"), p.classList.add(i ? "collapsed" : "expanded"), p.title = i ? "Click to expand" : "Click to collapse");
+            const g = p.parentElement;
+            if (g) return g;
           }
-          const p = document.createElement("span");
-          p.className = "collapsible-list-chevron-wrapper", p.setAttribute("contenteditable", "false");
-          const h = document.createElement("button");
-          return h.className = `collapsible-list-chevron ${i ? "collapsed" : "expanded"}`, h.setAttribute("data-list-item-id", a), h.setAttribute("contenteditable", "false"), h.setAttribute("tabindex", "-1"), h.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>', h.title = i ? "Click to expand" : "Click to collapse", h.addEventListener("click", (m) => {
-            m.preventDefault(), m.stopPropagation();
-            const y = h.classList.contains("collapsed");
-            h.classList.remove("collapsed", "expanded"), h.classList.add(y ? "expanded" : "collapsed"), h.title = y ? "Click to collapse" : "Click to expand", t.collapsedItems.has(a) ? t.collapsedItems.delete(a) : t.collapsedItems.add(a), Dn && Dn.dispatch(
+          const h = document.createElement("span");
+          h.className = "collapsible-list-chevron-wrapper", h.setAttribute("contenteditable", "false");
+          const m = document.createElement("button");
+          return m.className = `collapsible-list-chevron ${i ? "collapsed" : "expanded"}`, m.setAttribute("data-list-item-id", a), m.setAttribute("contenteditable", "false"), m.setAttribute("tabindex", "-1"), m.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>', m.title = i ? "Click to expand" : "Click to collapse", m.addEventListener("click", (y) => {
+            y.preventDefault(), y.stopPropagation();
+            const g = m.classList.contains("collapsed");
+            m.classList.remove("collapsed", "expanded"), m.classList.add(g ? "expanded" : "collapsed"), m.title = g ? "Click to collapse" : "Click to expand", t.collapsedItems.has(a) ? t.collapsedItems.delete(a) : t.collapsedItems.add(a), Dn && Dn.dispatch(
               Dn.state.tr.setMeta("collapsibleList", { toggled: a })
             );
-          }), p.appendChild(h), p;
+          }), h.appendChild(m), h;
         },
         { side: 1, key: `list-chevron-${a}` }
       );
