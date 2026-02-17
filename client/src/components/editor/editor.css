@@ -57,12 +57,12 @@
   --checkbox-checked-foreground: #ffffff;
   
   /* Table colors - Dark mode */
-  --table-header-bg: #1e2430;
+  --table-header-bg: #2d323c;
   --table-header-text: #e2e8f0;
   --table-cell-bg: #282c34;
   --table-cell-text: #dadada;
-  --table-row-odd: #2d323c;
-  --table-row-even: #282c34;
+  --table-row-odd: #282c34;
+  --table-row-even: #252930;
   --table-row-hover: #353b47;
   
   /* Callout colors - dark mode */
