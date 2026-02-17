@@ -715,6 +715,10 @@
     border: 1px solid var(--border);
     padding: 0.25rem 0.5rem;
     text-align: left;
+  }
+
+  th {
+    padding: calc(0.25rem + 4px) 0.5rem;
     min-width: 50px;
     vertical-align: middle;
     line-height: 1.3;
