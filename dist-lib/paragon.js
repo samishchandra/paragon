@@ -1954,20 +1954,49 @@ const Hh = Mo.create({
       const E = (P) => {
         !p.contains(P.target) && !d.contains(P.target) && (p.style.display = "none", T = !1);
       };
-      document.addEventListener("click", E), s.appendChild(i), s.appendChild(c), s.appendChild(d);
-      const N = s.closest('[role="dialog"]');
-      N ? N.appendChild(p) : document.body.appendChild(p), s.addEventListener("mouseenter", () => {
-        c.style.opacity = "1", d.style.opacity = "1";
+      document.addEventListener("click", E);
+      const N = document.createElement("button");
+      N.setAttribute("type", "button"), N.setAttribute("title", "View full size"), N.style.cssText = `
+        position: absolute;
+        bottom: 4px;
+        left: 4px;
+        width: 24px;
+        height: 24px;
+        background: oklch(0.98 0 0 / 0.95);
+        border: 1px solid oklch(0.85 0 0);
+        border-radius: 6px;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.15s ease, background 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px oklch(0 0 0 / 0.15);
+        z-index: 10;
+        padding: 0;
+      `, N.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.4 0 0)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="11" y1="8" x2="11" y2="14"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      `, N.addEventListener("mouseenter", () => {
+        N.style.background = "oklch(0.95 0 0)";
+      }), N.addEventListener("mouseleave", () => {
+        N.style.background = "oklch(0.98 0 0 / 0.95)";
+      }), s.appendChild(i), s.appendChild(N), s.appendChild(c), s.appendChild(d);
+      const R = s.closest('[role="dialog"]');
+      R ? R.appendChild(p) : document.body.appendChild(p), s.addEventListener("mouseenter", () => {
+        c.style.opacity = "1", d.style.opacity = "1", N.style.opacity = "1";
       }), s.addEventListener("mouseleave", () => {
-        c.style.opacity = "0", T || (d.style.opacity = "0");
+        c.style.opacity = "0", N.style.opacity = "0", T || (d.style.opacity = "0");
       }), d.addEventListener("mouseenter", () => {
         d.style.background = "oklch(0.95 0 0)";
       }), d.addEventListener("mouseleave", () => {
         d.style.background = "oklch(0.98 0 0 / 0.95)";
-      }), i.style.cursor = "zoom-in";
-      let R = !1;
+      });
       const I = (P) => {
-        if (R || T || d.contains(P.target) || c.contains(P.target)) return;
         P.preventDefault(), P.stopPropagation();
         const j = document.createElement("div");
         j.style.cssText = `
@@ -2049,16 +2078,15 @@ const Hh = Mo.create({
           j.style.opacity = "1", Z.style.transform = "scale(1)";
         });
       };
-      i.addEventListener("click", I);
+      N.addEventListener("click", I);
       let O, H;
       const W = (P) => {
-        P.preventDefault(), R = !0, O = P.clientX, H = i.offsetWidth, document.addEventListener("mousemove", q), document.addEventListener("mouseup", L);
+        P.preventDefault(), O = P.clientX, H = i.offsetWidth, document.addEventListener("mousemove", q), document.addEventListener("mouseup", L);
       }, q = (P) => {
         const j = P.clientX - O, Z = Math.max(100, H + j);
         i.style.width = `${Z}px`;
       }, L = () => {
         document.removeEventListener("mousemove", q), document.removeEventListener("mouseup", L), setTimeout(() => {
-          R = !1;
         }, 100);
         const P = typeof r == "function" ? r() : null, j = i.offsetWidth;
         if (P != null)
@@ -2081,7 +2109,7 @@ const Hh = Mo.create({
         dom: s,
         update: (P) => P.type.name !== "resizableImage" ? !1 : (o = P, u(P.attrs.src), i.alt = P.attrs.alt || "", P.attrs.width && (i.style.width = `${P.attrs.width}px`), a(P.attrs.align || "left"), !0),
         destroy: () => {
-          c.removeEventListener("mousedown", W), i.removeEventListener("click", I), document.removeEventListener("click", E), p.remove();
+          c.removeEventListener("mousedown", W), N.removeEventListener("click", I), document.removeEventListener("click", E), p.remove();
         }
       };
     };
