@@ -98,13 +98,28 @@ function convertCheckboxListsToTaskLists(html: string): string {
     nestedUls.forEach(processUl);
 
     // Check each <li> in this <ul> for checkboxes
+    // Note: marked may place checkboxes as direct children of <li> OR inside a <p> wrapper
+    // (the latter happens when list items have multi-line/continuation content)
     const items = Array.from(ul.children).filter(el => el.tagName === 'LI') as HTMLLIElement[];
     let hasCheckbox = false;
     let hasRegular = false;
 
+    // Helper to find checkbox in an <li> — checks both direct children and inside <p> wrappers
+    const findCheckbox = (li: HTMLLIElement): HTMLInputElement | null => {
+      // First check direct children
+      const directInput = li.querySelector(':scope > input[type="checkbox"]');
+      if (directInput) return directInput as HTMLInputElement;
+      // Then check inside first <p> child (marked wraps in <p> for multi-line items)
+      const firstP = li.querySelector(':scope > p');
+      if (firstP) {
+        const pInput = firstP.querySelector(':scope > input[type="checkbox"]');
+        if (pInput) return pInput as HTMLInputElement;
+      }
+      return null;
+    };
+
     items.forEach(li => {
-      const firstInput = li.querySelector(':scope > input[type="checkbox"]');
-      if (firstInput) {
+      if (findCheckbox(li)) {
         hasCheckbox = true;
       } else {
         hasRegular = true;
@@ -115,14 +130,23 @@ function convertCheckboxListsToTaskLists(html: string): string {
 
     // Convert checkbox <li> items to taskItem format
     items.forEach(li => {
-      const checkbox = li.querySelector(':scope > input[type="checkbox"]');
+      const checkbox = findCheckbox(li);
       if (checkbox) {
         const isChecked = checkbox.hasAttribute('checked');
         li.setAttribute('data-type', 'taskItem');
         li.setAttribute('data-checked', String(isChecked));
         
+        // Determine if checkbox was inside a <p> wrapper
+        const checkboxParent = checkbox.parentElement;
+        const wasInsideP = checkboxParent && checkboxParent.tagName === 'P' && checkboxParent.parentElement === li;
+        
         // Remove the checkbox input element
         checkbox.remove();
+        
+        // If the checkbox was inside a <p>, clean up that <p>'s leading whitespace
+        if (wasInsideP && checkboxParent.firstChild && checkboxParent.firstChild.nodeType === Node.TEXT_NODE) {
+          checkboxParent.firstChild.textContent = (checkboxParent.firstChild.textContent || '').replace(/^\s+/, '');
+        }
         
         // Get the remaining content of the <li>
         // We need to separate inline content from nested block elements (like <ul>)
@@ -159,6 +183,7 @@ function convertCheckboxListsToTaskLists(html: string): string {
         }
         
         // Re-append block content (nested lists, etc.)
+        // If a <p> that contained the checkbox is now in blockContent, it already has the text
         blockContent.forEach(node => li.appendChild(node));
       }
     });
