@@ -241,11 +241,63 @@ function isMarkdownTable(text: string): boolean {
 }
 
 // Simple markdown to HTML converter
+// Standard callout types
+const MP_CALLOUT_TYPES = ['info', 'note', 'prompt', 'resources', 'todo'];
+
 function markdownToHtml(markdown: string): string {
   let html = markdown;
   
-  // First, extract and convert tables
-  // Tables are multi-line structures, so we need to handle them specially
+  // === PHASE 1: Extract code blocks and callouts FIRST to protect their content ===
+  const codeBlockPlaceholders: string[] = [];
+  
+  // Extract Obsidian ad-* callout blocks first
+  html = html.replace(/```(ad-\w+)\s*\n([\s\S]*?)```/g, (_, _adType, content) => {
+    let innerHtml = content.trim();
+    innerHtml = innerHtml.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    innerHtml = innerHtml.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+    innerHtml = innerHtml.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+    innerHtml = innerHtml.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
+    innerHtml = innerHtml.replace(/`([^`]+)`/g, '<code>$1</code>');
+    if (!innerHtml.startsWith('<')) {
+      innerHtml = `<p>${innerHtml}</p>`;
+    }
+    const placeholder = `MANUSCODEPLACEHOLDER${codeBlockPlaceholders.length}END`;
+    codeBlockPlaceholders.push(`<div data-callout="" data-type="info" class="callout callout-info">${innerHtml}</div>`);
+    return placeholder;
+  });
+  
+  // Extract standard callout blocks
+  MP_CALLOUT_TYPES.forEach(type => {
+    const calloutRegex = new RegExp(`\`\`\`${type}\\s*\\n([\\s\\S]*?)\`\`\``, 'g');
+    html = html.replace(calloutRegex, (_, content) => {
+      let innerHtml = content.trim();
+      innerHtml = innerHtml.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      innerHtml = innerHtml.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+      innerHtml = innerHtml.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+      innerHtml = innerHtml.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
+      innerHtml = innerHtml.replace(/`([^`]+)`/g, '<code>$1</code>');
+      if (!innerHtml.startsWith('<')) {
+        innerHtml = `<p>${innerHtml}</p>`;
+      }
+      const placeholder = `MANUSCODEPLACEHOLDER${codeBlockPlaceholders.length}END`;
+      codeBlockPlaceholders.push(`<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`);
+      return placeholder;
+    });
+  });
+  
+  // Extract regular code blocks (use [\w-]* to support language names with hyphens)
+  html = html.replace(/```([\w-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const language = lang || 'plaintext';
+    const escapedCode = code.trim()
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const placeholder = `MANUSCODEPLACEHOLDER${codeBlockPlaceholders.length}END`;
+    codeBlockPlaceholders.push(`<pre><code class="language-${language}">${escapedCode}</code></pre>`);
+    return placeholder;
+  });
+  
+  // === PHASE 2: Extract tables ===
   const tablePattern = /^(\|[^\n]+\|\n\|[-:\s|]+\|\n(?:\|[^\n]+\|\n?)*)/gm;
   const tables: { placeholder: string; html: string }[] = [];
   let tableIndex = 0;
@@ -276,7 +328,8 @@ function markdownToHtml(markdown: string): string {
     return match;
   });
   
-  // Escape HTML entities first (but not in table placeholders)
+  // === PHASE 3: Process remaining markdown ===
+  // Escape HTML entities (but not in placeholders)
   html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   
   // Headers (must be at start of line)
@@ -311,12 +364,6 @@ function markdownToHtml(markdown: string): string {
   html = html.replace(/^---+$/gm, '<hr>');
   html = html.replace(/^\*\*\*+$/gm, '<hr>');
   html = html.replace(/^___+$/gm, '<hr>');
-  
-  // Code blocks (fenced)
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-    const language = lang || 'plaintext';
-    return `<pre><code class="language-${language}">${code.trim()}</code></pre>`;
-  });
   
   // Inline code
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -367,8 +414,8 @@ function markdownToHtml(markdown: string): string {
   const processedLines = lines.map(line => {
     const trimmed = line.trim();
     if (!trimmed) return '';
-    // Skip table placeholders
-    if (trimmed.startsWith('__TABLE_PLACEHOLDER_')) return line;
+    // Skip table and code block placeholders
+    if (trimmed.startsWith('__TABLE_PLACEHOLDER_') || trimmed.startsWith('MANUSCODEPLACEHOLDER')) return line;
     if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol') || 
         trimmed.startsWith('<li') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<pre') ||
         trimmed.startsWith('<hr') || trimmed.startsWith('</') || trimmed.startsWith('<table')) {
@@ -386,6 +433,11 @@ function markdownToHtml(markdown: string): string {
   // Restore tables
   for (const table of tables) {
     html = html.replace(table.placeholder, table.html);
+  }
+  
+  // Restore code blocks and callouts
+  for (let i = 0; i < codeBlockPlaceholders.length; i++) {
+    html = html.replace(`MANUSCODEPLACEHOLDER${i}END`, codeBlockPlaceholders[i]);
   }
   
   return html;

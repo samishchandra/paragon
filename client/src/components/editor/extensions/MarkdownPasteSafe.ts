@@ -17,12 +17,14 @@ const MARKDOWN_PATTERNS = {
   // Table pattern: header row with pipes, separator row with dashes, optional data rows
   // Allow headers and separators with or without trailing pipes
   table: /^\|[^\n]+\n\|[-:\s|]+/m,
-  // Callout pattern: ```info, ```note, ```prompt, ```resources, ```todo
-  callout: /```(?:info|note|prompt|resources|todo)\s*\n[\s\S]*?```/,
+  // Callout pattern: ```info, ```note, ```prompt, ```resources, ```todo, ```ad-*
+  callout: /```(?:info|note|prompt|resources|todo|ad-\w+)\s*\n[\s\S]*?```/,
 };
 
-// Callout types for parsing
+// Callout types for parsing (exact match types)
 const CALLOUT_TYPES = ['info', 'note', 'prompt', 'resources', 'todo'];
+// Obsidian ad-* callout prefix
+const AD_CALLOUT_PREFIX = 'ad-';
 
 // Quick check if text looks like markdown (optimized - check most common patterns first)
 function looksLikeMarkdown(text: string): boolean {
@@ -328,39 +330,55 @@ function markdownToHtml(markdown: string): string {
     return match;
   });
   
-  // Callout blocks (before regular code blocks)
-  // Convert ```info, ```warning, etc. to callout HTML
+  // === Extract code blocks and callouts into placeholders to protect their content ===
+  const codeBlockPlaceholders: string[] = [];
+  
+  // Obsidian ad-* callout blocks first
+  html = html.replace(/```(ad-\w+)\s*\n([\s\S]*?)```/g, (_, _adType, content) => {
+    let innerHtml = content.trim();
+    innerHtml = innerHtml.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    innerHtml = innerHtml.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+    innerHtml = innerHtml.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+    innerHtml = innerHtml.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
+    innerHtml = innerHtml.replace(/`([^`]+)`/g, '<code>$1</code>');
+    const baseType = 'info';
+    if (!innerHtml.startsWith('<')) {
+      innerHtml = `<p>${innerHtml}</p>`;
+    }
+    const placeholder = `MANUSCODEPLACEHOLDER${codeBlockPlaceholders.length}END`;
+    codeBlockPlaceholders.push(`<div data-callout="" data-type="${baseType}" class="callout callout-${baseType}">${innerHtml}</div>`);
+    return placeholder;
+  });
+  
+  // Standard callout types
   CALLOUT_TYPES.forEach(type => {
     const calloutRegex = new RegExp(`\`\`\`${type}\\s*\\n([\\s\\S]*?)\`\`\``, 'g');
     html = html.replace(calloutRegex, (_, content) => {
-      // Process the content inside the callout (convert markdown to HTML)
       let innerHtml = content.trim();
-      // Apply basic markdown formatting to inner content
       innerHtml = innerHtml.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
       innerHtml = innerHtml.replace(/__([^_]+)__/g, '<strong>$1</strong>');
       innerHtml = innerHtml.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
       innerHtml = innerHtml.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
       innerHtml = innerHtml.replace(/`([^`]+)`/g, '<code>$1</code>');
-      // Wrap in paragraph if not already wrapped
       if (!innerHtml.startsWith('<')) {
         innerHtml = `<p>${innerHtml}</p>`;
       }
-      return `<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`;
+      const placeholder = `MANUSCODEPLACEHOLDER${codeBlockPlaceholders.length}END`;
+      codeBlockPlaceholders.push(`<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`);
+      return placeholder;
     });
   });
   
-  // Code blocks (preserve content inside) - skip callout types
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-    // Skip if this is a callout type (already processed)
-    if (CALLOUT_TYPES.includes(lang)) {
-      return `<div data-callout="" data-type="${lang}" class="callout callout-${lang}"><p>${code.trim()}</p></div>`;
-    }
+  // Regular code blocks (use [\w-]* for language names with hyphens)
+  html = html.replace(/```([\w-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
     const language = lang || 'plaintext';
     const escapedCode = code.trim()
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
-    return `<pre><code class="language-${language}">${escapedCode}</code></pre>`;
+    const placeholder = `MANUSCODEPLACEHOLDER${codeBlockPlaceholders.length}END`;
+    codeBlockPlaceholders.push(`<pre><code class="language-${language}">${escapedCode}</code></pre>`);
+    return placeholder;
   });
   
   // Inline code (before other inline formatting)
@@ -433,7 +451,7 @@ function markdownToHtml(markdown: string): string {
     if (!trimmed) return '';
     // Skip lines that are already wrapped in HTML tags or are placeholders
     if (/^<[a-z]/.test(trimmed) || /^<\//.test(trimmed)) return line;
-    if (trimmed.startsWith('MANUSTABLEPLACEHOLDER')) return line;
+    if (trimmed.startsWith('MANUSTABLEPLACEHOLDER') || trimmed.startsWith('MANUSCODEPLACEHOLDER')) return line;
     return `<p>${trimmed}</p>`;
   });
   
@@ -445,6 +463,11 @@ function markdownToHtml(markdown: string): string {
   // Restore table placeholders
   for (let i = 0; i < tablePlaceholders.length; i++) {
     html = html.replace(`MANUSTABLEPLACEHOLDER${i}END`, tablePlaceholders[i]);
+  }
+  
+  // Restore code block and callout placeholders
+  for (let i = 0; i < codeBlockPlaceholders.length; i++) {
+    html = html.replace(`MANUSCODEPLACEHOLDER${i}END`, codeBlockPlaceholders[i]);
   }
   
   return html;
