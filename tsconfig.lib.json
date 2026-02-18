@@ -17,6 +17,11 @@
   "exclude": [
     "node_modules",
     "dist",
-    "dist-lib"
+    "dist-lib",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "client/src/test/**"
   ]
 }
