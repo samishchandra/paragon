@@ -288,10 +288,17 @@ export function useTurndownService(): TurndownService {
         if (rows.length === 0) return '';
 
         const result: string[] = [];
+        // Detect if the table has a header column (body rows with <th> in first cell)
+        let hasHeaderColumn = false;
 
         rows.forEach((row, rowIndex) => {
           const cells = Array.from(row.querySelectorAll('th, td'));
           const cellContents = cells.map(cell => serializeTableCell(cell));
+
+          // Check if body rows have <th> in the first cell (header column)
+          if (rowIndex > 0 && cells.length > 0 && cells[0].nodeName === 'TH') {
+            hasHeaderColumn = true;
+          }
 
           result.push('| ' + cellContents.join(' | ') + ' |');
 
@@ -302,7 +309,9 @@ export function useTurndownService(): TurndownService {
           }
         });
 
-        return '\n\n' + result.join('\n') + '\n\n';
+        // Append header-column marker if detected
+        const marker = hasHeaderColumn ? '\n<!-- header-column -->' : '';
+        return '\n\n' + result.join('\n') + marker + '\n\n';
       }
     });
 
