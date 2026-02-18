@@ -1922,7 +1922,6 @@ pre.with-line-numbers code .line::before {
 .hljs-quote,
 .hljs-deletion {
   color: oklch(0.55 0.02 250);
-  font-style: italic;
 }
 
 .hljs-variable,
@@ -1979,7 +1978,6 @@ pre.with-line-numbers code .line::before {
 .dark .hljs-quote,
 .dark .hljs-deletion {
   color: var(--syntax-comment);
-  font-style: italic;
 }
 
 .dark .hljs-variable,
@@ -3429,7 +3427,6 @@ pre.with-line-numbers code .line::before {
 [data-theme="light"] .hljs-comment,
 [data-theme="light"] .hljs-quote {
   color: oklch(0.55 0.02 250);
-  font-style: italic;
 }
 
 [data-theme="light"] .hljs-function,
@@ -4092,7 +4089,6 @@ pre.with-line-numbers code .line::before {
 [data-theme="dark"] .hljs-quote,
 [data-theme="dark"] .hljs-deletion {
   color: var(--syntax-comment);
-  font-style: italic;
 }
 
 [data-theme="dark"] .hljs-variable,

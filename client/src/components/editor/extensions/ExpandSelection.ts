@@ -26,6 +26,19 @@ import { Node as PMNode } from '@tiptap/pm/model';
  *     Cmd+A 4: Select entire Header 2 section (heading + all nested content)
  *     Cmd+A 5: Select the entire document
  * 
+ * For tables:
+ *   Cursor in a cell:
+ *     Cmd+A 1: Select text in current cell
+ *     Cmd+A 2: Select entire row content
+ *     Cmd+A 3: Select entire table content
+ *     Cmd+A 4: Heading sections / document
+ * 
+ * For callouts:
+ *   Cursor in a callout:
+ *     Cmd+A 1: Select text in current textblock inside callout
+ *     Cmd+A 2: Select entire callout content
+ *     Cmd+A 3: Heading sections / document
+ * 
  * The expansion state resets when:
  *   - The user clicks somewhere
  *   - The user types
@@ -65,21 +78,17 @@ const LIST_CONTAINER_TYPES = new Set([
   'mixedList',
 ]);
 
-// Node types that are individual list item wrappers
-const LIST_ITEM_TYPES = new Set([
-  'listItem',
-  'taskItem',
+// Complex block node types that should get their own expansion step
+const COMPLEX_BLOCK_TYPES = new Set([
+  'table',
+  'callout',
+  'codeBlock',
+  'blockquote',
 ]);
 
-// All wrapper types that should be skipped in the generic parent walk
-const WRAPPER_TYPES = new Set([
-  'listItem',
-  'bulletList',
-  'orderedList',
-  'taskList',
-  'taskItem',
-  'mixedList',
-]);
+// Table-related node types
+const TABLE_ROW_TYPE = 'tableRow';
+const TABLE_CELL_TYPES = new Set(['tableCell', 'tableHeader']);
 
 /**
  * Get the initial expansion — select the content of the current textblock (paragraph/heading).
@@ -101,10 +110,68 @@ function selectCurrentTextblock(doc: PMNode, from: number, to: number): { from: 
 }
 
 /**
+ * Find the table cell that contains the current selection.
+ * Returns the content range of the cell.
+ */
+function findTableCellRange(doc: PMNode, from: number, to: number): { from: number; to: number } | null {
+  const $from = doc.resolve(from);
+
+  for (let d = $from.depth; d >= 1; d--) {
+    const node = $from.node(d);
+    if (TABLE_CELL_TYPES.has(node.type.name)) {
+      const start = $from.start(d);
+      const end = $from.end(d);
+      if (start < from || end > to) {
+        return { from: start, to: end };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Find the table row that contains the current selection.
+ * Returns the content range of the row.
+ */
+function findTableRowRange(doc: PMNode, from: number, to: number): { from: number; to: number } | null {
+  const $from = doc.resolve(from);
+
+  for (let d = $from.depth; d >= 1; d--) {
+    const node = $from.node(d);
+    if (node.type.name === TABLE_ROW_TYPE) {
+      const start = $from.start(d);
+      const end = $from.end(d);
+      if (start < from || end > to) {
+        return { from: start, to: end };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Find a complex block node (table, callout, codeBlock, blockquote) that contains the selection.
+ * Returns the content range of the block.
+ */
+function findComplexBlockRange(doc: PMNode, from: number, to: number): { from: number; to: number } | null {
+  const $from = doc.resolve(from);
+
+  for (let d = $from.depth; d >= 1; d--) {
+    const node = $from.node(d);
+    if (COMPLEX_BLOCK_TYPES.has(node.type.name)) {
+      const start = $from.start(d);
+      const end = $from.end(d);
+      if (start < from || end > to) {
+        return { from: start, to: end };
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * Find the outermost list container that contains the current selection.
  * Returns the content range of the list (all list items' text content).
- * This selects from the start of the first list item's content to the end
- * of the last list item's content, effectively selecting "all list items text".
  */
 function findListContentRange(doc: PMNode, from: number, to: number): { from: number; to: number } | null {
   const $from = doc.resolve(from);
@@ -199,11 +266,24 @@ function findContainingHeadingSections(
 }
 
 /**
+ * Check if the cursor is inside a table.
+ */
+function isInsideTable(doc: PMNode, from: number): boolean {
+  const $from = doc.resolve(from);
+  for (let d = $from.depth; d >= 1; d--) {
+    if ($from.node(d).type.name === 'table') return true;
+  }
+  return false;
+}
+
+/**
  * Build the ordered list of expansion steps from the current selection.
  * 
- * Steps:
- * 1. Current textblock content (line text)
- * 2. List content (all list items) — only if cursor is inside a list
+ * Steps (contextual):
+ * 1. Current textblock content (line text / cell text)
+ * 2a. If in table: table cell → table row → entire table
+ * 2b. If in list: list content (all list items)
+ * 2c. If in callout/blockquote/codeBlock: entire block content
  * 3. Heading sections (smallest to largest)
  * 4. Entire document
  * 
@@ -218,32 +298,39 @@ function buildExpansionSteps(
   let currentFrom = initialFrom;
   let currentTo = initialTo;
 
+  // Helper to add a step if it expands the selection
+  const addStep = (range: { from: number; to: number } | null): boolean => {
+    if (range && (range.from < currentFrom || range.to > currentTo)) {
+      steps.push(range);
+      currentFrom = range.from;
+      currentTo = range.to;
+      return true;
+    }
+    return false;
+  };
+
   // Step 1: Current textblock content
-  const textblockRange = selectCurrentTextblock(doc, currentFrom, currentTo);
-  if (textblockRange && (textblockRange.from < currentFrom || textblockRange.to > currentTo)) {
-    steps.push(textblockRange);
-    currentFrom = textblockRange.from;
-    currentTo = textblockRange.to;
+  addStep(selectCurrentTextblock(doc, currentFrom, currentTo));
+
+  // Step 2: Context-specific expansion
+  if (isInsideTable(doc, initialFrom)) {
+    // Table: cell → row → table
+    addStep(findTableCellRange(doc, currentFrom, currentTo));
+    addStep(findTableRowRange(doc, currentFrom, currentTo));
   }
 
-  // Step 2: List content (all items in the list)
-  const listRange = findListContentRange(doc, currentFrom, currentTo);
-  if (listRange && (listRange.from < currentFrom || listRange.to > currentTo)) {
-    steps.push(listRange);
-    currentFrom = listRange.from;
-    currentTo = listRange.to;
-  }
+  // List content (works both inside and outside tables)
+  addStep(findListContentRange(doc, currentFrom, currentTo));
+
+  // Complex block (table, callout, codeBlock, blockquote) — select entire block
+  addStep(findComplexBlockRange(doc, currentFrom, currentTo));
 
   // Step 3: Heading sections (smallest to largest)
   const sections = buildHeadingSections(doc);
   if (sections.length > 0) {
     const containingSections = findContainingHeadingSections(sections, currentFrom, currentTo);
     for (const section of containingSections) {
-      if (section.from < currentFrom || section.to > currentTo) {
-        steps.push({ from: section.from, to: section.to });
-        currentFrom = section.from;
-        currentTo = section.to;
-      }
+      addStep({ from: section.from, to: section.to });
     }
   }
 

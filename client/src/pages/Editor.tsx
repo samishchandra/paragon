@@ -285,7 +285,10 @@ export default function EditorPage() {
     } catch {
       // Silently fail
     }
-    setContent('<h1>Untitled</h1><p></p>');
+    const blankContent = '<h1>Untitled</h1><p></p>';
+    setContent(blankContent);
+    // Directly update the TipTap editor since useEditor only uses content as initial value
+    editorRef.current?.setContent?.(blankContent);
     setShowNewConfirm(false);
   }, []);
 
@@ -297,6 +300,8 @@ export default function EditorPage() {
       // Silently fail
     }
     setContent(DEFAULT_CONTENT);
+    // Directly update the TipTap editor since useEditor only uses content as initial value
+    editorRef.current?.setContent?.(DEFAULT_CONTENT);
     setShowNewConfirm(false);
   }, []);
 
