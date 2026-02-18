@@ -94,7 +94,8 @@ describe('parseIntSafe', () => {
  * This function converts standard HTML checkbox lists to TipTap's taskList format.
  */
 describe('convertCheckboxListsToTaskLists', () => {
-  // Re-implement the function for testing (it's not exported)
+  // Re-implement the fixed function for testing (it's not exported)
+  // This must stay in sync with the actual implementation in MarkdownEditor.tsx
   function convertCheckboxListsToTaskLists(html: string): string {
     const parser = new DOMParser();
     const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
@@ -109,9 +110,20 @@ describe('convertCheckboxListsToTaskLists', () => {
       let hasCheckbox = false;
       let hasRegular = false;
 
+      // Helper to find checkbox in an <li> — checks both direct children and inside <p> wrappers
+      const findCheckbox = (li: HTMLLIElement): HTMLInputElement | null => {
+        const directInput = li.querySelector(':scope > input[type="checkbox"]');
+        if (directInput) return directInput as HTMLInputElement;
+        const firstP = li.querySelector(':scope > p');
+        if (firstP) {
+          const pInput = firstP.querySelector(':scope > input[type="checkbox"]');
+          if (pInput) return pInput as HTMLInputElement;
+        }
+        return null;
+      };
+
       items.forEach(li => {
-        const firstInput = li.querySelector(':scope > input[type="checkbox"]');
-        if (firstInput) {
+        if (findCheckbox(li)) {
           hasCheckbox = true;
         } else {
           hasRegular = true;
@@ -121,12 +133,20 @@ describe('convertCheckboxListsToTaskLists', () => {
       if (!hasCheckbox) return;
 
       items.forEach(li => {
-        const checkbox = li.querySelector(':scope > input[type="checkbox"]');
+        const checkbox = findCheckbox(li);
         if (checkbox) {
           const isChecked = checkbox.hasAttribute('checked');
           li.setAttribute('data-type', 'taskItem');
           li.setAttribute('data-checked', String(isChecked));
+
+          const checkboxParent = checkbox.parentElement;
+          const wasInsideP = checkboxParent && checkboxParent.tagName === 'P' && checkboxParent.parentElement === li;
+
           checkbox.remove();
+
+          if (wasInsideP && checkboxParent.firstChild && checkboxParent.firstChild.nodeType === Node.TEXT_NODE) {
+            checkboxParent.firstChild.textContent = (checkboxParent.firstChild.textContent || '').replace(/^\s+/, '');
+          }
 
           const childNodes = Array.from(li.childNodes);
           const inlineContent: Node[] = [];
@@ -231,5 +251,113 @@ describe('convertCheckboxListsToTaskLists', () => {
     const doc = parser.parseFromString(result, 'text/html');
     const p = doc.querySelector('p');
     expect(p?.textContent?.startsWith(' ')).toBe(false);
+  });
+
+  // ============================================================
+  // REGRESSION: Checkbox inside <p> wrapper (multi-line content)
+  // When marked parses task list items with continuation content
+  // (images, code blocks, multiple paragraphs), it wraps the
+  // checkbox inside a <p> tag instead of leaving it as a direct
+  // child of <li>. The findCheckbox helper must detect these.
+  // ============================================================
+
+  it('should find checkbox inside <p> wrapper (marked multi-line output)', () => {
+    // This is the exact HTML structure marked produces for:
+    // - [ ] first\n    \n    ![img](url)\n- [ ] second
+    const html = '<ul><li><input type="checkbox"> <p>first</p><p><img src="img.jpg"></p></li>' +
+      '<li><p><input type="checkbox"> second</p></li></ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    expect(result).toContain('data-type="taskList"');
+    // Both items should be converted to taskItems
+    const matches = result.match(/data-type="taskItem"/g);
+    expect(matches?.length).toBe(2);
+  });
+
+  it('should handle all checkboxes inside <p> wrappers', () => {
+    // All items have checkboxes inside <p>
+    const html = '<ul>' +
+      '<li><p><input type="checkbox"> first</p></li>' +
+      '<li><p><input type="checkbox"> second</p></li>' +
+      '<li><p><input type="checkbox"> third</p></li>' +
+      '</ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    expect(result).toContain('data-type="taskList"');
+    const matches = result.match(/data-type="taskItem"/g);
+    expect(matches?.length).toBe(3);
+  });
+
+  it('should preserve checked state when checkbox is inside <p>', () => {
+    const html = '<ul>' +
+      '<li><p><input type="checkbox" checked> done</p></li>' +
+      '<li><p><input type="checkbox"> pending</p></li>' +
+      '</ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    expect(result).toContain('data-checked="true"');
+    expect(result).toContain('data-checked="false"');
+  });
+
+  it('should clean up leading whitespace after removing checkbox from <p>', () => {
+    const html = '<ul><li><p><input type="checkbox">   spaced text</p></li></ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    expect(result).toContain('data-type="taskItem"');
+    // The text should not have leading whitespace
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(result, 'text/html');
+    const p = doc.querySelector('[data-type="taskItem"] p');
+    expect(p?.textContent?.startsWith(' ')).toBe(false);
+  });
+
+  it('should handle mixed direct-child and p-wrapped checkboxes', () => {
+    // First item has direct checkbox, second has it inside <p>
+    const html = '<ul>' +
+      '<li><input type="checkbox"> direct</li>' +
+      '<li><p><input type="checkbox"> wrapped</p></li>' +
+      '</ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    expect(result).toContain('data-type="taskList"');
+    const matches = result.match(/data-type="taskItem"/g);
+    expect(matches?.length).toBe(2);
+  });
+
+  it('should preserve block content (images) alongside p-wrapped checkbox', () => {
+    const html = '<ul>' +
+      '<li><input type="checkbox"> <p>text</p><p><img src="photo.jpg" alt="photo"></p></li>' +
+      '</ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    expect(result).toContain('data-type="taskItem"');
+    expect(result).toContain('img');
+    expect(result).toContain('photo.jpg');
+  });
+
+  it('should handle nested lists with p-wrapped checkboxes', () => {
+    const html = '<ul>' +
+      '<li><p><input type="checkbox"> parent</p>' +
+      '<ul><li><input type="checkbox"> child</li></ul>' +
+      '</li></ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    // Both parent and child should be task items
+    const matches = result.match(/data-type="taskItem"/g);
+    expect(matches?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('should not convert when checkbox is deeply nested (not direct child or first-p child)', () => {
+    // Checkbox inside a <div> inside <li> — should NOT be detected
+    const html = '<ul><li><div><input type="checkbox"> hidden</div></li></ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    expect(result).not.toContain('data-type="taskList"');
+  });
+
+  it('should handle three items where middle one has continuation content', () => {
+    // Simulates: - [ ] first\n- [ ] second\n\n    continuation\n\n- [ ] third
+    // marked wraps the second and third items differently
+    const html = '<ul>' +
+      '<li><input type="checkbox"> first</li>' +
+      '<li><input type="checkbox"> <p>second</p><p>continuation</p></li>' +
+      '<li><p><input type="checkbox"> third</p></li>' +
+      '</ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    expect(result).toContain('data-type="taskList"');
+    const matches = result.match(/data-type="taskItem"/g);
+    expect(matches?.length).toBe(3);
   });
 });
