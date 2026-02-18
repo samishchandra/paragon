@@ -91,6 +91,46 @@ function createTestTurndownService(): TurndownService {
     },
   });
 
+  // Custom table rule with header column detection
+  td.addRule('table', {
+    filter: 'table',
+    replacement: function(content, node) {
+      const table = node as HTMLTableElement;
+      const rows = Array.from(table.querySelectorAll('tr'));
+      if (rows.length === 0) return '';
+
+      const result: string[] = [];
+      let hasHeaderColumn = false;
+
+      rows.forEach((row, rowIndex) => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        const cellContents = cells.map(cell => (cell.textContent || '').trim().replace(/\|/g, '\\|'));
+
+        if (rowIndex > 0 && cells.length > 0 && cells[0].nodeName === 'TH') {
+          hasHeaderColumn = true;
+        }
+
+        result.push('| ' + cellContents.join(' | ') + ' |');
+
+        if (rowIndex === 0) {
+          const separator = cells.map(() => '---').join(' | ');
+          result.push('| ' + separator + ' |');
+        }
+      });
+
+      const marker = hasHeaderColumn ? '\n<!-- header-column -->' : '';
+      return '\n\n' + result.join('\n') + marker + '\n\n';
+    }
+  });
+
+  // Skip th and td since they're handled by the table rule
+  td.addRule('tableCell', {
+    filter: ['th', 'td'],
+    replacement: function(content) {
+      return content;
+    }
+  });
+
   // Callout rule
   td.addRule('callout', {
     filter: (node) => {
@@ -243,6 +283,56 @@ describe('HTML to Markdown Conversion', () => {
         const result = td.turndown(html);
         expect(result).toContain(`\`\`\`ad-${type}`);
       }
+    });
+  });
+
+  describe('Table Header Column Persistence', () => {
+    it('should append <!-- header-column --> marker when body rows have <th> in first cell', () => {
+      // Table with header column: body rows have <th> in first cell
+      const html = '<table><tr><th>H1</th><th>H2</th></tr>' +
+        '<tr><th>R1C1</th><td>R1C2</td></tr>' +
+        '<tr><th>R2C1</th><td>R2C2</td></tr></table>';
+      const result = td.turndown(html);
+      expect(result).toContain('<!-- header-column -->');
+    });
+
+    it('should NOT append <!-- header-column --> marker for regular tables', () => {
+      const html = '<table><tr><th>H1</th><th>H2</th></tr>' +
+        '<tr><td>R1C1</td><td>R1C2</td></tr>' +
+        '<tr><td>R2C1</td><td>R2C2</td></tr></table>';
+      const result = td.turndown(html);
+      expect(result).not.toContain('<!-- header-column -->');
+    });
+
+    it('should preserve cell content in header column tables', () => {
+      const html = '<table><tr><th>Name</th><th>Value</th></tr>' +
+        '<tr><th>Alpha</th><td>100</td></tr>' +
+        '<tr><th>Beta</th><td>200</td></tr></table>';
+      const result = td.turndown(html);
+      expect(result).toContain('Alpha');
+      expect(result).toContain('Beta');
+      expect(result).toContain('100');
+      expect(result).toContain('200');
+      expect(result).toContain('<!-- header-column -->');
+    });
+
+    it('should detect header column even with single body row', () => {
+      const html = '<table><tr><th>H1</th><th>H2</th></tr>' +
+        '<tr><th>R1C1</th><td>R1C2</td></tr></table>';
+      const result = td.turndown(html);
+      expect(result).toContain('<!-- header-column -->');
+    });
+
+    it('should produce valid markdown table with header-column marker', () => {
+      const html = '<table><tr><th>H1</th><th>H2</th><th>H3</th></tr>' +
+        '<tr><th>A</th><td>B</td><td>C</td></tr></table>';
+      const result = td.turndown(html);
+      // Should have header row, separator, data row, and marker
+      const lines = result.trim().split('\n');
+      expect(lines[0]).toMatch(/^\| H1 \| H2 \| H3 \|$/);
+      expect(lines[1]).toMatch(/^\| --- \| --- \| --- \|$/);
+      expect(lines[2]).toMatch(/^\| A \| B \| C \|$/);
+      expect(lines[3]).toBe('<!-- header-column -->');
     });
   });
 
