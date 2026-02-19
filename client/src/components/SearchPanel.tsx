@@ -38,6 +38,8 @@ import { cn } from '@/lib/utils';
 import { itemRowState, ITEM_DRAGGING } from '@/lib/styles';
 import { linkifyTitle, getTitlePlainText, extractFirstLineLink, renderFirstLineLink } from '@/lib/linkifyTitle';
 import { ListIcon } from '@/components/icons/ListIcon';
+import { ListPill } from '@/components/ListPill';
+import { TagPill } from '@/components/TagPill';
 import {
   debouncedSearch,
   cancelSearch,
@@ -178,7 +180,7 @@ export const SearchPanel = forwardRef<SearchPanelRef, SearchPanelProps>(({
   const [recentFilesData, setRecentFilesData] = useState<any[]>([]);
   useEffect(() => {
     if (!isActive || query.trim() || hasActiveFilters) return;
-    apiQuery({ table: 'items', select: 'id, type, title, content, updated_at', filters: { user_id: userId, deleted_at: null }, order: { column: 'updated_at', ascending: false }, limit: 5 }).then(({ data }) => {
+    apiQuery({ table: 'items', select: 'id, type, title, content, updated_at, list_id', filters: { user_id: userId, deleted_at: null }, order: { column: 'updated_at', ascending: false }, limit: 5 }).then(({ data }) => {
       setRecentFilesData(data || []);
     });
   }, [isActive, query, hasActiveFilters]);
@@ -191,6 +193,7 @@ export const SearchPanel = forwardRef<SearchPanelRef, SearchPanelProps>(({
       title: item.title,
       content: item.content,
       updatedAt: item.updated_at,
+      listId: item.list_id as string | null,
     }));
   }, [query, recentFilesData, hasActiveFilters]);
 
@@ -985,6 +988,36 @@ export const SearchPanel = forwardRef<SearchPanelRef, SearchPanelProps>(({
                           }
                           return null;
                         })()}
+                        {/* List and Tag pills */}
+                        {(() => {
+                          const stateItem = state.items.find(i => i.id === item.id);
+                          const itemTagIds = stateItem?.tags || [];
+                          const itemTags = state.tags.filter(t => itemTagIds.includes(t.id));
+                          const hasListOrTags = item.listId || itemTags.length > 0;
+                          if (!hasListOrTags) return null;
+                          return (
+                            <div className="flex items-center gap-1 mt-1 flex-wrap">
+                              {item.listId && (
+                                <ListPill
+                                  listId={item.listId}
+                                  itemId={item.id}
+                                  itemType={item.type}
+                                  size="sm"
+                                  readOnly
+                                />
+                              )}
+                              {itemTags.slice(0, 3).map((tag) => (
+                                <TagPill
+                                  key={tag.id}
+                                  tag={tag}
+                                  itemId={item.id}
+                                  size="sm"
+                                  readOnly
+                                />
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </button>
                   );
@@ -1058,6 +1091,36 @@ export const SearchPanel = forwardRef<SearchPanelRef, SearchPanelProps>(({
                             );
                           }
                           return null;
+                        })()}
+                        {/* List and Tag pills */}
+                        {(() => {
+                          const stateItem = state.items.find(i => i.id === result.id);
+                          const itemTagIds = stateItem?.tags || [];
+                          const itemTags = state.tags.filter(t => itemTagIds.includes(t.id));
+                          const hasListOrTags = result.listId || itemTags.length > 0;
+                          if (!hasListOrTags) return null;
+                          return (
+                            <div className="flex items-center gap-1 mt-1 flex-wrap">
+                              {result.listId && (
+                                <ListPill
+                                  listId={result.listId}
+                                  itemId={result.id}
+                                  itemType={result.type}
+                                  size="sm"
+                                  readOnly
+                                />
+                              )}
+                              {itemTags.slice(0, 3).map((tag) => (
+                                <TagPill
+                                  key={tag.id}
+                                  tag={tag}
+                                  itemId={result.id}
+                                  size="sm"
+                                  readOnly
+                                />
+                              ))}
+                            </div>
+                          );
                         })()}
                       </div>
                     </button>

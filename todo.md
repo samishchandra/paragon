@@ -116,3 +116,7 @@
 ## Upstream Momentum Fixes
 - [x] Pull latest fixes from original Momentum repo
 - [x] Review and apply relevant upstream changes (MiddlePanel bulk refresh fix, LeftSidebar click handlers applied; all other fixes already present)
+
+## Apply Upstream Commits
+- [x] Apply commit f858e689d159970da5a75f2ccfe1901717401a86 (profile area revert, list/tag pills in search)
+- [x] Apply commit fed52e95f0d16a70159efb80ac482cca2a0f8b86 (readOnly prop for ListPill/TagPill in search)

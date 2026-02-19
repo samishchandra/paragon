@@ -19,9 +19,10 @@ interface TagPillProps {
   itemId: string;
   className?: string;
   size?: 'default' | 'sm' | 'lg';
+  readOnly?: boolean;
 }
 
-export const TagPill = memo(function TagPill({ tag, itemId, className, size = 'default' }: TagPillProps) {
+export const TagPill = memo(function TagPill({ tag, itemId, className, size = 'default', readOnly = false }: TagPillProps) {
   const { state, updateItem, addTag } = useMomentum();
   const [open, setOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
@@ -49,6 +50,21 @@ export const TagPill = memo(function TagPill({ tag, itemId, className, size = 'd
     updateItem({ ...item, tags: [...currentTags, newTagId] });
     setNewTagName('');
   };
+
+  // ReadOnly mode: display-only pill without popover
+  if (readOnly) {
+    return (
+      <Pill
+        variant="filled"
+        size={size}
+        color={tag.color}
+        className={className}
+      >
+        <TagIcon className={size === 'sm' ? 'w-2.5 h-2.5' : 'w-3 h-3'} color={tag.color} />
+        {tag.name}
+      </Pill>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

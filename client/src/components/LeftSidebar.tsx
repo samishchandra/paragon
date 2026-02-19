@@ -707,18 +707,12 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
       {/* Footer with User Profile, Theme Toggle, and Settings */}
       <div className="p-3 border-t border-sidebar-border/50 sidebar-footer-mobile">
         <div className="flex items-center gap-2">
-          <button
-            className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
-            onClick={() => window.dispatchEvent(new CustomEvent('open-settings', { detail: { section: 'account' } }))}
-            title="Account settings"
-          >
-            <UserAvatar size={28} />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground truncate leading-tight">
-                {user?.name || user?.email?.split('@')[0] || 'User'}
-              </p>
-            </div>
-          </button>
+          <UserAvatar size={28} className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.dispatchEvent(new CustomEvent('open-settings', { detail: { section: 'account' } }))} />
+          <div className="flex-1 min-w-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.dispatchEvent(new CustomEvent('open-settings', { detail: { section: 'account' } }))} title="Account settings">
+            <p className="text-xs font-medium text-foreground truncate leading-tight">
+              {user?.name || user?.email?.split('@')[0] || 'User'}
+            </p>
+          </div>
           <div className="flex items-center gap-0.5 shrink-0">
             <Button
               variant="ghost"

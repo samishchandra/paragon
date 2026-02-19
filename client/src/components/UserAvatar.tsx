@@ -8,9 +8,10 @@ import { User } from 'lucide-react';
 interface UserAvatarProps {
   size?: number;
   className?: string;
+  onClick?: () => void;
 }
 
-export function UserAvatar({ size = 32, className = '' }: UserAvatarProps) {
+export function UserAvatar({ size = 32, className = '', onClick }: UserAvatarProps) {
   const { user } = useAuth();
 
   const avatarUrl = (user as any)?.user_metadata?.avatar_url || null;
@@ -34,6 +35,7 @@ export function UserAvatar({ size = 32, className = '' }: UserAvatarProps) {
         className={`rounded-full object-cover shrink-0 ${className}`}
         style={{ width: size, height: size }}
         referrerPolicy="no-referrer"
+        onClick={onClick}
       />
     );
   }
@@ -42,6 +44,7 @@ export function UserAvatar({ size = 32, className = '' }: UserAvatarProps) {
     <div
       className={`rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 ${className}`}
       style={{ width: size, height: size }}
+      onClick={onClick}
     >
       {initials !== '?' ? (
         <span className="text-xs font-medium" style={{ fontSize: size * 0.38 }}>

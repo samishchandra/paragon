@@ -22,9 +22,10 @@ interface ListPillProps {
   className?: string;
   showRemove?: boolean;
   size?: 'default' | 'sm' | 'lg';
+  readOnly?: boolean;
 }
 
-export const ListPill = memo(function ListPill({ listId, itemId, itemType, className, showRemove = false, size = 'default' }: ListPillProps) {
+export const ListPill = memo(function ListPill({ listId, itemId, itemType, className, showRemove = false, size = 'default', readOnly = false }: ListPillProps) {
   const { state, setItemList, removeItemFromList, addList } = useMomentum();
   const [open, setOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
@@ -145,6 +146,24 @@ export const ListPill = memo(function ListPill({ listId, itemId, itemType, class
       ) : null}
     </div>
   );
+
+  // If no list assigned and readOnly, show nothing
+  if (!list && readOnly) return null;
+
+  // If readOnly and list exists, show display-only pill
+  if (readOnly && list) {
+    return (
+      <Pill
+        variant="filled"
+        size={size}
+        color={list.color}
+        className={className}
+      >
+        <ListIcon name={list.icon} color={list.color} className={size === 'sm' ? 'w-3 h-3' : 'w-3.5 h-3.5'} />
+        {list.name}
+      </Pill>
+    );
+  }
 
   // If no list assigned, show a subtle "Add to list" button
   if (!list) {
