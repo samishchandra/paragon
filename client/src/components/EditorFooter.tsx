@@ -2,9 +2,9 @@
  * Editor Footer Component
  * 
  * Displays auto-save status, word count, character count, last updated time,
- * and Dropbox backup status at the bottom of the editor panel.
+ * and local folder backup status at the bottom of the editor panel.
  * 
- * Dropbox status is event-driven (no polling):
+ * Backup status is event-driven (no polling):
  * - Connection changes via onConnectionChange listener
  * - Per-item backup status via onItemBackupStatusChange listener
  */
@@ -15,8 +15,8 @@ import {
   Clock,
   Loader2,
   CheckCircle2,
-  Cloud,
-  CloudOff,
+  HardDrive,
+  HardDriveDownload,
   AlertCircle,
   UploadCloud,
 } from 'lucide-react';
@@ -34,7 +34,7 @@ import {
   backupItemNow,
   type ItemBackupStatus,
 } from '@/lib/autoBackup';
-import { isConnected as isDropboxConnected, onConnectionChange, getBackupFolder, sanitizeFilename } from '@/lib/dropbox';
+import { isConnected as isLocalBackupConnected, onConnectionChange, getFolderName } from '@/lib/localBackup';
 
 type SaveStatus = 'idle' | 'saving' | 'saved';
 
@@ -46,7 +46,7 @@ interface EditorFooterProps {
   contentVersion?: number;
   /** The ID of the currently selected item */
   itemId?: string;
-  /** The name of the list the item belongs to (for Dropbox folder link) */
+  /** The name of the list the item belongs to */
   listName?: string;
 }
 
@@ -58,20 +58,20 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
 
   // ── Backup status tracking (event-driven, no polling) ──
   const [backupStatus, setBackupStatus] = useState<ItemBackupStatus | null>(null);
-  const [dropboxConnected, setDropboxConnected] = useState(isDropboxConnected());
+  const [backupConnected, setBackupConnected] = useState(isLocalBackupConnected());
 
-  // Listen for Dropbox connection changes via event listener
+  // Listen for backup connection changes via event listener
   useEffect(() => {
-    setDropboxConnected(isDropboxConnected());
+    setBackupConnected(isLocalBackupConnected());
     const unsub = onConnectionChange((connected) => {
-      setDropboxConnected(connected);
+      setBackupConnected(connected);
     });
     return unsub;
   }, []);
 
   // Subscribe to backup status changes for the current item
   useEffect(() => {
-    if (!itemId || !dropboxConnected) {
+    if (!itemId || !backupConnected) {
       setBackupStatus(null);
       return;
     }
@@ -87,7 +87,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
     });
 
     return unsub;
-  }, [itemId, dropboxConnected]);
+  }, [itemId, backupConnected]);
 
   // Handle click-to-backup
   const handleBackupClick = useCallback(() => {
@@ -137,8 +137,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
     return { words, characters, lines };
   }, [content]);
 
-  // Format last updated time - relative for display, absolute for tooltip
-  // Only recalculates when updatedAt changes (on save) or when item is viewed (contentVersion)
+  // Format last updated time
   const lastUpdatedAbsolute = useMemo(() => {
     if (!updatedAt) return null;
     try {
@@ -180,10 +179,11 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
     }
   };
 
-  // Render Dropbox backup status indicator
+  // Render local backup status indicator
   const renderBackupStatus = () => {
-    if (!dropboxConnected || !itemId) return null;
+    if (!backupConnected || !itemId) return null;
 
+    const folderName = getFolderName();
     const isClickable = backupStatus === 'pending' || backupStatus === 'error';
     const clickableClass = isClickable 
       ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' 
@@ -196,18 +196,13 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <a
-                  href={`https://www.dropbox.com/home/Apps/Momentum${getBackupFolder()}/${sanitizeFilename(listName || 'Miscellaneous')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-emerald-500/70 hover:text-emerald-600 transition-colors"
-                >
-                  <Cloud className="w-3 h-3" />
+                <span className="flex items-center gap-1.5 text-emerald-500/70 cursor-default">
+                  <HardDrive className="w-3 h-3" />
                   <span className="text-[10px]">Backed up</span>
-                </a>
+                </span>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p>Backed up to Dropbox</p>
+                <p>Backed up to local folder: {folderName}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -221,12 +216,12 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
                 onClick={() => backupItemNow(itemId)}
                 className="flex items-center gap-1.5 text-muted-foreground/50 hover:text-muted-foreground cursor-pointer hover:opacity-80 active:scale-95 transition-all"
               >
-                <CloudOff className="w-3 h-3" />
+                <HardDriveDownload className="w-3 h-3" />
                 <span className="text-[10px]">Not backed up</span>
               </button>
             </TooltipTrigger>
             <TooltipContent side="top">
-              <p>Click to backup to Dropbox</p>
+              <p>Click to backup to local folder</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -264,7 +259,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
                 </span>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p>Backing up to Dropbox...</p>
+                <p>Backing up to local folder...</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -293,7 +288,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
     }
   };
 
-  const showBackup = dropboxConnected && !!itemId;
+  const showBackup = backupConnected && !!itemId;
   const showSaveStatus = saveStatus !== 'idle';
 
   return (
@@ -326,7 +321,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
         )}
       </div>
 
-      {/* Right side - Save status, Dropbox Backup status, and Cloud Sync */}
+      {/* Right side - Save status, Backup status, and Cloud Sync */}
       <div className="flex items-center gap-3">
         {/* Auto-save indicator */}
         {renderSaveStatus()}
@@ -336,7 +331,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
           <span className="w-px h-3 bg-border/60" />
         )}
 
-        {/* Dropbox backup status */}
+        {/* Local backup status */}
         {renderBackupStatus()}
 
         {/* Vertical divider when backup status is visible */}

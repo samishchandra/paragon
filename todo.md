@@ -100,3 +100,19 @@
 - [x] Wire up frontend AI features to backend LLM procedures
 - [x] Write vitest tests for AI procedures
 - [x] End-to-end test AI features
+
+## Local Folder Backup (Replace Dropbox)
+- [x] Remove Dropbox backup functionality and references
+- [x] Implement local folder backup using File System Access API
+- [x] One-way sync: app creates/updates/deletes reflected in filesystem
+- [x] Filesystem changes do NOT reflect back in the app
+- [x] Update Settings Backup tab UI for local folder selection
+- [x] Replace Dropbox image upload with S3 storage
+- [x] Add /api/images/upload REST endpoint with multer
+
+## Settings Panel Fix
+- [x] Fix Settings right-panel doesn't scroll
+
+## Upstream Momentum Fixes
+- [x] Pull latest fixes from original Momentum repo
+- [x] Review and apply relevant upstream changes (MiddlePanel bulk refresh fix, LeftSidebar click handlers applied; all other fixes already present)

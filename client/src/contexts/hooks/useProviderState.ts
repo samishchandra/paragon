@@ -19,7 +19,7 @@ import { useItemOperations } from './useItemOperations';
 import { useVisibilitySync } from './useVisibilitySync';
 import { useTagListOperations } from './useTagListOperations';
 import { useDataFetching } from './useDataFetching';
-import { useDropboxBackup } from './useDropboxBackup';
+import { useLocalBackup } from './useLocalBackup';
 import { useLocalStoragePersistence } from './useLocalStoragePersistence';
 import { useComputedData } from './useComputedData';
 import { useWikiLinks } from './useWikiLinks';
@@ -172,7 +172,7 @@ export function useProviderState(userId: string): ServerMomentumContextValue {
   });
 
   // ── Auto-backup initialization ──
-  useDropboxBackup(userId);
+  useLocalBackup(userId);
 
   // ── Visibility & focus-based catch-up sync ──
   useVisibilitySync({

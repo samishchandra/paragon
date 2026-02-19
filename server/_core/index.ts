@@ -41,6 +41,25 @@ async function startServer() {
   app.use('/api/data', dataRouter);
   // AI API (streaming + completions)
   app.use('/api/ai', aiRouter);
+  // Image upload endpoint (multipart form data → S3)
+  const multer = (await import('multer')).default;
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+  app.post('/api/images/upload', upload.single('file'), async (req, res) => {
+    try {
+      const file = (req as any).file;
+      if (!file) { res.status(400).json({ error: 'No file provided' }); return; }
+      const { storagePut } = await import('../storage');
+      const date = new Date().toISOString().slice(0, 10);
+      const random = Math.random().toString(36).substring(2, 10);
+      const ext = (file.originalname || 'image.png').split('.').pop()?.toLowerCase() || 'png';
+      const key = `images/${date}_${random}.${ext}`;
+      const { url } = await storagePut(key, file.buffer, file.mimetype);
+      res.json({ url, key });
+    } catch (err: any) {
+      console.error('Image upload error:', err);
+      res.status(500).json({ error: err.message || 'Upload failed' });
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",

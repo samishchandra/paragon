@@ -1,7 +1,7 @@
 /**
- * IndexedDB-based image cache for Dropbox images.
- * Caches image blobs locally so they don't need to be re-downloaded
- * from Dropbox on every editor load.
+ * IndexedDB-based image cache for editor images.
+ * Caches image blobs locally for fast resolution
+ * without re-downloading from the server.
  */
 
 const DB_NAME = 'momentum-image-cache';

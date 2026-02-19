@@ -83,13 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     // Clear all app-specific localStorage keys
     const keysToRemove = [
-      'momentum_dropbox_app_key',
-      'momentum_dropbox_access_token',
-      'momentum_dropbox_refresh_token',
-      'momentum_dropbox_token_expiry',
-      'momentum_dropbox_code_verifier',
-      'momentum_dropbox_backup_state',
-      'momentum_dropbox_backup_folder',
+      'momentum_local_backup_connected',
       'momentum_backup_activity_log',
       'momentum_autobackup_pending',
       'momentum-offline-queue',

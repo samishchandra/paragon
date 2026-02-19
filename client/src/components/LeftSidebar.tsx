@@ -345,10 +345,14 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
     <div className="h-full bg-sidebar flex flex-col overflow-hidden">
       {/* Header - hidden on mobile as we have the mobile header */}
       <div className="p-4 border-b border-sidebar-border/50 items-center justify-between hidden md:flex">
-        <div className="flex items-center gap-2 h-8">
+        <button
+          className="flex items-center gap-2 h-8 hover:opacity-80 transition-opacity cursor-pointer"
+          onClick={() => setFilter({ type: 'all' })}
+          title="Go to All Items"
+        >
           <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/ifoOkUsgGUQLWdog.png" alt="Momentum" className="w-7 h-7" />
           <span className="font-medium text-sidebar-foreground leading-7">Momentum</span>
-        </div>
+        </button>
         <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
@@ -703,12 +707,18 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
       {/* Footer with User Profile, Theme Toggle, and Settings */}
       <div className="p-3 border-t border-sidebar-border/50 sidebar-footer-mobile">
         <div className="flex items-center gap-2">
-          <UserAvatar size={28} />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-foreground truncate leading-tight">
-              {user?.name || user?.email?.split('@')[0] || 'User'}
-            </p>
-          </div>
+          <button
+            className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
+            onClick={() => window.dispatchEvent(new CustomEvent('open-settings', { detail: { section: 'account' } }))}
+            title="Account settings"
+          >
+            <UserAvatar size={28} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground truncate leading-tight">
+                {user?.name || user?.email?.split('@')[0] || 'User'}
+              </p>
+            </div>
+          </button>
           <div className="flex items-center gap-0.5 shrink-0">
             <Button
               variant="ghost"

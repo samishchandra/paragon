@@ -301,6 +301,36 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     }
   }, [state.leftPanelCollapsed, state.rightPanelCollapsed]);
 
+  // Suppress layout during data fetches to prevent overlap when items array
+  // is replaced in bulk (e.g., IndexedDB cache load → server sync, filter change).
+  // We track the items array reference: when it changes, suppress layout briefly
+  // so items snap into place instead of animating from stale positions.
+  const prevItemsRef = useRef(state.items);
+  const prevItemsLenRef = useRef(state.items.length);
+  useEffect(() => {
+    const prevItems = prevItemsRef.current;
+    const prevLen = prevItemsLenRef.current;
+    prevItemsRef.current = state.items;
+    prevItemsLenRef.current = state.items.length;
+
+    // Detect bulk replacement: different array reference AND significant length change
+    // (single-item edits reuse the same length but still create a new array,
+    //  so we also check if the first/last IDs shifted — a sign of a full reload)
+    if (prevItems !== state.items) {
+      const lenDelta = Math.abs(state.items.length - prevLen);
+      const firstChanged = state.items[0]?.id !== prevItems[0]?.id;
+      const lastChanged = state.items[state.items.length - 1]?.id !== prevItems[prevLen - 1]?.id;
+
+      if (lenDelta >= 2 || (lenDelta >= 1 && (firstChanged || lastChanged)) || (firstChanged && lastChanged)) {
+        setSuppressLayout(true);
+        if (suppressLayoutTimerRef.current) clearTimeout(suppressLayoutTimerRef.current);
+        suppressLayoutTimerRef.current = setTimeout(() => {
+          setSuppressLayout(false);
+        }, 100);
+      }
+    }
+  }, [state.items]);
+
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

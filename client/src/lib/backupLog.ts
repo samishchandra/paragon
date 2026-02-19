@@ -126,6 +126,6 @@ export function logBackupError(message: string): void {
 export function logConnection(connected: boolean): void {
   addLogEntry({
     type: connected ? 'connect' : 'disconnect',
-    message: connected ? 'Connected to Dropbox' : 'Disconnected from Dropbox',
+    message: connected ? 'Connected to local folder' : 'Disconnected from local folder',
   });
 }

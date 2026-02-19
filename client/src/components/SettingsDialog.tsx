@@ -17,7 +17,7 @@ import {
   Settings,
   Type,
   Database,
-  Cloud,
+  HardDrive,
   Code2,
   Sparkles,
   ChevronLeft,
@@ -29,7 +29,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
-import { isConnected as isDropboxConnected } from '@/lib/dropbox';
+import { isConnected as isLocalBackupConnected } from '@/lib/localBackup';
 import { MFASettings } from '@/components/MFASettings';
 import { shortcutCategories, ShortcutKeys } from '@/components/KeyboardShortcutsDialog';
 
@@ -40,7 +40,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: React.ElementType }[
   { id: 'general', label: 'General', icon: Settings },
   { id: 'editor', label: 'Editor', icon: Type },
   { id: 'data', label: 'Data', icon: Database },
-  { id: 'backup', label: 'Backup', icon: Cloud },
+  { id: 'backup', label: 'Backup', icon: HardDrive },
   { id: 'ai', label: 'AI Assistant', icon: Sparkles },
   { id: 'developer', label: 'Developer', icon: Code2 },
   { id: 'keyboard', label: 'Keyboard Shortcuts', icon: Keyboard },
@@ -189,12 +189,12 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
     }
   }, [open, initialSection]);
   const [showContent, setShowContent] = useState(false); // mobile: toggle between nav and content
-  const [dbxConnected, setDbxConnected] = useState(isDropboxConnected());
+  const [backupConnected, setBackupConnected] = useState(isLocalBackupConnected());
 
-  // Poll Dropbox connection status so sidebar indicator updates in real-time
+  // Poll local backup connection status so sidebar indicator updates in real-time
   useEffect(() => {
     if (!open) return;
-    const check = () => setDbxConnected(isDropboxConnected());
+    const check = () => setBackupConnected(isLocalBackupConnected());
     check();
     const interval = setInterval(check, 2000);
     return () => clearInterval(interval);
@@ -249,7 +249,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
               {SECTIONS.map((section) => {
                 const Icon = section.icon;
                 const isActive = activeSection === section.id;
-                const showConnectedDot = section.id === 'backup' && dbxConnected;
+                const showConnectedDot = section.id === 'backup' && backupConnected;
                 return (
                   <button
                     key={section.id}
@@ -264,7 +264,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                     <Icon className="w-4 h-4 shrink-0" />
                     <span className="flex-1">{section.label}</span>
                     {showConnectedDot && (
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Dropbox connected" />
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Local folder connected" />
                     )}
                   </button>
                 );
@@ -279,7 +279,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
 
           {/* Right Content Panel */}
           <div className={cn(
-            "flex-1 flex-col min-w-0",
+            "flex-1 flex-col min-w-0 overflow-hidden",
             // Mobile: hide content when nav is showing
             isMobile && !showContent ? "hidden" : "flex"
           )}>
@@ -296,7 +296,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                 <>
                   <activeSectionInfo.icon className="w-4 h-4 text-primary shrink-0" />
                   <h3 className="text-base font-semibold text-foreground">{activeSectionInfo.label}</h3>
-                  {activeSection === 'backup' && dbxConnected && (
+                  {activeSection === 'backup' && backupConnected && (
                     <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
                       Connected
                     </span>
@@ -305,11 +305,11 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
               )}
             </div>
             {/* Content Body */}
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto">
               <div className="p-6">
                 {renderContent()}
               </div>
-            </ScrollArea>
+            </div>
           </div>
         </div>
       </DialogContent>

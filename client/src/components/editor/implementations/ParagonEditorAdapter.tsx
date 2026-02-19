@@ -26,8 +26,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { marked } from 'marked';
 import { MarkdownEditor, type MarkdownEditorRef, parseDateFromMarkdown, getDateVariant, isValidTag, normalizeTag } from '@samishkolli/paragon';
 import type { EditorRef, EditorProps, FormatAction, TextLevel } from '../types';
-import { isConnected } from '@/lib/dropbox';
-import { uploadImageToDropbox, resolveImageSrc as resolveDropboxImageSrc } from '@/lib/dropboxImages';
+import { uploadImage, resolveImageSrc as resolveS3ImageSrc } from '@/lib/imageUpload';
 import { toast } from '@/lib/toast';
 import { DEFAULT_AI_ACTIONS } from '@/lib/ai/types';
 import type { AIActionDefinition } from '@samishkolli/paragon';
@@ -537,17 +536,17 @@ const ParagonEditorAdapter = forwardRef<EditorRef, ParagonEditorAdapterProps>((p
     toast.info('AI features are built-in and should be available automatically.');
   }, []);
 
-  // --- Dropbox image upload/resolve hooks ---
+  // --- Image upload/resolve hooks (S3-backed) ---
 
   /**
    * Handle image upload from paste/drop in the editor.
-   * Uploads the file to Dropbox and returns a relative path for markdown storage.
+   * Uploads the file to S3 via the server and returns the public URL.
    */
   const handleImageUpload = useCallback(async (
     file: File,
     options: { fileName: string; mimeType: string; fileSize: number; uploadId: string }
   ): Promise<string> => {
-    return uploadImageToDropbox(file, options);
+    return uploadImage(file, options);
   }, []);
 
   /**
@@ -558,12 +557,11 @@ const ParagonEditorAdapter = forwardRef<EditorRef, ParagonEditorAdapterProps>((p
   }, []);
 
   /**
-   * Resolve relative image paths (e.g. "../_images/photo.jpg") to displayable blob URLs.
-   * Uses IndexedDB cache first, falls back to authenticated Dropbox download.
-   * Stable reference via useCallback to avoid unnecessary re-renders.
+   * Resolve image sources to displayable URLs.
+   * S3 URLs are returned as-is. Legacy relative paths use IndexedDB cache.
    */
   const stableResolveImageSrc = useCallback(async (src: string): Promise<string> => {
-    return resolveDropboxImageSrc(src);
+    return resolveS3ImageSrc(src);
   }, []);
 
   // CRITICAL: Compute htmlContent ONCE from the initial mount value only.

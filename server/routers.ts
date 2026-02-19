@@ -328,6 +328,25 @@ export const appRouter = router({
     }),
   }),
 
+  // ─── Images ─────────────────────────────────────────────────────────────
+  images: router({
+    getUploadUrl: protectedProcedure
+      .input(z.object({
+        fileName: z.string(),
+        mimeType: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { storagePut } = await import('./storage');
+        // Generate a unique key for the image
+        const date = new Date().toISOString().slice(0, 10);
+        const random = Math.random().toString(36).substring(2, 10);
+        const ext = input.fileName.split('.').pop()?.toLowerCase() || 'png';
+        const key = `images/${ctx.user.id}/${date}_${random}.${ext}`;
+        // We return the key so the client can upload via a separate endpoint
+        return { key, mimeType: input.mimeType };
+      }),
+  }),
+
   // ─── Sync (for offline-first) ──────────────────────────────────────────
   sync: router({
     pull: protectedProcedure

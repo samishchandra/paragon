@@ -68,8 +68,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import * as dropbox from '@/lib/dropbox';
-import { runBackup, runFullBackup, setBackupUserId, type BackupProgress } from '@/lib/dropboxBackup';
+import * as localBackup from '@/lib/localBackup';
+import { runBackup, runFullBackup, setBackupUserId, type BackupProgress } from '@/lib/localBackupSync';
 import { triggerFullBackup, setAutoBackupEnabled, hasUnsyncedItems, getPendingCount, onGlobalBackupStatusChange } from '@/lib/autoBackup';
 import { getLog, onLogChange, clearLog, logManualBackup, logConnection, type BackupLogEntry, type BackupLogType } from '@/lib/backupLog';
 // AI config is now handled server-side via built-in LLM
@@ -557,7 +557,7 @@ export function SettingsData() {
         setImportMessage(`Importing ${counters.items} of ${importPreview.files.length} files...`);
       }
       refreshData();
-      // Trigger full backup to Dropbox after import
+      // Trigger full backup to local folder after import
       triggerFullBackup();
       const tagMsg = counters.tags > 0 ? `, ${counters.tags} tags` : '';
       toast.success('Folder imported successfully', { description: `Imported ${counters.items} items, ${counters.lists} lists${tagMsg}.` });
@@ -807,7 +807,7 @@ export function SettingsData() {
 }
 
 /* ─────────────────────────────────────────────
- * SECTION: Backup (Dropbox)
+ * SECTION: Backup (Local Folder)
  * ───────────────────────────────────────────── */
 
 function getLogIcon(type: BackupLogType) {
@@ -912,70 +912,31 @@ function BackupLogRow({ entry }: { entry: BackupLogEntry }) {
 export function SettingsBackup() {
   const { userId } = useMomentum();
   const { user } = useAuth();
-  // Set userId for dropboxBackup module
   useEffect(() => { setBackupUserId(userId); }, [userId]);
   const [activityLog, setActivityLog] = useState<BackupLogEntry[]>(() => getLog());
   const [logExpanded, setLogExpanded] = useState(false);
-  const [dbxAppKey, setDbxAppKey] = useState(() => dropbox.getAppKey());
-  const [dbxBackupFolder, setDbxBackupFolder] = useState(() => dropbox.getBackupFolder());
-  const [dbxConnected, setDbxConnected] = useState(() => dropbox.isConnected());
-  const [dbxBacking, setDbxBacking] = useState(false);
-  const [dbxProgress, setDbxProgress] = useState<BackupProgress | null>(null);
+  const [connected, setConnected] = useState(() => localBackup.isConnected());
+  const [folderName, setFolderName] = useState(() => localBackup.getFolderName());
+  const [backing, setBacking] = useState(false);
+  const [progress, setProgress] = useState<BackupProgress | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
-  const [dbxFolderRenaming, setDbxFolderRenaming] = useState(false);
-  const [dbxLastBackup, setDbxLastBackup] = useState<string | null>(() => {
-    const s = dropbox.getBackupState();
+  const [lastBackup, setLastBackup] = useState<string | null>(() => {
+    const s = localBackup.getBackupState();
     return s?.lastBackupAt || null;
   });
-  // Track the "committed" folder path (what's actually saved) vs the input field value
-  const committedFolderRef = useRef(dropbox.getBackupFolder());
-  const folderInputTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [apiSupported] = useState(() => localBackup.isFileSystemAccessSupported());
 
-  // When Dropbox first connects and no custom folder is set, use user-specific default
+  // Listen for connection changes
   useEffect(() => {
-    if (dbxConnected && user) {
-      const current = dropbox.getBackupFolder();
-      // If still using the generic default, upgrade to user-specific
-      if (current === '/MomentumBackup') {
-        const userSpecific = dropbox.generateDefaultBackupFolder(user);
-        if (userSpecific !== '/MomentumBackup') {
-          dropbox.setBackupFolder(userSpecific);
-          setDbxBackupFolder(userSpecific);
-          committedFolderRef.current = userSpecific;
-          dropbox.syncCredentialsToSupabase();
-        }
-      }
-    }
-  }, [dbxConnected, user]);
+    setConnected(localBackup.isConnected());
+    setFolderName(localBackup.getFolderName());
 
-  // Listen for connection changes (from OAuth callback processed globally)
-  useEffect(() => {
-    // Check current state on mount
-    setDbxConnected(dropbox.isConnected());
-    setDbxAppKey(dropbox.getAppKey());
-    setDbxBackupFolder(dropbox.getBackupFolder());
-    committedFolderRef.current = dropbox.getBackupFolder();
-
-    // Listen for connection changes
-    const unsub = dropbox.onConnectionChange((connected) => {
-      setDbxConnected(connected);
-      if (connected) {
-        setDbxAppKey(dropbox.getAppKey());
-        setDbxBackupFolder(dropbox.getBackupFolder());
-        committedFolderRef.current = dropbox.getBackupFolder();
-      }
+    const unsub = localBackup.onConnectionChange((isConnected) => {
+      setConnected(isConnected);
+      setFolderName(localBackup.getFolderName());
     });
 
-    // Also poll periodically as a fallback (e.g., if OAuth callback was processed before this component mounted)
-    const interval = setInterval(() => {
-      const connected = dropbox.isConnected();
-      setDbxConnected(connected);
-      if (connected) {
-        setDbxAppKey(dropbox.getAppKey());
-      }
-    }, 2000);
-
-    return () => { unsub(); clearInterval(interval); };
+    return unsub;
   }, []);
 
   // Listen for activity log changes
@@ -986,7 +947,7 @@ export function SettingsBackup() {
 
   // Track pending backup count
   useEffect(() => {
-    if (!dbxConnected) {
+    if (!connected) {
       setPendingCount(0);
       return;
     }
@@ -995,157 +956,129 @@ export function SettingsBackup() {
       setPendingCount(getPendingCount());
     });
     return unsub;
-  }, [dbxConnected]);
+  }, [connected]);
 
-  // Handle folder path change with debounced Dropbox rename
-  const handleFolderChange = useCallback((newValue: string) => {
-    setDbxBackupFolder(newValue);
-    // Clear any pending rename timer
-    if (folderInputTimerRef.current) {
-      clearTimeout(folderInputTimerRef.current);
-    }
-    // Debounce: wait 1.5s after user stops typing to commit the rename
-    folderInputTimerRef.current = setTimeout(async () => {
-      const normalized = newValue.startsWith('/') ? newValue : '/' + newValue;
-      const oldFolder = committedFolderRef.current;
-      if (normalized === oldFolder || !normalized.trim() || normalized === '/') return;
-
-      // Update localStorage and Supabase immediately
-      dropbox.setBackupFolder(normalized);
-      dropbox.syncCredentialsToSupabase();
-
-      // Attempt to rename the folder in Dropbox
-      if (oldFolder && oldFolder !== normalized) {
-        setDbxFolderRenaming(true);
-        try {
-          const moved = await dropbox.moveFolder(oldFolder, normalized);
-          if (moved) {
-            toast.success('Dropbox folder renamed', {
-              description: `${oldFolder} → ${normalized}`,
-            });
-          } else {
-            // Folder didn't exist or destination already exists — that's OK
-            toast.info('Backup folder path updated', {
-              description: 'New backups will use the new path.',
-            });
-          }
-        } catch (err) {
-          console.warn('Failed to rename Dropbox folder:', err);
-          toast.warning('Folder path updated locally', {
-            description: 'Could not rename the folder in Dropbox. New backups will use the new path.',
-          });
-        } finally {
-          setDbxFolderRenaming(false);
-        }
+  const handlePickFolder = async () => {
+    try {
+      const ok = await localBackup.pickFolder();
+      if (ok) {
+        setConnected(true);
+        setFolderName(localBackup.getFolderName());
+        setAutoBackupEnabled(true, userId);
+        logConnection(true);
+        toast.success('Backup folder selected', {
+          description: `Files will be backed up to: ${localBackup.getFolderName()}`,
+        });
       }
-      committedFolderRef.current = normalized;
-    }, 1500);
-  }, []);
-
-  // Cleanup folder rename timer on unmount
-  useEffect(() => {
-    return () => {
-      if (folderInputTimerRef.current) clearTimeout(folderInputTimerRef.current);
-    };
-  }, []);
-
-  const handleDbxConnect = async () => {
-    if (!dbxAppKey.trim()) { toast.error('Please enter your Dropbox App Key first'); return; }
-    dropbox.setAppKey(dbxAppKey.trim());
-    try { await dropbox.startAuth(); }
-    catch (err) { toast.error('Failed to start Dropbox auth', { description: err instanceof Error ? err.message : 'Unknown error' }); }
+    } catch (err) {
+      toast.error('Failed to select folder', {
+        description: err instanceof Error ? err.message : 'Unknown error',
+      });
+    }
   };
 
-  const handleDbxDisconnect = () => {
-    dropbox.disconnect();
-    dropbox.clearBackupState();
-    dropbox.clearCredentialsFromSupabase(); // Clear from Supabase too
+  const handleDisconnect = () => {
+    localBackup.disconnect();
     setAutoBackupEnabled(false);
-    setDbxConnected(false);
-    setDbxLastBackup(null);
+    setConnected(false);
+    setFolderName('');
+    setLastBackup(null);
     setPendingCount(0);
     logConnection(false);
-    toast.success('Dropbox disconnected');
+    toast.success('Backup folder disconnected');
   };
 
-  const handleDbxBackup = async (full = false) => {
-    setDbxBacking(true);
-    setDbxProgress(null);
+  const handleBackup = async (full = false) => {
+    setBacking(true);
+    setProgress(null);
     try {
-      dropbox.setBackupFolder(dbxBackupFolder);
       const result = full
-        ? await runFullBackup((p) => setDbxProgress(p))
-        : await runBackup((p) => setDbxProgress(p));
-      const s = dropbox.getBackupState();
-      setDbxLastBackup(s?.lastBackupAt || null);
-      // Log the manual backup result
+        ? await runFullBackup((p) => setProgress(p))
+        : await runBackup((p) => setProgress(p));
+      const s = localBackup.getBackupState();
+      setLastBackup(s?.lastBackupAt || null);
       logManualBackup(result.uploaded, result.deleted, result.unchanged, result.errors, full);
       if (result.errors.length > 0) {
         toast.warning(`Backup completed with ${result.errors.length} error(s)`, {
-          description: `Uploaded: ${result.uploaded}, Deleted: ${result.deleted}, Unchanged: ${result.unchanged}`,
+          description: `Written: ${result.uploaded}, Deleted: ${result.deleted}, Unchanged: ${result.unchanged}`,
         });
       } else {
         toast.success('Backup complete', {
-          description: `Uploaded: ${result.uploaded}, Deleted: ${result.deleted}, Unchanged: ${result.unchanged}`,
+          description: `Written: ${result.uploaded}, Deleted: ${result.deleted}, Unchanged: ${result.unchanged}`,
         });
       }
     } catch (err) {
       toast.error('Backup failed', { description: err instanceof Error ? err.message : 'Unknown error' });
     } finally {
-      setDbxBacking(false);
-      setTimeout(() => setDbxProgress(null), 3000);
+      setBacking(false);
+      setTimeout(() => setProgress(null), 3000);
     }
   };
 
-  // Count backed-up files from state
   const backedUpFileCount = (() => {
-    const s = dropbox.getBackupState();
+    const s = localBackup.getBackupState();
     return s?.files ? Object.keys(s.files).length : 0;
   })();
 
   return (
     <div className="space-y-6">
+      {/* Browser support warning */}
+      {!apiSupported && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Browser Not Supported</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Local folder backup requires the File System Access API, which is supported in Chrome, Edge, and Opera.
+                Firefox and Safari do not support this feature yet.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Connection Status Card */}
       <div className="space-y-4">
-        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Connection</h4>
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Backup Folder</h4>
         <div className={`rounded-lg border p-4 ${
-          dbxConnected
+          connected
             ? 'border-emerald-500/30 bg-emerald-500/5'
             : 'border-border bg-card'
         }`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-              dbxConnected
+              connected
                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                 : 'bg-muted text-muted-foreground'
             }`}>
-              {dbxConnected ? <CheckCircle2 className="w-5 h-5" /> : <CloudOff className="w-5 h-5" />}
+              {connected ? <CheckCircle2 className="w-5 h-5" /> : <FolderClosed className="w-5 h-5" />}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-foreground">
-                  {dbxConnected ? 'Connected to Dropbox' : 'Not Connected'}
+                  {connected ? folderName : 'No Folder Selected'}
                 </h3>
-                {dbxConnected && (
+                {connected && (
                   <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
                     Active
                   </span>
                 )}
               </div>
-              {dbxConnected ? (
+              {connected ? (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Auto-backup is enabled. Changes are synced automatically.
+                  Auto-backup is enabled. Changes are written to your local folder automatically.
                 </p>
               ) : (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Connect your Dropbox account to enable automatic backups.
+                  Choose a local folder to enable automatic one-way backup of your notes and tasks.
                 </p>
               )}
             </div>
           </div>
 
           {/* Connected details */}
-          {dbxConnected && (
+          {connected && (
             <div className="mt-3 pt-3 border-t border-emerald-500/20 grid grid-cols-3 gap-3">
               <div className="text-center">
                 <div className="text-lg font-semibold text-foreground">{backedUpFileCount}</div>
@@ -1157,7 +1090,7 @@ export function SettingsBackup() {
               </div>
               <div className="text-center">
                 <div className="text-lg font-semibold text-foreground">
-                  {dbxLastBackup ? new Date(dbxLastBackup).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+                  {lastBackup ? new Date(lastBackup).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '\u2014'}
                 </div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Last backup</div>
               </div>
@@ -1166,114 +1099,79 @@ export function SettingsBackup() {
         </div>
       </div>
 
-      {/* Configuration */}
+      {/* Folder Selection */}
       <div className="space-y-4">
         <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Configuration</h4>
-
-        {/* App Key */}
-        <div className="space-y-2">
-          <Label htmlFor="dbxAppKey" className="text-sm font-medium flex items-center gap-1.5">
-            <KeyRound className="w-3.5 h-3.5" />
-            Dropbox App Key
-          </Label>
-          <div className="flex gap-2">
-            <Input
-              id="dbxAppKey" type="password" placeholder="Enter your Dropbox app key"
-              value={dbxAppKey}
-              onChange={(e) => { setDbxAppKey(e.target.value); dropbox.setAppKey(e.target.value); }}
-              className="font-mono text-sm" disabled={dbxConnected}
-            />
-            {!dbxConnected ? (
-              <Button variant="default" onClick={handleDbxConnect} disabled={!dbxAppKey.trim()}>
-                <ExternalLink className="w-4 h-4 mr-2" /> Connect
+        <div className="flex gap-2">
+          {!connected ? (
+            <Button variant="default" onClick={handlePickFolder} disabled={!apiSupported}>
+              <FolderOpen className="w-4 h-4 mr-2" /> Choose Folder
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={handlePickFolder}>
+                <FolderOpen className="w-4 h-4 mr-2" /> Change Folder
               </Button>
-            ) : (
-              <Button variant="outline" onClick={handleDbxDisconnect} className="text-destructive hover:text-destructive">
-                <CloudOff className="w-4 h-4 mr-2" /> Disconnect
+              <Button variant="outline" onClick={handleDisconnect} className="text-destructive hover:text-destructive">
+                <Unplug className="w-4 h-4 mr-2" /> Disconnect
               </Button>
-            )}
-          </div>
-          {!dbxConnected && (
-            <p className="text-xs text-muted-foreground">
-              Create a Dropbox app at{' '}
-              <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">
-                dropbox.com/developers/apps
-              </a>{' '}with "App folder" access.
-            </p>
+            </>
           )}
         </div>
-
-        {/* Backup Folder */}
-        {dbxConnected && (
-          <div className="space-y-2">
-            <Label htmlFor="dbxFolder" className="text-sm font-medium">Backup Folder Path</Label>
-            <div className="relative">
-              <Input
-                id="dbxFolder" placeholder={dropbox.generateDefaultBackupFolder(user)}
-                value={dbxBackupFolder}
-                onChange={(e) => handleFolderChange(e.target.value)}
-                className="font-mono text-sm" disabled={dbxBacking || dbxFolderRenaming}
-              />
-              {dbxFolderRenaming && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                </div>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Files will be organized as: <code className="bg-muted px-1 rounded">{dbxBackupFolder}/ListName/ItemTitle.md</code>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Changing the path will rename the existing folder in Dropbox.
-            </p>
-          </div>
+        {connected && (
+          <p className="text-xs text-muted-foreground">
+            Files are organized as: <code className="bg-muted px-1 rounded">{folderName}/ListName/ItemTitle.md</code>
+          </p>
         )}
+        <p className="text-xs text-muted-foreground">
+          Backup is <strong>one-way</strong>: changes in the app are written to the folder. Editing files in the folder will not affect the app.
+        </p>
       </div>
 
       {/* Manual Backup Actions */}
-      {dbxConnected && (
+      {connected && (
         <div className="space-y-4">
           <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Manual Backup</h4>
           <div className="space-y-3">
             <div className="flex flex-wrap gap-3">
-              <Button variant="default" onClick={() => handleDbxBackup(false)} disabled={dbxBacking}>
-                {dbxBacking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Cloud className="w-4 h-4 mr-2" />}
-                {dbxBacking ? 'Backing up...' : 'Backup Now'}
+              <Button variant="default" onClick={() => handleBackup(false)} disabled={backing}>
+                {backing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <HardDrive className="w-4 h-4 mr-2" />}
+                {backing ? 'Backing up...' : 'Backup Now'}
               </Button>
-              <Button variant="outline" onClick={() => handleDbxBackup(true)} disabled={dbxBacking}>
+              <Button variant="outline" onClick={() => handleBackup(true)} disabled={backing}>
                 <RefreshCw className="w-4 h-4 mr-2" /> Full Backup
               </Button>
             </div>
-            {dbxProgress && dbxProgress.phase !== 'done' && (
+            {progress && progress.phase !== 'done' && (
               <div className="space-y-2">
-                <Progress value={dbxProgress.total > 0 ? (dbxProgress.current / dbxProgress.total) * 100 : 0} className="h-2" />
+                <Progress value={progress.total > 0 ? (progress.current / progress.total) * 100 : 0} className="h-2" />
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" /> {dbxProgress.message}
+                    <Loader2 className="w-4 h-4 animate-spin" /> {progress.message}
                   </div>
-                  {dbxProgress.total > 0 && <span>{Math.round((dbxProgress.current / dbxProgress.total) * 100)}%</span>}
+                  {progress.total > 0 && <span>{Math.round((progress.current / progress.total) * 100)}%</span>}
                 </div>
               </div>
             )}
-            {dbxProgress?.phase === 'done' && (
+            {progress?.phase === 'done' && (
               <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
-                <Cloud className="w-3.5 h-3.5" /> {dbxProgress.message}
+                <HardDrive className="w-3.5 h-3.5" /> {progress.message}
               </p>
             )}
-            {dbxLastBackup && !dbxBacking && !dbxProgress && (
+            {lastBackup && !backing && !progress && (
               <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="w-3 h-3" /> Last backup: {new Date(dbxLastBackup).toLocaleString()}
+                <Clock className="w-3 h-3" /> Last backup: {new Date(lastBackup).toLocaleString()}
               </p>
             )}
             <p className="text-xs text-muted-foreground">
-              <strong>Backup Now</strong> uploads only new and changed files (delta sync). <strong>Full Backup</strong> re-uploads everything.
+              <strong>Backup Now</strong> writes only new and changed files (delta sync). <strong>Full Backup</strong> re-writes everything.
             </p>
           </div>
         </div>
       )}
 
       {/* Auto-backup info */}
-      {dbxConnected && (
+      {connected && (
         <div className="space-y-4">
           <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Auto-Backup</h4>
           <div className="rounded-lg border bg-card p-4 space-y-3">
@@ -1282,7 +1180,7 @@ export function SettingsBackup() {
               <div className="space-y-1">
                 <p className="text-sm font-medium text-foreground">Automatic background backup</p>
                 <p className="text-xs text-muted-foreground">
-                  Items are automatically backed up to Dropbox when you make changes. Backups trigger after 10 seconds of inactivity, when you switch items, when the tab loses focus, or after 60 seconds of idle time.
+                  Items are automatically backed up to your local folder when you make changes. Backups trigger after 10 seconds of inactivity, when you switch items, when the tab loses focus, or after 60 seconds of idle time.
                 </p>
               </div>
             </div>
