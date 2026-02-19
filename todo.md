@@ -92,3 +92,11 @@
 - [x] Fix: Sidebar counts key mismatch (all_count vs all) — keys now match frontend expectations
 - [x] Fix: Tag counts and list counts not returned from get_sidebar_counts RPC
 - [x] Fix: Data Overview in Settings showing all zeros
+
+## AI Assistant Integration
+- [x] Audit current AI settings and frontend AI code
+- [x] Create backend tRPC procedures for AI features (summarize, suggest tasks, improve writing, continue writing)
+- [x] Remove provider/API key/temperature settings from AI Settings UI
+- [x] Wire up frontend AI features to backend LLM procedures
+- [x] Write vitest tests for AI procedures
+- [x] End-to-end test AI features

@@ -29,10 +29,7 @@ import type { EditorRef, EditorProps, FormatAction, TextLevel } from '../types';
 import { isConnected } from '@/lib/dropbox';
 import { uploadImageToDropbox, resolveImageSrc as resolveDropboxImageSrc } from '@/lib/dropboxImages';
 import { toast } from '@/lib/toast';
-import { useAIConfig } from '@/lib/ai/config';
-import { createAIProvider } from '@/lib/ai';
-import { DEFAULT_AI_ACTIONS, type AIProviderConfig, type AIStreamChunk } from '@/lib/ai/types';
-import { AI_PROMPTS } from '@/lib/ai/prompts';
+import { DEFAULT_AI_ACTIONS } from '@/lib/ai/types';
 import type { AIActionDefinition } from '@samishkolli/paragon';
 
 // Import Paragon editor CSS (pre-built from npm package)
@@ -474,28 +471,11 @@ const ParagonEditorAdapter = forwardRef<EditorRef, ParagonEditorAdapterProps>((p
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
-  // --- AI Writing Assistant ---
+  // --- AI Writing Assistant (Built-in, server-side) ---
   
-  const { config: aiConfig, loading: aiConfigLoading } = useAIConfig();
-  const aiProviderRef = useRef<ReturnType<typeof createAIProvider> | null>(null);
-  
-  // Recreate the AI provider whenever config changes (live reactivity)
-  useEffect(() => {
-    if (aiConfig && aiConfig.apiKey) {
-      try {
-        aiProviderRef.current = createAIProvider(aiConfig);
-      } catch {
-        aiProviderRef.current = null;
-      }
-    } else {
-      aiProviderRef.current = null;
-    }
-  }, [aiConfig]);
-  
-  const aiEnabled = !aiConfigLoading && !!aiConfig?.apiKey;
   
   /**
-   * AI action handler — called by Paragon when the user selects an action.
+   * AI action handler — calls the server-side streaming endpoint.
    * Returns an AsyncIterable<string> for streaming text chunks.
    */
   const stableAIActionHandler = useCallback((
@@ -503,35 +483,58 @@ const ParagonEditorAdapter = forwardRef<EditorRef, ParagonEditorAdapterProps>((p
     text: string,
     customPrompt?: string
   ): AsyncIterable<string> => {
-    const provider = aiProviderRef.current;
-    if (!provider) {
-      throw new Error('AI provider not configured. Please set up your API key in Settings.');
-    }
-    
-    const prompt = AI_PROMPTS[actionId];
-    if (!prompt) {
-      throw new Error(`Unknown AI action: ${actionId}`);
-    }
-    
-    const systemPrompt = prompt.system;
-    const userPrompt = prompt.user(text, customPrompt);
-    
     return (async function* () {
-      for await (const chunk of provider.stream(userPrompt, systemPrompt)) {
-        yield chunk.text;
+      const response = await fetch('/api/ai/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ actionId, text, customPrompt }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'AI request failed' }));
+        throw new Error(errorData.error || `AI error: ${response.status}`);
+      }
+      
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') return;
+              try {
+                const json = JSON.parse(data);
+                if (json.error) throw new Error(json.error);
+                if (json.text) yield json.text;
+              } catch (e: any) {
+                if (e.message && !e.message.includes('JSON')) throw e;
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
       }
     })();
   }, []);
   
   /**
-   * Called when AI sparkles is clicked but no API key is configured.
-   * Navigates to the Settings page.
+   * Called when AI sparkles is clicked but AI is unavailable.
+   * This should rarely happen since AI is built-in.
    */
   const handleAISetupRequired = useCallback(() => {
-    toast.info('Please configure your AI API key in Settings to use AI features.');
-    // Dispatch a custom event to open the Settings dialog to the AI tab
-    // Home.tsx listens for this event — avoids prop drilling through multiple layers
-    window.dispatchEvent(new CustomEvent('open-settings', { detail: { section: 'ai' } }));
+    toast.info('AI features are built-in and should be available automatically.');
   }, []);
 
   // --- Dropbox image upload/resolve hooks ---
@@ -763,9 +766,9 @@ const ParagonEditorAdapter = forwardRef<EditorRef, ParagonEditorAdapterProps>((p
         onImageUpload={handleImageUpload}
         onImageUploadError={handleImageUploadError}
         resolveImageSrc={stableResolveImageSrc}
-        aiActions={aiEnabled ? DEFAULT_AI_ACTIONS as AIActionDefinition[] : undefined}
-        onAIAction={aiEnabled ? stableAIActionHandler : undefined}
-        onAISetupRequired={!aiEnabled ? handleAISetupRequired : undefined}
+        aiActions={DEFAULT_AI_ACTIONS as AIActionDefinition[]}
+        onAIAction={stableAIActionHandler}
+        onAISetupRequired={handleAISetupRequired}
         onWikiLinkClick={onWikiLinkClick}
         validateWikiLink={validateWikiLink}
         onWikiLinkSearch={onWikiLinkSearch}

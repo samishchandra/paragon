@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import dataRouter from "../dataRouter";
+import aiRouter from "../aiRouter";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 
@@ -38,6 +39,8 @@ async function startServer() {
   registerOAuthRoutes(app);
   // Data REST API
   app.use('/api/data', dataRouter);
+  // AI API (streaming + completions)
+  app.use('/api/ai', aiRouter);
   // tRPC API
   app.use(
     "/api/trpc",
