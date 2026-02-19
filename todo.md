@@ -126,3 +126,15 @@
 - [x] Compare with existing tests and identify gaps
 - [x] Port and adapt upstream tests to work with Manus backend (10 test files ported)
 - [x] Fix any test failures (Dropbox→Local Backup assertion, TS direction type, @testing-library/react installed)
+
+## Local Folder Backup Integration Tests
+- [x] Review localBackup.ts, autoBackup.ts, localBackupSync.ts modules
+- [x] Create mock File System Access API (showDirectoryPicker, FileSystemDirectoryHandle, FileSystemFileHandle)
+- [x] Test: pickFolder connects and stores folder handle
+- [x] Test: writeFile creates/updates files in the chosen folder
+- [x] Test: deleteFile removes files from the chosen folder
+- [x] Test: runBackup syncs all items (creates new, updates changed, deletes removed)
+- [x] Test: runFullBackup writes all items to the folder
+- [x] Test: autoBackup triggers on item changes when connected
+- [x] Test: disconnect clears the folder handle and state
+- [x] Run all tests and verify they pass — 418 tests across 15 files, all passing
