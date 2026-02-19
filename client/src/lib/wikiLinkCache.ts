@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 
 /**
  * Lightweight client-side cache of item titles for synchronous wiki link validation.
@@ -24,13 +24,16 @@ class WikiLinkTitleCache {
 
     this.refreshPromise = (async () => {
       try {
-        const { data } = await supabase
-          .from('items')
-          .select('id, title')
-          .eq('user_id', userId)
-          .is('deleted_at', null);
+        const { data } = await apiQuery({
+          table: 'items',
+          select: 'id, title',
+          filters: {
+            user_id: userId,
+            'deleted_at__is': null,
+          },
+        });
         this.cache.clear();
-        data?.forEach(item => {
+        data?.forEach((item: any) => {
           if (item.title) {
             this.cache.set(this.normalize(item.title), item.id);
           }
@@ -92,7 +95,7 @@ class WikiLinkTitleCache {
    * Rebuild the cache from the current in-memory items array.
    * Called whenever items are loaded/synced from the server (SET_ITEMS,
    * catch-up sync, etc.) — replaces periodic polling with event-driven updates.
-   * No Supabase query needed since items are already in memory.
+   * No server query needed since items are already in memory.
    */
   rebuildFromItems(items: { id: string; title: string; deletedAt?: string }[]): void {
     this.cache.clear();

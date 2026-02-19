@@ -7,7 +7,7 @@
  * synced to Supabase user_settings for cross-device persistence.
  */
 
-import { supabase } from './supabaseClient';
+import { apiQuery } from './apiClient';
 
 const AUTH_URL = 'https://www.dropbox.com/oauth2/authorize';
 const TOKEN_URL = 'https://api.dropboxapi.com/oauth2/token';
@@ -131,16 +131,18 @@ export async function syncCredentialsToSupabase(): Promise<void> {
     };
 
     // Try update first, then insert if no row exists
-    const { data: existing } = await supabase
-      .from('user_settings')
-      .select('user_id')
-      .limit(1)
-      .single();
+    const { data: existing } = await apiQuery({
+      table: 'user_settings',
+      select: 'user_id',
+      filters: {},
+      limit: 1,
+      single: true,
+    });
 
     if (existing?.user_id) {
-      await supabase.from('user_settings').update(updates).eq('user_id', existing.user_id);
+      await apiQuery({ action: 'update', table: 'user_settings', data: updates, filters: { user_id: existing.user_id } });
     } else {
-      await supabase.from('user_settings').insert(updates);
+      await apiQuery({ action: 'insert', table: 'user_settings', data: updates });
     }
   } catch (err) {
     console.warn('Failed to sync Dropbox credentials to Supabase:', err);
@@ -152,20 +154,22 @@ export async function syncCredentialsToSupabase(): Promise<void> {
  */
 export async function clearCredentialsFromSupabase(): Promise<void> {
   try {
-    const { data: existing } = await supabase
-      .from('user_settings')
-      .select('user_id')
-      .limit(1)
-      .single();
+    const { data: existing } = await apiQuery({
+      table: 'user_settings',
+      select: 'user_id',
+      filters: {},
+      limit: 1,
+      single: true,
+    });
 
     if (existing?.user_id) {
-      await supabase.from('user_settings').update({
+      await apiQuery({ action: 'update', table: 'user_settings', data: {
         dropbox_app_key: null,
         dropbox_refresh_token: null,
         dropbox_access_token: null,
         dropbox_token_expiry: null,
         dropbox_backup_folder: null,
-      }).eq('user_id', existing.user_id);
+      }, filters: { user_id: existing.user_id } });
     }
   } catch (err) {
     console.warn('Failed to clear Dropbox credentials from Supabase:', err);
@@ -182,11 +186,13 @@ export async function loadCredentialsFromSupabase(): Promise<boolean> {
     // If already connected locally, no need to load from Supabase
     if (isConnected()) return true;
 
-    const { data } = await supabase
-      .from('user_settings')
-      .select('dropbox_app_key, dropbox_refresh_token, dropbox_access_token, dropbox_token_expiry, dropbox_backup_folder')
-      .limit(1)
-      .single();
+    const { data } = await apiQuery({
+      table: 'user_settings',
+      select: 'dropbox_app_key, dropbox_refresh_token, dropbox_access_token, dropbox_token_expiry, dropbox_backup_folder',
+      filters: {},
+      limit: 1,
+      single: true,
+    });
 
     if (!data?.dropbox_app_key || !data?.dropbox_refresh_token) {
       return false;

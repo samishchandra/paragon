@@ -10,7 +10,7 @@
  *   - updateWikiLinksOnRename (propagate title renames across backlinks)
  */
 import { useCallback, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import { wikiLinkCache } from '@/lib/wikiLinkCache';
 import type { Item } from '@/types';
 
@@ -49,14 +49,13 @@ export function useWikiLinks(deps: WikiLinksDeps) {
 
   const searchItemTitles = useCallback(async (query: string) => {
     if (!query.trim()) return [];
-    const { data } = await supabase
-      .from('items')
-      .select('id, title, type')
-      .eq('user_id', userId)
-      .is('deleted_at', null)
-      .ilike('title', `%${query.trim()}%`)
-      .order('updated_at', { ascending: false })
-      .limit(10);
+    const { data } = await apiQuery({
+      table: 'items',
+      select: 'id, title, type',
+      filters: { user_id: userId, deleted_at: null, 'title__ilike': `%${query.trim()}%` },
+      order: { column: 'updated_at', ascending: false },
+      limit: 10,
+    });
     return (data || []) as {id: string; title: string; type: string}[];
   }, [userId]);
 
@@ -71,14 +70,13 @@ export function useWikiLinks(deps: WikiLinksDeps) {
       }
     }
     // Fallback to server query
-    const { data } = await supabase
-      .from('items')
-      .select('id, title, type')
-      .eq('user_id', userId)
-      .is('deleted_at', null)
-      .ilike('title', title.trim())
-      .order('updated_at', { ascending: false })
-      .limit(1);
+    const { data } = await apiQuery({
+      table: 'items',
+      select: 'id, title, type',
+      filters: { user_id: userId, deleted_at: null, 'title__ilike': title.trim() },
+      order: { column: 'updated_at', ascending: false },
+      limit: 1,
+    });
     return data && data.length > 0 ? data[0] as {id: string; title: string; type: string} : null;
   }, [userId, items]);
 
@@ -98,12 +96,11 @@ export function useWikiLinks(deps: WikiLinksDeps) {
 
     // Find all items containing [[oldTitle]] in their content
     const escapedTitle = oldTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const { data: affectedItems } = await supabase
-      .from('items')
-      .select('id, content')
-      .eq('user_id', userId)
-      .is('deleted_at', null)
-      .ilike('content', `%[[${oldTitle}]]%`);
+    const { data: affectedItems } = await apiQuery({
+      table: 'items',
+      select: 'id, content',
+      filters: { user_id: userId, deleted_at: null, 'content__ilike': `%[[${oldTitle}]]%` },
+    });
 
     if (!affectedItems || affectedItems.length === 0) return;
 
@@ -113,10 +110,12 @@ export function useWikiLinks(deps: WikiLinksDeps) {
         new RegExp(`\\[\\[${escapedTitle}\\]\\]`, 'g'),
         `[[${newTitle}]]`
       );
-      await supabase
-        .from('items')
-        .update({ content: updatedContent, updated_at: new Date().toISOString() })
-        .eq('id', item.id);
+      await apiQuery({
+        action: 'update',
+        table: 'items',
+        data: { content: updatedContent, updated_at: new Date().toISOString() },
+        filters: { id: item.id },
+      });
 
       // Update local state if item is loaded
       const localItem = items.find(i => i.id === item.id);

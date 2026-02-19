@@ -10,7 +10,7 @@
 
 import { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import { useMomentum } from "@/contexts/ServerMomentumContext";
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import { X, ListTodo, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { linkifyTitle } from '@/lib/linkifyTitle';
@@ -54,7 +54,7 @@ export function EditorTabs({ onSelectItem }: EditorTabsProps) {
     if (state.isLoading) return;
     
     const doFetch = () => {
-      supabase.from('items').select('*, item_tags(tag_id)').eq('user_id', userId).in('id', missingTabIds).then(({ data }) => {
+      apiQuery({ table: 'items', select: '*, item_tags(tag_id)', filters: { user_id: userId, 'id__in': missingTabIds } }).then(({ data }) => {
         setMissingTabItemsData(data || []);
       });
     };

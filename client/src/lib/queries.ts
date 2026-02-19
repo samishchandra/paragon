@@ -1,11 +1,21 @@
 /**
- * queries.ts — Supabase query helpers for items, tags, lists, and sidebar data.
+ * queries.ts — Data query helpers for items, tags, lists, and sidebar data.
  *
- * These are pure, stateless functions that talk to Supabase and return
- * domain objects. Extracted from ServerMomentumContext so hooks and
- * other modules can import them directly without circular dependencies.
+ * These are pure, stateless functions that talk to the Manus backend API
+ * and return domain objects. Extracted from ServerMomentumContext so hooks
+ * and other modules can import them directly without circular dependencies.
  */
-import { supabase } from '@/lib/supabaseClient';
+import {
+  apiSelectItems,
+  apiSelectTags,
+  apiSelectLists,
+  apiSelectItemTags,
+  apiInsertItemTags,
+  apiDeleteItemTags,
+  apiDeleteTag,
+  apiRpc,
+  apiQuery,
+} from '@/lib/apiClient';
 import type {
   Item,
   Task,
@@ -102,58 +112,67 @@ export async function fetchItems(
   };
   const sortField = sortFieldMap[sortOrder] || 'updated_at';
 
-  let query = supabase
-    .from('items')
-    .select('*, item_tags(tag_id)', { count: 'exact' })
-    .eq('user_id', userId);
+  // Build filters object
+  const filters: Record<string, any> = { user_id: userId };
 
-  // Apply filters
   switch (filter.type) {
     case 'all':
-      query = query.is('deleted_at', null).eq('is_completed', false);
+      filters['deleted_at__is'] = null;
+      filters['is_completed'] = false;
       break;
     case 'tasks':
-      query = query.eq('type', 'task').is('deleted_at', null).eq('is_completed', false);
+      filters['type'] = 'task';
+      filters['deleted_at__is'] = null;
+      filters['is_completed'] = false;
       break;
     case 'notes':
-      query = query.eq('type', 'note').is('deleted_at', null);
+      filters['type'] = 'note';
+      filters['deleted_at__is'] = null;
       break;
     case 'todo':
-      query = query.eq('has_uncompleted_todos', true).is('deleted_at', null);
+      filters['has_uncompleted_todos'] = true;
+      filters['deleted_at__is'] = null;
       break;
     case 'miscellaneous':
-      query = query.is('list_id', null).is('deleted_at', null).eq('is_completed', false);
+      filters['list_id__is'] = null;
+      filters['deleted_at__is'] = null;
+      filters['is_completed'] = false;
       break;
     case 'list':
-      query = query.eq('list_id', (filter as any).listId).is('deleted_at', null);
+      filters['list_id'] = (filter as any).listId;
+      filters['deleted_at__is'] = null;
       break;
     case 'tag': {
-      // For tag filter, we need to join through item_tags
       const tagId = (filter as any).tagId;
-      const { data: tagItemIds } = await supabase
-        .from('item_tags')
-        .select('item_id')
-        .eq('tag_id', tagId);
+      const { data: tagItemIds } = await apiSelectItemTags({ tag_id: tagId });
       const ids = tagItemIds?.map((r: any) => r.item_id) || [];
       if (ids.length === 0) return { items: [], total: 0, hasMore: false };
-      query = query.in('id', ids).is('deleted_at', null);
+      filters['id__in'] = ids;
+      filters['deleted_at__is'] = null;
       break;
     }
     case 'pinned':
-      query = query.eq('is_pinned', true).is('deleted_at', null);
+      filters['is_pinned'] = true;
+      filters['deleted_at__is'] = null;
       break;
     case 'completed':
-      query = query.eq('is_completed', true).is('deleted_at', null);
+      filters['is_completed'] = true;
+      filters['deleted_at__is'] = null;
       break;
     case 'trash':
-      query = query.not('deleted_at', 'is', null);
+      filters['deleted_at__not_is'] = null;
       break;
   }
 
-  query = query.order(sortField, { ascending: sortDirection === 'asc' })
-    .range(offset, offset + limit - 1);
+  const { data, error, count } = await apiSelectItems({
+    userId,
+    filters,
+    order: { column: sortField, ascending: sortDirection === 'asc' },
+    offset,
+    limit,
+    select: '*, item_tags(tag_id)',
+  });
 
-  const { data, error, count } = await query;
   if (error) throw error;
 
   const items = (data || []).map(dbRowToItem);
@@ -162,7 +181,7 @@ export async function fetchItems(
 }
 
 export async function fetchTags(userId: string) {
-  const { data, error } = await supabase.from('tags').select('*').eq('user_id', userId).order('name');
+  const { data, error } = await apiSelectTags(userId);
   if (error) throw error;
   const allTags = (data || []).map(dbRowToTag);
 
@@ -186,16 +205,15 @@ export async function fetchTags(userId: string) {
       const lower = tag.name.toLowerCase();
       const keepTag = seen.get(lower)!;
       // Reassign item_tags from duplicate to the surviving tag
-      const { data: junctions } = await supabase.from('item_tags').select('item_id').eq('tag_id', tag.id);
+      const { data: junctions } = await apiSelectItemTags({ tag_id: tag.id });
       if (junctions && junctions.length > 0) {
         for (const j of junctions) {
-          // Insert the new mapping (ignore conflict if already exists)
-          await supabase.from('item_tags').upsert({ item_id: j.item_id, tag_id: keepTag.id }, { onConflict: 'item_id,tag_id', ignoreDuplicates: true });
+          await apiInsertItemTags({ item_id: j.item_id, tag_id: keepTag.id });
         }
       }
       // Delete old junction entries and the duplicate tag
-      await supabase.from('item_tags').delete().eq('tag_id', tag.id);
-      await supabase.from('tags').delete().eq('id', tag.id);
+      await apiDeleteItemTags({ tag_id: tag.id });
+      await apiDeleteTag({ id: tag.id });
     }
   }
 
@@ -203,7 +221,7 @@ export async function fetchTags(userId: string) {
 }
 
 export async function fetchLists(userId: string) {
-  const { data, error } = await supabase.from('lists').select('*').eq('user_id', userId).order('sort_order');
+  const { data, error } = await apiSelectLists(userId);
   if (error) throw error;
   return (data || []).map(dbRowToList);
 }
@@ -217,10 +235,9 @@ export async function fetchAllSidebarData(userId: string): Promise<{
   tagCounts: Record<string, number>;
   listCounts: Record<string, number>;
 }> {
-  const { data, error } = await supabase.rpc('get_sidebar_counts', { p_user_id: userId });
+  const { data, error } = await apiRpc('get_sidebar_counts', { p_user_id: userId });
   if (error) {
     console.error('Error fetching sidebar counts via RPC:', error);
-    // Fallback: return empty counts
     return { counts: { all: 0, tasks: 0, notes: 0, pinned: 0, completed: 0, trash: 0, miscellaneous: 0, todo: 0 }, tagCounts: {}, listCounts: {} };
   }
   const result = data as any;
@@ -242,27 +259,32 @@ export async function fetchAllSidebarData(userId: string): Promise<{
 
 export async function fetchRecentItemsByIds(ids: string[], userId: string) {
   if (ids.length === 0) return [];
-  const { data, error } = await supabase
-    .from('items')
-    .select('*, item_tags(tag_id)')
-    .eq('user_id', userId)
-    .in('id', ids)
-    .is('deleted_at', null);
+  const { data, error } = await apiQuery({
+    table: 'items',
+    select: '*, item_tags(tag_id)',
+    filters: {
+      user_id: userId,
+      'id__in': ids,
+      'deleted_at__is': null,
+    },
+  });
   
   if (error) throw error;
   const itemsMap = new Map((data || []).map(dbRowToItem).map(item => [item.id, item]));
-  // Return in the same order as the input IDs
   return ids.map(id => itemsMap.get(id)).filter((item): item is Item => item !== undefined);
 }
 
 export async function fetchPinnedItems(userId: string) {
-  const { data, error } = await supabase
-    .from('items')
-    .select('*, item_tags(tag_id)')
-    .eq('user_id', userId)
-    .eq('is_pinned', true)
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: false });
+  const { data, error } = await apiQuery({
+    table: 'items',
+    select: '*, item_tags(tag_id)',
+    filters: {
+      user_id: userId,
+      is_pinned: true,
+      'deleted_at__is': null,
+    },
+    order: { column: 'updated_at', ascending: false },
+  });
   
   if (error) throw error;
   return (data || []).map(dbRowToItem);
@@ -270,14 +292,18 @@ export async function fetchPinnedItems(userId: string) {
 
 export async function searchItems(query: string, userId: string, offset = 0, limit = PAGE_SIZE) {
   const searchTerm = `%${query}%`;
-  const { data, error, count } = await supabase
-    .from('items')
-    .select('*, item_tags(tag_id)', { count: 'exact' })
-    .eq('user_id', userId)
-    .is('deleted_at', null)
-    .or(`title.ilike.${searchTerm},content.ilike.${searchTerm},search_content.ilike.${searchTerm}`)
-    .order('updated_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+  const { data, error, count } = await apiQuery({
+    table: 'items',
+    select: '*, item_tags(tag_id)',
+    filters: {
+      user_id: userId,
+      'deleted_at__is': null,
+      __or: `title.ilike.${searchTerm},content.ilike.${searchTerm},search_content.ilike.${searchTerm}`,
+    },
+    order: { column: 'updated_at', ascending: false },
+    offset,
+    limit,
+  });
   
   if (error) throw error;
   const items = (data || []).map(dbRowToItem);

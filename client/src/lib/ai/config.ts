@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { AIProviderConfig, AIProviderType } from './types';
-import { supabase } from '../supabaseClient';
+import { apiQuery } from '../apiClient';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -76,15 +76,17 @@ async function deleteLocalConfig(): Promise<void> {
   });
 }
 
-// ─── Supabase Sync ───────────────────────────────────────────────────────────
+// ─── Server Sync ────────────────────────────────────────────────────────────
 
 async function syncToSupabase(config: AIProviderConfig): Promise<void> {
   try {
-    const { data: existing } = await supabase
-      .from('user_settings')
-      .select('user_id')
-      .limit(1)
-      .single();
+    const { data: existing } = await apiQuery({
+      table: 'user_settings',
+      select: 'user_id',
+      filters: {},
+      limit: 1,
+      single: true,
+    });
 
     const updates = {
       ai_provider: config.provider,
@@ -96,45 +98,54 @@ async function syncToSupabase(config: AIProviderConfig): Promise<void> {
     };
 
     if (existing?.user_id) {
-      await supabase.from('user_settings').update(updates).eq('user_id', existing.user_id);
+      await apiQuery({ action: 'update', table: 'user_settings', data: updates, filters: { user_id: existing.user_id } });
     }
     // If no user_settings row exists, we don't create one just for AI config
     // (the row is created during initial app setup)
   } catch (err) {
-    console.warn('Failed to sync AI config to Supabase:', err);
+    console.warn('Failed to sync AI config to server:', err);
   }
 }
 
 async function clearSupabaseConfig(): Promise<void> {
   try {
-    const { data: existing } = await supabase
-      .from('user_settings')
-      .select('user_id')
-      .limit(1)
-      .single();
+    const { data: existing } = await apiQuery({
+      table: 'user_settings',
+      select: 'user_id',
+      filters: {},
+      limit: 1,
+      single: true,
+    });
 
     if (existing?.user_id) {
-      await supabase.from('user_settings').update({
-        ai_provider: null,
-        ai_api_key: null,
-        ai_model: null,
-        ai_temperature: 0.7,
-        ai_base_url: null,
-        updated_at: new Date().toISOString(),
-      }).eq('user_id', existing.user_id);
+      await apiQuery({
+        action: 'update',
+        table: 'user_settings',
+        data: {
+          ai_provider: null,
+          ai_api_key: null,
+          ai_model: null,
+          ai_temperature: 0.7,
+          ai_base_url: null,
+          updated_at: new Date().toISOString(),
+        },
+        filters: { user_id: existing.user_id },
+      });
     }
   } catch (err) {
-    console.warn('Failed to clear AI config from Supabase:', err);
+    console.warn('Failed to clear AI config from server:', err);
   }
 }
 
 async function loadFromSupabase(): Promise<AIProviderConfig | null> {
   try {
-    const { data } = await supabase
-      .from('user_settings')
-      .select('ai_provider, ai_api_key, ai_model, ai_temperature, ai_base_url')
-      .limit(1)
-      .single();
+    const { data } = await apiQuery({
+      table: 'user_settings',
+      select: 'ai_provider, ai_api_key, ai_model, ai_temperature, ai_base_url',
+      filters: {},
+      limit: 1,
+      single: true,
+    });
 
     if (!data?.ai_provider || !data?.ai_api_key) {
       return null;

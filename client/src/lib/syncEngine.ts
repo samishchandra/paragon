@@ -36,7 +36,7 @@ import {
   clearAllCachedData,
 } from './offlineStore';
 
-import { supabase } from './supabaseClient';
+import { apiQuery, apiSelectTags, apiSelectLists, apiSelectViewSortPrefs } from './apiClient';
 
 // ---- Types ----
 
@@ -67,11 +67,12 @@ export async function loadItemsOfflineFirst(
   // 2. If online, fetch from server in background
   if (navigator.onLine) {
     try {
-      const { data, error } = await supabase
-        .from('items')
-        .select('*, item_tags(tag_id)')
-        .eq('user_id', userId)
-        .order('updated_at', { ascending: false });
+      const { data, error } = await apiQuery({
+        table: 'items',
+        select: '*, item_tags(tag_id)',
+        filters: { user_id: userId },
+        order: { column: 'updated_at', ascending: false },
+      });
 
       if (!error && data) {
         // Update cache
@@ -108,10 +109,7 @@ export async function loadTagsOfflineFirst(
 
   if (navigator.onLine) {
     try {
-      const { data, error } = await supabase
-        .from('tags')
-        .select('*')
-        .eq('user_id', userId);
+      const { data, error } = await apiSelectTags(userId);
 
       if (!error && data) {
         await putCachedTags(data);
@@ -143,11 +141,7 @@ export async function loadListsOfflineFirst(
 
   if (navigator.onLine) {
     try {
-      const { data, error } = await supabase
-        .from('lists')
-        .select('*')
-        .eq('user_id', userId)
-        .order('sort_order', { ascending: true });
+      const { data, error } = await apiSelectLists(userId);
 
       if (!error && data) {
         await putCachedLists(data);
@@ -222,11 +216,13 @@ export async function loadSettingsOfflineFirst(
 
   if (navigator.onLine) {
     try {
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
+      const { data, error } = await apiQuery({
+        table: 'user_settings',
+        select: '*',
+        filters: { user_id: userId },
+        limit: 1,
+        single: true,
+      });
 
       if (!error && data) {
         await putCachedUserSettings(data);
@@ -258,10 +254,7 @@ export async function loadViewSortPrefsOfflineFirst(
 
   if (navigator.onLine) {
     try {
-      const { data, error } = await supabase
-        .from('view_sort_preferences')
-        .select('*')
-        .eq('user_id', userId);
+      const { data, error } = await apiSelectViewSortPrefs(userId);
 
       if (!error && data) {
         await putCachedViewSortPrefs(data);
@@ -286,10 +279,10 @@ export async function fullSync(userId: string): Promise<{
 
   try {
     const [itemsRes, tagsRes, listsRes, itemTagsRes] = await Promise.all([
-      supabase.from('items').select('*, item_tags(tag_id)').eq('user_id', userId),
-      supabase.from('tags').select('*').eq('user_id', userId),
-      supabase.from('lists').select('*').eq('user_id', userId).order('sort_order', { ascending: true }),
-      supabase.from('item_tags').select('*'),
+      apiQuery({ table: 'items', select: '*, item_tags(tag_id)', filters: { user_id: userId } }),
+      apiSelectTags(userId),
+      apiSelectLists(userId),
+      apiQuery({ table: 'item_tags', select: '*', filters: {} }),
     ]);
 
     const items = itemsRes.data || [];

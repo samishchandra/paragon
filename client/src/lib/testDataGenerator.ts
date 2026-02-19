@@ -5,7 +5,7 @@
  * with rich TipTap HTML content that exercises all markdown/editor features.
  */
 
-import { supabase } from './supabaseClient';
+import { apiQuery } from './apiClient';
 
 // ─── Tag Definitions ─────────────────────────────────────────────
 export const TEST_TAGS = [
@@ -429,14 +429,14 @@ export async function generateTestData(options: GenerateOptions): Promise<Genera
   if (clearExisting) {
     onProgress?.(5, 'Clearing existing data...');
     // Filter by user_id to only clear the current user's data
-    const { data: userItems } = await supabase.from('items').select('id').eq('user_id', userId);
+    const { data: userItems } = await apiQuery({ table: 'items', select: 'id', filters: { user_id: userId } });
     const userItemIds = (userItems || []).map(i => i.id);
     if (userItemIds.length > 0) {
-      await supabase.from('item_tags').delete().in('item_id', userItemIds);
+      await apiQuery({ action: 'delete', table: 'item_tags', filters: { 'item_id__in': userItemIds } });
     }
-    await supabase.from('items').delete().eq('user_id', userId);
-    await supabase.from('tags').delete().eq('user_id', userId);
-    await supabase.from('lists').delete().eq('user_id', userId);
+    await apiQuery({ action: 'delete', table: 'items', filters: { user_id: userId } });
+    await apiQuery({ action: 'delete', table: 'tags', filters: { user_id: userId } });
+    await apiQuery({ action: 'delete', table: 'lists', filters: { user_id: userId } });
   }
 
   // Step 2: Create tags
@@ -446,10 +446,7 @@ export async function generateTestData(options: GenerateOptions): Promise<Genera
     color: t.color,
     user_id: userId,
   }));
-  const { data: createdTags, error: tagErr } = await supabase
-    .from('tags')
-    .insert(tagInserts)
-    .select('id, name');
+  const { data: createdTags, error: tagErr } = await apiQuery({ action: 'insert', table: 'tags', data: tagInserts });
   if (tagErr) throw new Error(`Failed to create tags: ${tagErr.message}`);
   
   const tagNameToId = new Map<string, string>();
@@ -465,10 +462,7 @@ export async function generateTestData(options: GenerateOptions): Promise<Genera
     sort_order: i,
     user_id: userId,
   }));
-  const { data: createdLists, error: listErr } = await supabase
-    .from('lists')
-    .insert(listInserts)
-    .select('id, name, type');
+  const { data: createdLists, error: listErr } = await apiQuery({ action: 'insert', table: 'lists', data: listInserts });
   if (listErr) throw new Error(`Failed to create lists: ${listErr.message}`);
 
   const taskLists = (createdLists || []).filter(l => l.type === 'task');
@@ -513,7 +507,7 @@ export async function generateTestData(options: GenerateOptions): Promise<Genera
   const insertedTaskIds: string[] = [];
   for (let i = 0; i < taskItems.length; i += batchSize) {
     const batch = taskItems.slice(i, i + batchSize);
-    const { data, error } = await supabase.from('items').insert(batch).select('id');
+    const { data, error } = await apiQuery({ action: 'insert', table: 'items', data: batch });
     if (error) throw new Error(`Failed to insert tasks: ${error.message}`);
     insertedTaskIds.push(...(data || []).map(d => d.id));
     onProgress?.(40 + (20 * Math.min(i + batchSize, taskItems.length) / taskItems.length), `Creating tasks... (${Math.min(i + batchSize, taskItems.length)}/${taskItems.length})`);
@@ -555,7 +549,7 @@ export async function generateTestData(options: GenerateOptions): Promise<Genera
   const insertedNoteIds: string[] = [];
   for (let i = 0; i < noteItems.length; i += batchSize) {
     const batch = noteItems.slice(i, i + batchSize);
-    const { data, error } = await supabase.from('items').insert(batch).select('id');
+    const { data, error } = await apiQuery({ action: 'insert', table: 'items', data: batch });
     if (error) throw new Error(`Failed to insert notes: ${error.message}`);
     insertedNoteIds.push(...(data || []).map(d => d.id));
     onProgress?.(65 + (15 * Math.min(i + batchSize, noteItems.length) / noteItems.length), `Creating notes... (${Math.min(i + batchSize, noteItems.length)}/${noteItems.length})`);
@@ -593,7 +587,7 @@ export async function generateTestData(options: GenerateOptions): Promise<Genera
   let insertedTagAssociations = 0;
   for (let i = 0; i < itemTagInserts.length; i += batchSize) {
     const batch = itemTagInserts.slice(i, i + batchSize);
-    const { error } = await supabase.from('item_tags').insert(batch);
+    const { error } = await apiQuery({ action: 'insert', table: 'item_tags', data: batch });
     if (error) {
       console.warn('Some tag associations failed:', error.message);
     } else {
@@ -628,7 +622,7 @@ export async function generateTestData(options: GenerateOptions): Promise<Genera
       user_id: userId,
     },
   ];
-  await supabase.from('items').insert(trashedItems);
+  await apiQuery({ action: 'insert', table: 'items', data: trashedItems });
 
   onProgress?.(100, 'Done!');
 
@@ -643,19 +637,19 @@ export async function generateTestData(options: GenerateOptions): Promise<Genera
 
 export async function clearAllData(userId: string): Promise<{ items: number; lists: number; tags: number }> {
   if (!userId) throw new Error('userId is required to clear data');
-  const { count: itemCount } = await supabase.from('items').select('*', { count: 'exact', head: true }).eq('user_id', userId);
-  const { count: listCount } = await supabase.from('lists').select('*', { count: 'exact', head: true }).eq('user_id', userId);
-  const { count: tagCount } = await supabase.from('tags').select('*', { count: 'exact', head: true }).eq('user_id', userId);
+  const { count: itemCount } = await apiQuery({ table: 'items', select: '*', filters: { user_id: userId }, count: true });
+  const { count: listCount } = await apiQuery({ table: 'lists', select: '*', filters: { user_id: userId }, count: true });
+  const { count: tagCount } = await apiQuery({ table: 'tags', select: '*', filters: { user_id: userId }, count: true });
 
   // Delete item_tags for this user's items
-  const { data: userItems } = await supabase.from('items').select('id').eq('user_id', userId);
+  const { data: userItems } = await apiQuery({ table: 'items', select: 'id', filters: { user_id: userId } });
   const userItemIds = (userItems || []).map(i => i.id);
   if (userItemIds.length > 0) {
-    await supabase.from('item_tags').delete().in('item_id', userItemIds);
+    await apiQuery({ action: 'delete', table: 'item_tags', filters: { 'item_id__in': userItemIds } });
   }
-  await supabase.from('items').delete().eq('user_id', userId);
-  await supabase.from('lists').delete().eq('user_id', userId);
-  await supabase.from('tags').delete().eq('user_id', userId);
+  await apiQuery({ action: 'delete', table: 'items', filters: { user_id: userId } });
+  await apiQuery({ action: 'delete', table: 'lists', filters: { user_id: userId } });
+  await apiQuery({ action: 'delete', table: 'tags', filters: { user_id: userId } });
 
   return {
     items: itemCount || 0,

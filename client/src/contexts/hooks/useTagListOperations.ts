@@ -1,16 +1,16 @@
 /**
- * useTagListOperations — Tag and list CRUD with optimistic UI + Supabase persistence.
+ * useTagListOperations — Tag and list CRUD with optimistic UI + API persistence.
  *
  * Handles: addTag, updateTag, deleteTag, mergeTags, addList, updateList,
  * deleteList, reorderLists, setItemList, removeItemFromList.
  *
  * All mutations follow the same pattern:
  *   1. Optimistic dispatch to the reducer
- *   2. If online → Supabase call (with offline fallback on error)
+ *   2. If online → API call (with offline fallback on error)
  *   3. If offline → enqueue for later flush
  */
 import { useCallback } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import { markItemDirty } from '@/lib/autoBackup';
 import type { Item, Tag, List } from '@/types';
 
@@ -46,7 +46,7 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'insert', table: 'tags', payload });
     } else {
-      supabase.from('tags').insert(payload).then(({ error }) => {
+      apiQuery({ action: 'insert', table: 'tags', data: payload }).then(({ error }) => {
         if (error) enqueueOffline({ mutationType: 'insert', table: 'tags', payload });
       });
     }
@@ -57,7 +57,7 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'update', table: 'tags', payload: updates as Record<string, any>, filterColumn: 'id', filterValue: id });
     } else {
-      supabase.from('tags').update(updates).eq('id', id).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'tags', data: updates, filters: { id } }).then(({ error }) => {
         if (error) enqueueOffline({ mutationType: 'update', table: 'tags', payload: updates as Record<string, any>, filterColumn: 'id', filterValue: id });
       });
     }
@@ -69,12 +69,12 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
       enqueueOffline({ mutationType: 'delete', table: 'item_tags', payload: {}, filterColumn: 'tag_id', filterValue: id });
       enqueueOffline({ mutationType: 'delete', table: 'tags', payload: {}, filterColumn: 'id', filterValue: id });
     } else {
-      supabase.from('item_tags').delete().eq('tag_id', id).then(({ error: junctionError }) => {
+      apiQuery({ action: 'delete', table: 'item_tags', filters: { tag_id: id } }).then(({ error: junctionError }) => {
         if (junctionError) {
           console.error('Failed to delete item_tags for tag:', id, junctionError);
           enqueueOffline({ mutationType: 'delete', table: 'item_tags', payload: {}, filterColumn: 'tag_id', filterValue: id });
         }
-        return supabase.from('tags').delete().eq('id', id);
+        return apiQuery({ action: 'delete', table: 'tags', filters: { id } });
       }).then((result) => {
         if (result && 'error' in result && result.error) {
           console.error('Failed to delete tag:', id, result.error);
@@ -113,7 +113,7 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'insert', table: 'lists', payload });
     } else {
-      supabase.from('lists').insert(payload).then(({ error }) => {
+      apiQuery({ action: 'insert', table: 'lists', data: payload }).then(({ error }) => {
         if (error) enqueueOffline({ mutationType: 'insert', table: 'lists', payload });
       });
     }
@@ -130,7 +130,7 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'update', table: 'lists', payload: dbUpdates, filterColumn: 'id', filterValue: id });
     } else {
-      supabase.from('lists').update(dbUpdates).eq('id', id).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'lists', data: dbUpdates, filters: { id } }).then(({ error }) => {
         if (error) enqueueOffline({ mutationType: 'update', table: 'lists', payload: dbUpdates, filterColumn: 'id', filterValue: id });
       });
     }
@@ -142,8 +142,8 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
       enqueueOffline({ mutationType: 'update', table: 'items', payload: { list_id: null }, filterColumn: 'list_id', filterValue: id });
       enqueueOffline({ mutationType: 'delete', table: 'lists', payload: {}, filterColumn: 'id', filterValue: id });
     } else {
-      supabase.from('items').update({ list_id: null }).eq('list_id', id).then(() => {
-        supabase.from('lists').delete().eq('id', id);
+      apiQuery({ action: 'update', table: 'items', data: { list_id: null }, filters: { list_id: id } }).then(() => {
+        apiQuery({ action: 'delete', table: 'lists', filters: { id } });
       });
     }
   }, [enqueueOffline]);
@@ -156,7 +156,7 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
         enqueueOffline({ mutationType: 'update', table: 'lists', payload, filterColumn: 'id', filterValue: list.id });
         return Promise.resolve();
       } else {
-        return supabase.from('lists').update(payload).eq('id', list.id).then(({ error }) => {
+        return apiQuery({ action: 'update', table: 'lists', data: payload, filters: { id: list.id } }).then(({ error }) => {
           if (error) {
             console.error(`Failed to update sort_order for list ${list.name}:`, error);
             enqueueOffline({ mutationType: 'update', table: 'lists', payload, filterColumn: 'id', filterValue: list.id });
@@ -176,7 +176,7 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'update', table: 'items', payload, filterColumn: 'id', filterValue: itemId });
     } else {
-      supabase.from('items').update(payload).eq('id', itemId).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'items', data: payload, filters: { id: itemId } }).then(({ error }) => {
         if (error) enqueueOffline({ mutationType: 'update', table: 'items', payload, filterColumn: 'id', filterValue: itemId });
         refreshCounts();
       });
@@ -190,7 +190,7 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'update', table: 'items', payload, filterColumn: 'id', filterValue: itemId });
     } else {
-      supabase.from('items').update(payload).eq('id', itemId).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'items', data: payload, filters: { id: itemId } }).then(({ error }) => {
         if (error) enqueueOffline({ mutationType: 'update', table: 'items', payload, filterColumn: 'id', filterValue: itemId });
         refreshCounts();
       });

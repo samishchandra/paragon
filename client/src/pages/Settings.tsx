@@ -59,7 +59,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useMomentum } from '@/contexts/ServerMomentumContext';
 import { Beaker } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -86,18 +86,18 @@ function useUserSettings(userId: string) {
   const [userSettings, setUserSettings] = useState<any>(null);
 
   useEffect(() => {
-    supabase.from('user_settings').select('*').eq('user_id', userId).limit(1).single().then(({ data }) => {
+    apiQuery({ table: 'user_settings', select: '*', filters: { user_id: userId }, limit: 1, single: true }).then(({ data }) => {
       setUserSettings(data);
     });
   }, [userId]);
 
   const updateSettings = useCallback(async (updates: any) => {
     if (userSettings?.user_id) {
-      await supabase.from('user_settings').update(updates).eq('user_id', userSettings.user_id);
+      await apiQuery({ action: 'update', table: 'user_settings', data: updates, filters: { user_id: userSettings.user_id } });
     } else {
-      await supabase.from('user_settings').insert({ ...updates, user_id: userId });
+      await apiQuery({ action: 'insert', table: 'user_settings', data: { ...updates, user_id: userId } });
     }
-    const { data } = await supabase.from('user_settings').select('*').eq('user_id', userId).limit(1).single();
+    const { data } = await apiQuery({ table: 'user_settings', select: '*', filters: { user_id: userId }, limit: 1, single: true });
     setUserSettings(data);
   }, [userSettings?.user_id, userId]);
 
@@ -347,11 +347,11 @@ export function SettingsData() {
   ): Promise<string | null> => {
     const lower = tagName.toLowerCase();
     if (tagNameToId.has(lower)) return tagNameToId.get(lower)!;
-    const { data: existing } = await supabase.from('tags').select('id').eq('user_id', userId).eq('name', lower).limit(1).single();
+    const { data: existing } = await apiQuery({ table: 'tags', select: 'id', filters: { user_id: userId, name: lower }, limit: 1, single: true });
     if (existing) { tagNameToId.set(lower, existing.id); return existing.id; }
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
     const color = colors[counters.tags % colors.length];
-    const { data: newTag } = await supabase.from('tags').insert({ name: lower, color, user_id: userId }).select('id').single();
+    const { data: newTag } = await apiQuery({ action: 'insert', table: 'tags', data: { name: lower, color, user_id: userId }, single: true });
     if (newTag) { tagNameToId.set(lower, newTag.id); counters.tags++; return newTag.id; }
     return null;
   };
@@ -363,10 +363,10 @@ export function SettingsData() {
     lastModified?: number,
   ) => {
     if (folderName !== 'Miscellaneous' && !listNameToId.has(folderName)) {
-      const { data: existingList } = await supabase.from('lists').select('id').eq('user_id', userId).eq('name', folderName).limit(1).single();
+      const { data: existingList } = await apiQuery({ table: 'lists', select: 'id', filters: { user_id: userId, name: folderName }, limit: 1, single: true });
       if (existingList) { listNameToId.set(folderName, existingList.id); }
       else {
-        const { data: newList } = await supabase.from('lists').insert({ name: folderName, type: 'note', user_id: userId }).select('id').single();
+        const { data: newList } = await apiQuery({ action: 'insert', table: 'lists', data: { name: folderName, type: 'note', user_id: userId }, single: true });
         if (newList) { listNameToId.set(folderName, newList.id); counters.lists++; }
       }
     }
@@ -398,12 +398,12 @@ export function SettingsData() {
       timestamps.created_at = isoDate;
     }
     const hasUncompleted = /- \[ \]/.test(itemContent);
-    const { data: insertedItem } = await supabase.from('items').insert({
+    const { data: insertedItem } = await apiQuery({ action: 'insert', table: 'items', data: {
       type, title, content: itemContent, section, list_id: listId,
       is_completed: isCompleted, is_pinned: isPinned, due_date: dueDate,
       sort_order: counters.items, search_content: searchContent,
       has_uncompleted_todos: hasUncompleted, user_id: userId, ...timestamps,
-    }).select('id').single();
+    }, single: true });
     if (insertedItem && allTagNames.length > 0) {
       const tagIds: string[] = [];
       for (const tagName of allTagNames) {
@@ -411,7 +411,7 @@ export function SettingsData() {
         if (tagId) tagIds.push(tagId);
       }
       if (tagIds.length > 0) {
-        await supabase.from('item_tags').insert(tagIds.map(tid => ({ item_id: insertedItem.id, tag_id: tid })));
+        await apiQuery({ action: 'insert', table: 'item_tags', data: tagIds.map(tid => ({ item_id: insertedItem.id, tag_id: tid })) });
       }
     }
     counters.items++;
@@ -445,9 +445,9 @@ export function SettingsData() {
     setIsExporting(true);
     try {
       const [itemsResult, tagsResult, listsResult] = await Promise.all([
-        supabase.from('items').select('*, item_tags(tag_id)').eq('user_id', userId),
-        supabase.from('tags').select('*').eq('user_id', userId),
-        supabase.from('lists').select('*').eq('user_id', userId),
+        apiQuery({ table: 'items', select: '*, item_tags(tag_id)', filters: { user_id: userId } }),
+        apiQuery({ table: 'tags', select: '*', filters: { user_id: userId } }),
+        apiQuery({ table: 'lists', select: '*', filters: { user_id: userId } }),
       ]);
       const items = itemsResult.data || [];
       const tags = tagsResult.data || [];
@@ -583,10 +583,11 @@ export function SettingsData() {
     (async () => {
       try {
         // Sum approximate content size: title + content for all items
-        const { data, error } = await supabase
-          .from('items')
-          .select('title, content')
-          .eq('user_id', userId);
+        const { data, error } = await apiQuery({
+          table: 'items',
+          select: 'title, content',
+          filters: { user_id: userId },
+        });
         if (error || !data || cancelled) return;
         let totalBytes = 0;
         for (const row of data) {

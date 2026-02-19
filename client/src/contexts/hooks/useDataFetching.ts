@@ -11,7 +11,7 @@
  *   - Recent items fetch (deferred on mount, immediate on change)
  */
 import { useCallback, useRef, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import type { Item, FilterType, SortOrder } from '@/types';
 import { fetchItems, searchItems, fetchTags, fetchLists, fetchRecentItemsByIds, dbRowToItem } from '@/lib/queries';
 import {
@@ -245,7 +245,7 @@ export function useDataFetching(deps: DataFetchingDeps) {
         const [tags, lists, settingsResult] = await Promise.all([
           fetchTags(userId),
           fetchLists(userId),
-          supabase.from('user_settings').select('*').eq('user_id', userId).limit(1).single(),
+          apiQuery({ table: 'user_settings', select: '*', filters: { user_id: userId }, limit: 1, single: true }),
         ]);
         if (cancelled) return;
         dispatch({ type: 'SET_TAGS', payload: tags });
@@ -295,11 +295,11 @@ export function useDataFetching(deps: DataFetchingDeps) {
     if (openTabIds.length === 0) return;
 
     try {
-      const { data, error } = await supabase
-        .from('items')
-        .select('*, item_tags(tag_id)')
-        .eq('user_id', userId)
-        .in('id', openTabIds);
+      const { data, error } = await apiQuery({
+        table: 'items',
+        select: '*, item_tags(tag_id)',
+        filters: { user_id: userId, 'id__in': openTabIds },
+      });
 
       if (error || !data || data.length === 0) return;
 

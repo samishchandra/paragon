@@ -9,7 +9,7 @@
  * a mutable ref that the provider populates once refreshCounts is created.
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import { toast } from '@/lib/toast';
 import { clearSearchCache } from '@/lib/serverSearch';
 import * as offlineQueue from '@/lib/offlineQueue';
@@ -65,28 +65,29 @@ export function useOnlineStatus(
     let successCount = 0;
     let failCount = 0;
 
-    // Non-retryable Supabase error codes — dequeue instead of retrying
+    // Non-retryable error codes — dequeue instead of retrying
     const NON_RETRYABLE_CODES = [
       '23505', // unique_violation (duplicate key)
       '23503', // foreign_key_violation (referenced row missing)
-      '22003', // numeric_value_out_of_range (e.g., integer overflow)
+      '22003', // numeric_value_out_of_range
       '42P01', // undefined_table
       '42703', // undefined_column
-      'PGRST116', // row not found (for single-row expectations)
+      'PGRST116', // row not found
     ];
 
     for (const entry of entries) {
       try {
-        let result;
-        if (entry.mutationType === 'insert') {
-          result = await supabase.from(entry.table).insert(entry.payload);
-        } else if (entry.mutationType === 'update') {
-          result = await supabase.from(entry.table).update(entry.payload).eq(entry.filterColumn || 'id', entry.filterValue!);
-        } else if (entry.mutationType === 'delete') {
-          result = await supabase.from(entry.table).delete().eq(entry.filterColumn || 'id', entry.filterValue!);
-        } else if (entry.mutationType === 'upsert') {
-          result = await supabase.from(entry.table).upsert(entry.payload);
+        const body: any = {
+          action: entry.mutationType,
+          table: entry.table,
+          data: entry.payload,
+        };
+
+        if (entry.filterColumn && entry.filterValue) {
+          body.filters = { [entry.filterColumn]: entry.filterValue };
         }
+
+        const result = await apiQuery(body);
 
         if (result?.error) {
           const errCode = result.error.code;

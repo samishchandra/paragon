@@ -8,6 +8,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { trpc } from '@/lib/trpc';
 import { getLoginUrl } from '@/const';
 import { clearAllCachedData } from '@/lib/offlineStore';
+import { clearSwCaches } from '@/lib/serviceWorker';
 
 interface AuthContextValue {
   user: { id: string; email?: string; name?: string } | null;
@@ -105,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try { indexedDB.deleteDatabase('momentum-ai-config'); } catch {}
     try { indexedDB.deleteDatabase('momentum-image-cache'); } catch {}
     try { await clearAllCachedData(); } catch {}
+    try { await clearSwCaches(); } catch {}
     window.location.href = getLoginUrl();
   }, [logoutMutation]);
 

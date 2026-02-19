@@ -11,7 +11,7 @@
  *   - loadTestData / loadLargeTestData / clearAllData (stubs)
  */
 import { useCallback } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import { toast } from 'sonner';
 import type { Item, FilterType, SortOrder } from '@/types';
 import { fetchItems, searchItems, fetchTags, fetchLists } from '@/lib/queries';
@@ -63,12 +63,12 @@ export function useSortAndNavigation(deps: SortAndNavigationDeps) {
       ...viewSortPrefs,
       [viewKey]: { sortOrder: newSortOrder, sortDirection },
     }});
-    supabase.from('view_sort_preferences').upsert({
+    apiQuery({ action: 'upsert', table: 'view_sort_preferences', data: {
       view_key: viewKey,
       sort_order: newSortOrder,
       sort_direction: sortDirection,
       user_id: userId,
-    }, { onConflict: 'view_key' });
+    } });
   }, [computeViewKey, sortDirection, viewSortPrefs, userId]);
 
   const setSortDirection = useCallback((direction: 'asc' | 'desc') => {
@@ -78,12 +78,12 @@ export function useSortAndNavigation(deps: SortAndNavigationDeps) {
       ...viewSortPrefs,
       [viewKey]: { sortOrder, sortDirection: direction },
     }});
-    supabase.from('view_sort_preferences').upsert({
+    apiQuery({ action: 'upsert', table: 'view_sort_preferences', data: {
       view_key: viewKey,
       sort_order: sortOrder,
       sort_direction: direction,
       user_id: userId,
-    }, { onConflict: 'view_key' });
+    } });
   }, [computeViewKey, sortOrder, viewSortPrefs, userId]);
 
   const selectNextItem = useCallback(() => {

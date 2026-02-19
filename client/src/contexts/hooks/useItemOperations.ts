@@ -12,7 +12,7 @@
  * The main provider calls this hook and spreads its return values into the context.
  */
 import { useCallback, useRef, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import { format } from 'date-fns';
 import { toast } from '@/lib/toast';
 import { clearSearchCache } from '@/lib/serverSearch';
@@ -141,7 +141,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
         enqueueOffline({ mutationType: 'update', table: 'items', payload: flushPayload, filterColumn: 'id', filterValue: item.id });
         pendingUpdatesRef.current.delete(item.id);
       } else {
-        supabase.from('items').update(flushPayload).eq('id', item.id).then(({ error }) => {
+        apiQuery({ action: 'update', table: 'items', data: flushPayload, filters: { id: item.id } }).then(({ error }) => {
           if (error) {
             enqueueOffline({ mutationType: 'update', table: 'items', payload: flushPayload, filterColumn: 'id', filterValue: item.id });
           }
@@ -217,16 +217,14 @@ export function useItemOperations(deps: ItemOperationsDeps) {
       return;
     }
 
-    supabase.from('items').insert(insertPayload).then(({ error }) => {
+    apiQuery({ action: 'insert', table: 'items', data: insertPayload }).then(({ error }) => {
       if (error) {
         console.error('Failed to create task:', error);
         enqueueOffline({ mutationType: 'insert', table: 'items', payload: insertPayload });
         toast.info('Saved offline — will sync when connected');
       } else {
         if (tagIds && tagIds.length > 0) {
-          supabase.from('item_tags').insert(
-            tagIds.map(tagId => ({ item_id: id, tag_id: tagId }))
-          ).then(({ error: tagError }) => {
+          apiQuery({ action: 'insert', table: 'item_tags', data: tagIds.map(tagId => ({ item_id: id, tag_id: tagId })) }).then(({ error: tagError }) => {
             if (tagError) console.error('Failed to insert item_tags:', tagError);
           });
         }
@@ -262,7 +260,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
             pendingTagsRef.current.set(lower, newTag);
             const tagPayload = { id: newTagId, name: lower, color, user_id: userId };
             if (isOnlineRef.current) {
-              supabase.from('tags').insert(tagPayload).then(({ error }) => {
+              apiQuery({ action: 'insert', table: 'tags', data: tagPayload }).then(({ error }) => {
                 if (error) enqueueOffline({ mutationType: 'insert', table: 'tags', payload: tagPayload });
               });
             } else {
@@ -329,16 +327,14 @@ export function useItemOperations(deps: ItemOperationsDeps) {
       return id;
     }
 
-    supabase.from('items').insert(insertPayload).then(({ error }) => {
+    apiQuery({ action: 'insert', table: 'items', data: insertPayload }).then(({ error }) => {
       if (error) {
         console.error('Failed to create note:', error);
         enqueueOffline({ mutationType: 'insert', table: 'items', payload: insertPayload });
         toast.info('Saved offline — will sync when connected');
       } else {
         if (resolvedTagIds.length > 0) {
-          supabase.from('item_tags').insert(
-            resolvedTagIds.map(tagId => ({ item_id: id, tag_id: tagId }))
-          ).then(({ error: tagError }) => {
+          apiQuery({ action: 'insert', table: 'item_tags', data: resolvedTagIds.map(tagId => ({ item_id: id, tag_id: tagId })) }).then(({ error: tagError }) => {
             if (tagError) console.error('Failed to insert item_tags:', tagError);
           });
         }
@@ -376,7 +372,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
           has_uncompleted_todos: hasUncompletedTodos(pendingItem.content),
         };
         if (isOnlineRef.current) {
-          supabase.from('items').update(savePayload).eq('id', id);
+          apiQuery({ action: 'update', table: 'items', data: savePayload, filters: { id: id } });
         } else {
           enqueueOffline({ mutationType: 'update', table: 'items', payload: savePayload, filterColumn: 'id', filterValue: id });
         }
@@ -404,7 +400,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     dispatch({ type: 'ADD_ITEM', payload: newItem });
     markItemDirty(newId);
 
-    supabase.from('items').insert({
+    apiQuery({ action: 'insert', table: 'items', data: {
       id: newId,
       type: sourceItem.type,
       title: duplicatedTitle,
@@ -416,15 +412,13 @@ export function useItemOperations(deps: ItemOperationsDeps) {
       sort_order: newItem.order,
       has_uncompleted_todos: hasUncompletedTodos(sourceItem.content),
       user_id: userId,
-    }).then(async ({ error }) => {
+    } }).then(async ({ error }) => {
       if (error) {
         dispatch({ type: 'DELETE_ITEM', payload: newId });
         toast.error('Failed to duplicate item');
       } else {
         if (sourceItem.tags.length > 0) {
-          await supabase.from('item_tags').insert(
-            sourceItem.tags.map(tagId => ({ item_id: newId, tag_id: tagId }))
-          );
+          await apiQuery({ action: 'insert', table: 'item_tags', data: sourceItem.tags.map(tagId => ({ item_id: newId, tag_id: tagId })) });
         }
         refreshCounts();
         toast.success(`Duplicated ${sourceItem.type === 'task' ? 'task' : 'note'}`);
@@ -510,15 +504,13 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     const tagsChanged = currentItem && JSON.stringify(item.tags) !== JSON.stringify(currentItem.tags);
     if (tagsChanged && isOnlineRef.current) {
       const newTags = [...item.tags];
-      supabase.from('item_tags').delete().eq('item_id', item.id).then(({ error: delError }) => {
+      apiQuery({ action: 'delete', table: 'item_tags', filters: { item_id: item.id } }).then(({ error: delError }) => {
         if (delError) {
           console.error('[ITEM_TAGS_SYNC] Delete error:', delError);
           return;
         }
         if (newTags.length > 0) {
-          supabase.from('item_tags').insert(
-            newTags.map(tagId => ({ item_id: item.id, tag_id: tagId }))
-          ).then(({ error: insError }) => {
+          apiQuery({ action: 'insert', table: 'item_tags', data: newTags.map(tagId => ({ item_id: item.id, tag_id: tagId })) }).then(({ error: insError }) => {
             if (insError) console.error('[ITEM_TAGS_SYNC] Insert error:', insError);
           });
         }
@@ -579,7 +571,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
         return;
       }
 
-      supabase.from('items').update(updatePayload).eq('id', latestItem.id).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'items', data: updatePayload, filters: { id: latestItem.id } }).then(({ error }) => {
         if (error) {
           console.error('Update failed:', error);
           enqueueOffline({ mutationType: 'update', table: 'items', payload: updatePayload, filterColumn: 'id', filterValue: latestItem.id });
@@ -636,7 +628,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'update', table: 'items', payload: deletePayload, filterColumn: 'id', filterValue: id });
     } else {
-      supabase.from('items').update(deletePayload).eq('id', id).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'items', data: deletePayload, filters: { id: id } }).then(({ error }) => {
         if (error) {
           enqueueOffline({ mutationType: 'update', table: 'items', payload: deletePayload, filterColumn: 'id', filterValue: id });
         } else {
@@ -674,7 +666,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
           if (!isOnlineRef.current) {
             enqueueOffline({ mutationType: 'update', table: 'items', payload: restorePayload, filterColumn: 'id', filterValue: id });
           } else {
-            supabase.from('items').update(restorePayload).eq('id', id);
+            apiQuery({ action: 'update', table: 'items', data: restorePayload, filters: { id: id } });
           }
           undoStackRef.current = undoStackRef.current.filter((u) => u.item.id !== id);
           refreshCounts();
@@ -717,7 +709,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'update', table: 'items', payload: restorePayload, filterColumn: 'id', filterValue: id });
     } else {
-      supabase.from('items').update(restorePayload).eq('id', id).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'items', data: restorePayload, filters: { id: id } }).then(({ error }) => {
         if (error) {
           enqueueOffline({ mutationType: 'update', table: 'items', payload: restorePayload, filterColumn: 'id', filterValue: id });
         }
@@ -742,8 +734,8 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     }
 
     dispatch({ type: 'PERMANENT_DELETE_ITEM', payload: id });
-    supabase.from('item_tags').delete().eq('item_id', id).then(() => {
-      supabase.from('items').delete().eq('id', id).then(() => {
+    apiQuery({ action: 'delete', table: 'item_tags', filters: { item_id: id } }).then(() => {
+      apiQuery({ action: 'delete', table: 'items', filters: { id: id } }).then(() => {
         refreshCounts();
         clearSearchCache();
         markItemDirty(id);
@@ -764,8 +756,8 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     dispatch({ type: 'EMPTY_TRASH' });
 
     const ids = trashedItems.map(i => i.id);
-    await supabase.from('item_tags').delete().in('item_id', ids);
-    await supabase.from('items').delete().not('deleted_at', 'is', null);
+    await apiQuery({ action: 'delete', table: 'item_tags', filters: { 'item_id__in': ids } });
+    await apiQuery({ action: 'delete', table: 'items', filters: { 'deleted_at__not_is': null } });
     refreshCounts();
     clearSearchCache();
     markItemsDirty(ids);
@@ -793,7 +785,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     const trashedItem = itemsRef.current.find((i) => i.id === item.id && i.deletedAt);
     if (trashedItem) {
       dispatch({ type: 'RESTORE_ITEM', payload: item.id });
-      supabase.from('items').update({ deleted_at: null }).eq('id', item.id);
+      apiQuery({ action: 'update', table: 'items', data: { deleted_at: null }, filters: { id: item.id } });
       const itemTitle = item.title || (item.type === 'task' ? 'Task' : 'Note');
       const displayTitle = itemTitle.length > 30 ? itemTitle.substring(0, 30) + '...' : itemTitle;
       toast.success(`"${displayTitle}" restored`, { description: 'Press ⌘/Ctrl+Z again to undo more' });
@@ -820,11 +812,13 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     }
     setIsFetchingItem(true);
     try {
-      const { data, error } = await supabase
-        .from('items')
-        .select('*, item_tags(tag_id)')
-        .eq('id', id)
-        .single();
+      const { data, error } = await apiQuery({
+        table: 'items',
+        select: '*, item_tags(tag_id)',
+        filters: { id },
+        limit: 1,
+        single: true,
+      });
       if (error || !data) {
         console.error('Failed to fetch item:', error);
         selectItem(id);
@@ -872,7 +866,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'update', table: 'items', payload: pinPayload, filterColumn: 'id', filterValue: id });
     } else {
-      supabase.from('items').update(pinPayload).eq('id', id).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'items', data: pinPayload, filters: { id: id } }).then(({ error }) => {
         if (error) {
           enqueueOffline({ mutationType: 'update', table: 'items', payload: pinPayload, filterColumn: 'id', filterValue: id });
         }
@@ -901,7 +895,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'update', table: 'items', payload: completePayload, filterColumn: 'id', filterValue: id });
     } else {
-      supabase.from('items').update(completePayload).eq('id', id).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'items', data: completePayload, filters: { id: id } }).then(({ error }) => {
         if (error) {
           enqueueOffline({ mutationType: 'update', table: 'items', payload: completePayload, filterColumn: 'id', filterValue: id });
         }
@@ -924,7 +918,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
           if (!isOnlineRef.current) {
             enqueueOffline({ mutationType: 'update', table: 'items', payload: undoPayload, filterColumn: 'id', filterValue: id });
           } else {
-            supabase.from('items').update(undoPayload).eq('id', id).then(({ error }) => {
+            apiQuery({ action: 'update', table: 'items', data: undoPayload, filters: { id: id } }).then(({ error }) => {
               if (error) enqueueOffline({ mutationType: 'update', table: 'items', payload: undoPayload, filterColumn: 'id', filterValue: id });
               refreshCounts();
             });
@@ -948,7 +942,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'update', table: 'items', payload, filterColumn: 'id', filterValue: id });
     } else {
-      supabase.from('items').update(payload).eq('id', id).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'items', data: payload, filters: { id: id } }).then(({ error }) => {
         if (error) enqueueOffline({ mutationType: 'update', table: 'items', payload, filterColumn: 'id', filterValue: id });
         refreshCounts();
       });
@@ -962,7 +956,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     if (!isOnlineRef.current) {
       enqueueOffline({ mutationType: 'update', table: 'items', payload, filterColumn: 'id', filterValue: itemId });
     } else {
-      supabase.from('items').update(payload).eq('id', itemId).then(({ error }) => {
+      apiQuery({ action: 'update', table: 'items', data: payload, filters: { id: itemId } }).then(({ error }) => {
         if (error) enqueueOffline({ mutationType: 'update', table: 'items', payload, filterColumn: 'id', filterValue: itemId });
       });
     }
@@ -975,7 +969,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
       if (!isOnlineRef.current) {
         enqueueOffline({ mutationType: 'update', table: 'items', payload: { sort_order: index }, filterColumn: 'id', filterValue: id });
       } else {
-        supabase.from('items').update({ sort_order: index }).eq('id', id);
+        apiQuery({ action: 'update', table: 'items', data: { sort_order: index }, filters: { id: id } });
       }
     });
   }, [enqueueOffline]);
@@ -995,7 +989,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
         enqueueOffline({ mutationType: 'insert', table: 'item_tags', payload: row });
       });
     } else {
-      supabase.from('item_tags').upsert(rows, { onConflict: 'item_id,tag_id' }).then(({ error }) => {
+      apiQuery({ action: 'upsert', table: 'item_tags', data: rows }).then(({ error }) => {
         if (error) {
           console.error('[BULK_ADD_TAG] Server sync error:', error);
           rows.forEach(row => {
@@ -1016,19 +1010,20 @@ export function useItemOperations(deps: ItemOperationsDeps) {
         enqueueOffline({ mutationType: 'delete', table: 'item_tags', payload: { item_id: itemId, tag_id: tagId }, filterColumn: 'item_id', filterValue: itemId });
       });
     } else {
-      supabase.from('item_tags').delete()
-        .in('item_id', itemIds)
-        .eq('tag_id', tagId)
-        .then(({ error }) => {
-          if (error) {
-            console.error('[BULK_REMOVE_TAG] Server sync error:', error);
-            itemIds.forEach(itemId => {
-              enqueueOffline({ mutationType: 'delete', table: 'item_tags', payload: { item_id: itemId, tag_id: tagId }, filterColumn: 'item_id', filterValue: itemId });
-            });
-          } else {
-            refreshCounts();
-          }
-        });
+      // Delete item_tags for each item individually
+      Promise.all(itemIds.map(itemId =>
+        apiQuery({ action: 'delete', table: 'item_tags', filters: { item_id: itemId, tag_id: tagId } })
+      )).then((results) => {
+        const hasError = results.some(r => r.error);
+        if (hasError) {
+          console.error('[BULK_REMOVE_TAG] Server sync error');
+          itemIds.forEach(itemId => {
+            enqueueOffline({ mutationType: 'delete', table: 'item_tags', payload: { item_id: itemId, tag_id: tagId }, filterColumn: 'item_id', filterValue: itemId });
+          });
+        } else {
+          refreshCounts();
+        }
+      });
     }
   }, [refreshCounts, enqueueOffline]);
 
@@ -1043,18 +1038,20 @@ export function useItemOperations(deps: ItemOperationsDeps) {
         enqueueOffline({ mutationType: 'update', table: 'items', payload: deletePayload, filterColumn: 'id', filterValue: id });
       });
     } else {
-      supabase.from('items').update(deletePayload)
-        .in('id', itemIds)
-        .then(({ error }) => {
-          if (error) {
-            console.error('[BULK_DELETE] Server sync error:', error);
-            itemIds.forEach(id => {
-              enqueueOffline({ mutationType: 'update', table: 'items', payload: deletePayload, filterColumn: 'id', filterValue: id });
-            });
-          } else {
-            refreshCounts();
-          }
-        });
+      // Update each item individually
+      Promise.all(itemIds.map(id =>
+        apiQuery({ action: 'update', table: 'items', data: deletePayload, filters: { id } })
+      )).then((results) => {
+        const hasError = results.some(r => r.error);
+        if (hasError) {
+          console.error('[BULK_DELETE] Server sync error');
+          itemIds.forEach(id => {
+            enqueueOffline({ mutationType: 'update', table: 'items', payload: deletePayload, filterColumn: 'id', filterValue: id });
+          });
+        } else {
+          refreshCounts();
+        }
+      });
     }
   }, [refreshCounts, enqueueOffline]);
 
@@ -1069,18 +1066,20 @@ export function useItemOperations(deps: ItemOperationsDeps) {
         enqueueOffline({ mutationType: 'update', table: 'items', payload: listPayload, filterColumn: 'id', filterValue: id });
       });
     } else {
-      supabase.from('items').update(listPayload)
-        .in('id', itemIds)
-        .then(({ error }) => {
-          if (error) {
-            console.error('[BULK_SET_LIST] Server sync error:', error);
-            itemIds.forEach(id => {
-              enqueueOffline({ mutationType: 'update', table: 'items', payload: listPayload, filterColumn: 'id', filterValue: id });
-            });
-          } else {
-            refreshCounts();
-          }
-        });
+      // Update each item individually
+      Promise.all(itemIds.map(id =>
+        apiQuery({ action: 'update', table: 'items', data: listPayload, filters: { id } })
+      )).then((results) => {
+        const hasError = results.some(r => r.error);
+        if (hasError) {
+          console.error('[BULK_SET_LIST] Server sync error');
+          itemIds.forEach(id => {
+            enqueueOffline({ mutationType: 'update', table: 'items', payload: listPayload, filterColumn: 'id', filterValue: id });
+          });
+        } else {
+          refreshCounts();
+        }
+      });
     }
   }, [refreshCounts, enqueueOffline]);
 

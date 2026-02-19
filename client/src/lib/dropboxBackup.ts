@@ -4,7 +4,7 @@
  * computes delta against previous backup, and uploads/deletes only changes.
  */
 
-import { supabase } from './supabaseClient';
+import { apiQuery } from './apiClient';
 import {
   uploadFile,
   deleteFile,
@@ -47,27 +47,27 @@ export function setBackupUserId(userId: string) {
 
 async function fetchAllItems() {
   // Fetch all non-deleted items
-  const { data: items, error: itemsErr } = await supabase
-    .from('items')
-    .select('id, type, title, content, section, is_completed, is_pinned, due_date, list_id, created_at, updated_at, deleted_at')
-    .eq('user_id', _backupUserId)
-    .is('deleted_at', null)
-    .order('sort_order', { ascending: true });
+  const { data: items, error: itemsErr } = await apiQuery({
+    table: 'items',
+    select: 'id, type, title, content, section, is_completed, is_pinned, due_date, list_id, created_at, updated_at, deleted_at',
+    filters: { user_id: _backupUserId, deleted_at: null },
+    order: { column: 'sort_order', ascending: true },
+  });
 
   if (itemsErr) throw new Error(`Failed to fetch items: ${itemsErr.message}`);
 
   // Fetch all lists
-  const { data: lists } = await supabase.from('lists').select('id, name').eq('user_id', _backupUserId);
+  const { data: lists } = await apiQuery({ table: 'lists', select: 'id, name', filters: { user_id: _backupUserId } });
   const listMap = new Map<string, string>();
   (lists || []).forEach((l: any) => listMap.set(l.id, l.name));
 
   // Fetch all tags
-  const { data: tags } = await supabase.from('tags').select('id, name').eq('user_id', _backupUserId);
+  const { data: tags } = await apiQuery({ table: 'tags', select: 'id, name', filters: { user_id: _backupUserId } });
   const tagMap = new Map<string, string>();
   (tags || []).forEach((t: any) => tagMap.set(t.id, t.name));
 
   // Fetch all item_tags
-  const { data: itemTags } = await supabase.from('item_tags').select('item_id, tag_id');
+  const { data: itemTags } = await apiQuery({ table: 'item_tags', select: 'item_id, tag_id', filters: {} });
   const itemTagMap = new Map<string, string[]>();
   (itemTags || []).forEach((it: any) => {
     const arr = itemTagMap.get(it.item_id) || [];

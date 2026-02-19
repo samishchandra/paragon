@@ -1,7 +1,7 @@
 /**
  * Server-Side Search Service
  * 
- * Uses Supabase PostgreSQL full-text search (tsvector + GIN index) with:
+ * Uses the Manus backend API for full-text search with:
  * - Debounced queries (200ms) to avoid firing on every keystroke
  * - AbortController to cancel in-flight requests when user types more
  * - LRU cache (50 entries, 30s TTL) for instant repeat queries
@@ -9,7 +9,7 @@
  * - Fallback to ILIKE-based fuzzy search for partial matches
  */
 
-import { supabase } from './supabaseClient';
+import { apiRpc, apiQuery, apiSelectItemTags } from './apiClient';
 
 // --- Types ---
 
@@ -104,7 +104,7 @@ let currentAbortController: AbortController | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
- * Map a raw Supabase RPC row to our typed SearchResult
+ * Map a raw API row to our typed SearchResult
  */
 function mapRow(row: any): ServerSearchResult {
   return {
@@ -128,7 +128,7 @@ function mapRow(row: any): ServerSearchResult {
 }
 
 /**
- * Execute server-side search via Supabase RPC.
+ * Execute server-side search via RPC.
  * First tries FTS (search_items), falls back to fuzzy (search_items_fuzzy) if no results.
  */
 async function executeSearch(
@@ -145,8 +145,7 @@ async function executeSearch(
   if (filters?.tagId) rpcParams.filter_tag_id = filters.tagId;
 
   // Try FTS first
-  const { data: ftsData, error: ftsError } = await supabase
-    .rpc('search_items', rpcParams);
+  const { data: ftsData, error: ftsError } = await apiRpc('search_items', rpcParams);
 
   if (ftsError) {
     // If aborted, don't throw — just return empty
@@ -162,8 +161,7 @@ async function executeSearch(
   }
 
   // Fallback to fuzzy/ILIKE search for partial matches
-  const { data: fuzzyData, error: fuzzyError } = await supabase
-    .rpc('search_items_fuzzy', rpcParams);
+  const { data: fuzzyData, error: fuzzyError } = await apiRpc('search_items_fuzzy', rpcParams);
 
   if (fuzzyError) {
     if (signal.aborted) return [];
@@ -267,37 +265,37 @@ export async function browseFilteredItems(
   filters: SearchFilters,
   maxResults = 20
 ): Promise<ServerSearchResult[]> {
-  let query = supabase
-    .from('items')
-    .select('id, type, title, content, is_pinned, is_completed, due_date, list_id, section, sort_order, deleted_at, created_at, updated_at')
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: false })
-    .limit(maxResults);
+  const queryFilters: Record<string, any> = {
+    'deleted_at__is': null,
+  };
 
   if (filters.listId) {
-    query = query.eq('list_id', filters.listId);
+    queryFilters['list_id'] = filters.listId;
   }
 
   if (filters.tagId) {
     // For tag filter, we need to get item IDs from item_tags first
-    const { data: tagItems } = await supabase
-      .from('item_tags')
-      .select('item_id')
-      .eq('tag_id', filters.tagId);
+    const { data: tagItems } = await apiSelectItemTags({ tag_id: filters.tagId });
     
     if (!tagItems || tagItems.length === 0) return [];
-    const itemIds = tagItems.map(t => t.item_id);
-    query = query.in('id', itemIds);
+    const itemIds = tagItems.map((t: any) => t.item_id);
+    queryFilters['id__in'] = itemIds;
   }
 
-  const { data, error } = await query;
+  const { data, error } = await apiQuery({
+    table: 'items',
+    select: 'id, type, title, content, is_pinned, is_completed, due_date, list_id, section, sort_order, deleted_at, created_at, updated_at',
+    filters: queryFilters,
+    order: { column: 'updated_at', ascending: false },
+    limit: maxResults,
+  });
 
   if (error) {
     console.warn('Browse filtered items error:', error.message);
     return [];
   }
 
-  return (data || []).map(row => ({
+  return (data || []).map((row: any) => ({
     id: row.id,
     type: row.type as 'task' | 'note',
     title: row.title,
@@ -363,15 +361,23 @@ export function parseHighlight(html: string): { text: string; highlighted: boole
       if (remaining) segments.push({ text: remaining, highlighted: false });
       break;
     } else if (markStart === -1) {
-      tagStart = bStart; openTag = '<b>'; closeTag = '</b>';
+      tagStart = bStart;
+      openTag = '<b>';
+      closeTag = '</b>';
     } else if (bStart === -1) {
-      tagStart = markStart; openTag = '<mark>'; closeTag = '</mark>';
+      tagStart = markStart;
+      openTag = '<mark>';
+      closeTag = '</mark>';
     } else {
-      // Use whichever comes first
+      // Both found — use whichever comes first
       if (markStart <= bStart) {
-        tagStart = markStart; openTag = '<mark>'; closeTag = '</mark>';
+        tagStart = markStart;
+        openTag = '<mark>';
+        closeTag = '</mark>';
       } else {
-        tagStart = bStart; openTag = '<b>'; closeTag = '</b>';
+        tagStart = bStart;
+        openTag = '<b>';
+        closeTag = '</b>';
       }
     }
 
@@ -380,47 +386,40 @@ export function parseHighlight(html: string): { text: string; highlighted: boole
       segments.push({ text: remaining.slice(0, tagStart), highlighted: false });
     }
 
-    // Find the closing tag
-    const tagEnd = remaining.indexOf(closeTag, tagStart);
-    if (tagEnd === -1) {
-      // Malformed — add rest as unhighlighted
+    // Find closing tag
+    const closeStart = remaining.indexOf(closeTag, tagStart + openTag.length);
+    if (closeStart === -1) {
+      // Malformed — treat rest as plain text
       segments.push({ text: remaining.slice(tagStart), highlighted: false });
       break;
     }
 
-    // Add the highlighted text
-    const highlightedText = remaining.slice(tagStart + openTag.length, tagEnd);
-    if (highlightedText) {
-      segments.push({ text: highlightedText, highlighted: true });
-    }
+    // Add highlighted text
+    const highlightedText = remaining.slice(tagStart + openTag.length, closeStart);
+    segments.push({ text: highlightedText, highlighted: true });
 
-    remaining = remaining.slice(tagEnd + closeTag.length);
+    remaining = remaining.slice(closeStart + closeTag.length);
   }
 
-  return segments.length > 0 ? segments : [{ text: html, highlighted: false }];
+  return segments;
 }
 
+
 /**
- * Client-side substring highlighting for local filtering (lists, tags, quick actions).
- * Supports multi-word queries: each space-separated word is highlighted independently.
- * e.g., query "code lic" highlights both "Code" and "Lic" in "Coderunner 1234 Licence".
- * Zero performance overhead — simple indexOf on short strings already in memory.
+ * Client-side substring highlighting for search results.
+ * Splits query into individual words and highlights all occurrences.
  */
 export function highlightSubstring(
   text: string,
   query: string
 ): { text: string; highlighted: boolean }[] {
   if (!query || !text) return [{ text: text || '', highlighted: false }];
-
   // Split query into individual words for multi-word matching
   const words = query.trim().split(/\s+/).filter(w => w.length > 0);
   if (words.length === 0) return [{ text, highlighted: false }];
-
   const lowerText = text.toLowerCase();
-
   // Build a boolean array marking which character positions should be highlighted
   const highlights = new Array(text.length).fill(false);
-
   for (const word of words) {
     const lowerWord = word.toLowerCase();
     let pos = lowerText.indexOf(lowerWord);
@@ -431,7 +430,6 @@ export function highlightSubstring(
       pos = lowerText.indexOf(lowerWord, pos + 1);
     }
   }
-
   // Convert the boolean array into segments
   const segments: { text: string; highlighted: boolean }[] = [];
   let i = 0;
@@ -442,6 +440,5 @@ export function highlightSubstring(
     segments.push({ text: text.slice(i, j), highlighted: isHighlighted });
     i = j;
   }
-
   return segments.length > 0 ? segments : [{ text, highlighted: false }];
 }

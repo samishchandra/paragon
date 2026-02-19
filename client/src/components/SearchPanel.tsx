@@ -33,7 +33,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { useMomentum } from "@/contexts/ServerMomentumContext";
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import { cn } from '@/lib/utils';
 import { itemRowState, ITEM_DRAGGING } from '@/lib/styles';
 import { linkifyTitle, getTitlePlainText, extractFirstLineLink, renderFirstLineLink } from '@/lib/linkifyTitle';
@@ -178,7 +178,7 @@ export const SearchPanel = forwardRef<SearchPanelRef, SearchPanelProps>(({
   const [recentFilesData, setRecentFilesData] = useState<any[]>([]);
   useEffect(() => {
     if (!isActive || query.trim() || hasActiveFilters) return;
-    supabase.from('items').select('id, type, title, content, updated_at').eq('user_id', userId).is('deleted_at', null).order('updated_at', { ascending: false }).limit(5).then(({ data }) => {
+    apiQuery({ table: 'items', select: 'id, type, title, content, updated_at', filters: { user_id: userId, deleted_at: null }, order: { column: 'updated_at', ascending: false }, limit: 5 }).then(({ data }) => {
       setRecentFilesData(data || []);
     });
   }, [isActive, query, hasActiveFilters]);

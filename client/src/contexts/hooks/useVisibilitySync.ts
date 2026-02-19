@@ -9,7 +9,7 @@
  * A minimum interval (15 s) prevents query storms from rapid tab switching.
  */
 import { useCallback, useRef, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import { clearSearchCache } from '@/lib/serverSearch';
 import type { SortOrder } from '@/types';
 import { fetchTags, fetchLists } from '@/lib/queries';
@@ -60,13 +60,13 @@ export function useVisibilitySync(deps: VisibilitySyncDeps) {
         fetchTags(userId).then(tags => dispatch({ type: 'SET_TAGS', payload: tags })),
         fetchLists(userId).then(lists => dispatch({ type: 'SET_LISTS', payload: lists })),
         // Refresh user settings
-        supabase.from('user_settings').select('*').eq('user_id', userId).limit(1).single().then(({ data }) => {
+        apiQuery({ table: 'user_settings', select: '*', filters: { user_id: userId }, limit: 1, single: true }).then(({ data }) => {
           if (data) {
             applySettingsFromServer(data);
           }
         }),
         // Refresh view sort preferences
-        supabase.from('view_sort_preferences').select('*').eq('user_id', userId).then(({ data }) => {
+        apiQuery({ table: 'view_sort_preferences', select: '*', filters: { user_id: userId } }).then(({ data }) => {
           if (data) {
             const prefsMap: Record<string, { sortOrder: SortOrder; sortDirection: 'asc' | 'desc' }> = {};
             for (const pref of data) {

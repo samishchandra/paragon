@@ -7,7 +7,7 @@
  *   - prevViewKeyRef tracking to avoid redundant dispatches
  */
 import { useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import type { FilterType, SortOrder } from '@/types';
 
 export interface SettingsLoaderDeps {
@@ -24,7 +24,7 @@ export function useSettingsLoader(deps: SettingsLoaderDeps) {
   // Load view sort preferences on mount
   useEffect(() => {
     async function loadViewSortPrefs() {
-      const { data } = await supabase.from('view_sort_preferences').select('*').eq('user_id', userId);
+      const { data } = await apiQuery({ table: 'view_sort_preferences', select: '*', filters: { user_id: userId } });
       if (data) {
         const prefsMap: Record<string, { sortOrder: SortOrder; sortDirection: 'asc' | 'desc' }> = {};
         for (const pref of data) {

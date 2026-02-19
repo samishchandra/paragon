@@ -5,7 +5,7 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
-import supabaseCompatRouter from "../supabaseCompat";
+import dataRouter from "../dataRouter";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 
@@ -36,8 +36,8 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
-  // Supabase compatibility REST API
-  app.use('/api/supabase-compat', supabaseCompatRouter);
+  // Data REST API
+  app.use('/api/data', dataRouter);
   // tRPC API
   app.use(
     "/api/trpc",

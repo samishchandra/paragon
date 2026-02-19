@@ -28,7 +28,7 @@ import {
   type BackupState,
   type BackupFileState,
 } from './dropbox';
-import { supabase } from './supabaseClient';
+import { apiQuery } from './apiClient';
 import { logAutoBackup, logBackupError } from './backupLog';
 
 // ── Per-item backup status ──
@@ -167,11 +167,11 @@ export async function triggerFullBackup() {
   
   // Fetch all item IDs from the database
   try {
-    const { data: items } = await supabase
-      .from('items')
-      .select('id')
-      .eq('user_id', _userId)
-      .is('deleted_at', null);
+    const { data: items } = await apiQuery({
+      table: 'items',
+      select: 'id',
+      filters: { user_id: _userId, deleted_at: null },
+    });
     
     if (items && items.length > 0) {
       const ids = items.map((i: any) => i.id);
@@ -250,11 +250,11 @@ async function flushDirtyItems() {
     };
     
     // Fetch the specific items from Supabase
-    const { data: items, error: itemsErr } = await supabase
-      .from('items')
-      .select('id, type, title, content, section, is_completed, is_pinned, due_date, list_id, created_at, updated_at, deleted_at')
-      .eq('user_id', _userId)
-      .in('id', itemIdsToBackup);
+    const { data: items, error: itemsErr } = await apiQuery({
+      table: 'items',
+      select: 'id, type, title, content, section, is_completed, is_pinned, due_date, list_id, created_at, updated_at, deleted_at',
+      filters: { user_id: _userId, 'id__in': itemIdsToBackup },
+    });
     
     if (itemsErr) {
       console.error('[AutoBackup] Failed to fetch items:', itemsErr);
@@ -269,18 +269,19 @@ async function flushDirtyItems() {
     }
     
     // Fetch lists and tags for metadata
-    const { data: lists } = await supabase.from('lists').select('id, name').eq('user_id', _userId);
+    const { data: lists } = await apiQuery({ table: 'lists', select: 'id, name', filters: { user_id: _userId } });
     const listMap = new Map<string, string>();
     (lists || []).forEach((l: any) => listMap.set(l.id, l.name));
     
-    const { data: tags } = await supabase.from('tags').select('id, name').eq('user_id', _userId);
+    const { data: tags } = await apiQuery({ table: 'tags', select: 'id, name', filters: { user_id: _userId } });
     const tagMap = new Map<string, string>();
     (tags || []).forEach((t: any) => tagMap.set(t.id, t.name));
     
-    const { data: itemTags } = await supabase
-      .from('item_tags')
-      .select('item_id, tag_id')
-      .in('item_id', itemIdsToBackup);
+    const { data: itemTags } = await apiQuery({
+      table: 'item_tags',
+      select: 'item_id, tag_id',
+      filters: { 'item_id__in': itemIdsToBackup },
+    });
     const itemTagMap = new Map<string, string[]>();
     (itemTags || []).forEach((it: any) => {
       const arr = itemTagMap.get(it.item_id) || [];

@@ -9,7 +9,7 @@
  *   - Auto-backup event listeners lifecycle
  */
 import { useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { apiQuery } from '@/lib/apiClient';
 import { toast } from 'sonner';
 import { setAutoBackupEnabled, initAutoBackupListeners } from '@/lib/autoBackup';
 import {
@@ -44,7 +44,7 @@ export function useDropboxBackup(userId: string) {
           const currentFolder = getDropboxBackupFolder();
           if (currentFolder === '/MomentumBackup') {
             try {
-              const { data: { user: authUser } } = await supabase.auth.getUser();
+              const authUser = { id: userId, email: userId };
               if (authUser) {
                 const userSpecific = generateDefaultBackupFolder(authUser);
                 if (userSpecific !== '/MomentumBackup') {
