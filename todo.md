@@ -120,3 +120,9 @@
 ## Apply Upstream Commits
 - [x] Apply commit f858e689d159970da5a75f2ccfe1901717401a86 (profile area revert, list/tag pills in search)
 - [x] Apply commit fed52e95f0d16a70159efb80ac482cca2a0f8b86 (readOnly prop for ListPill/TagPill in search)
+
+## Test Updates from Original Repo
+- [x] Audit test files in original Momentum repo (12 files found, skip 2 Dropbox tests, port 10)
+- [x] Compare with existing tests and identify gaps
+- [x] Port and adapt upstream tests to work with Manus backend (10 test files ported)
+- [x] Fix any test failures (Dropbox→Local Backup assertion, TS direction type, @testing-library/react installed)
