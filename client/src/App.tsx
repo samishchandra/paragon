@@ -1,39 +1,47 @@
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ToastContainer } from "./components/ToastContainer";
+import { lazy, Suspense, useEffect } from "react";
+import { getLoginUrl } from "./const";
 
+// Lazy-load the entire authenticated app shell
+const AuthenticatedApp = lazy(() => import("./AuthenticatedApp"));
 
-function Router() {
+function AuthGate() {
+  const { user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      // Not authenticated — redirect to Manus OAuth login
+      window.location.href = getLoginUrl();
+    }
+  }, [isLoading, user]);
+
+  if (isLoading) {
+    // Keep the HTML splash screen visible while auth loads
+    return null;
+  }
+
+  if (!user) {
+    // Will redirect to login, show nothing
+    return null;
+  }
+
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={null}>
+      <AuthenticatedApp userId={user.id} />
+    </Suspense>
   );
 }
-
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+      <ThemeProvider defaultTheme="light" switchable>
+        <AuthProvider>
+          <AuthGate />
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

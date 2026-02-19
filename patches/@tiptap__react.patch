@@ -1,0 +1,40 @@
+diff --git a/dist/index.js b/dist/index.js
+index b0abf6a9c25334e892c1be7c983f7618a8c3a0db..65b11f707ffe9295b12119bea292e821a363cc46 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -71,7 +71,7 @@ var PureEditorContent = class extends React.Component {
+     var _a;
+     super(props);
+     this.editorContentRef = React.createRef();
+-    this.initialized = false;
++    // initialized flag moved to editor instance
+     this.state = {
+       hasContentComponentInitialized: Boolean((_a = props.editor) == null ? void 0 : _a.contentComponent)
+     };
+@@ -111,7 +111,7 @@ var PureEditorContent = class extends React.Component {
+         });
+       }
+       editor.createNodeViews();
+-      this.initialized = true;
++      editor.isEditorContentInitialized = true;
+     }
+   }
+   componentWillUnmount() {
+@@ -120,7 +120,7 @@ var PureEditorContent = class extends React.Component {
+     if (!editor) {
+       return;
+     }
+-    this.initialized = false;
++    editor.isEditorContentInitialized = false;
+     if (!editor.isDestroyed) {
+       editor.view.setProps({
+         nodeViews: {}
+@@ -675,7 +675,7 @@ var ReactRenderer = class {
+     if (className) {
+       this.element.classList.add(...className.split(" "));
+     }
+-    if (this.editor.isInitialized) {
++    if (this.editor.isEditorContentInitialized) {
+       flushSync(() => {
+         this.render();
+       });

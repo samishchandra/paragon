@@ -5,20 +5,150 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>Hi World App</title>    
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+    <title>Momentum Notes</title>
+    <meta name="description" content="A modern note-taking and task management app" />
+    <meta name="theme-color" content="#067bc2" />
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/x-icon" href="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/RWLRdbgrWwyWUkup.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/nerxQrikIJEKNIXy.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/EjchSyBZihGRFrWW.png" />
+
+    <!-- PWA Manifest (crossorigin needed for Manus OAuth proxy) -->
+    <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Momentum Notes" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Momentum Notes" />
+    <meta property="og:description" content="A modern note-taking and task management app" />
+    <meta property="og:image" content="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/wiTMncKMtXMIvjPW.png" />
+    <meta property="og:type" content="website" />
+
+    <!-- Preconnect to Supabase for faster API calls -->
+    <link rel="preconnect" href="https://fokythpzpbidammhxxvm.supabase.co" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Splash Screen Styles -->
+    <style>
+      #splash-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
+      }
+
+      #splash-screen.fade-out {
+        opacity: 0;
+        visibility: hidden;
+      }
+      #splash-screen .splash-icon {
+        width: 72px;
+        height: 72px;
+        animation: splash-breathe 2s ease-in-out infinite;
+      }
+      @keyframes splash-breathe {
+        0%, 100% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.08); opacity: 1; }
+      }
+      #splash-screen .splash-text {
+        margin-top: 20px;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e293b;
+        letter-spacing: -0.01em;
+      }
+      #splash-screen .splash-dots {
+        display: flex;
+        gap: 6px;
+        margin-top: 24px;
+      }
+      #splash-screen .splash-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #cbd5e1;
+        animation: splash-dot 1.4s ease-in-out infinite;
+      }
+      #splash-screen .splash-dots span.active {
+        background: #0284c7;
+      }
+      #splash-screen .splash-dots span:nth-child(1) { animation-delay: 0s; }
+      #splash-screen .splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+      #splash-screen .splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes splash-dot {
+        0%, 80%, 100% { transform: scale(1); opacity: 0.4; }
+        40% { transform: scale(1.3); opacity: 1; }
+      }
+    </style>
   </head>
 
   <body>
+    <!-- Loading Splash Screen -->
+    <div id="splash-screen">
+      <img
+        src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/akqSHFTWMwaktltN.png"
+        alt="Momentum Notes"
+        class="splash-icon"
+      />
+      <div class="splash-text">Momentum Notes</div>
+      <div class="splash-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
     <div id="root"></div>
+    <script>
+      // Global function to dismiss the splash screen, called by React once ready
+      window.__dismissSplash = function() {
+        var splash = document.getElementById('splash-screen');
+        if (splash && !splash.classList.contains('fade-out')) {
+          splash.classList.add('fade-out');
+          setTimeout(function() { splash.remove(); }, 500);
+        }
+      };
+      // Safety net: auto-dismiss after 10 seconds in case React never calls it
+      setTimeout(function() { window.__dismissSplash && window.__dismissSplash(); }, 10000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Chunk loading error recovery: auto-reload once on stale cache -->
+    <script>
+      window.addEventListener('error', function(e) {
+        if (e.message && (e.message.includes('Unexpected token') || e.message.includes('Failed to fetch dynamically imported module') || e.message.includes('Loading chunk'))) {
+          var reloaded = sessionStorage.getItem('chunk-error-reload');
+          if (!reloaded) {
+            sessionStorage.setItem('chunk-error-reload', '1');
+            window.location.reload();
+          } else {
+            sessionStorage.removeItem('chunk-error-reload');
+          }
+        }
+      });
+      // Clear the reload flag on successful load
+      window.addEventListener('load', function() {
+        sessionStorage.removeItem('chunk-error-reload');
+      });
+    </script>
     <script
       defer
       src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"
+      onerror="this.remove()"></script>
   </body>
 
 </html>

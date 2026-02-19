@@ -36,6 +36,8 @@ export function ThemeProvider({
     } else {
       root.classList.remove("dark");
     }
+    // Set data-theme attribute for Paragon editor CSS compatibility
+    root.setAttribute("data-theme", theme);
 
     if (switchable) {
       localStorage.setItem("theme", theme);

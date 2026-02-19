@@ -1,0 +1,1919 @@
+/**
+ * Settings Page — split into section components for 2-column layout.
+ *
+ * Exports: SettingsGeneral, SettingsEditor, SettingsData, SettingsBackup,
+ *          SettingsDeveloper, SettingsContent (legacy), Settings (full-page).
+ */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { toast } from '@/lib/toast';
+import {
+  ArrowLeft,
+  Sparkles,
+  Settings as SettingsIcon,
+  Loader2,
+  CheckSquare,
+  Trash2,
+  HardDrive,
+  FolderArchive,
+  FolderOpen,
+  FileText,
+  Tag,
+  ListChecks,
+  FolderClosed,
+  Cloud,
+  CloudOff,
+  RefreshCw,
+  ExternalLink,
+  KeyRound,
+  Database,
+  CheckCircle2,
+  Clock,
+  Shield,
+  AlertTriangle,
+  ScrollText,
+  Upload,
+  Trash,
+  Plug,
+  Unplug,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
+import { SyncStatusIndicator } from '@/components/SyncStatusIndicator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Progress } from '@/components/ui/progress';
+import { useMomentum } from '@/contexts/ServerMomentumContext';
+import { Beaker } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import * as dropbox from '@/lib/dropbox';
+import { runBackup, runFullBackup, setBackupUserId, type BackupProgress } from '@/lib/dropboxBackup';
+import { triggerFullBackup, setAutoBackupEnabled, hasUnsyncedItems, getPendingCount, onGlobalBackupStatusChange } from '@/lib/autoBackup';
+import { getLog, onLogChange, clearLog, logManualBackup, logConnection, type BackupLogEntry, type BackupLogType } from '@/lib/backupLog';
+import { useAIConfig, saveAIConfig, clearAIConfig, getDefaultConfig } from '@/lib/ai/config';
+import type { AIProviderConfig, AIProviderType } from '@/lib/ai/types';
+import { PROVIDER_MODELS } from '@/lib/ai/types';
+import { createAIProvider } from '@/lib/ai';
+import { useAuth } from '@/contexts/AuthContext';
+
+/* ─────────────────────────────────────────────
+ * Shared hook: user_settings row
+ * ───────────────────────────────────────────── */
+
+function useUserSettings(userId: string) {
+  const [userSettings, setUserSettings] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.from('user_settings').select('*').eq('user_id', userId).limit(1).single().then(({ data }) => {
+      setUserSettings(data);
+    });
+  }, [userId]);
+
+  const updateSettings = useCallback(async (updates: any) => {
+    if (userSettings?.user_id) {
+      await supabase.from('user_settings').update(updates).eq('user_id', userSettings.user_id);
+    } else {
+      await supabase.from('user_settings').insert({ ...updates, user_id: userId });
+    }
+    const { data } = await supabase.from('user_settings').select('*').eq('user_id', userId).limit(1).single();
+    setUserSettings(data);
+  }, [userSettings?.user_id, userId]);
+
+  return { userSettings, updateSettings };
+}
+
+/* ─────────────────────────────────────────────
+ * SECTION: General
+ * ───────────────────────────────────────────── */
+
+export function SettingsGeneral() {
+  const { userId, setTasksEnabled } = useMomentum();
+  const { userSettings, updateSettings } = useUserSettings(userId);
+
+  return (
+    <div className="space-y-6">
+      {/* Sync Status */}
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">Sync Status</h4>
+          <SyncStatusIndicator />
+        </div>
+      </div>
+
+      {/* Features */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Features</h4>
+
+        <div className="flex items-center justify-between gap-4 py-2 border-b border-border/30">
+          <div className="flex-1">
+            <Label htmlFor="tasksEnabled" className="text-sm font-medium cursor-pointer">
+              Enable Tasks
+            </Label>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Show task creation options and task-related views. When disabled, only notes are available.
+            </p>
+          </div>
+          <Switch
+            id="tasksEnabled"
+            checked={userSettings?.tasks_enabled ?? false}
+            onCheckedChange={(checked) => {
+              updateSettings({ tasks_enabled: checked });
+              setTasksEnabled(checked);
+              toast.success(checked ? 'Tasks enabled' : 'Tasks disabled');
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+ * SECTION: Editor
+ * ───────────────────────────────────────────── */
+
+const FONT_FAMILIES = [
+  { value: 'system', label: 'System Default' },
+  { value: 'inter', label: 'Inter' },
+  { value: 'georgia', label: 'Georgia' },
+  { value: 'merriweather', label: 'Merriweather' },
+  { value: 'lora', label: 'Lora' },
+  { value: 'source-sans', label: 'Source Sans 3' },
+  { value: 'jetbrains-mono', label: 'JetBrains Mono' },
+  { value: 'fira-code', label: 'Fira Code' },
+  { value: 'ibm-plex-sans', label: 'IBM Plex Sans' },
+  { value: 'nunito', label: 'Nunito' },
+  { value: 'open-sans', label: 'Open Sans' },
+  { value: 'roboto', label: 'Roboto' },
+];
+
+const FONT_SIZES = [
+  { value: '12', label: '12' },
+  { value: '13', label: '13' },
+  { value: '14', label: '14' },
+  { value: '15', label: '15' },
+  { value: '16', label: '16' },
+  { value: '17', label: '17' },
+  { value: '18', label: '18' },
+  { value: '20', label: '20' },
+  { value: '22', label: '22' },
+  { value: '24', label: '24' },
+];
+
+export function SettingsEditor() {
+  const { userId, setEditorPreferences } = useMomentum();
+  const { userSettings, updateSettings } = useUserSettings(userId);
+
+  const currentFontFamily = userSettings?.editor_font_family || 'inter';
+  const currentFontSize = userSettings?.editor_font_size?.toString() || '15';
+  const currentLineHeight = userSettings?.editor_line_height || 'normal';
+
+  const handleFontFamilyChange = async (value: string) => {
+    await updateSettings({ editor_font_family: value });
+    setEditorPreferences?.({ fontFamily: value });
+    toast.success(`Font changed to ${FONT_FAMILIES.find(f => f.value === value)?.label || value}`);
+  };
+
+  const handleFontSizeChange = async (value: string) => {
+    const size = parseInt(value, 10);
+    await updateSettings({ editor_font_size: size });
+    setEditorPreferences?.({ fontSize: size });
+    toast.success(`Font size changed to ${size}px`);
+  };
+
+  const LINE_HEIGHTS = [
+    { value: 'compact', label: 'Compact', description: 'Tighter spacing' },
+    { value: 'normal', label: 'Normal', description: 'Default spacing' },
+    { value: 'relaxed', label: 'Relaxed', description: 'More breathing room' },
+  ];
+
+  const handleLineHeightChange = async (value: string) => {
+    await updateSettings({ editor_line_height: value });
+    setEditorPreferences?.({ lineHeight: value });
+    toast.success(`Line height changed to ${LINE_HEIGHTS.find(l => l.value === value)?.label || value}`);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Typography */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Typography</h4>
+
+        <div className="flex items-center justify-between gap-4 py-2 border-b border-border/30">
+          <Label className="text-sm font-medium">Font</Label>
+          <Select value={currentFontFamily} onValueChange={handleFontFamilyChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FONT_FAMILIES.map((f) => (
+                <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center justify-between gap-4 py-2 border-b border-border/30">
+          <Label className="text-sm font-medium">Font size</Label>
+          <Select value={currentFontSize} onValueChange={handleFontSizeChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FONT_SIZES.map((s) => (
+                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center justify-between gap-4 py-2 border-b border-border/30">
+          <div>
+            <Label className="text-sm font-medium">Line height</Label>
+            <p className="text-xs text-muted-foreground mt-0.5">Controls spacing between lines of text.</p>
+          </div>
+          <Select value={currentLineHeight} onValueChange={handleLineHeightChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LINE_HEIGHTS.map((l) => (
+                <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Editor Behavior */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Behavior</h4>
+
+        <div className="flex items-center justify-between gap-4 py-2 border-b border-border/30">
+          <div className="flex-1">
+            <Label htmlFor="autoReorderEditor" className="text-sm font-medium cursor-pointer">
+              Auto-reorder checklist items
+            </Label>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Move completed checklist items to the bottom when toggled.
+            </p>
+          </div>
+          <Switch
+            id="autoReorderEditor"
+            checked={userSettings?.auto_reorder_checklist ?? true}
+            onCheckedChange={(checked) => {
+              updateSettings({ auto_reorder_checklist: checked });
+              toast.success(checked ? 'Auto-reorder enabled' : 'Auto-reorder disabled');
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+ * SECTION: Data (Export / Import)
+ * ───────────────────────────────────────────── */
+
+export function SettingsData() {
+  const { userId, refreshData } = useMomentum();
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importTotal, setImportTotal] = useState(0);
+  const [importMessage, setImportMessage] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const [showImportPreview, setShowImportPreview] = useState(false);
+  const [importPreview, setImportPreview] = useState<{
+    files: { name: string; content: string; folder: string; lastModified: number }[];
+    lists: string[];
+    tags: string[];
+    tasks: number;
+    notes: number;
+  } | null>(null);
+
+  // ── Parse helpers ──
+  const parseFrontmatter = (content: string) => {
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    if (!fmMatch) return { meta: {} as Record<string, string>, body: content };
+    const meta: Record<string, string> = {};
+    for (const line of fmMatch[1].split('\n')) {
+      const colonIdx = line.indexOf(':');
+      if (colonIdx > 0) {
+        meta[line.slice(0, colonIdx).trim()] = line.slice(colonIdx + 1).trim();
+      }
+    }
+    return { meta, body: fmMatch[2] };
+  };
+
+  const extractHashtags = (text: string): string[] => {
+    const withoutCode = text.replace(/```[\s\S]*?```/g, '').replace(/`[^`]+`/g, '');
+    const tagRegex = /(?:^|\s)#([a-zA-Z][\w-]{0,49})(?=\s|$|[.,;:!?)])/gm;
+    const tags = new Set<string>();
+    let match;
+    while ((match = tagRegex.exec(withoutCode)) !== null) {
+      tags.add(match[1].toLowerCase());
+    }
+    return Array.from(tags);
+  };
+
+  const resolveTag = async (
+    tagName: string,
+    tagNameToId: Map<string, string>,
+    counters: { items: number; lists: number; tags: number },
+  ): Promise<string | null> => {
+    const lower = tagName.toLowerCase();
+    if (tagNameToId.has(lower)) return tagNameToId.get(lower)!;
+    const { data: existing } = await supabase.from('tags').select('id').eq('user_id', userId).eq('name', lower).limit(1).single();
+    if (existing) { tagNameToId.set(lower, existing.id); return existing.id; }
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+    const color = colors[counters.tags % colors.length];
+    const { data: newTag } = await supabase.from('tags').insert({ name: lower, color, user_id: userId }).select('id').single();
+    if (newTag) { tagNameToId.set(lower, newTag.id); counters.tags++; return newTag.id; }
+    return null;
+  };
+
+  const importMarkdownFile = async (
+    fileName: string, content: string, folderName: string,
+    listNameToId: Map<string, string>, tagNameToId: Map<string, string>,
+    counters: { items: number; lists: number; tags: number },
+    lastModified?: number,
+  ) => {
+    if (folderName !== 'Miscellaneous' && !listNameToId.has(folderName)) {
+      const { data: existingList } = await supabase.from('lists').select('id').eq('user_id', userId).eq('name', folderName).limit(1).single();
+      if (existingList) { listNameToId.set(folderName, existingList.id); }
+      else {
+        const { data: newList } = await supabase.from('lists').insert({ name: folderName, type: 'note', user_id: userId }).select('id').single();
+        if (newList) { listNameToId.set(folderName, newList.id); counters.lists++; }
+      }
+    }
+    const { meta, body } = parseFrontmatter(content);
+    let title = fileName.replace('.md', '');
+    let itemContent = body;
+    const headingMatch = body.match(/^#\s+(.+)/m);
+    if (headingMatch) { title = headingMatch[1]; itemContent = body.replace(/^#\s+.+\n*/, '').trim(); }
+    const detectedTags = extractHashtags(title + '\n' + itemContent);
+    const fmTags: string[] = [];
+    if (meta.tags) {
+      for (const t of meta.tags.replace(/^\[|\]$/g, '').split(',')) {
+        const trimmed = t.trim().replace(/^#/, ''); // Strip # prefix (Obsidian-compatible format)
+        if (trimmed) fmTags.push(trimmed.toLowerCase());
+      }
+    }
+    const allTagNames = Array.from(new Set([...detectedTags, ...fmTags]));
+    const type = meta.type === 'task' ? 'task' : 'note';
+    const section = meta.section || 'now';
+    const isCompleted = meta.completed === 'true';
+    const isPinned = meta.pinned === 'true';
+    const dueDate = meta.due || null;
+    const listId = listNameToId.get(folderName) || null;
+    const searchContent = itemContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const timestamps: Record<string, string> = {};
+    if (lastModified) {
+      const isoDate = new Date(lastModified).toISOString();
+      timestamps.updated_at = isoDate;
+      timestamps.created_at = isoDate;
+    }
+    const hasUncompleted = /- \[ \]/.test(itemContent);
+    const { data: insertedItem } = await supabase.from('items').insert({
+      type, title, content: itemContent, section, list_id: listId,
+      is_completed: isCompleted, is_pinned: isPinned, due_date: dueDate,
+      sort_order: counters.items, search_content: searchContent,
+      has_uncompleted_todos: hasUncompleted, user_id: userId, ...timestamps,
+    }).select('id').single();
+    if (insertedItem && allTagNames.length > 0) {
+      const tagIds: string[] = [];
+      for (const tagName of allTagNames) {
+        const tagId = await resolveTag(tagName, tagNameToId, counters);
+        if (tagId) tagIds.push(tagId);
+      }
+      if (tagIds.length > 0) {
+        await supabase.from('item_tags').insert(tagIds.map(tid => ({ item_id: insertedItem.id, tag_id: tid })));
+      }
+    }
+    counters.items++;
+  };
+
+  const analyzeFiles = (files: { name: string; content: string; folder: string; lastModified: number }[]) => {
+    const lists = new Set<string>();
+    const tags = new Set<string>();
+    let tasks = 0; let notes = 0;
+    for (const f of files) {
+      if (f.folder !== 'Miscellaneous') lists.add(f.folder);
+      const { meta, body } = parseFrontmatter(f.content);
+      let itemContent = body;
+      const headingMatch = body.match(/^#\s+(.+)/m);
+      if (headingMatch) itemContent = body.replace(/^#\s+.+\n*/, '').trim();
+      const detected = extractHashtags(f.name + '\n' + itemContent);
+      detected.forEach(t => tags.add(t));
+      if (meta.tags) {
+        for (const t of meta.tags.replace(/^\[|\]$/g, '').split(',')) {
+          const trimmed = t.trim().replace(/^#/, ''); // Strip # prefix (Obsidian-compatible format)
+          if (trimmed) tags.add(trimmed.toLowerCase());
+        }
+      }
+      if (meta.type === 'task') tasks++; else notes++;
+    }
+    return { files, lists: Array.from(lists), tags: Array.from(tags), tasks, notes };
+  };
+
+  // ── Export ──
+  const handleExportFolders = async () => {
+    setIsExporting(true);
+    try {
+      const [itemsResult, tagsResult, listsResult] = await Promise.all([
+        supabase.from('items').select('*, item_tags(tag_id)').eq('user_id', userId),
+        supabase.from('tags').select('*').eq('user_id', userId),
+        supabase.from('lists').select('*').eq('user_id', userId),
+      ]);
+      const items = itemsResult.data || [];
+      const tags = tagsResult.data || [];
+      const lists = listsResult.data || [];
+      const tagMap = new Map(tags.map((t: any) => [t.id, t.name]));
+      const listMap = new Map(lists.map((l: any) => [l.id, l.name]));
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      for (const item of items) {
+        const listName = item.list_id ? (listMap.get(item.list_id) || 'Miscellaneous') : 'Miscellaneous';
+        const itemTags = (item.item_tags || []).map((it: any) => tagMap.get(it.tag_id)).filter(Boolean);
+        let frontmatter = '---\n';
+        frontmatter += `type: ${item.type}\n`;
+        if (item.section) frontmatter += `section: ${item.section}\n`;
+        if (item.is_completed) frontmatter += `completed: true\n`;
+        if (item.is_pinned) frontmatter += `pinned: true\n`;
+        if (item.due_date) frontmatter += `due: ${item.due_date}\n`;
+        if (itemTags.length > 0) frontmatter += `tags: [${itemTags.join(', ')}]\n`;
+        frontmatter += '---\n\n';
+        const title = item.title || 'Untitled';
+        const safeTitle = title.replace(/[<>:"/\\|?*]/g, '_').substring(0, 100);
+        const content = frontmatter + `# ${title}\n\n${item.content || ''}`;
+        zip.file(`${listName}/${safeTitle}.md`, content);
+      }
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `momentum-backup-${new Date().toISOString().slice(0, 10)}.zip`;
+      a.click(); URL.revokeObjectURL(url);
+      toast.success('Export complete', { description: `Exported ${items.length} items in ${lists.length + 1} folders.` });
+    } catch (err) {
+      toast.error('Export failed', { description: err instanceof Error ? err.message : 'Unknown error' });
+    } finally { setIsExporting(false); }
+  };
+
+  // ── Import from Folder ──
+  const handleImportFromFolder = () => {
+    if (typeof (window as any).showDirectoryPicker === 'function') {
+      (async () => {
+        try {
+          const dirHandle = await (window as any).showDirectoryPicker();
+          setIsScanning(true);
+          const filesToImport: { name: string; content: string; folder: string; lastModified: number }[] = [];
+          const collectFiles = async (handle: FileSystemDirectoryHandle, parentFolder: string) => {
+            for await (const entry of (handle as any).values()) {
+              if (entry.kind === 'file' && entry.name.endsWith('.md')) {
+                const file = await entry.getFile();
+                const content = await file.text();
+                filesToImport.push({ name: file.name, content, folder: parentFolder, lastModified: file.lastModified });
+              } else if (entry.kind === 'directory' && !entry.name.startsWith('.')) {
+                await collectFiles(entry, entry.name);
+              }
+            }
+          };
+          await collectFiles(dirHandle, 'Miscellaneous');
+          if (filesToImport.length === 0) { toast.info('No markdown files found'); return; }
+          const preview = analyzeFiles(filesToImport);
+          setImportPreview(preview);
+          setShowImportPreview(true);
+        } catch (err: any) {
+          if (err.name !== 'AbortError') toast.error('Scan failed', { description: err.message });
+        } finally { setIsScanning(false); }
+      })();
+    } else {
+      const input = document.createElement('input');
+      input.type = 'file';
+      (input as any).webkitdirectory = true;
+      (input as any).directory = true;
+      input.multiple = true;
+      input.onchange = async (e) => {
+        const fileList = (e.target as HTMLInputElement).files;
+        if (!fileList || fileList.length === 0) return;
+        setIsScanning(true);
+        try {
+          const filesToImport: { name: string; content: string; folder: string; lastModified: number }[] = [];
+          for (const file of Array.from(fileList)) {
+            if (!file.name.endsWith('.md')) continue;
+            const content = await file.text();
+            const parts = (file as any).webkitRelativePath?.split('/') || [file.name];
+            let folderName = 'Miscellaneous';
+            if (parts.length >= 3) folderName = parts[parts.length - 2];
+            filesToImport.push({ name: file.name, content, folder: folderName, lastModified: file.lastModified });
+          }
+          if (filesToImport.length === 0) { toast.info('No markdown files found'); return; }
+          const preview = analyzeFiles(filesToImport);
+          setImportPreview(preview);
+          setShowImportPreview(true);
+        } catch (err) {
+          toast.error('Scan failed', { description: err instanceof Error ? err.message : 'Failed to read folder' });
+        } finally { setIsScanning(false); }
+      };
+      input.click();
+    }
+  };
+
+  const executeImport = async () => {
+    if (!importPreview) return;
+    setShowImportPreview(false);
+    setIsImporting(true);
+    setImportProgress(0);
+    setImportTotal(importPreview.files.length);
+    setImportMessage(`Importing 0 of ${importPreview.files.length} files...`);
+    try {
+      const listNameToId = new Map<string, string>();
+      const tagNameToId = new Map<string, string>();
+      const counters = { items: 0, lists: 0, tags: 0 };
+      for (const f of importPreview.files) {
+        await importMarkdownFile(f.name, f.content, f.folder, listNameToId, tagNameToId, counters, f.lastModified);
+        setImportProgress(counters.items);
+        setImportMessage(`Importing ${counters.items} of ${importPreview.files.length} files...`);
+      }
+      refreshData();
+      // Trigger full backup to Dropbox after import
+      triggerFullBackup();
+      const tagMsg = counters.tags > 0 ? `, ${counters.tags} tags` : '';
+      toast.success('Folder imported successfully', { description: `Imported ${counters.items} items, ${counters.lists} lists${tagMsg}.` });
+    } catch (err) {
+      toast.error('Import failed', { description: err instanceof Error ? err.message : 'Unknown error' });
+    } finally {
+      setIsImporting(false); setImportProgress(0); setImportTotal(0);
+      setImportMessage(''); setImportPreview(null);
+    }
+  };
+
+  const { sidebarCounts, sidebarTagCounts, state: ctxState } = useMomentum();
+  const totalTags = Object.keys(sidebarTagCounts || {}).length;
+  const totalLists = ctxState.lists?.length || 0;
+
+  // Storage size estimate
+  const [storageSize, setStorageSize] = useState<{ totalBytes: number; itemCount: number } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        // Sum approximate content size: title + content for all items
+        const { data, error } = await supabase
+          .from('items')
+          .select('title, content')
+          .eq('user_id', userId);
+        if (error || !data || cancelled) return;
+        let totalBytes = 0;
+        for (const row of data) {
+          totalBytes += new Blob([row.title || '']).size;
+          totalBytes += new Blob([row.content || '']).size;
+        }
+        if (!cancelled) setStorageSize({ totalBytes, itemCount: data.length });
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Data Stats */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Data Overview</h4>
+        {sidebarCounts ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-2xl font-bold tabular-nums">{sidebarCounts.all}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">All Items</div>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-2xl font-bold tabular-nums">{sidebarCounts.tasks}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Tasks</div>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-2xl font-bold tabular-nums">{sidebarCounts.notes}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Notes</div>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-2xl font-bold tabular-nums">{sidebarCounts.pinned}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Pinned</div>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-2xl font-bold tabular-nums">{sidebarCounts.completed}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Completed</div>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-2xl font-bold tabular-nums">{sidebarCounts.trash}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Deleted</div>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-2xl font-bold tabular-nums">{totalLists}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Lists</div>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <div className="text-2xl font-bold tabular-nums">{totalTags}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Tags</div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading stats...
+          </div>
+        )}
+      </div>
+
+      {/* Storage Used */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Storage Used</h4>
+        {storageSize ? (
+          <div className="rounded-lg border bg-card p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
+                <Database className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold tabular-nums">{formatBytes(storageSize.totalBytes)}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Estimated content size across {storageSize.itemCount.toLocaleString()} items (titles + body text)
+                </div>
+              </div>
+            </div>
+            {/* Visual bar */}
+            <div className="mt-3">
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${Math.min((storageSize.totalBytes / (500 * 1024 * 1024)) * 100, 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                <span>{formatBytes(storageSize.totalBytes)}</span>
+                <span>500 MB (est. limit)</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Calculating storage...
+          </div>
+        )}
+      </div>
+
+      {/* Import */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Import</h4>
+        <div>
+          <Button variant="outline" onClick={handleImportFromFolder} disabled={isImporting || isScanning}>
+            {(isImporting || isScanning) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FolderOpen className="w-4 h-4 mr-2" />}
+            {isScanning ? 'Scanning...' : 'Import from Folder'}
+          </Button>
+          {isImporting && importTotal > 0 && (
+            <div className="space-y-2 mt-3">
+              <Progress value={(importProgress / importTotal) * 100} className="h-2" />
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {importMessage}
+                </div>
+                <span>{Math.round((importProgress / importTotal) * 100)}%</span>
+              </div>
+            </div>
+          )}
+          {isImporting && importTotal === 0 && (
+            <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {importMessage || 'Preparing...'}
+            </div>
+          )}
+          {!isImporting && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Restore from a folder of markdown files. Tags (#hashtags) are auto-detected.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Export */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Export</h4>
+        <div>
+          <Button variant="outline" onClick={handleExportFolders} disabled={isExporting}>
+            {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FolderArchive className="w-4 h-4 mr-2" />}
+            Export Data
+          </Button>
+          <p className="text-xs text-muted-foreground mt-2">
+            Download your tasks and notes as a ZIP with markdown files organized by list.
+          </p>
+        </div>
+      </div>
+
+      {/* Import Preview Dialog */}
+      <AlertDialog open={showImportPreview} onOpenChange={setShowImportPreview}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Import Preview</AlertDialogTitle>
+            <AlertDialogDescription>Review what will be imported before proceeding.</AlertDialogDescription>
+          </AlertDialogHeader>
+          {importPreview && (
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <FileText className="w-5 h-5 text-blue-500 shrink-0" />
+                  <div>
+                    <div className="text-2xl font-semibold leading-none">{importPreview.files.length}</div>
+                    <div className="text-xs text-muted-foreground mt-1">Markdown files</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <ListChecks className="w-5 h-5 text-green-500 shrink-0" />
+                  <div>
+                    <div className="text-2xl font-semibold leading-none">{importPreview.tasks}</div>
+                    <div className="text-xs text-muted-foreground mt-1">Tasks / {importPreview.notes} Notes</div>
+                  </div>
+                </div>
+              </div>
+              {importPreview.lists.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <FolderClosed className="w-4 h-4 text-amber-500" />
+                    {importPreview.lists.length} list{importPreview.lists.length !== 1 ? 's' : ''} detected
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {importPreview.lists.map(l => (
+                      <span key={l} className="inline-flex items-center rounded-md bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-500/20">{l}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {importPreview.tags.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Tag className="w-4 h-4 text-violet-500" />
+                    {importPreview.tags.length} tag{importPreview.tags.length !== 1 ? 's' : ''} detected
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {importPreview.tags.slice(0, 20).map(t => (
+                      <span key={t} className="inline-flex items-center rounded-md bg-violet-500/10 px-2 py-1 text-xs font-medium text-violet-700 dark:text-violet-400 ring-1 ring-inset ring-violet-500/20">#{t}</span>
+                    ))}
+                    {importPreview.tags.length > 20 && (
+                      <span className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">+{importPreview.tags.length - 20} more</span>
+                    )}
+                  </div>
+                </div>
+              )}
+              {importPreview.tags.length === 0 && importPreview.lists.length === 0 && (
+                <p className="text-sm text-muted-foreground">No tags or lists detected. All items will be imported to Miscellaneous.</p>
+              )}
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setShowImportPreview(false); setImportPreview(null); }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeImport}>Import {importPreview?.files.length} files</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+ * SECTION: Backup (Dropbox)
+ * ───────────────────────────────────────────── */
+
+function getLogIcon(type: BackupLogType) {
+  switch (type) {
+    case 'auto': return <Cloud className="w-3.5 h-3.5 text-sky-500" />;
+    case 'manual': return <Upload className="w-3.5 h-3.5 text-primary" />;
+    case 'full': return <RefreshCw className="w-3.5 h-3.5 text-violet-500" />;
+    case 'error': return <AlertTriangle className="w-3.5 h-3.5 text-destructive" />;
+    case 'connect': return <Plug className="w-3.5 h-3.5 text-emerald-500" />;
+    case 'disconnect': return <Unplug className="w-3.5 h-3.5 text-amber-500" />;
+    default: return <ScrollText className="w-3.5 h-3.5 text-muted-foreground" />;
+  }
+}
+
+function formatRelativeTime(iso: string): string {
+  const now = Date.now();
+  const then = new Date(iso).getTime();
+  const diffMs = now - then;
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return 'just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function BackupLogRow({ entry }: { entry: BackupLogEntry }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasDetails = (entry.uploaded != null && entry.uploaded > 0) ||
+    (entry.deleted != null && entry.deleted > 0) ||
+    (entry.unchanged != null && entry.unchanged > 0) ||
+    (entry.errors && entry.errors.length > 0);
+
+  return (
+    <div className="group">
+      <button
+        onClick={() => hasDetails && setExpanded(!expanded)}
+        className={`w-full px-3 py-2.5 flex items-start gap-2.5 text-left transition-colors ${
+          hasDetails ? 'hover:bg-muted/50 cursor-pointer' : 'cursor-default'
+        }`}
+      >
+        <div className="mt-0.5 shrink-0">{getLogIcon(entry.type)}</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-foreground leading-snug">{entry.message}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            {formatRelativeTime(entry.timestamp)}
+            <span className="mx-1 opacity-30">·</span>
+            {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+        {hasDetails && (
+          <ChevronDown className={`w-3 h-3 text-muted-foreground/50 mt-1 shrink-0 transition-transform ${
+            expanded ? 'rotate-180' : ''
+          }`} />
+        )}
+      </button>
+      {expanded && hasDetails && (
+        <div className="px-3 pb-2.5 pl-9 space-y-1">
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
+            {entry.uploaded != null && entry.uploaded > 0 && (
+              <span className="flex items-center gap-1">
+                <Upload className="w-2.5 h-2.5 text-emerald-500" />
+                {entry.uploaded} uploaded
+              </span>
+            )}
+            {entry.deleted != null && entry.deleted > 0 && (
+              <span className="flex items-center gap-1">
+                <Trash className="w-2.5 h-2.5 text-amber-500" />
+                {entry.deleted} deleted
+              </span>
+            )}
+            {entry.unchanged != null && entry.unchanged > 0 && (
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="w-2.5 h-2.5 text-muted-foreground" />
+                {entry.unchanged} unchanged
+              </span>
+            )}
+          </div>
+          {entry.errors && entry.errors.length > 0 && (
+            <div className="space-y-0.5">
+              {entry.errors.slice(0, 3).map((err, i) => (
+                <p key={i} className="text-[10px] text-destructive/80 leading-tight">
+                  {err}
+                </p>
+              ))}
+              {entry.errors.length > 3 && (
+                <p className="text-[10px] text-muted-foreground">
+                  +{entry.errors.length - 3} more error(s)
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function SettingsBackup() {
+  const { userId } = useMomentum();
+  const { user } = useAuth();
+  // Set userId for dropboxBackup module
+  useEffect(() => { setBackupUserId(userId); }, [userId]);
+  const [activityLog, setActivityLog] = useState<BackupLogEntry[]>(() => getLog());
+  const [logExpanded, setLogExpanded] = useState(false);
+  const [dbxAppKey, setDbxAppKey] = useState(() => dropbox.getAppKey());
+  const [dbxBackupFolder, setDbxBackupFolder] = useState(() => dropbox.getBackupFolder());
+  const [dbxConnected, setDbxConnected] = useState(() => dropbox.isConnected());
+  const [dbxBacking, setDbxBacking] = useState(false);
+  const [dbxProgress, setDbxProgress] = useState<BackupProgress | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [dbxFolderRenaming, setDbxFolderRenaming] = useState(false);
+  const [dbxLastBackup, setDbxLastBackup] = useState<string | null>(() => {
+    const s = dropbox.getBackupState();
+    return s?.lastBackupAt || null;
+  });
+  // Track the "committed" folder path (what's actually saved) vs the input field value
+  const committedFolderRef = useRef(dropbox.getBackupFolder());
+  const folderInputTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // When Dropbox first connects and no custom folder is set, use user-specific default
+  useEffect(() => {
+    if (dbxConnected && user) {
+      const current = dropbox.getBackupFolder();
+      // If still using the generic default, upgrade to user-specific
+      if (current === '/MomentumBackup') {
+        const userSpecific = dropbox.generateDefaultBackupFolder(user);
+        if (userSpecific !== '/MomentumBackup') {
+          dropbox.setBackupFolder(userSpecific);
+          setDbxBackupFolder(userSpecific);
+          committedFolderRef.current = userSpecific;
+          dropbox.syncCredentialsToSupabase();
+        }
+      }
+    }
+  }, [dbxConnected, user]);
+
+  // Listen for connection changes (from OAuth callback processed globally)
+  useEffect(() => {
+    // Check current state on mount
+    setDbxConnected(dropbox.isConnected());
+    setDbxAppKey(dropbox.getAppKey());
+    setDbxBackupFolder(dropbox.getBackupFolder());
+    committedFolderRef.current = dropbox.getBackupFolder();
+
+    // Listen for connection changes
+    const unsub = dropbox.onConnectionChange((connected) => {
+      setDbxConnected(connected);
+      if (connected) {
+        setDbxAppKey(dropbox.getAppKey());
+        setDbxBackupFolder(dropbox.getBackupFolder());
+        committedFolderRef.current = dropbox.getBackupFolder();
+      }
+    });
+
+    // Also poll periodically as a fallback (e.g., if OAuth callback was processed before this component mounted)
+    const interval = setInterval(() => {
+      const connected = dropbox.isConnected();
+      setDbxConnected(connected);
+      if (connected) {
+        setDbxAppKey(dropbox.getAppKey());
+      }
+    }, 2000);
+
+    return () => { unsub(); clearInterval(interval); };
+  }, []);
+
+  // Listen for activity log changes
+  useEffect(() => {
+    const unsub = onLogChange(() => setActivityLog(getLog()));
+    return unsub;
+  }, []);
+
+  // Track pending backup count
+  useEffect(() => {
+    if (!dbxConnected) {
+      setPendingCount(0);
+      return;
+    }
+    setPendingCount(getPendingCount());
+    const unsub = onGlobalBackupStatusChange(() => {
+      setPendingCount(getPendingCount());
+    });
+    return unsub;
+  }, [dbxConnected]);
+
+  // Handle folder path change with debounced Dropbox rename
+  const handleFolderChange = useCallback((newValue: string) => {
+    setDbxBackupFolder(newValue);
+    // Clear any pending rename timer
+    if (folderInputTimerRef.current) {
+      clearTimeout(folderInputTimerRef.current);
+    }
+    // Debounce: wait 1.5s after user stops typing to commit the rename
+    folderInputTimerRef.current = setTimeout(async () => {
+      const normalized = newValue.startsWith('/') ? newValue : '/' + newValue;
+      const oldFolder = committedFolderRef.current;
+      if (normalized === oldFolder || !normalized.trim() || normalized === '/') return;
+
+      // Update localStorage and Supabase immediately
+      dropbox.setBackupFolder(normalized);
+      dropbox.syncCredentialsToSupabase();
+
+      // Attempt to rename the folder in Dropbox
+      if (oldFolder && oldFolder !== normalized) {
+        setDbxFolderRenaming(true);
+        try {
+          const moved = await dropbox.moveFolder(oldFolder, normalized);
+          if (moved) {
+            toast.success('Dropbox folder renamed', {
+              description: `${oldFolder} → ${normalized}`,
+            });
+          } else {
+            // Folder didn't exist or destination already exists — that's OK
+            toast.info('Backup folder path updated', {
+              description: 'New backups will use the new path.',
+            });
+          }
+        } catch (err) {
+          console.warn('Failed to rename Dropbox folder:', err);
+          toast.warning('Folder path updated locally', {
+            description: 'Could not rename the folder in Dropbox. New backups will use the new path.',
+          });
+        } finally {
+          setDbxFolderRenaming(false);
+        }
+      }
+      committedFolderRef.current = normalized;
+    }, 1500);
+  }, []);
+
+  // Cleanup folder rename timer on unmount
+  useEffect(() => {
+    return () => {
+      if (folderInputTimerRef.current) clearTimeout(folderInputTimerRef.current);
+    };
+  }, []);
+
+  const handleDbxConnect = async () => {
+    if (!dbxAppKey.trim()) { toast.error('Please enter your Dropbox App Key first'); return; }
+    dropbox.setAppKey(dbxAppKey.trim());
+    try { await dropbox.startAuth(); }
+    catch (err) { toast.error('Failed to start Dropbox auth', { description: err instanceof Error ? err.message : 'Unknown error' }); }
+  };
+
+  const handleDbxDisconnect = () => {
+    dropbox.disconnect();
+    dropbox.clearBackupState();
+    dropbox.clearCredentialsFromSupabase(); // Clear from Supabase too
+    setAutoBackupEnabled(false);
+    setDbxConnected(false);
+    setDbxLastBackup(null);
+    setPendingCount(0);
+    logConnection(false);
+    toast.success('Dropbox disconnected');
+  };
+
+  const handleDbxBackup = async (full = false) => {
+    setDbxBacking(true);
+    setDbxProgress(null);
+    try {
+      dropbox.setBackupFolder(dbxBackupFolder);
+      const result = full
+        ? await runFullBackup((p) => setDbxProgress(p))
+        : await runBackup((p) => setDbxProgress(p));
+      const s = dropbox.getBackupState();
+      setDbxLastBackup(s?.lastBackupAt || null);
+      // Log the manual backup result
+      logManualBackup(result.uploaded, result.deleted, result.unchanged, result.errors, full);
+      if (result.errors.length > 0) {
+        toast.warning(`Backup completed with ${result.errors.length} error(s)`, {
+          description: `Uploaded: ${result.uploaded}, Deleted: ${result.deleted}, Unchanged: ${result.unchanged}`,
+        });
+      } else {
+        toast.success('Backup complete', {
+          description: `Uploaded: ${result.uploaded}, Deleted: ${result.deleted}, Unchanged: ${result.unchanged}`,
+        });
+      }
+    } catch (err) {
+      toast.error('Backup failed', { description: err instanceof Error ? err.message : 'Unknown error' });
+    } finally {
+      setDbxBacking(false);
+      setTimeout(() => setDbxProgress(null), 3000);
+    }
+  };
+
+  // Count backed-up files from state
+  const backedUpFileCount = (() => {
+    const s = dropbox.getBackupState();
+    return s?.files ? Object.keys(s.files).length : 0;
+  })();
+
+  return (
+    <div className="space-y-6">
+      {/* Connection Status Card */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Connection</h4>
+        <div className={`rounded-lg border p-4 ${
+          dbxConnected
+            ? 'border-emerald-500/30 bg-emerald-500/5'
+            : 'border-border bg-card'
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+              dbxConnected
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                : 'bg-muted text-muted-foreground'
+            }`}>
+              {dbxConnected ? <CheckCircle2 className="w-5 h-5" /> : <CloudOff className="w-5 h-5" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">
+                  {dbxConnected ? 'Connected to Dropbox' : 'Not Connected'}
+                </h3>
+                {dbxConnected && (
+                  <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                    Active
+                  </span>
+                )}
+              </div>
+              {dbxConnected ? (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Auto-backup is enabled. Changes are synced automatically.
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Connect your Dropbox account to enable automatic backups.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Connected details */}
+          {dbxConnected && (
+            <div className="mt-3 pt-3 border-t border-emerald-500/20 grid grid-cols-3 gap-3">
+              <div className="text-center">
+                <div className="text-lg font-semibold text-foreground">{backedUpFileCount}</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Files backed up</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-foreground">{pendingCount}</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Pending</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-foreground">
+                  {dbxLastBackup ? new Date(dbxLastBackup).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+                </div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Last backup</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Configuration */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Configuration</h4>
+
+        {/* App Key */}
+        <div className="space-y-2">
+          <Label htmlFor="dbxAppKey" className="text-sm font-medium flex items-center gap-1.5">
+            <KeyRound className="w-3.5 h-3.5" />
+            Dropbox App Key
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              id="dbxAppKey" type="password" placeholder="Enter your Dropbox app key"
+              value={dbxAppKey}
+              onChange={(e) => { setDbxAppKey(e.target.value); dropbox.setAppKey(e.target.value); }}
+              className="font-mono text-sm" disabled={dbxConnected}
+            />
+            {!dbxConnected ? (
+              <Button variant="default" onClick={handleDbxConnect} disabled={!dbxAppKey.trim()}>
+                <ExternalLink className="w-4 h-4 mr-2" /> Connect
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={handleDbxDisconnect} className="text-destructive hover:text-destructive">
+                <CloudOff className="w-4 h-4 mr-2" /> Disconnect
+              </Button>
+            )}
+          </div>
+          {!dbxConnected && (
+            <p className="text-xs text-muted-foreground">
+              Create a Dropbox app at{' '}
+              <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">
+                dropbox.com/developers/apps
+              </a>{' '}with "App folder" access.
+            </p>
+          )}
+        </div>
+
+        {/* Backup Folder */}
+        {dbxConnected && (
+          <div className="space-y-2">
+            <Label htmlFor="dbxFolder" className="text-sm font-medium">Backup Folder Path</Label>
+            <div className="relative">
+              <Input
+                id="dbxFolder" placeholder={dropbox.generateDefaultBackupFolder(user)}
+                value={dbxBackupFolder}
+                onChange={(e) => handleFolderChange(e.target.value)}
+                className="font-mono text-sm" disabled={dbxBacking || dbxFolderRenaming}
+              />
+              {dbxFolderRenaming && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Files will be organized as: <code className="bg-muted px-1 rounded">{dbxBackupFolder}/ListName/ItemTitle.md</code>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Changing the path will rename the existing folder in Dropbox.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Manual Backup Actions */}
+      {dbxConnected && (
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Manual Backup</h4>
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-3">
+              <Button variant="default" onClick={() => handleDbxBackup(false)} disabled={dbxBacking}>
+                {dbxBacking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Cloud className="w-4 h-4 mr-2" />}
+                {dbxBacking ? 'Backing up...' : 'Backup Now'}
+              </Button>
+              <Button variant="outline" onClick={() => handleDbxBackup(true)} disabled={dbxBacking}>
+                <RefreshCw className="w-4 h-4 mr-2" /> Full Backup
+              </Button>
+            </div>
+            {dbxProgress && dbxProgress.phase !== 'done' && (
+              <div className="space-y-2">
+                <Progress value={dbxProgress.total > 0 ? (dbxProgress.current / dbxProgress.total) * 100 : 0} className="h-2" />
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> {dbxProgress.message}
+                  </div>
+                  {dbxProgress.total > 0 && <span>{Math.round((dbxProgress.current / dbxProgress.total) * 100)}%</span>}
+                </div>
+              </div>
+            )}
+            {dbxProgress?.phase === 'done' && (
+              <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                <Cloud className="w-3.5 h-3.5" /> {dbxProgress.message}
+              </p>
+            )}
+            {dbxLastBackup && !dbxBacking && !dbxProgress && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Last backup: {new Date(dbxLastBackup).toLocaleString()}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              <strong>Backup Now</strong> uploads only new and changed files (delta sync). <strong>Full Backup</strong> re-uploads everything.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Auto-backup info */}
+      {dbxConnected && (
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Auto-Backup</h4>
+          <div className="rounded-lg border bg-card p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">Automatic background backup</p>
+                <p className="text-xs text-muted-foreground">
+                  Items are automatically backed up to Dropbox when you make changes. Backups trigger after 10 seconds of inactivity, when you switch items, when the tab loses focus, or after 60 seconds of idle time.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Activity Log */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Activity Log</h4>
+          <div className="flex items-center gap-2">
+            {activityLog.length > 0 && (
+              <button
+                onClick={() => { clearLog(); setActivityLog([]); }}
+                className="text-[10px] text-muted-foreground hover:text-destructive transition-colors uppercase tracking-wider"
+              >
+                Clear
+              </button>
+            )}
+            {activityLog.length > 5 && (
+              <button
+                onClick={() => setLogExpanded(!logExpanded)}
+                className="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-0.5 uppercase tracking-wider"
+              >
+                {logExpanded ? <><ChevronUp className="w-3 h-3" /> Less</> : <><ChevronDown className="w-3 h-3" /> More</>}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {activityLog.length === 0 ? (
+          <div className="rounded-lg border border-dashed bg-card/50 p-6 text-center">
+            <ScrollText className="w-5 h-5 text-muted-foreground/50 mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">No backup activity yet.</p>
+            <p className="text-[10px] text-muted-foreground/60 mt-1">Activity will appear here after your first backup.</p>
+          </div>
+        ) : (
+          <div className="rounded-lg border bg-card overflow-hidden">
+            <div className="divide-y divide-border">
+              {(logExpanded ? activityLog : activityLog.slice(0, 5)).map((entry) => (
+                <BackupLogRow key={entry.id} entry={entry} />
+              ))}
+            </div>
+            {!logExpanded && activityLog.length > 5 && (
+              <div className="px-3 py-2 bg-muted/30 text-center">
+                <button
+                  onClick={() => setLogExpanded(true)}
+                  className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Show {activityLog.length - 5} more entries
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+ * SECTION: Developer
+ * ───────────────────────────────────────────── */
+
+function TestDataGenerator() {
+  const { refreshData, userId } = useMomentum();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [taskCount, setTaskCount] = useState(20);
+  const [noteCount, setNoteCount] = useState(15);
+  const [clearExisting, setClearExisting] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearConfirmText, setClearConfirmText] = useState('');
+
+  const handleGenerate = async () => {
+    const { generateTestData } = await import('@/lib/testDataGenerator');
+    setIsGenerating(true);
+    setElapsedSeconds(0); setProgress(0); setProgressMessage('Starting...');
+    timerRef.current = setInterval(() => setElapsedSeconds(prev => prev + 1), 1000);
+    try {
+      const result = await generateTestData({
+        taskCount,
+        noteCount,
+        clearExisting,
+        userId,
+        onProgress: (pct, msg) => { setProgress(pct); setProgressMessage(msg); },
+      });
+      if (timerRef.current) clearInterval(timerRef.current);
+      toast.success('Test data generated', {
+        description: `Created ${result.tasks} tasks, ${result.notes} notes, ${result.lists} lists, ${result.tags} tags, ${result.itemTags} tag associations`,
+      });
+      refreshData();
+    } catch (err: any) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      toast.error('Failed to generate test data', { description: err.message });
+    } finally { setIsGenerating(false); setProgress(0); setProgressMessage(''); }
+  };
+
+  const handleClear = async () => {
+    const { clearAllData } = await import('@/lib/testDataGenerator');
+    setIsClearing(true);
+    setShowClearConfirm(false);
+    setClearConfirmText('');
+    try {
+      const result = await clearAllData(userId);
+      toast.success('All data cleared', { description: `Deleted ${result.items} items, ${result.lists} lists, ${result.tags} tags` });
+      refreshData();
+    } catch (err: any) {
+      toast.error('Failed to clear data', { description: err.message });
+    } finally { setIsClearing(false); }
+  };
+
+  useEffect(() => { return () => { if (timerRef.current) clearInterval(timerRef.current); }; }, []);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Generate realistic test data including tasks with code snippets, notes with rich markdown, lists, tags, and tag associations.
+      </p>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="taskCount" className="text-sm">Tasks</Label>
+          <Input
+            id="taskCount"
+            type="number"
+            value={taskCount}
+            onChange={(e) => setTaskCount(Math.max(0, Math.min(1000, Number(e.target.value))))}
+            min={0}
+            max={1000}
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="noteCount" className="text-sm">Notes</Label>
+          <Input
+            id="noteCount"
+            type="number"
+            value={noteCount}
+            onChange={(e) => setNoteCount(Math.max(0, Math.min(1000, Number(e.target.value))))}
+            min={0}
+            max={1000}
+            className="mt-1"
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch id="clearExisting" checked={clearExisting} onCheckedChange={setClearExisting} />
+        <Label htmlFor="clearExisting" className="text-sm cursor-pointer">Clear existing data before generating</Label>
+      </div>
+      {isGenerating && (
+        <div className="space-y-2">
+          <Progress value={progress} className="h-2" />
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />{progressMessage}</div>
+            <span>{elapsedSeconds}s</span>
+          </div>
+        </div>
+      )}
+      <div className="flex gap-3">
+        <Button onClick={handleGenerate} disabled={isGenerating || isClearing}>
+          {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Beaker className="w-4 h-4 mr-2" />}
+          Generate Test Data
+        </Button>
+        <AlertDialog open={showClearConfirm} onOpenChange={(open) => { setShowClearConfirm(open); if (!open) setClearConfirmText(''); }}>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" disabled={isGenerating || isClearing}>
+              {isClearing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Clear All Data
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="w-5 h-5" />
+                Delete all data permanently?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3">
+                <span className="block">This will permanently delete <strong>all items, lists, and tags</strong> from your account. This action cannot be undone.</span>
+                <span className="block text-sm">Type <strong className="font-mono bg-muted px-1.5 py-0.5 rounded text-foreground">DELETE</strong> below to confirm:</span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <Input
+              value={clearConfirmText}
+              onChange={(e) => setClearConfirmText(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className="font-mono"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === 'Enter' && clearConfirmText === 'DELETE') handleClear(); }}
+            />
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleClear}
+                disabled={clearConfirmText !== 'DELETE'}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete Everything
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+ * SECTION: AI Assistant
+ * ───────────────────────────────────────────── */
+
+const PROVIDER_OPTIONS: { value: AIProviderType; label: string; description: string }[] = [
+  { value: 'gemini', label: 'Google Gemini', description: 'Free tier available' },
+  { value: 'openai', label: 'OpenAI', description: 'GPT-4o, GPT-4o Mini' },
+  { value: 'anthropic', label: 'Anthropic', description: 'Claude 3.5 Sonnet, Haiku' },
+  { value: 'custom', label: 'Custom / Self-hosted', description: 'OpenAI-compatible endpoint' },
+];
+
+export function SettingsAI() {
+  const { config: liveConfig, loading } = useAIConfig();
+  const [config, setConfig] = useState<AIProviderConfig | null>(null);
+  const [validating, setValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<'success' | 'error' | null>(null);
+  const [showApiKey, setShowApiKey] = useState(false);
+
+  // Sync local state with the live config hook
+  useEffect(() => {
+    if (!loading) {
+      setConfig(liveConfig || getDefaultConfig());
+    }
+  }, [liveConfig, loading]);
+
+  const handleProviderChange = (provider: AIProviderType) => {
+    const newConfig = getDefaultConfig(provider);
+    // Preserve API key if switching back to same provider
+    if (config?.provider === provider && config.apiKey) {
+      newConfig.apiKey = config.apiKey;
+    }
+    setConfig(newConfig);
+    setValidationResult(null);
+    saveAIConfig(newConfig);
+  };
+
+  const handleModelChange = (model: string) => {
+    if (!config) return;
+    const updated = { ...config, model };
+    setConfig(updated);
+    saveAIConfig(updated);
+  };
+
+  const handleApiKeyChange = (apiKey: string) => {
+    if (!config) return;
+    const updated = { ...config, apiKey };
+    setConfig(updated);
+    setValidationResult(null);
+    // Debounce save
+    saveAIConfig(updated);
+  };
+
+  const handleBaseUrlChange = (baseUrl: string) => {
+    if (!config) return;
+    const updated = { ...config, baseUrl };
+    setConfig(updated);
+    saveAIConfig(updated);
+  };
+
+  const handleTemperatureChange = (temperature: number) => {
+    if (!config) return;
+    const updated = { ...config, temperature };
+    setConfig(updated);
+    saveAIConfig(updated);
+  };
+
+  const handleValidate = async () => {
+    if (!config || !config.apiKey) {
+      toast.error('Please enter an API key first');
+      return;
+    }
+    setValidating(true);
+    setValidationResult(null);
+    try {
+      const provider = createAIProvider(config);
+      const valid = await provider.validate();
+      setValidationResult(valid ? 'success' : 'error');
+      if (valid) {
+        toast.success('API key is valid');
+      } else {
+        toast.error('API key validation failed');
+      }
+    } catch (err: any) {
+      setValidationResult('error');
+      toast.error(`Validation failed: ${err.message || 'Unknown error'}`);
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const handleClearConfig = async () => {
+    await clearAIConfig();
+    setConfig(getDefaultConfig());
+    setValidationResult(null);
+    toast.success('AI configuration cleared');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground py-4">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        <span className="text-sm">Loading AI settings…</span>
+      </div>
+    );
+  }
+
+  const models = config ? PROVIDER_MODELS[config.provider] : [];
+
+  return (
+    <div className="space-y-6">
+      {/* Provider Selection */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">AI Provider</h4>
+
+        <div className="flex items-center justify-between gap-4 py-2 border-b border-border/30">
+          <div>
+            <Label className="text-sm font-medium">Provider</Label>
+            <p className="text-xs text-muted-foreground mt-0.5">Choose your AI service provider.</p>
+          </div>
+          <Select value={config?.provider || 'gemini'} onValueChange={(v) => handleProviderChange(v as AIProviderType)}>
+            <SelectTrigger className="w-52">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PROVIDER_OPTIONS.map((p) => (
+                <SelectItem key={p.value} value={p.value}>
+                  <div className="flex flex-col">
+                    <span>{p.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* API Key */}
+        <div className="space-y-2 py-2 border-b border-border/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-sm font-medium">API Key</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {config?.provider === 'gemini' 
+                  ? 'Get your key from Google AI Studio' 
+                  : config?.provider === 'openai'
+                  ? 'Get your key from platform.openai.com'
+                  : config?.provider === 'anthropic'
+                  ? 'Get your key from console.anthropic.com'
+                  : 'Enter your API key'
+                }
+              </p>
+            </div>
+            {validationResult === 'success' && (
+              <div className="flex items-center gap-1 text-emerald-500 text-xs">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Valid</span>
+              </div>
+            )}
+            {validationResult === 'error' && (
+              <div className="flex items-center gap-1 text-destructive text-xs">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>Invalid</span>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                type={showApiKey ? 'text' : 'password'}
+                value={config?.apiKey || ''}
+                onChange={(e) => handleApiKeyChange(e.target.value)}
+                placeholder="Enter your API key…"
+                className="pr-10 font-mono text-xs"
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showApiKey ? <KeyRound className="w-4 h-4" /> : <KeyRound className="w-4 h-4" />}
+              </button>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleValidate}
+              disabled={validating || !config?.apiKey}
+              className="shrink-0"
+            >
+              {validating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+              <span className="ml-1.5">Test</span>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Shield className="w-3 h-3" />
+            Your API key is stored locally on your device and never sent to our servers.
+          </p>
+        </div>
+
+        {/* Model Selection */}
+        <div className="flex items-center justify-between gap-4 py-2 border-b border-border/30">
+          <div>
+            <Label className="text-sm font-medium">Model</Label>
+            <p className="text-xs text-muted-foreground mt-0.5">Choose the AI model to use.</p>
+          </div>
+          <Select value={config?.model || models[0]?.id || ''} onValueChange={handleModelChange}>
+            <SelectTrigger className="w-52">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {models.map((m) => (
+                <SelectItem key={m.id} value={m.id}>
+                  <div className="flex flex-col">
+                    <span>{m.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Custom Base URL (only for custom provider) */}
+        {config?.provider === 'custom' && (
+          <div className="space-y-2 py-2 border-b border-border/30">
+            <Label className="text-sm font-medium">Base URL</Label>
+            <Input
+              type="url"
+              value={config?.baseUrl || ''}
+              onChange={(e) => handleBaseUrlChange(e.target.value)}
+              placeholder="https://api.example.com/v1"
+              className="font-mono text-xs"
+            />
+            <p className="text-xs text-muted-foreground">OpenAI-compatible endpoint URL.</p>
+          </div>
+        )}
+
+        {/* Temperature */}
+        <div className="space-y-2 py-2 border-b border-border/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-sm font-medium">Temperature</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Controls randomness. Lower = more focused, higher = more creative.</p>
+            </div>
+            <span className="text-sm font-mono text-muted-foreground">{config?.temperature?.toFixed(1) || '0.7'}</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="2"
+            step="0.1"
+            value={config?.temperature ?? 0.7}
+            onChange={(e) => handleTemperatureChange(parseFloat(e.target.value))}
+            className="w-full h-1.5 bg-secondary rounded-full appearance-none cursor-pointer
+              [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
+              [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:cursor-pointer
+              [&::-webkit-slider-thumb]:shadow-sm"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Precise (0)</span>
+            <span>Creative (2)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-3">
+        <Button variant="destructive" size="sm" onClick={handleClearConfig}>
+          <Trash2 className="w-4 h-4 mr-1.5" />
+          Clear Configuration
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function OrphanTagPruner() {
+  const { state, deleteTag, getTagCounts } = useMomentum();
+  const [isPruning, setIsPruning] = useState(false);
+  const [orphanTags, setOrphanTags] = useState<{ id: string; name: string }[]>([]);
+  const [scanned, setScanned] = useState(false);
+
+  const scanForOrphans = useCallback(() => {
+    const tagCounts = getTagCounts();
+    const orphans = state.tags
+      .filter((tag) => !tagCounts.has(tag.id) || tagCounts.get(tag.id) === 0)
+      .map((tag) => ({ id: tag.id, name: tag.name }));
+    setOrphanTags(orphans);
+    setScanned(true);
+  }, [state.tags, getTagCounts]);
+
+  const handlePrune = async () => {
+    if (orphanTags.length === 0) return;
+    setIsPruning(true);
+    let deleted = 0;
+    for (const tag of orphanTags) {
+      try {
+        deleteTag(tag.id);
+        deleted++;
+      } catch (err) {
+        console.error(`Failed to delete orphan tag "${tag.name}":`, err);
+      }
+    }
+    setIsPruning(false);
+    setOrphanTags([]);
+    setScanned(false);
+    toast.success(`Pruned ${deleted} orphan tag${deleted !== 1 ? 's' : ''}`);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium">Prune Orphan Tags</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Find and remove tags that have no associated items.
+          </p>
+        </div>
+        {!scanned ? (
+          <Button variant="outline" size="sm" onClick={scanForOrphans}>
+            Scan
+          </Button>
+        ) : orphanTags.length === 0 ? (
+          <div className="flex items-center gap-1.5 text-xs text-emerald-600">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            No orphan tags found
+          </div>
+        ) : (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handlePrune}
+            disabled={isPruning}
+          >
+            {isPruning ? (
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+            )}
+            Prune {orphanTags.length} tag{orphanTags.length !== 1 ? 's' : ''}
+          </Button>
+        )}
+      </div>
+      {scanned && orphanTags.length > 0 && (
+        <div className="rounded-md border border-border/50 bg-muted/30 p-3">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Orphan tags to be removed:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {orphanTags.map((tag) => (
+              <span
+                key={tag.id}
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-destructive/10 text-destructive border border-destructive/20"
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function SettingsDeveloper() {
+  return (
+    <div className="space-y-6">
+      {/* Data Maintenance */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Data Maintenance</h4>
+        <OrphanTagPruner />
+      </div>
+
+      {/* Test Data */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Test Data</h4>
+        <TestDataGenerator />
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+ * Legacy: SettingsContent (renders all sections)
+ * ───────────────────────────────────────────── */
+
+export function SettingsContent() {
+  return (
+    <div className="space-y-8">
+      <SettingsGeneral />
+      <SettingsEditor />
+      <SettingsAI />
+      <SettingsData />
+      <SettingsBackup />
+      <SettingsDeveloper />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+ * Full-page Settings route
+ * ───────────────────────────────────────────── */
+
+export default function Settings() {
+  const [, setLocation] = useLocation();
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="h-14 border-b border-border/50 flex items-center px-4 gap-4 bg-background sticky top-0 z-10">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setLocation('/')}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+            <SettingsIcon className="w-4 h-4 text-primary" />
+          </div>
+          <span className="font-semibold text-foreground">Settings</span>
+        </div>
+      </header>
+      <main className="max-w-2xl mx-auto p-6 space-y-6">
+        <SettingsContent />
+      </main>
+    </div>
+  );
+}

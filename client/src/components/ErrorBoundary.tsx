@@ -12,6 +12,8 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
+  private autoRecoveryTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -21,8 +23,43 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
+  componentDidCatch(error: Error) {
+    // Auto-recover from HMR-induced context errors in development.
+    // When Vite hot-updates a context module, the provider reference changes
+    // but child components still hold the old context, causing "must be used
+    // within a Provider" errors. These are transient — retrying after a short
+    // delay allows React to re-render with the new provider.
+    const isHmrContextError =
+      import.meta.env.DEV &&
+      error.message.includes('must be used within a');
+
+    if (isHmrContextError) {
+      console.warn('[ErrorBoundary] HMR context error detected, auto-recovering...');
+      this.autoRecoveryTimer = setTimeout(() => {
+        this.setState({ hasError: false, error: null });
+      }, 100);
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.autoRecoveryTimer) {
+      clearTimeout(this.autoRecoveryTimer);
+    }
+  }
+
   render() {
     if (this.state.hasError) {
+      // During HMR auto-recovery, show nothing instead of the error screen
+      // to avoid a flash of the error UI.
+      const isHmrContextError =
+        typeof import.meta !== 'undefined' &&
+        import.meta.env?.DEV &&
+        this.state.error?.message.includes('must be used within a');
+
+      if (isHmrContextError) {
+        return null;
+      }
+
       return (
         <div className="flex items-center justify-center min-h-screen p-8 bg-background">
           <div className="flex flex-col items-center w-full max-w-2xl p-8">
