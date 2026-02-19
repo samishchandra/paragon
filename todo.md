@@ -71,3 +71,24 @@
 
 ## Bug Fixes (Round 2)
 - [x] Fix: value.toISOString is not a function in offline queue flush
+
+## End-to-End Testing
+- [x] Test: Create a new note and verify content saves
+- [x] Test: Edit note title and content, verify persistence after refresh
+- [x] Test: Create a new task and verify it appears
+- [x] Test: Complete a task and verify status change
+- [x] Test: Create a tag and assign it to an item
+- [x] Test: Create a list and add items to it
+- [x] Test: Search for items
+- [x] Test: Delete an item and restore from trash
+- [x] Test: Pin an item
+- [x] Test: Settings page loads correctly
+- [x] Test: Check all console/network errors and fix
+- [x] Test: Due date assignment for tasks
+- [x] Test: Task complete/uncomplete toggle
+- [x] Test: Enable Tasks toggle in Settings
+
+## Bug Fixes (Round 3)
+- [x] Fix: Sidebar counts key mismatch (all_count vs all) — keys now match frontend expectations
+- [x] Fix: Tag counts and list counts not returned from get_sidebar_counts RPC
+- [x] Fix: Data Overview in Settings showing all zeros

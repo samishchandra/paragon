@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, title, LEFT(content, 100) as content_preview, LENGTH(content) as content_len FROM items WHERE title = 'My Test Note';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VvnsUcftvfMz6d.a6c48d72682d --database d4wAeXwS7a9nGqh29YUR28 --execute SELECT id, title, LEFT(content, 100) as content_preview, LENGTH(content) as content_len FROM items WHERE title = 'My Test Note';",
+  "rows": [
+    {
+      "id": "8fa65a29-4e03-4400-af30-4b8fe077016c",
+      "title": "My Test Note",
+      "content_preview": "​",
+      "content_len": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tcontent_preview\tcontent_len\n8fa65a29-4e03-4400-af30-4b8fe077016c\tMy Test Note\t​\t3\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

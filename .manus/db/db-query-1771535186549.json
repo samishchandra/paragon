@@ -1,0 +1,74 @@
+{
+  "query": "SELECT id, title, type, deletedAt IS NOT NULL as is_deleted, createdAt, updatedAt FROM items ORDER BY updatedAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VvnsUcftvfMz6d.a6c48d72682d --database d4wAeXwS7a9nGqh29YUR28 --execute SELECT id, title, type, deletedAt IS NOT NULL as is_deleted, createdAt, updatedAt FROM items ORDER BY updatedAt DESC;",
+  "rows": [
+    {
+      "id": "32d699bf-cb97-4c1e-a764-4e2dd611141a",
+      "title": "Work Momentum Application",
+      "type": "note",
+      "is_deleted": "0",
+      "createdAt": "2026-02-19 21:06:01",
+      "updatedAt": "2026-02-19 21:06:16"
+    },
+    {
+      "id": "8fa65a29-4e03-4400-af30-4b8fe077016c",
+      "title": "My Test Note",
+      "type": "note",
+      "is_deleted": "0",
+      "createdAt": "2026-02-19 21:03:43",
+      "updatedAt": "2026-02-19 21:05:00"
+    },
+    {
+      "id": "8a838759-15a7-4ef1-9d88-08dd3eace276",
+      "title": "Sample Markdown Editor Template",
+      "type": "note",
+      "is_deleted": "0",
+      "createdAt": "2026-02-19 21:02:56",
+      "updatedAt": "2026-02-19 21:04:53"
+    },
+    {
+      "id": "054a27f3-c1aa-4fb1-9f00-2b16bfd35471",
+      "title": "Feb 19, 2026 4:04 PM",
+      "type": "note",
+      "is_deleted": "0",
+      "createdAt": "2026-02-19 21:04:45",
+      "updatedAt": "2026-02-19 21:04:45"
+    },
+    {
+      "id": "2d726bab-f9cb-4f7a-a61f-05e4933059aa",
+      "title": "Feb 19, 2026 3:29 PM",
+      "type": "note",
+      "is_deleted": "1",
+      "createdAt": "2026-02-19 20:29:17",
+      "updatedAt": "2026-02-19 21:04:44"
+    },
+    {
+      "id": "935630fc-9f96-4668-be4e-52998952d616",
+      "title": "Feb 19, 2026 4:04 PM",
+      "type": "note",
+      "is_deleted": "0",
+      "createdAt": "2026-02-19 21:04:40",
+      "updatedAt": "2026-02-19 21:04:40"
+    },
+    {
+      "id": "e2a4d8b1-7ece-42b1-8591-a4b9a1d7b253",
+      "title": "Feb 19, 2026 4:04 PM",
+      "type": "note",
+      "is_deleted": "0",
+      "createdAt": "2026-02-19 21:04:38",
+      "updatedAt": "2026-02-19 21:04:38"
+    },
+    {
+      "id": "457eb8bf-9efb-4634-9aff-4342bc2fa43d",
+      "title": "Untitled Task",
+      "type": "task",
+      "is_deleted": "1",
+      "createdAt": "2026-02-19 21:04:14",
+      "updatedAt": "2026-02-19 21:04:25"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\ttype\tis_deleted\tcreatedAt\tupdatedAt\n32d699bf-cb97-4c1e-a764-4e2dd611141a\tWork Momentum Application\tnote\t0\t2026-02-19 21:06:01\t2026-02-19 21:06:16\n8fa65a29-4e03-4400-af30-4b8fe077016c\tMy Test Note\tnote\t0\t2026-02-19 21:03:43\t2026-02-19 21:05:00\n8a838759-15a7-4ef1-9d88-08dd3eace276\tSample Markdown Editor Template\tnote\t0\t2026-02-19 21:02:56\t2026-02-19 21:04:53\n054a27f3-c1aa-4fb1-9f00-2b16bfd35471\tFeb 19, 2026 4:04 PM\tnote\t0\t2026-02-19 21:04:45\t2026-02-19 21:04:45\n2d726bab-f9cb-4f7a-a61f-05e4933059aa\tFeb 19, 2026 3:29 PM\tnote\t1\t2026-02-19 20:29:17\t2026-02-19 21:04:44\n935630fc-9f96-4668-be4e-52998952d616\tFeb 19, 2026 4:04 PM\tnote\t0\t2026-02-19 21:04:40\t2026-02-19 21:04:40\ne2a4d8b1-7ece-42b1-8591-a4b9a1d7b253\tFeb 19, 2026 4:04 PM\tnote\t0\t2026-02-19 21:04:38\t2026-02-19 21:04:38\n457eb8bf-9efb-4634-9aff-4342bc2fa43d\tUntitled Task\ttask\t1\t2026-02-19 21:04:14\t2026-02-19 21:04:25\n",
+  "stderr": "",
+  "execution_time_ms": 65
+}

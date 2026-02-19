@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, title, LEFT(content, 50) as content_preview, type, deleted_at, created_at, updated_at FROM items WHERE user_id = 1 ORDER BY updated_at DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VvnsUcftvfMz6d.a6c48d72682d --database d4wAeXwS7a9nGqh29YUR28 --execute SELECT id, title, LEFT(content, 50) as content_preview, type, deleted_at, created_at, updated_at FROM items WHERE user_id = 1 ORDER BY updated_at DESC;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'user_id' in 'where clause'"
+  ]
+}

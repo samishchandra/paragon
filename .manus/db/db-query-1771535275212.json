@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, title, content, searchContent, updatedAt FROM items WHERE title = 'My Test Note';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2VvnsUcftvfMz6d.a6c48d72682d --database d4wAeXwS7a9nGqh29YUR28 --execute SELECT id, title, content, searchContent, updatedAt FROM items WHERE title = 'My Test Note';",
+  "rows": [
+    {
+      "id": "8fa65a29-4e03-4400-af30-4b8fe077016c",
+      "title": "My Test Note",
+      "content": "​",
+      "searchContent": "​",
+      "updatedAt": "2026-02-19 21:05:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tcontent\tsearchContent\tupdatedAt\n8fa65a29-4e03-4400-af30-4b8fe077016c\tMy Test Note\t​\t​\t2026-02-19 21:05:00\n",
+  "stderr": "",
+  "execution_time_ms": 65
+}

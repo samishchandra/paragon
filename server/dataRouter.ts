@@ -200,27 +200,30 @@ router.post('/', async (req: Request, res: Response) => {
 
   try {
     if (action === 'insert') {
-      const mappedData = mapColumns(tableName, data);
-      // Add userId for user-scoped tables
-      if (tableName !== 'item_tags' && tableName !== 'itemTags') {
-        mappedData.userId = user.id;
-      }
-      // Handle date fields
-      if (mappedData.deletedAt && typeof mappedData.deletedAt === 'string') {
-        mappedData.deletedAt = new Date(mappedData.deletedAt);
-      }
-      await db.insert(tableRef).values(mappedData);
+      // Handle both single objects and arrays of objects
+      const isArray = Array.isArray(data);
+      const dataArray = isArray ? data : [data];
+      const mappedArray = dataArray.map((item: any) => {
+        const mapped = mapColumns(tableName, item);
+        // Add userId for user-scoped tables
+        if (tableName !== 'item_tags' && tableName !== 'itemTags') {
+          mapped.userId = user.id;
+        }
+        // Handle date fields
+        if (mapped.deletedAt && typeof mapped.deletedAt === 'string') {
+          mapped.deletedAt = new Date(mapped.deletedAt);
+        }
+        return mapped;
+      });
+      
+      await db.insert(tableRef).values(mappedArray);
       
       // Return the inserted data
-      let result;
-      if (mappedData.id) {
-        const rows = await db.select().from(tableRef).where(eq(tableRef.id, mappedData.id)).limit(1);
-        result = rows[0] ? unmapColumns(tableName, rows[0]) : mappedData;
-      } else {
-        result = unmapColumns(tableName, mappedData);
+      const results = mappedArray.map((m: any) => unmapColumns(tableName, m));
+      if (!isArray && (single || maybeSingle)) {
+        return res.json({ data: results[0] });
       }
-      
-      return res.json({ data: single || maybeSingle ? result : [result] });
+      return res.json({ data: results });
     }
 
     if (action === 'update') {
@@ -232,7 +235,17 @@ router.post('/', async (req: Request, res: Response) => {
         mappedData.deletedAt = mappedData.deletedAt ? new Date(mappedData.deletedAt) : null;
       }
       
-      await db.update(tableRef).set(mappedData).where(and(...conditions));
+      console.log('[DataRouter] UPDATE', tableName, 'filters:', JSON.stringify(filters), 'data keys:', JSON.stringify(Object.keys(mappedData)), 'content:', typeof mappedData.content === 'string' ? mappedData.content.substring(0, 80) : mappedData.content);
+      
+      const result = await db.update(tableRef).set(mappedData).where(and(...conditions));
+      console.log('[DataRouter] UPDATE result:', JSON.stringify(result));
+      
+      // Return the updated row
+      if (filters?.id) {
+        const rows = await db.select().from(tableRef).where(eq(tableRef.id, filters.id)).limit(1);
+        const updated = rows[0] ? unmapColumns(tableName, rows[0]) : null;
+        return res.json({ data: single || maybeSingle ? updated : updated ? [updated] : null });
+      }
       return res.json({ data: null });
     }
 
@@ -243,32 +256,37 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     if (action === 'upsert') {
-      const mappedData = mapColumns(tableName, data);
-      if (tableName !== 'item_tags' && tableName !== 'itemTags') {
-        mappedData.userId = user.id;
-      }
-      if (mappedData.deletedAt && typeof mappedData.deletedAt === 'string') {
-        mappedData.deletedAt = new Date(mappedData.deletedAt);
-      }
+      // Handle both single objects and arrays of objects
+      const isArray = Array.isArray(data);
+      const dataArray = isArray ? data : [data];
+      const mappedArray = dataArray.map((item: any) => {
+        const mapped = mapColumns(tableName, item);
+        if (tableName !== 'item_tags' && tableName !== 'itemTags') {
+          mapped.userId = user.id;
+        }
+        if (mapped.deletedAt && typeof mapped.deletedAt === 'string') {
+          mapped.deletedAt = new Date(mapped.deletedAt);
+        }
+        return mapped;
+      });
       
       // Try insert, on conflict update
-      try {
-        await db.insert(tableRef).values(mappedData).onDuplicateKeyUpdate({ set: mappedData });
-      } catch {
-        // Fallback: try update
-        if (mappedData.id) {
-          await db.update(tableRef).set(mappedData).where(eq(tableRef.id, mappedData.id));
+      for (const mapped of mappedArray) {
+        try {
+          await db.insert(tableRef).values(mapped).onDuplicateKeyUpdate({ set: mapped });
+        } catch {
+          // Fallback: try update
+          if (mapped.id) {
+            await db.update(tableRef).set(mapped).where(eq(tableRef.id, mapped.id));
+          }
         }
       }
       
-      let result;
-      if (mappedData.id) {
-        const rows = await db.select().from(tableRef).where(eq(tableRef.id, mappedData.id)).limit(1);
-        result = rows[0] ? unmapColumns(tableName, rows[0]) : mappedData;
-      } else {
-        result = unmapColumns(tableName, mappedData);
+      const results = mappedArray.map((m: any) => unmapColumns(tableName, m));
+      if (!isArray && (single || maybeSingle)) {
+        return res.json({ data: results[0] });
       }
-      return res.json({ data: single || maybeSingle ? result : [result] });
+      return res.json({ data: results });
     }
 
     // Default: SELECT query
@@ -361,33 +379,76 @@ router.post('/rpc', async (req: Request, res: Response) => {
       const active = allItems.filter(i => !i.deletedAt);
       const deleted = allItems.filter(i => i.deletedAt);
 
+      // Tag counts
+      const allItemIds = active.map(i => i.id);
+      let tagCountsMap: Record<string, number> = {};
+      let listCountsMap: Record<string, number> = {};
+      if (allItemIds.length > 0) {
+        const tagRows = await db.select().from(itemTags).where(inArray(itemTags.itemId, allItemIds));
+        for (const tr of tagRows) {
+          tagCountsMap[tr.tagId] = (tagCountsMap[tr.tagId] || 0) + 1;
+        }
+      }
+      // List counts
+      for (const item of active) {
+        if (item.listId) {
+          listCountsMap[item.listId] = (listCountsMap[item.listId] || 0) + 1;
+        }
+      }
+
       const result = {
-        all_count: active.length,
-        task_count: active.filter(i => i.type === 'task').length,
-        note_count: active.filter(i => i.type === 'note').length,
-        pinned_count: active.filter(i => i.isPinned).length,
-        completed_count: active.filter(i => i.isCompleted).length,
-        trash_count: deleted.length,
-        miscellaneous_count: active.filter(i => !i.listId).length,
-        todo_count: active.filter(i => i.type === 'task' && !i.isCompleted && i.section !== 'completed').length,
+        all: active.length,
+        tasks: active.filter(i => i.type === 'task').length,
+        notes: active.filter(i => i.type === 'note').length,
+        pinned: active.filter(i => i.isPinned).length,
+        completed: active.filter(i => i.isCompleted).length,
+        trash: deleted.length,
+        miscellaneous: active.filter(i => !i.listId).length,
+        todo: active.filter(i => i.type === 'task' && !i.isCompleted && i.section !== 'completed').length,
+        tag_counts: tagCountsMap,
+        list_counts: listCountsMap,
       };
 
       return res.json({ data: result });
     }
 
     if (funcName === 'search_items' || funcName === 'search_items_fuzzy') {
-      const searchTerm = `%${params?.search_query || ''}%`;
+      const searchText = params?.search_text || params?.search_query || '';
+      const searchTerm = `%${searchText}%`;
+      const maxResults = params?.max_results || 50;
+      const filterListId = params?.filter_list_id;
+      const filterTagId = params?.filter_tag_id;
+
+      // Build conditions
+      const searchConditions: any[] = [
+        eq(items.userId, user.id),
+        isNull(items.deletedAt),
+        or(
+          like(items.title, searchTerm),
+          like(items.content, searchTerm),
+          like(items.searchContent, searchTerm)
+        ),
+      ];
+
+      // Apply optional filters
+      if (filterListId) {
+        searchConditions.push(eq(items.listId, filterListId));
+      }
+
+      // If tag filter, get item IDs first
+      let tagFilterItemIds: string[] | null = null;
+      if (filterTagId) {
+        const tagItemRows = await db.select().from(itemTags).where(eq(itemTags.tagId, filterTagId));
+        tagFilterItemIds = tagItemRows.map(r => r.itemId);
+        if (tagFilterItemIds.length === 0) {
+          return res.json({ data: [] });
+        }
+        searchConditions.push(inArray(items.id, tagFilterItemIds));
+      }
+
       const rows = await db.select().from(items).where(
-        and(
-          eq(items.userId, user.id),
-          isNull(items.deletedAt),
-          or(
-            like(items.title, searchTerm),
-            like(items.content, searchTerm),
-            like(items.searchContent, searchTerm)
-          )
-        )
-      ).orderBy(desc(items.updatedAt)).limit(params?.max_results || 50);
+        and(...searchConditions)
+      ).orderBy(desc(items.updatedAt)).limit(maxResults);
 
       // Attach item_tags
       const itemIds = rows.map(r => r.id);
@@ -400,10 +461,40 @@ router.post('/rpc', async (req: Request, res: Response) => {
         }
       }
 
-      const unmapped = rows.map(r => ({
-        ...unmapColumns('items', r),
-        item_tags: tagMap[r.id] || [],
-      }));
+      // Generate highlight snippets
+      const lowerSearch = searchText.toLowerCase();
+      const unmapped = rows.map(r => {
+        const base = unmapColumns('items', r);
+        // Generate title highlight
+        let titleHighlight = r.title || '';
+        const titleIdx = titleHighlight.toLowerCase().indexOf(lowerSearch);
+        if (titleIdx >= 0) {
+          titleHighlight = titleHighlight.substring(0, titleIdx) +
+            '<b>' + titleHighlight.substring(titleIdx, titleIdx + searchText.length) + '</b>' +
+            titleHighlight.substring(titleIdx + searchText.length);
+        }
+        // Generate content highlight
+        let contentHighlight = '';
+        const content = r.content || r.searchContent || '';
+        const contentIdx = content.toLowerCase().indexOf(lowerSearch);
+        if (contentIdx >= 0) {
+          const start = Math.max(0, contentIdx - 40);
+          const end = Math.min(content.length, contentIdx + searchText.length + 40);
+          const snippet = (start > 0 ? '...' : '') +
+            content.substring(start, contentIdx) +
+            '<b>' + content.substring(contentIdx, contentIdx + searchText.length) + '</b>' +
+            content.substring(contentIdx + searchText.length, end) +
+            (end < content.length ? '...' : '');
+          contentHighlight = snippet;
+        }
+        return {
+          ...base,
+          rank: 1,
+          title_highlight: titleHighlight,
+          content_highlight: contentHighlight,
+          item_tags: tagMap[r.id] || [],
+        };
+      });
 
       return res.json({ data: unmapped });
     }
