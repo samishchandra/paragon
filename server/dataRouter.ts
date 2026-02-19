@@ -84,12 +84,31 @@ function mapColumns(table: string, data: any): any {
     },
   };
 
+  // Timestamp columns that need Date conversion per table
+  const dateColumns: Record<string, Set<string>> = {
+    items: new Set(['createdAt', 'updatedAt', 'deletedAt', 'dueDate', 'created_at', 'updated_at', 'deleted_at', 'due_date']),
+    lists: new Set(['createdAt', 'updatedAt', 'created_at', 'updated_at']),
+    tags: new Set([]),
+    item_tags: new Set([]),
+    user_settings: new Set([]),
+    view_sort_preferences: new Set([]),
+  };
+
+  const dateCols = dateColumns[table] || new Set();
   const map = columnMaps[table] || {};
   const mapped: any = {};
   
   for (const [key, value] of Object.entries(data)) {
     const mappedKey = map[key] || key;
-    mapped[mappedKey] = value;
+    // Convert ISO date strings to Date objects for timestamp columns
+    if (value && typeof value === 'string' && (dateCols.has(key) || dateCols.has(mappedKey))) {
+      const d = new Date(value);
+      mapped[mappedKey] = isNaN(d.getTime()) ? value : d;
+    } else if (value === null && (dateCols.has(key) || dateCols.has(mappedKey))) {
+      mapped[mappedKey] = null;
+    } else {
+      mapped[mappedKey] = value;
+    }
   }
   
   return mapped;

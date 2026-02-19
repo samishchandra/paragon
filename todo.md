@@ -68,3 +68,6 @@
 - [x] Register Service Worker in the app
 - [x] Handle SW updates and cache versioning
 - [x] Test offline mode end-to-end
+
+## Bug Fixes (Round 2)
+- [x] Fix: value.toISOString is not a function in offline queue flush
