@@ -91,6 +91,12 @@ function createQueryBuilder(table: string) {
       queryParams.order = { column, ascending: options?.ascending ?? true };
       return builder;
     },
+    range: (from: number, to: number) => {
+      queryParams.range = { from, to };
+      queryParams.limit = to - from + 1;
+      queryParams.offset = from;
+      return builder;
+    },
     limit: (count: number) => {
       queryParams.limit = count;
       return builder;

@@ -32,3 +32,6 @@
 - [x] Write vitest tests for backend routes (28 tests, all passing)
 - [x] Test and fix issues
 - [x] Save checkpoint and deliver
+
+## Bug Fixes
+- [x] Fix: query.order(...).range is not a function in supabaseClient shim

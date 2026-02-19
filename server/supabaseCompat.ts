@@ -172,7 +172,7 @@ router.post('/', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Database not available' });
   }
 
-  const { action, table: tableName, data, filters, select, order, limit: limitVal, single, maybeSingle } = req.body;
+  const { action, table: tableName, data, filters, select, order, limit: limitVal, offset: offsetVal, range, single, maybeSingle } = req.body;
 
   const tableRef = tableMap[tableName];
   if (!tableRef) {
@@ -268,8 +268,20 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
+    if (offsetVal) {
+      query = query.offset(offsetVal) as any;
+    }
+
     if (limitVal) {
       query = query.limit(limitVal) as any;
+    }
+
+    // Get total count for pagination when select includes 'count'
+    let totalCount: number | undefined;
+    if (select && select.includes('count')) {
+      const countQuery = db.select({ count: sql<number>`count(*)` }).from(tableRef).where(and(...conditions));
+      const countResult = await countQuery;
+      totalCount = Number(countResult[0]?.count ?? 0);
     }
 
     let rows = await query;
@@ -302,7 +314,7 @@ router.post('/', async (req: Request, res: Response) => {
     if (maybeSingle) {
       return res.json({ data: unmappedRows[0] || null });
     }
-    return res.json({ data: unmappedRows });
+    return res.json({ data: unmappedRows, count: totalCount });
   } catch (error: any) {
     console.error('[SupabaseCompat] Error:', error);
     return res.status(500).json({ error: error.message });
