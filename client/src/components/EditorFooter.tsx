@@ -162,7 +162,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
     switch (saveStatus) {
       case 'saving':
         return (
-          <span className="flex items-center gap-1.5 text-blue-500 animate-in fade-in duration-200">
+          <span className="flex items-center gap-1.5 text-emerald-500 animate-in fade-in duration-200">
             <Loader2 className="w-3 h-3 animate-spin" />
             <span>Saving...</span>
           </span>
@@ -253,7 +253,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="flex items-center gap-1.5 text-blue-500/80 cursor-default animate-in fade-in duration-200">
+                <span className="flex items-center gap-1.5 text-emerald-500/80 cursor-default animate-in fade-in duration-200">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span className="text-[10px]">Backing up</span>
                 </span>

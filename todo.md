@@ -138,3 +138,23 @@
 - [x] Test: autoBackup triggers on item changes when connected
 - [x] Test: disconnect clears the folder handle and state
 - [x] Run all tests and verify they pass — 418 tests across 15 files, all passing
+
+## Google Drive Backup Integration
+- [ ] Explore Google Drive MCP tools and understand the API
+- [ ] Design Google Drive backup architecture
+- [ ] Implement backend endpoints for Google Drive backup (create folder, write files, delete files)
+- [ ] Update Settings Backup UI to support both local folder and Google Drive options
+- [ ] Wire up frontend to backend Google Drive backup flow
+- [ ] Write vitest tests for Google Drive backup
+- [ ] End-to-end test Google Drive backup
+
+## Green Theme Update (Work Instance)
+- [x] Audit current theme colors, favicon, PWA manifest, and accent usage
+- [x] Generate new green-themed favicon and PWA icons (uploaded to CDN)
+- [x] Update CSS theme variables and accent colors from blue to green
+- [x] Update all hardcoded blue Tailwind classes to emerald/green equivalents
+- [x] Update PWA manifest theme color and meta tags
+- [x] Update favicon, PWA icons, OG image, splash screen, sidebar logos to green versions
+- [x] Remove stale Supabase preconnect from index.html
+- [x] Test the green theme visually — all UI elements confirmed green
+- [x] Run all 418 tests — all passing after theme changes

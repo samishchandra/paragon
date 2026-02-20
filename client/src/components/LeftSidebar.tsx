@@ -350,7 +350,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
           onClick={() => setFilter({ type: 'all' })}
           title="Go to All Items"
         >
-          <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/ifoOkUsgGUQLWdog.png" alt="Momentum" className="w-7 h-7" />
+          <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/KHHydNOzBeFQwwce.png" alt="Momentum" className="w-7 h-7" />
           <span className="font-medium text-sidebar-foreground leading-7">Momentum</span>
         </button>
         <div className="flex items-center gap-0.5">
@@ -755,7 +755,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               className="h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={() => dispatch({ type: 'TOGGLE_LEFT_PANEL' })}
             >
-              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/ifoOkUsgGUQLWdog.png" alt="Momentum" className="h-4 w-4" />
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/KHHydNOzBeFQwwce.png" alt="Momentum" className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"

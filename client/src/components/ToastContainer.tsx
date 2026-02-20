@@ -33,7 +33,7 @@ export function ToastContainer() {
               "pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border min-w-[280px] max-w-[400px]",
               toast.type === 'success' && "bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-100",
               toast.type === 'error' && "bg-red-50 border-red-200 text-red-900 dark:bg-red-950 dark:border-red-800 dark:text-red-100",
-              toast.type === 'info' && "bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-100",
+              toast.type === 'info' && "bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-100",
               toast.type === 'warning' && "bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-100"
             )}
           >
@@ -42,7 +42,7 @@ export function ToastContainer() {
               "shrink-0 w-5 h-5 rounded-full flex items-center justify-center",
               toast.type === 'success' && "bg-emerald-500",
               toast.type === 'error' && "bg-red-500",
-              toast.type === 'info' && "bg-blue-500",
+              toast.type === 'info' && "bg-emerald-500",
               toast.type === 'warning' && "bg-amber-500"
             )}>
               {toast.type === 'success' && <Check className="w-3 h-3 text-white" />}
@@ -70,7 +70,7 @@ export function ToastContainer() {
                   "px-3 py-1.5 text-sm font-semibold rounded-md transition-colors",
                   toast.type === 'success' && "bg-emerald-100 hover:bg-emerald-200 text-emerald-700 dark:bg-emerald-900 dark:hover:bg-emerald-800 dark:text-emerald-300",
                   toast.type === 'error' && "bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900 dark:hover:bg-red-800 dark:text-red-300",
-                  toast.type === 'info' && "bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900 dark:hover:bg-blue-800 dark:text-blue-300",
+                  toast.type === 'info' && "bg-emerald-100 hover:bg-emerald-200 text-emerald-700 dark:bg-emerald-900 dark:hover:bg-emerald-800 dark:text-emerald-300",
                   toast.type === 'warning' && "bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900 dark:hover:bg-amber-800 dark:text-amber-300"
                 )}
               >

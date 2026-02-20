@@ -272,7 +272,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             </div>
             </ScrollArea>
             <div className="px-5 py-3 border-t border-border/50 shrink-0 flex items-center gap-2">
-              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/ifoOkUsgGUQLWdog.png" alt="" className="w-4 h-4" />
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/KHHydNOzBeFQwwce.png" alt="" className="w-4 h-4" />
               <p className="text-xs text-muted-foreground">Momentum Notes</p>
             </div>
           </nav>
