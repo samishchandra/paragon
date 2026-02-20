@@ -440,11 +440,11 @@ export default function Home() {
           </header>
         )}
 
-        <div className="flex-1 overflow-hidden safe-area-tab-offset relative">
+        <div className="flex-1 overflow-hidden relative">
           {/* Use CSS visibility to keep SearchPanel mounted (preserving state) while hiding it */}
           <div
             className={cn(
-              "h-full absolute inset-0 transition-opacity duration-100",
+              "absolute inset-0 mobile-tab-bottom-offset transition-opacity duration-100",
               mobileView === 'search' ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
             )}
           >
@@ -464,7 +464,7 @@ export default function Home() {
               Use CSS visibility/opacity to show/hide panels instead of AnimatePresence mount/unmount. */}
           <div
             className={cn(
-              "h-full absolute inset-0 transition-opacity duration-100",
+              "absolute inset-0 mobile-tab-bottom-offset transition-opacity duration-100",
               mobileView === 'sidebar' ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
             )}
           >
@@ -472,7 +472,7 @@ export default function Home() {
           </div>
           <div
             className={cn(
-              "h-full absolute inset-0 transition-opacity duration-100",
+              "absolute inset-0 mobile-tab-bottom-offset transition-opacity duration-100",
               mobileView === 'list' ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
             )}
           >
@@ -482,7 +482,7 @@ export default function Home() {
           </div>
           <div
             className={cn(
-              "h-full absolute inset-0 transition-opacity duration-100",
+              "absolute inset-0 mobile-tab-bottom-offset transition-opacity duration-100",
               mobileView === 'editor' ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
             )}
           >

@@ -288,9 +288,14 @@
   padding-bottom: calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
 
+/* Bottom offset for absolutely-positioned mobile panels to clear the fixed tab bar */
+.mobile-tab-bottom-offset {
+  bottom: calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)));
+}
+
 /* Sidebar footer: extra bottom padding on mobile to clear the bottom nav bar */
 .sidebar-footer-mobile {
-  padding-bottom: calc(4.5rem + max(0.5rem, env(safe-area-inset-bottom)));
+  padding-bottom: 0.75rem;
 }
 @media (min-width: 768px) {
   .sidebar-footer-mobile {

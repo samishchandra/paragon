@@ -324,3 +324,48 @@ describe('settings import safeguard', () => {
     expect(content).not.toContain('Export as Folders (ZIP)');
   });
 });
+
+// ─── Mobile Tab Bar Bottom Offset Safeguard ─────────────────────────
+
+describe('mobile tab bar bottom offset safeguard', () => {
+  it('index.css defines mobile-tab-bottom-offset class with bottom offset', () => {
+    const cssPath = resolve(
+      PROJECT_ROOT,
+      'client/src/index.css'
+    );
+    const content = readFileSync(cssPath, 'utf-8');
+
+    // The class must exist and set a bottom offset to clear the fixed tab bar
+    expect(content).toContain('.mobile-tab-bottom-offset');
+    // Must use bottom: calc(...) to offset from the tab bar
+    const classBlock = content.match(/\.mobile-tab-bottom-offset\s*\{[^}]*\}/);
+    expect(classBlock).toBeTruthy();
+    expect(classBlock![0]).toMatch(/bottom\s*:\s*calc/);
+  });
+
+  it('Home.tsx mobile panel wrappers use mobile-tab-bottom-offset', () => {
+    const homePath = resolve(
+      PROJECT_ROOT,
+      'client/src/pages/Home.tsx'
+    );
+    const content = readFileSync(homePath, 'utf-8');
+
+    // All four mobile panel wrappers (search, sidebar, list, editor) should use the offset class
+    const matches = content.match(/mobile-tab-bottom-offset/g) || [];
+    expect(matches.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('Home.tsx mobile panel wrappers do NOT use h-full (height managed by absolute positioning)', () => {
+    const homePath = resolve(
+      PROJECT_ROOT,
+      'client/src/pages/Home.tsx'
+    );
+    const content = readFileSync(homePath, 'utf-8');
+
+    // The panel wrappers should not have h-full alongside mobile-tab-bottom-offset
+    // because absolute positioning with inset-0 + bottom offset handles height
+    const panelWrapperPattern = /mobile-tab-bottom-offset[^"]*h-full|h-full[^"]*mobile-tab-bottom-offset/g;
+    const badMatches = content.match(panelWrapperPattern) || [];
+    expect(badMatches.length).toBe(0);
+  });
+});

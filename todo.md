@@ -163,3 +163,6 @@
 - [x] Fix: Loading/splash icon — added border-radius:16px to splash CSS, regenerated all icons with clean rounded corners (no gray border artifacts), uploaded to CDN
 - [x] Fix: Sidebar "All Items" sparkle icon — changed accentColor from text-[#1F80E5] to text-emerald-500
 - [x] Fix: Tab bar bottom border — verified border-b-2 border-b-primary is present on selected tab (renders green via --primary CSS variable)
+
+## Mobile Layout Fix
+- [x] Add bottom padding to right panel (editor) to account for mobile bottom tab bar and safe area — replaced safe-area-tab-offset padding with mobile-tab-bottom-offset absolute bottom offset on all four mobile panel wrappers
