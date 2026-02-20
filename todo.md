@@ -182,3 +182,6 @@
 ## Upstream Commits Round 3
 - [x] Add SF Pro font option to editor settings (commit 237c22a)
 - [x] Fix: restore active tab bottom accent border using inset box-shadow instead of border-b (commit f7d9705)
+
+## Sidebar Font
+- [x] Use system-default font stack for sidebar items instead of Inter — changed --font-sans to system font stack (SF Pro on Mac, Segoe UI on Windows)
