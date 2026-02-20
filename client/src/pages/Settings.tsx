@@ -184,7 +184,7 @@ export function SettingsEditor() {
   const { userId, setEditorPreferences } = useMomentum();
   const { userSettings, updateSettings } = useUserSettings(userId);
 
-  const currentFontFamily = userSettings?.editor_font_family || 'inter';
+  const currentFontFamily = userSettings?.editor_font_family || 'system';
   const currentFontSize = userSettings?.editor_font_size?.toString() || '15';
   const currentLineHeight = userSettings?.editor_line_height || 'normal';
 

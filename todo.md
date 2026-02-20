@@ -185,3 +185,6 @@
 
 ## Sidebar Font
 - [x] Use system-default font stack for sidebar items instead of Inter — changed --font-sans to system font stack (SF Pro on Mac, Segoe UI on Windows)
+
+## Default Editor Font
+- [x] Change default editor font from 'inter' to 'system' for new users — updated EditorV2.tsx and Settings.tsx defaults

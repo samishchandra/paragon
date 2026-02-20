@@ -61,7 +61,7 @@ export const EditorV2 = memo(function EditorV2({ editorType = 'paragon', onToggl
   // Compute CSS variables for editor font (2px smaller on mobile)
   const LINE_HEIGHT_MAP: Record<string, string> = { compact: '1.4', normal: '1.6', relaxed: '1.9' };
   const editorFontStyle = useMemo(() => {
-    const fontConfig = getFontConfig(editorPreferences?.fontFamily || 'inter');
+    const fontConfig = getFontConfig(editorPreferences?.fontFamily || 'system');
     const baseFontSize = editorPreferences?.fontSize || 15;
     const fontSize = isMobileEditor ? Math.max(baseFontSize - 2, 10) : baseFontSize;
     const lineHeight = LINE_HEIGHT_MAP[editorPreferences?.lineHeight || 'normal'] || '1.6';
