@@ -394,6 +394,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                   count={sidebarCounts?.tasks ?? todoCounts.total}
                   isActive={isActiveFilter({ type: 'tasks' })}
                   onClick={() => setFilter({ type: 'tasks' })}
+                  accentColor="text-blue-500"
                 />
               )}
               {tasksEnabled && (
@@ -403,6 +404,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                   count={sidebarCounts?.notes ?? state.items.filter((i) => i.type === 'note' && !i.deletedAt).length}
                   isActive={isActiveFilter({ type: 'notes' })}
                   onClick={() => setFilter({ type: 'notes' })}
+                  accentColor="text-orange-400"
                 />
               )}
               {(sidebarCounts?.todo ?? 0) > 0 && (

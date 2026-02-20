@@ -188,3 +188,6 @@
 
 ## Default Editor Font
 - [x] Change default editor font from 'inter' to 'system' for new users — updated EditorV2.tsx and Settings.tsx defaults
+
+## Sidebar Icon Colors
+- [x] Make Notes and Tasks icons colored in the sidebar panel — Tasks=blue-500, Notes=orange-400
