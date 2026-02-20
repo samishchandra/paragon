@@ -175,3 +175,6 @@
 - [x] Enhance serverSearch.ts debouncedSearch to show instant local results from IndexedDB (commit 80640af)
 - [x] Enhance useDataFetching.ts filter-change to load from IndexedDB instead of showing empty state (commit 80640af)
 - [x] Enhance useSidebarData.ts to compute counts locally from IndexedDB on mount/offline (commit 80640af)
+
+## System Default Font Option
+- [x] Add "System Default" font option in Settings that uses OS system font stack (SF Pro on Mac, Segoe UI on Windows, etc.)

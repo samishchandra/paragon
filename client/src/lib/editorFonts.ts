@@ -12,7 +12,7 @@ export interface FontConfig {
 
 const FONT_MAP: Record<string, FontConfig> = {
   system: {
-    family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    family: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     googleFontsUrl: null,
   },
   inter: {
