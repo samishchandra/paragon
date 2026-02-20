@@ -158,3 +158,8 @@
 - [x] Remove stale Supabase preconnect from index.html
 - [x] Test the green theme visually — all UI elements confirmed green
 - [x] Run all 418 tests — all passing after theme changes
+
+## Bug Fixes (Green Theme Round 2)
+- [x] Fix: Loading/splash icon — added border-radius:16px to splash CSS, regenerated all icons with clean rounded corners (no gray border artifacts), uploaded to CDN
+- [x] Fix: Sidebar "All Items" sparkle icon — changed accentColor from text-[#1F80E5] to text-emerald-500
+- [x] Fix: Tab bar bottom border — verified border-b-2 border-b-primary is present on selected tab (renders green via --primary CSS variable)
