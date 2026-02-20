@@ -164,6 +164,7 @@ const FONT_FAMILIES = [
   { value: 'nunito', label: 'Nunito' },
   { value: 'open-sans', label: 'Open Sans' },
   { value: 'roboto', label: 'Roboto' },
+  { value: 'sf-pro', label: 'SF Pro' },
 ];
 
 const FONT_SIZES = [

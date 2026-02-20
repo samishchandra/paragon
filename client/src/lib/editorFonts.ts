@@ -59,6 +59,10 @@ const FONT_MAP: Record<string, FontConfig> = {
     family: '"Roboto", sans-serif',
     googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap',
   },
+  'sf-pro': {
+    family: '"SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif',
+    googleFontsUrl: 'https://fonts.cdnfonts.com/css/sf-pro-display',
+  },
 };
 
 /** Get font config for a given key. Falls back to system. */

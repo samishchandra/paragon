@@ -178,3 +178,7 @@
 
 ## System Default Font Option
 - [x] Add "System Default" font option in Settings that uses OS system font stack (SF Pro on Mac, Segoe UI on Windows, etc.)
+
+## Upstream Commits Round 3
+- [x] Add SF Pro font option to editor settings (commit 237c22a)
+- [x] Fix: restore active tab bottom accent border using inset box-shadow instead of border-b (commit f7d9705)

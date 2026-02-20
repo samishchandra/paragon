@@ -401,13 +401,14 @@ export function EditorTabs({ onSelectItem }: EditorTabsProps) {
                   onDragEnd={handleDragEnd}
                   onClick={() => onSelectItem(tab.id)}
                   className={cn(
-                    "group flex items-center gap-1.5 pl-3 pr-1.5 py-2 min-w-[120px] max-w-[200px] cursor-grab active:cursor-grabbing border-r border-border/30 transition-all shrink-0",
+                    "group relative flex items-center gap-1.5 pl-3 pr-1.5 py-2 min-w-[120px] max-w-[200px] cursor-grab active:cursor-grabbing border-r border-border/30 transition-all shrink-0",
                     isSelected 
-                      ? "bg-background border-b-2 border-b-primary" 
+                      ? "bg-background" 
                       : "hover:bg-muted/50",
                     isDragging && "opacity-50",
                     isDragOver && "bg-primary/10 border-l-2 border-l-primary"
                   )}
+                  style={isSelected ? { boxShadow: 'inset 0 -2px 0 0 var(--color-primary)' } : undefined}
                 >
                   {/* Item type icon */}
                   {tab.type === 'task' ? (
