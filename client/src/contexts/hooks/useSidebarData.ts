@@ -6,10 +6,14 @@
  *
  * The hook owns the state and the refreshCounts function. The provider calls
  * refreshCounts after every mutation and during catch-up sync.
+ *
+ * On mount, sidebar counts are computed locally from IndexedDB first (instant),
+ * then refined with server data in the background.
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Item } from '@/types';
 import { fetchAllSidebarData, fetchPinnedItems } from '@/lib/queries';
+import { computeSidebarCountsLocally } from '@/lib/offlineStore';
 
 // Sidebar counts shape (matches the context value type)
 export type SidebarCounts = {
@@ -46,6 +50,7 @@ export function useSidebarData(userId: string): UseSidebarDataReturn {
   const [sidebarListCounts, setSidebarListCounts] = useState<Record<string, number> | null>(null);
   const [pinnedItems, setPinnedItems] = useState<Item[]>([]);
   const [recentItemsData, setRecentItemsData] = useState<Item[]>([]);
+  const localCountsLoadedRef = useRef(false);
 
   const refreshCounts = useCallback(async () => {
     try {
@@ -60,6 +65,30 @@ export function useSidebarData(userId: string): UseSidebarDataReturn {
     } catch (error) {
       console.error('Failed to refresh counts:', error);
     }
+  }, [userId]);
+
+  // Load local counts from IndexedDB immediately on mount (instant, no server needed)
+  useEffect(() => {
+    if (localCountsLoadedRef.current) return;
+    localCountsLoadedRef.current = true;
+
+    computeSidebarCountsLocally(userId).then(({ counts, tagCounts, listCounts }) => {
+      // Only set if we don't already have server data
+      setSidebarCounts(prev => {
+        if (prev !== null) return prev; // Server already responded
+        return counts as SidebarCounts;
+      });
+      setSidebarTagCounts(prev => {
+        if (prev !== null) return prev;
+        return tagCounts;
+      });
+      setSidebarListCounts(prev => {
+        if (prev !== null) return prev;
+        return listCounts;
+      });
+    }).catch(() => {
+      // IndexedDB not available, will wait for server
+    });
   }, [userId]);
 
   // Deferred initial load — sidebar counts are visible but not blocking main content

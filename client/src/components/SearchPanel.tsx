@@ -231,7 +231,7 @@ export const SearchPanel = forwardRef<SearchPanelRef, SearchPanelProps>(({
 
     debouncedSearch(trimmed, (newState) => {
       setSearchState(newState);
-    }, 200, searchFilters);
+    }, 200, searchFilters, userId);
 
     return () => {
       cancelSearch();
@@ -1259,6 +1259,11 @@ export const SearchPanel = forwardRef<SearchPanelRef, SearchPanelProps>(({
               </div>
             )}
           </>
+        )}
+
+        {/* Bottom spacer for mobile tab bar + safe area */}
+        {mode === 'fullscreen' && (
+          <div className="shrink-0 md:hidden" style={{ height: 'calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)))' }} />
         )}
       </div>
     </div>

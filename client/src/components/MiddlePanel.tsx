@@ -2270,6 +2270,8 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
           >
             <div className="p-3 space-y-4">
               {renderSections()}
+              {/* Bottom spacer for mobile tab bar + safe area */}
+              <div className="shrink-0 md:hidden" style={{ height: 'calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)))' }} />
             </div>
 
           <DragOverlay>

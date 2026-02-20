@@ -366,6 +366,130 @@ export async function replaceAllCachedData(data: {
   }
 }
 
+// ---- Local Search ----
+
+/**
+ * Search items locally from IndexedDB by matching query against title and content.
+ * Used for instant search results while server search is loading.
+ */
+export async function searchItemsLocally(
+  query: string,
+  userId: string,
+  maxResults = 20
+): Promise<any[]> {
+  try {
+    const allItems = await getCachedItems();
+    const lowerQuery = query.toLowerCase();
+    const results: any[] = [];
+
+    for (const item of allItems) {
+      // Skip items from other users
+      if (String(item.user_id) !== String(userId)) continue;
+      // Skip deleted items
+      if (item.deleted_at) continue;
+
+      const titleMatch = (item.title || '').toLowerCase().includes(lowerQuery);
+      const contentMatch = (item.content || '').toLowerCase().includes(lowerQuery);
+
+      if (titleMatch || contentMatch) {
+        results.push(item);
+        if (results.length >= maxResults) break;
+      }
+    }
+
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+// ---- Local Sidebar Counts ----
+
+/**
+ * Compute sidebar counts locally from IndexedDB items.
+ * Used for instant sidebar counts on mount and when offline.
+ */
+export async function computeSidebarCountsLocally(userId: string): Promise<{
+  counts: Record<string, number>;
+  tagCounts: Record<string, number>;
+  listCounts: Record<string, number>;
+}> {
+  const [allItems, allTags] = await Promise.all([
+    getCachedItems(),
+    getCachedTags(),
+  ]);
+
+  let all = 0, tasks = 0, notes = 0, pinned = 0, completed = 0, trash = 0, miscellaneous = 0, todo = 0;
+  const tagCounts: Record<string, number> = {};
+  const listCounts: Record<string, number> = {};
+
+  // Initialize tag counts to 0
+  const userTags = allTags.filter((t: any) => String(t.user_id) === String(userId));
+  for (const tag of userTags) {
+    tagCounts[tag.id] = 0;
+  }
+
+  // Get item_tags for tag counting
+  let itemTagMap: Record<string, string[]> = {};
+  try {
+    const allItemTags = await getCachedItemTags();
+    for (const it of allItemTags) {
+      const itemId = it.item_id;
+      if (!itemTagMap[itemId]) itemTagMap[itemId] = [];
+      itemTagMap[itemId].push(it.tag_id);
+    }
+  } catch {
+    // If item_tags aren't cached, skip tag counting
+  }
+
+  for (const item of allItems) {
+    // Skip items from other users
+    if (String(item.user_id) !== String(userId)) continue;
+
+    if (item.deleted_at) {
+      trash++;
+      continue;
+    }
+
+    const isTask = item.type === 'task';
+    const isCompleted = isTask && item.is_completed;
+
+    if (isCompleted) {
+      completed++;
+    } else {
+      all++;
+      if (isTask) tasks++;
+      if (item.type === 'note') notes++;
+      if (item.is_pinned) pinned++;
+      if (!item.list_id) miscellaneous++;
+    }
+
+    // Count tags
+    const itemTags = itemTagMap[item.id] || [];
+    for (const tagId of itemTags) {
+      tagCounts[tagId] = (tagCounts[tagId] || 0) + 1;
+    }
+
+    // Count lists
+    if (item.list_id && !isCompleted) {
+      listCounts[item.list_id] = (listCounts[item.list_id] || 0) + 1;
+    }
+  }
+
+  return {
+    counts: { all, tasks, notes, pinned, completed, trash, miscellaneous, todo },
+    tagCounts,
+    listCounts,
+  };
+}
+
+// ---- Pre-warm ----
+
+/** Pre-warm the IndexedDB connection (call early in app lifecycle) */
+export function preWarm(): void {
+  openDB().catch(() => {});
+}
+
 /**
  * Clear all offline data (used on logout).
  */

@@ -166,3 +166,12 @@
 
 ## Mobile Layout Fix
 - [x] Add bottom padding to right panel (editor) to account for mobile bottom tab bar and safe area — replaced safe-area-tab-offset padding with mobile-tab-bottom-offset absolute bottom offset on all four mobile panel wrappers
+
+## Upstream Commits from momentum/master (Feb 20)
+- [x] Add internal bottom spacer divs to EditorV2 (empty + item-selected states) for mobile tab bar (commit 56a516a)
+- [x] Add internal bottom spacer divs to MiddlePanel and SearchPanel for mobile tab bar (commit 0ac99c2)
+- [x] Add searchItemsLocally() to offlineStore.ts for instant local search (commit 80640af)
+- [x] Add computeSidebarCountsLocally() to offlineStore.ts for offline sidebar counts (commit 80640af)
+- [x] Enhance serverSearch.ts debouncedSearch to show instant local results from IndexedDB (commit 80640af)
+- [x] Enhance useDataFetching.ts filter-change to load from IndexedDB instead of showing empty state (commit 80640af)
+- [x] Enhance useSidebarData.ts to compute counts locally from IndexedDB on mount/offline (commit 80640af)

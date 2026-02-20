@@ -10,6 +10,7 @@
  */
 
 import { apiRpc, apiQuery, apiSelectItemTags } from './apiClient';
+import { searchItemsLocally } from './offlineStore';
 
 // --- Types ---
 
@@ -183,7 +184,8 @@ export function debouncedSearch(
   query: string,
   onUpdate: (state: SearchState) => void,
   debounceMs = 200,
-  filters?: SearchFilters
+  filters?: SearchFilters,
+  userId?: string
 ): void {
   // Clear any pending debounce
   if (debounceTimer) {
@@ -218,7 +220,37 @@ export function debouncedSearch(
 
   // Show loading state (with cached results if available)
   if (!cached) {
-    onUpdate({ results: [], isLoading: true, query: trimmed, fromCache: false, error: null });
+    // Instant local search from IndexedDB — show results immediately while server loads
+    if (userId) {
+      onUpdate({ results: [], isLoading: true, query: trimmed, fromCache: false, error: null });
+      searchItemsLocally(trimmed, userId, 20).then(localItems => {
+        if (localItems.length > 0) {
+          // Convert raw IndexedDB items to ServerSearchResult[] for display
+          const localResults: ServerSearchResult[] = localItems.map(item => ({
+            id: item.id,
+            type: item.type as 'task' | 'note',
+            title: item.title,
+            content: item.content || '',
+            isPinned: item.is_pinned,
+            isCompleted: item.is_completed || false,
+            dueDate: item.due_date || null,
+            listId: item.list_id || null,
+            section: item.section || '',
+            sortOrder: item.sort_order || 0,
+            deletedAt: item.deleted_at || null,
+            createdAt: item.created_at,
+            updatedAt: item.updated_at,
+            rank: 0,
+            titleHighlight: item.title,
+            contentHighlight: (item.content || '').substring(0, 200),
+          }));
+          // Only show local results if server hasn't responded yet
+          onUpdate({ results: localResults, isLoading: true, query: trimmed, fromCache: true, error: null });
+        }
+      }).catch(() => {});
+    } else {
+      onUpdate({ results: [], isLoading: true, query: trimmed, fromCache: false, error: null });
+    }
   }
 
   // Debounce the actual server request

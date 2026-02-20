@@ -584,6 +584,9 @@ export const EditorV2 = memo(function EditorV2({ editorType = 'paragon', onToggl
           content=""
           className="shrink-0"
         />
+
+        {/* Bottom spacer for mobile tab bar + safe area */}
+        <div className="shrink-0 md:hidden" style={{ height: 'calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)))' }} />
       </div>
     );
   }
@@ -691,6 +694,9 @@ export const EditorV2 = memo(function EditorV2({ editorType = 'paragon', onToggl
         itemId={selectedItem.id}
         listName={selectedItem.listId ? state.lists.find(l => l.id === selectedItem.listId)?.name : undefined}
       />
+
+      {/* Bottom spacer for mobile tab bar + safe area */}
+      <div className="shrink-0 md:hidden" style={{ height: 'calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)))' }} />
 
       {/* Create Tag Modal */}
       <CreateTagModal

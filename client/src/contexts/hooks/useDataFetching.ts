@@ -190,6 +190,8 @@ export function useDataFetching(deps: DataFetchingDeps) {
   }, [activeFilter, sortOrder, sortDirection, searchQuery, selectedItemId, getFilterCacheKey]);
 
   // ── Filter-change cache restore ────────────────────────────────────────
+  // On filter change, immediately serve from in-memory cache or IndexedDB cache
+  // instead of showing an empty state (which causes a flash).
   useEffect(() => {
     const newKey = getFilterCacheKey(activeFilter);
     const oldKey = prevActiveFilterRef.current;
@@ -203,9 +205,32 @@ export function useDataFetching(deps: DataFetchingDeps) {
           payload: { items: cached.items, total: cached.total, hasMore: cached.hasMore },
         });
       } else {
-        dispatch({
-          type: 'SET_ITEMS',
-          payload: { items: [], total: 0, hasMore: false },
+        // Instead of showing empty [], try to load from IndexedDB cache
+        getCachedItems().then(cachedItems => {
+          if (cachedItems.length > 0) {
+            // Filter cached items by user and convert to app format
+            const userItems = cachedItems
+              .filter((item: any) => String(item.user_id) === String(userId))
+              .filter((item: any) => !item.deleted_at)
+              .map(dbRowToItem);
+            if (userItems.length > 0) {
+              dispatch({
+                type: 'SET_ITEMS',
+                payload: { items: userItems, total: userItems.length, hasMore: false },
+              });
+              return;
+            }
+          }
+          // Fallback to empty if IndexedDB also has nothing
+          dispatch({
+            type: 'SET_ITEMS',
+            payload: { items: [], total: 0, hasMore: false },
+          });
+        }).catch(() => {
+          dispatch({
+            type: 'SET_ITEMS',
+            payload: { items: [], total: 0, hasMore: false },
+          });
         });
       }
     }
