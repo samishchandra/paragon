@@ -779,8 +779,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               className={cn(
                 "h-8 w-8",
                 isActiveFilter({ type: 'all' })
-                  ? SIDEBAR_FILTER_ACTIVE
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-emerald-500 bg-emerald-500/10"
+                  : "text-emerald-500/60 hover:text-emerald-500"
               )}
               onClick={() => setFilter({ type: 'all' })}
               title="All Items"
@@ -794,8 +794,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                 className={cn(
                   "h-8 w-8",
                   isActiveFilter({ type: 'tasks' })
-                    ? SIDEBAR_FILTER_ACTIVE
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-blue-500 bg-blue-500/10"
+                    : "text-blue-500/60 hover:text-blue-500"
                 )}
                 onClick={() => setFilter({ type: 'tasks' })}
                 title="Tasks"
@@ -810,8 +810,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                 className={cn(
                   "h-8 w-8",
                   isActiveFilter({ type: 'notes' })
-                    ? SIDEBAR_FILTER_ACTIVE
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-orange-400 bg-orange-400/10"
+                    : "text-orange-400/60 hover:text-orange-400"
                 )}
                 onClick={() => setFilter({ type: 'notes' })}
                 title="Notes"
@@ -827,7 +827,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                   "h-8 w-8",
                   isActiveFilter({ type: 'todo' })
                     ? "text-amber-400 bg-amber-400/10"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-amber-400/60 hover:text-amber-400"
                 )}
                 onClick={() => setFilter({ type: 'todo' })}
                 title="Todo"
@@ -842,7 +842,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                 "h-8 w-8",
                 isActiveFilter({ type: 'miscellaneous' })
                   ? "text-violet-400 bg-violet-400/10"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-violet-400/60 hover:text-violet-400"
               )}
               onClick={() => setFilter({ type: 'miscellaneous' })}
               title="Miscellaneous"
@@ -857,7 +857,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                   "h-8 w-8",
                   isActiveFilter({ type: 'completed' })
                     ? "text-emerald-400 bg-emerald-400/10"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-emerald-400/60 hover:text-emerald-400"
                 )}
                 onClick={() => setFilter({ type: 'completed' })}
                 title="Completed"
@@ -872,7 +872,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                 "h-8 w-8",
                 isActiveFilter({ type: 'trash' })
                   ? "text-red-400 bg-red-400/10"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-red-400/60 hover:text-red-400"
               )}
               onClick={() => setFilter({ type: 'trash' })}
               title="Deleted"

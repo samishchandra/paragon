@@ -191,3 +191,6 @@
 
 ## Sidebar Icon Colors
 - [x] Make Notes and Tasks icons colored in the sidebar panel — Tasks=blue-500, Notes=orange-400
+
+## Mobile Bottom Tab Bar Colors
+- [x] Color mobile bottom tab bar icons to match sidebar accent colors (All Items=emerald, Tasks=blue, Notes=orange, Todo=amber, Miscellaneous=violet, Completed=emerald, Deleted=red)
