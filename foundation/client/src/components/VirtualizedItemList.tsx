@@ -410,6 +410,7 @@ function InnerList({
   return (
     <List
       listRef={listRef}
+      className="subtle-scrollbar"
       style={{ height, width }}
       rowCount={items.length}
       rowHeight={rowHeight}
