@@ -153,7 +153,7 @@ function Row({
     <div style={style}>
       <div
         className={cn(
-          "group relative py-3 pr-3 pl-3 rounded-lg transition-colors duration-150 cursor-pointer select-none border-b border-border/40",
+          "group relative py-3 pr-3 pl-3 transition-colors duration-150 cursor-pointer select-none border-b border-border/30",
           isSelected
             ? ITEM_SELECTED
             : 'bg-transparent ' + ITEM_HOVER,

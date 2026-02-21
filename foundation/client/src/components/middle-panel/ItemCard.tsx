@@ -234,7 +234,7 @@ export const ItemCard = memo(function ItemCard({
   };
 
   return (
-    <div className="relative rounded-lg overflow-hidden border-b border-border/40">
+    <div className="relative overflow-hidden border-b border-border/30">
       {/* Swipe action buttons (revealed on swipe left - mobile only) */}
       {swipeOffset > 0 && (
         <div 
@@ -319,7 +319,7 @@ export const ItemCard = memo(function ItemCard({
                         setIsSwipeRevealed(false);
                         setShowMobileMenu(false);
                       }}>
-                        <Clock className="w-4 h-4 mr-2 text-primary" />
+                        <Clock className="w-4 h-4 mr-2 text-sky-500" />
                         Later
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => {
@@ -380,7 +380,7 @@ export const ItemCard = memo(function ItemCard({
           transition: swipeOffset === 0 || swipeOffset === 160 ? 'transform 0.2s ease-out' : 'none',
         }}
         className={cn(
-          'group relative py-3 pr-3 pl-3 rounded-lg transition-colors duration-150 cursor-pointer select-none bg-background',
+          'group relative py-3 pr-3 pl-3 transition-colors duration-150 cursor-pointer select-none bg-background',
           isSelected
             ? ITEM_SELECTED
             : 'bg-transparent ' + ITEM_HOVER,
@@ -548,7 +548,7 @@ export const ItemCard = memo(function ItemCard({
                               Do
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onMove?.('later')}>
-                              <Clock className="w-4 h-4 mr-2 text-primary" />
+                              <Clock className="w-4 h-4 mr-2 text-sky-500" />
                               Later
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onMove?.('completed')}>
