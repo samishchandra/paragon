@@ -423,6 +423,7 @@ interface GenerateResult {
 
 export async function generateTestData(options: GenerateOptions): Promise<GenerateResult> {
   const { taskCount = 20, noteCount = 15, clearExisting, userId, onProgress } = options;
+  console.log('[TestDataGenerator:v3] Starting test data generation...');
   if (!userId) throw new Error('userId is required to generate test data');
 
   // Step 1: Clear existing data if requested

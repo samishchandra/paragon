@@ -1128,7 +1128,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
       const sections = [
         // Pinned section removed from Tasks view - pinned items show in All Items view only
         { id: 'now' as DisplaySectionType, title: 'Now', items: sortItems(organizedItems.now || []), color: 'text-rose-500', icon: <Zap className="w-4 h-4" /> },
-        { id: 'do' as DisplaySectionType, title: 'Do', items: sortItems(organizedItems.do || []), color: 'text-primary', icon: <ListTodo className="w-4 h-4" /> },
+        { id: 'do' as DisplaySectionType, title: 'Do', items: sortItems(organizedItems.do || []), color: 'text-sky-500', icon: <ListTodo className="w-4 h-4" /> },
         { id: 'later' as DisplaySectionType, title: 'Later', items: sortItems(organizedItems.later || []), color: 'text-violet-500', icon: <Timer className="w-4 h-4" /> },
         // Completed section removed - completed items are shown in Completed view
       ];
@@ -1931,7 +1931,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     const sections = [
       { id: 'pinned' as const, title: 'Pinned', items: sortItems(organizedItems.pinned || []), color: 'text-primary', icon: <Pin className="w-4 h-4" /> },
       { id: 'now' as const, title: 'Now', items: sortItems(nowSectionItems), color: 'text-rose-500', icon: <Zap className="w-4 h-4" /> },
-      { id: 'do' as const, title: 'Do', items: sortItems(doSectionItems), color: 'text-primary', icon: <ListTodo className="w-4 h-4" /> },
+      { id: 'do' as const, title: 'Do', items: sortItems(doSectionItems), color: 'text-sky-500', icon: <ListTodo className="w-4 h-4" /> },
       { id: 'later' as const, title: 'Later', items: sortItems(laterSectionItems), color: 'text-violet-500', icon: <Timer className="w-4 h-4" /> },
       { id: 'completed' as const, title: 'Completed', items: sortItems(organizedItems.completed || []), color: 'text-emerald-500', icon: <CheckCheck className="w-4 h-4" /> },
     ];
@@ -2176,7 +2176,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                   className="h-8 w-8"
                   title={availableSortOptions.find(o => o.value === state.sortOrder)?.label || SORT_OPTIONS.find(o => o.value === state.sortOrder)?.label}
                 >
-                  <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+                  <ArrowUpDown className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">

@@ -346,6 +346,8 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
     async insert<T = any>(table: string, data: any | any[]): Promise<MutationResult<T>> {
     try {
       const resolvedTable = resolveTable(table);
+      // v3: bulletproof keyPath handling with DOMStringList support
+      console.debug(`[BrowserDB:v3] insert into '${resolvedTable}', ${Array.isArray(data) ? data.length : 1} record(s)`);
       const store = await this.getStore(table, 'readwrite');
       const items = Array.isArray(data) ? data : [data];
 
