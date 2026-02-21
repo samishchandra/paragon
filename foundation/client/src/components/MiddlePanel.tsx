@@ -2103,6 +2103,33 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
   
   const viewInfo = getViewInfo();
 
+  // Check if the current view should use virtualization.
+  // When virtualized, we render VirtualizedItemList directly in the flex-1 container
+  // (outside ScrollArea) so AutoSizer can measure the parent's height correctly.
+  const getVirtualizedListProps = (): { items: Item[]; hideListPill: boolean } | null => {
+    if (state.sortOrder === 'custom') return null;
+    const filtered = getFilteredItems();
+    
+    if (isAllItemsView) {
+      const allItems = sortItems(filtered);
+      if (allItems.length > VIRTUALIZATION_THRESHOLD) return { items: allItems, hideListPill: false };
+    }
+    if (isNotesView) {
+      const allNotes = sortItems(organizedItems.all || []);
+      if (allNotes.length > VIRTUALIZATION_THRESHOLD) return { items: allNotes, hideListPill: isNoteListView };
+    }
+    if (isTagView) {
+      const allTagItems = sortItems(filtered);
+      if (allTagItems.length > VIRTUALIZATION_THRESHOLD) return { items: allTagItems, hideListPill: false };
+    }
+    if (isListView && currentList) {
+      const allListItems = sortItems(filtered);
+      if (allListItems.length > VIRTUALIZATION_THRESHOLD) return { items: allListItems, hideListPill: true };
+    }
+    return null;
+  };
+  const virtualizedProps = getVirtualizedListProps();
+
   return (
     <div
       className="h-full flex flex-col bg-[#F9FAFB] dark:bg-zinc-900 border-r border-border/50 relative"
@@ -2254,35 +2281,82 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
       <div 
         className="flex-1 overflow-hidden relative"
       >
-        <ScrollArea 
-          className="h-full custom-scrollbar" 
-          ref={scrollViewportRef}
-        >
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
+        {virtualizedProps ? (
+          /* Virtualized path: render directly (not inside ScrollArea)
+             so AutoSizer can measure the parent's height correctly */
+          <VirtualizedItemList
+            items={virtualizedProps.items}
+            selectedItemId={state.selectedItemId}
+            tags={state.tags}
+            lists={state.lists}
+            searchQuery={state.searchQuery}
+            onSelect={handleItemSelect}
+            onComplete={(id) => {
+              const item = state.items.find(i => i.id === id);
+              if (item && item.type === 'task') completeTask(id);
+            }}
+            onUncomplete={(id) => {
+              const item = state.items.find(i => i.id === id);
+              if (item && item.type === 'task') uncompleteTask(id);
+            }}
+            onDelete={(id) => softDeleteItem(id)}
+            onMove={(id, section) => {
+              const item = state.items.find(i => i.id === id);
+              if (item && item.type === 'note' && section === 'completed') return;
+              if (item) updateItem({ ...item, section } as Item);
+            }}
+            onPin={(id) => togglePin(id)}
+            onMoveToTop={(id) => {
+              const item = state.items.find(i => i.id === id);
+              if (item) {
+                const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
+                const otherItems = sectionItems.filter(i => i.id !== item.id);
+                const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
+                updateItem({ ...item, order: newOrder });
+              }
+            }}
+            onDuplicate={(id) => duplicateItem(id)}
+            onDateChange={(id, date) => {
+              const item = state.items.find(i => i.id === id);
+              if (item && item.type === 'task') {
+                updateItem({ ...item, dueDate: date } as Item);
+              }
+            }}
+            hideListPill={virtualizedProps.hideListPill}
+            className="h-full"
+          />
+        ) : (
+          /* Non-virtualized path: use ScrollArea with DndContext for drag-and-drop */
+          <ScrollArea 
+            className="h-full custom-scrollbar" 
+            ref={scrollViewportRef}
           >
-            <div className="p-3 space-y-4">
-              {renderSections()}
-              {/* Bottom spacer for mobile tab bar + safe area */}
-              <div className="shrink-0 md:hidden" style={{ height: 'calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)))' }} />
-            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="p-3 space-y-4">
+                {renderSections()}
+                {/* Bottom spacer for mobile tab bar + safe area */}
+                <div className="shrink-0 md:hidden" style={{ height: 'calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)))' }} />
+              </div>
 
-          <DragOverlay>
-            {activeItem && (
-              <ItemCard
-                item={activeItem}
-                isSelected={false}
-                isDragging
-                tags={state.tags}
-              />
-            )}
-          </DragOverlay>
-        </DndContext>
-      </ScrollArea>
+            <DragOverlay>
+              {activeItem && (
+                <ItemCard
+                  item={activeItem}
+                  isSelected={false}
+                  isDragging
+                  tags={state.tags}
+                />
+              )}
+            </DragOverlay>
+          </DndContext>
+        </ScrollArea>
+        )}
       </div>
     </div>
   );
