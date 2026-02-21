@@ -23,6 +23,8 @@ export interface TagPillOptions {
   HTMLAttributes: Record<string, unknown>;
   /** Callback when a tag pill is clicked */
   onTagClick?: (tag: string) => void;
+  /** Enable auto-detection of #hashtag patterns via input rules and paste handling (default: true) */
+  enableAutoDetect?: boolean;
 }
 
 declare module '@tiptap/core' {
@@ -61,6 +63,7 @@ export const TagPill = Node.create<TagPillOptions>({
     return {
       HTMLAttributes: {},
       onTagClick: undefined,
+      enableAutoDetect: true,
     };
   },
 
@@ -71,6 +74,7 @@ export const TagPill = Node.create<TagPillOptions>({
         parseHTML: (element) => element.getAttribute('data-tag'),
         renderHTML: (attributes) => ({ 'data-tag': attributes.tag }),
       },
+
     };
   },
 
@@ -95,7 +99,9 @@ export const TagPill = Node.create<TagPillOptions>({
   addNodeView() {
     return ReactNodeViewRenderer(TagPillComponent, {
       stopEvent: ({ event }) => {
-        if (event.type === 'click' || event.type === 'mousedown') {
+        // Allow all events to be handled by the React component
+        // This enables click, double-click, and keyboard events for editing
+        if (event.type === 'click' || event.type === 'mousedown' || event.type === 'dblclick' || event.type === 'keydown' || event.type === 'keyup' || event.type === 'input' || event.type === 'focus' || event.type === 'blur') {
           return true;
         }
         return false;
@@ -119,6 +125,9 @@ export const TagPill = Node.create<TagPillOptions>({
   },
 
   addInputRules() {
+    // When auto-detect is disabled, don't add input rules
+    if (!this.options.enableAutoDetect) return [];
+    
     // Match #tagname followed by a space
     // Tag must contain at least one letter (not purely numeric)
     // Negative lookbehind for word characters to avoid matching mid-word
@@ -143,6 +152,9 @@ export const TagPill = Node.create<TagPillOptions>({
   },
 
   addProseMirrorPlugins() {
+    // When auto-detect is disabled, don't add paste handling plugin
+    if (!this.options.enableAutoDetect) return [];
+    
     const tagPillType = this.type;
 
     return [

@@ -501,6 +501,13 @@ export interface MarkdownEditorProps {
   /** Enable progressive Cmd+A / Ctrl+A selection that expands to parent nodes instead of immediately selecting all (default: false) */
   progressiveSelectAll?: boolean;
   
+  // === AUTO-DETECTION FEATURE TOGGLES ===
+  
+  /** Enable auto-detection of #hashtag patterns and conversion to tag pills (default: true) */
+  enableTagAutoDetect?: boolean;
+  /** Enable auto-detection and highlighting of hex color values like #FF0000 (default: true) */
+  enableHexColorHighlight?: boolean;
+  
   // === ERROR BOUNDARY ===
   
   /** Callback when the editor crashes — useful for external error reporting */
@@ -601,6 +608,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   autoReorderChecklist = false,
   // Expand selection
   progressiveSelectAll = false,
+  // Auto-detection toggles
+  enableTagAutoDetect = true,
+  enableHexColorHighlight = true,
   // Error boundary
   onEditorError,
   // AI writing assistant
@@ -843,12 +853,15 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }
 
     // Add TagPill if not disabled
+    // When enableTagAutoDetect is false, the extension is still added (for rendering existing pills)
+    // but input rules and paste handling are disabled
     if (!disabledFeatures.tagPills) {
       baseExtensions.push(
         TagPill.configure({
           HTMLAttributes: {
             class: 'tag-pill',
           },
+          enableAutoDetect: enableTagAutoDetect,
         })
       );
     }
@@ -874,7 +887,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }
 
     // Add HexColorMark for auto-detecting hex color values and rendering with background color
-    baseExtensions.push(HexColorMark);
+    if (enableHexColorHighlight) {
+      baseExtensions.push(HexColorMark);
+    }
 
     // Conditionally add markdown paste
     if (!disabledFeatures.markdownPaste) {
@@ -1184,16 +1199,18 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         return match; // Not a valid date, leave as-is
       });
       
-      // Convert #tagname markdown format back to tag pill HTML
+      // Convert #tagname markdown format back to tag pill HTML (only when auto-detect is enabled)
       // Must be done before marked.parse() to prevent marked from treating # as heading
       // Match #tag preceded by start-of-line or whitespace, tag must contain at least one letter
-      processedMarkdown = processedMarkdown.replace(/(?:^|(?<=\s))#([a-zA-Z][a-zA-Z0-9_-]*|[a-zA-Z0-9_-]*[a-zA-Z][a-zA-Z0-9_-]*)(?=\s|$|[.,;:!?)\]])/gm, (match, tag) => {
-        const normalized = normalizeTag(tag);
-        if (isValidTag(normalized)) {
-          return `<span data-type="tag-pill" data-tag="${normalized}" class="tag-pill"><span class="tag-icon">#</span><span class="tag-text">${normalized}</span></span>`;
-        }
-        return match;
-      });
+      if (enableTagAutoDetect && !disabledFeatures.tagPills) {
+        processedMarkdown = processedMarkdown.replace(/(?:^|(?<=\s))#([a-zA-Z][a-zA-Z0-9_-]*|[a-zA-Z0-9_-]*[a-zA-Z][a-zA-Z0-9_-]*)(?=\s|$|[.,;:!?)\]])/gm, (match, tag) => {
+          const normalized = normalizeTag(tag);
+          if (isValidTag(normalized)) {
+            return `<span data-type="tag-pill" data-tag="${normalized}" class="tag-pill"><span class="tag-icon">#</span><span class="tag-text">${normalized}</span></span>`;
+          }
+          return match;
+        });
+      }
 
       // Convert [[wiki links]] back to wiki link HTML spans
       // Split by code fences and inline code to avoid converting links inside code
