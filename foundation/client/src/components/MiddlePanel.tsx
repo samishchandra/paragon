@@ -1021,7 +1021,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
       if (useVirtualization) {
         // Use virtualized list for large datasets (100+ items)
         return (
-          <div className="h-[calc(100vh-200px)]">
             <VirtualizedItemList
               items={allNotes}
               selectedItemId={state.selectedItemId}
@@ -1048,9 +1047,15 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                 }
               }}
               onDuplicate={(id) => duplicateItem(id)}
+              onDateChange={(id, date) => {
+                const item = state.items.find(i => i.id === id);
+                if (item && item.type === 'task') {
+                  updateItem({ ...item, dueDate: date } as Item);
+                }
+              }}
               hideListPill={isListView}
+              className="-mx-3 -mb-4"
             />
-          </div>
         );
       }
 
@@ -1334,7 +1339,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
       if (useVirtualization) {
         // Use virtualized list for large datasets (100+ items)
         return (
-          <div className="h-[calc(100vh-200px)]">
             <VirtualizedItemList
               items={completedItems}
               selectedItemId={state.selectedItemId}
@@ -1366,9 +1370,15 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                 }
               }}
               onDuplicate={(id) => duplicateItem(id)}
+              onDateChange={(id, date) => {
+                const item = state.items.find(i => i.id === id);
+                if (item && item.type === 'task') {
+                  updateItem({ ...item, dueDate: date } as Item);
+                }
+              }}
               hideListPill={isListView}
+              className="-mx-3 -mb-4"
             />
-          </div>
         );
       }
       
@@ -1453,7 +1463,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
       
       if (useVirtualization) {
         return (
-          <div className="h-[calc(100vh-200px)]">
             <VirtualizedItemList
               items={allItems}
               selectedItemId={state.selectedItemId}
@@ -1480,9 +1489,15 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                 }
               }}
               onDuplicate={(id) => duplicateItem(id)}
+              onDateChange={(id, date) => {
+                const item = state.items.find(i => i.id === id);
+                if (item && item.type === 'task') {
+                  updateItem({ ...item, dueDate: date } as Item);
+                }
+              }}
               hideListPill={false}
+              className="-mx-3 -mb-4"
             />
-          </div>
         );
       }
 
@@ -1667,7 +1682,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
       
       if (useVirtualization) {
         return (
-          <div className="h-[calc(100vh-200px)]">
             <VirtualizedItemList
               items={allTagItems}
               selectedItemId={state.selectedItemId}
@@ -1694,9 +1708,15 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                 }
               }}
               onDuplicate={(id) => duplicateItem(id)}
+              onDateChange={(id, date) => {
+                const item = state.items.find(i => i.id === id);
+                if (item && item.type === 'task') {
+                  updateItem({ ...item, dueDate: date } as Item);
+                }
+              }}
               hideListPill={false}
+              className="-mx-3 -mb-4"
             />
-          </div>
         );
       }
       
@@ -1784,7 +1804,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
       
       if (useVirtualization) {
         return (
-          <div className="h-[calc(100vh-200px)]">
             <VirtualizedItemList
               items={allNoteListItems}
               selectedItemId={state.selectedItemId}
@@ -1811,9 +1830,15 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                 }
               }}
                onDuplicate={(id) => duplicateItem(id)}
+              onDateChange={(id, date) => {
+                const item = state.items.find(i => i.id === id);
+                if (item && item.type === 'task') {
+                  updateItem({ ...item, dueDate: date } as Item);
+                }
+              }}
               hideListPill={true}
+              className="-mx-3 -mb-4"
             />
-          </div>
         );
       }
 

@@ -66,6 +66,7 @@ interface VirtualizedItemListProps {
   onPin: (id: string) => void;
   onMoveToTop: (id: string) => void;
   onDuplicate: (id: string) => void;
+  onDateChange?: (id: string, date: string | null) => void;
   hideListPill?: boolean;
   className?: string;
   // Infinite scroll props
@@ -89,6 +90,7 @@ interface RowProps {
   onPin: (id: string) => void;
   onMoveToTop: (id: string) => void;
   onDuplicate: (id: string) => void;
+  onDateChange?: (id: string, date: string | null) => void;
   hideListPill?: boolean;
 }
 
@@ -121,6 +123,7 @@ function Row({
   onPin,
   onMoveToTop,
   onDuplicate,
+  onDateChange,
   hideListPill,
 }: RowComponentProps & RowProps): ReactElement | null {
   const item = items[index];
@@ -147,7 +150,7 @@ function Row({
   // The inner content renders naturally — useDynamicRowHeight's ResizeObserver
   // will measure the actual height and update the list accordingly.
   return (
-    <div style={style} className="px-1">
+    <div style={style}>
       <div
         className={cn(
           "group relative py-3 pr-3 pl-3 rounded-lg transition-colors duration-150 cursor-pointer select-none border-b border-border/40",
@@ -315,7 +318,7 @@ function Row({
                 {dueDate && (
                   <DatePill
                     dueDate={dueDate}
-                    onDateChange={() => {}}
+                    onDateChange={(newDate) => onDateChange?.(item.id, newDate ? newDate.toISOString() : null)}
                     size="sm"
                     showPlaceholder={false}
                   />
@@ -369,6 +372,7 @@ function InnerList({
   onPin,
   onMoveToTop,
   onDuplicate,
+  onDateChange,
   hideListPill,
   listRef,
   rowHeight,
@@ -396,6 +400,7 @@ function InnerList({
     onPin,
     onMoveToTop,
     onDuplicate,
+    onDateChange,
     hideListPill,
   };
 
@@ -436,6 +441,7 @@ export function VirtualizedItemList({
   onPin,
   onMoveToTop,
   onDuplicate,
+  onDateChange,
   hideListPill,
   className,
   hasMore = false,
@@ -506,6 +512,7 @@ export function VirtualizedItemList({
               onPin={onPin}
               onMoveToTop={onMoveToTop}
               onDuplicate={onDuplicate}
+              onDateChange={onDateChange}
               hideListPill={hideListPill}
               listRef={listRef}
               rowHeight={rowHeight}
