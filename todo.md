@@ -203,3 +203,6 @@
 
 ## Adapter Registry Fix
 - [x] Fix: configureAdapters() not called — created ManusDatabaseAdapter (REST wrapper), manusConfig.ts (adapter setup with green theme), and called initializeManusAdapters() in main.tsx before React renders
+
+## Publish Build Error Fix
+- [x] Fix: Production build verified — `pnpm build` succeeds locally (3195 modules, all chunks generated). Previous publish error was from stale state before adapter/import fixes.
