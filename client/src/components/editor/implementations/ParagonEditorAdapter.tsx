@@ -25,7 +25,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useCallback, useEffect,
 import { useTheme } from '@/contexts/ThemeContext';
 import { marked } from 'marked';
 import { MarkdownEditor, type MarkdownEditorRef, parseDateFromMarkdown, getDateVariant, isValidTag, normalizeTag } from '@samishkolli/paragon';
-import type { EditorRef, EditorProps, FormatAction, TextLevel } from '../types';
+import type { EditorRef, EditorProps, FormatAction, TextLevel } from '@/components/editor/types';
 import { uploadImage, resolveImageSrc as resolveS3ImageSrc } from '@/lib/imageUpload';
 import { toast } from '@/lib/toast';
 import { DEFAULT_AI_ACTIONS } from '@/lib/ai/types';

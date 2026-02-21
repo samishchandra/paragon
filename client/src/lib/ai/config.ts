@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { AIProviderConfig, AIProviderType } from './types';
+import type { AIProviderConfig, AIProviderType } from '@/lib/ai/types';
 import { apiQuery } from '../apiClient';
 
 // ─── Constants ───────────────────────────────────────────────────────────────

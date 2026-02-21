@@ -34,7 +34,7 @@ import {
   getLastSyncTimestamp,
   replaceAllCachedData,
   clearAllCachedData,
-} from './offlineStore';
+} from '@/lib/offlineStore';
 
 import { apiQuery, apiSelectTags, apiSelectLists, apiSelectViewSortPrefs } from './apiClient';
 

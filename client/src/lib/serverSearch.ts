@@ -10,7 +10,7 @@
  */
 
 import { apiRpc, apiQuery, apiSelectItemTags } from './apiClient';
-import { searchItemsLocally } from './offlineStore';
+import { searchItemsLocally } from '@/lib/offlineStore';
 
 // --- Types ---
 
