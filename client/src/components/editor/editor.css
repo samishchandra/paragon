@@ -481,6 +481,18 @@
     color: var(--muted-foreground);
   }
   
+  /* Force inline formatting elements to inherit muted color in checked task items */
+  ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+  ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+  ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+  ul[data-type="taskList"] li[data-checked="true"] > div > p a,
+  ul[data-type="taskList"] li[data-checked="true"] > div > p mark,
+  ul[data-type="taskList"] li[data-checked="true"] > div > p s,
+  ul[data-type="taskList"] li[data-checked="true"] > div > p u,
+  ul[data-type="taskList"] li[data-checked="true"] > div > p span {
+    color: inherit !important;
+  }
+  
   /* Muted color for direct text nodes in the div (for items without p tags) */
   ul[data-type="taskList"] li[data-checked="true"] > div {
     color: var(--muted-foreground);
@@ -529,11 +541,33 @@
     color: var(--foreground);
   }
   
+  /* Reset inline formatting color for nested unchecked task items */
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p strong,
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p em,
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p code,
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p a,
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p mark,
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p s {
+    color: var(--foreground) !important;
+  }
+  
   /* Nested checked items get muted color */
   ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p,
   ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p {
     text-decoration: none !important;
     color: var(--muted-foreground) !important;
+  }
+  
+  /* Force inline formatting to inherit muted color in nested checked items */
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+  ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p a,
+  ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+  ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+  ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+  ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p a {
+    color: inherit !important;
   }
   
   /* Remove extra margin from p tags inside task list items */
@@ -663,6 +697,18 @@
   li.task-item[data-checked="true"] > div > p {
     text-decoration: none;
     color: var(--muted-foreground);
+  }
+
+  /* Force inline formatting elements to inherit muted color in checked mixed-list task items */
+  li.task-item[data-checked="true"] > div > p strong,
+  li.task-item[data-checked="true"] > div > p em,
+  li.task-item[data-checked="true"] > div > p code,
+  li.task-item[data-checked="true"] > div > p a,
+  li.task-item[data-checked="true"] > div > p mark,
+  li.task-item[data-checked="true"] > div > p s,
+  li.task-item[data-checked="true"] > div > p u,
+  li.task-item[data-checked="true"] > div > p span {
+    color: inherit !important;
   }
 
   li.task-item[data-checked="true"] > div {
@@ -3351,6 +3397,26 @@ pre.with-line-numbers code .line::before {
   color: var(--muted-foreground) !important;
 }
 
+/* Force inline formatting to inherit muted color in .tiptap-editor nested checked items */
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p a,
+.tiptap-editor ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+.tiptap-editor ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+.tiptap-editor ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+.tiptap-editor ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p a {
+  color: inherit !important;
+}
+
+/* Reset inline formatting color for .tiptap-editor nested unchecked task items */
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p strong,
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p em,
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p code,
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p a {
+  color: var(--foreground) !important;
+}
+
 
 /* ============================================
    LIGHT THEME COMPREHENSIVE FIXES
@@ -3461,6 +3527,18 @@ pre.with-line-numbers code .line::before {
   text-decoration: none;
 }
 
+/* Force inline formatting to inherit muted color in light theme checked task items */
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div > p a,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div > p mark,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div > p s,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div > p u,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div > p span {
+  color: inherit !important;
+}
+
 [data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] > div {
   color: #9a9a9a;
 }
@@ -3481,6 +3559,26 @@ pre.with-line-numbers code .line::before {
 [data-theme="light"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p {
   text-decoration: none !important;
   color: #9a9a9a !important;
+}
+
+/* Force inline formatting to inherit muted color in light theme nested checked items */
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p a,
+[data-theme="light"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+[data-theme="light"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+[data-theme="light"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+[data-theme="light"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p a {
+  color: inherit !important;
+}
+
+/* Reset inline formatting color for light theme nested unchecked task items */
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p strong,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p em,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p code,
+[data-theme="light"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p a {
+  color: var(--foreground) !important;
 }
 
 /* Light theme task item checkbox (mixed lists - target by class) */
@@ -4191,6 +4289,18 @@ pre.with-line-numbers code .line::before {
   text-decoration: none;
 }
 
+/* Force inline formatting to inherit muted color in dark theme checked task items */
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div > p a,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div > p mark,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div > p s,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div > p u,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div > p span {
+  color: inherit !important;
+}
+
 [data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] > div {
   color: var(--muted-foreground);
 }
@@ -4209,6 +4319,26 @@ pre.with-line-numbers code .line::before {
 [data-theme="dark"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p {
   text-decoration: none !important;
   color: var(--muted-foreground) !important;
+}
+
+/* Force inline formatting to inherit muted color in dark theme nested checked items */
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li[data-checked="true"] > div > p a,
+[data-theme="dark"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p strong,
+[data-theme="dark"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p em,
+[data-theme="dark"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p code,
+[data-theme="dark"] ul[data-type="taskList"] li ul[data-type="taskList"] li[data-checked="true"] > div > p a {
+  color: inherit !important;
+}
+
+/* Reset inline formatting color for dark theme nested unchecked task items */
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p strong,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p em,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p code,
+[data-theme="dark"] ul[data-type="taskList"] li[data-checked="true"] ul[data-type="taskList"] li:not([data-checked="true"]) > div > p a {
+  color: var(--foreground) !important;
 }
 
 /* Dark theme task item checkbox (mixed lists) */
