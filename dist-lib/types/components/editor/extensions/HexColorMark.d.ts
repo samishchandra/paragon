@@ -6,6 +6,11 @@ import { Mark } from '@tiptap/core';
  *
  * This is a decoration-only extension — it doesn't modify the document
  * structure, just visually highlights hex colors inline.
+ *
+ * PERFORMANCE: Uses incremental decoration mapping. On each transaction,
+ * only the changed ranges are re-scanned. Unchanged decorations are mapped
+ * through the transaction's mapping to their new positions. This avoids
+ * O(n) full-document traversal on every keystroke.
  */
 /** Regex to match hex color values: #RGB, #RRGGBB, or #RRGGBBAA */
 export declare const HEX_COLOR_REGEX: RegExp;
