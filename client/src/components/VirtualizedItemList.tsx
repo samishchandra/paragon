@@ -17,7 +17,7 @@
  * `de()` stabilizer + `ue()` memo comparator handle row-level memoization.
  */
 
-import { useEffect, useCallback, useRef, ReactElement, ReactNode } from 'react';
+import { useEffect, useCallback, useRef, ReactElement, ReactNode, KeyboardEvent } from 'react';
 import { List, useListRef, useDynamicRowHeight } from 'react-window';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { Item, SectionType, Task, Tag } from '@/types';
@@ -265,6 +265,32 @@ export function VirtualizedItemList({
     handleScroll(target.scrollTop, target.scrollHeight, target.clientHeight);
   }, [handleScroll]);
 
+  // Keyboard arrow-key navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    if (items.length === 0) return;
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const currentIndex = selectedItemId
+        ? items.findIndex(i => i.id === selectedItemId)
+        : -1;
+
+      let nextIndex: number;
+      if (e.key === 'ArrowDown') {
+        nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : currentIndex;
+      } else {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+      }
+
+      if (nextIndex !== currentIndex || currentIndex === -1) {
+        const nextItem = items[nextIndex];
+        if (nextItem) {
+          onSelect(nextItem.id);
+        }
+      }
+    }
+  }, [items, selectedItemId, onSelect]);
+
   // Build rowProps object — react-window v2's internal `de()` stabilizer
   // uses useMemo with Object.values() as deps, so it only creates a new
   // reference when actual values change (not just object identity).
@@ -304,7 +330,12 @@ export function VirtualizedItemList({
   }
 
   return (
-    <div className={cn("h-full flex flex-col", className)}>
+    <div
+      className={cn("h-full flex flex-col", className)}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      style={{ outline: 'none' }}
+    >
       <div className="flex-1 min-h-0">
         {/* 
          * IMPORTANT: Use renderProp instead of ChildComponent to avoid remounting.

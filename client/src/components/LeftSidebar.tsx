@@ -149,8 +149,10 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
         const item = state.items.find(i => i.id === itemId);
         if (item) {
           // Add tag to item if not already present
-          if (!item.tags.includes(tagId)) {
-            const tag = state.tags.find(t => t.id === tagId);
+          const tag = state.tags.find(t => t.id === tagId);
+          if (item.tags.includes(tagId)) {
+            toast.info(`Already tagged with "${tag?.name || 'tag'}"`);
+          } else {
             const previousTags = [...item.tags];
             updateItem({
               ...item,
