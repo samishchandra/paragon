@@ -598,7 +598,7 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
       if (item.is_pinned) pinned++;
       if (item.is_completed) completed++;
       if (!item.list_id) miscellaneous++;
-      if (item.type === 'task' && !item.is_completed) todo++;
+      if (item.type === 'task' && !item.is_completed && item.section !== 'completed') todo++;
 
       // List counts
       if (item.list_id) {
