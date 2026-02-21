@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { registerServiceWorker } from "@/lib/serviceWorker";
+import { initializeManusAdapters } from "./adapters/manusConfig";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
@@ -8,6 +9,9 @@ import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
+
+// Configure foundation adapter registry before any React rendering
+initializeManusAdapters();
 
 const queryClient = new QueryClient();
 

@@ -200,3 +200,6 @@
 - [x] Update vitest.config.ts with foundation resolve plugin for @/ imports
 - [x] Update cssAndEditorSafeguards.test.ts with resolveProjectFile() helper for foundation fallback
 - [x] All 421 tests passing after foundation submodule integration
+
+## Adapter Registry Fix
+- [x] Fix: configureAdapters() not called — created ManusDatabaseAdapter (REST wrapper), manusConfig.ts (adapter setup with green theme), and called initializeManusAdapters() in main.tsx before React renders
