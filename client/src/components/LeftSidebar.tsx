@@ -29,6 +29,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useMomentum } from "@/contexts/ServerMomentumContext";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { getThemeConfig } from '@/adapters/registry';
 import { UserAvatar } from '@/components/UserAvatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -61,7 +62,7 @@ import { linkifyTitle, getTitlePlainText, extractFirstLineLink, renderFirstLineL
 import { useLocation } from 'wouter';
 import { FilterType, Item, Tag, List } from '@/types';
 import { EditListDialog } from '@/components/EditListDialog';
-import { motion, AnimatePresence } from 'motion/react';
+// motion/react removed — using CSS transitions for chevron rotation and collapsible sections
 import { toast } from '@/lib/toast';
 import {
   SIDEBAR_NAV_SELECTED,
@@ -149,10 +150,25 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
         if (item) {
           // Add tag to item if not already present
           if (!item.tags.includes(tagId)) {
+            const tag = state.tags.find(t => t.id === tagId);
+            const previousTags = [...item.tags];
             updateItem({
               ...item,
               tags: [...item.tags, tagId],
               updatedAt: new Date().toISOString(),
+            });
+            toast.success(`Tagged with "${tag?.name || 'tag'}"`, {
+              action: {
+                label: 'Undo',
+                onClick: () => {
+                  updateItem({
+                    ...item,
+                    tags: previousTags,
+                    updatedAt: new Date().toISOString(),
+                  });
+                  toast.success('Tag removed');
+                },
+              },
             });
           }
         }
@@ -342,7 +358,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
 
   // Mobile-friendly full width sidebar
   const sidebarContent = (
-    <div className="h-full bg-sidebar flex flex-col overflow-hidden contain-layout">
+    <div className="h-full bg-sidebar flex flex-col overflow-hidden">
       {/* Header - hidden on mobile as we have the mobile header */}
       <div className="p-4 border-b border-sidebar-border/50 items-center justify-between hidden md:flex">
         <button
@@ -350,7 +366,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
           onClick={() => setFilter({ type: 'all' })}
           title="Go to All Items"
         >
-          <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/NZmQsfhbCmKNvHui.png" alt="Momentum" className="w-7 h-7" />
+          <img src={getThemeConfig().appIconSmallUrl || getThemeConfig().appIconUrl} alt={getThemeConfig().appName} className="w-7 h-7" />
           <span className="font-medium text-sidebar-foreground leading-7">Momentum</span>
         </button>
         <div className="flex items-center gap-0.5">
@@ -374,7 +390,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
         </div>
       </div>
 
-      <ScrollArea className="flex-1 custom-scrollbar">
+      <ScrollArea className="flex-1 min-h-0 overflow-hidden custom-scrollbar">
         <div className="p-3 space-y-4">
           {/* Views Section - No header, items aligned with chevrons */}
           <div>
@@ -394,7 +410,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                   count={sidebarCounts?.tasks ?? todoCounts.total}
                   isActive={isActiveFilter({ type: 'tasks' })}
                   onClick={() => setFilter({ type: 'tasks' })}
-                  accentColor="text-primary"
+                  accentColor="text-blue-500"
                 />
               )}
               {tasksEnabled && (
@@ -459,28 +475,22 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               >
                 <Pin className="w-4 h-4" />
                 <span className="text-left">Pinned</span>
-                <motion.div
-                  animate={{ rotate: pinnedExpanded ? 90 : 0 }}
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                <div
                   className={cn(
-                    "w-4 h-4 flex items-center justify-center shrink-0 transition-opacity duration-200",
-                    pinnedExpanded ? "opacity-0 group-hover:opacity-60" : "opacity-100"
+                    "w-4 h-4 flex items-center justify-center shrink-0 transition-all duration-200 ease-in-out",
+                    pinnedExpanded ? "rotate-90 opacity-0 group-hover:opacity-60" : "rotate-0 opacity-100"
                   )}
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
-                </motion.div>
+                </div>
                 <span className="flex-1" />
                 <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground/70">{pinnedItems.length}</span>
               </button>
-              <AnimatePresence>
-                {pinnedExpanded && (
-                  <motion.nav
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: "easeInOut" }}
-                    className="space-y-1 overflow-hidden"
-                  >
+              <div
+                className="grid transition-all duration-250 ease-in-out overflow-hidden"
+                style={{ gridTemplateRows: pinnedExpanded ? '1fr' : '0fr', opacity: pinnedExpanded ? 1 : 0 }}
+              >
+                <nav className="space-y-1 min-h-0 overflow-hidden">
                     {pinnedItems.slice(0, 10).map((item) => (
                       <PinnedItem
                         key={item.id}
@@ -497,9 +507,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                         +{pinnedItems.length - 10} more items
                       </button>
                     )}
-                  </motion.nav>
-                )}
-              </AnimatePresence>
+                </nav>
+              </div>
             </div>
           )}
 
@@ -512,27 +521,21 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               >
                 <Clock className="w-4 h-4" />
                 <span className="text-left">Recent</span>
-                <motion.div
-                  animate={{ rotate: recentExpanded ? 90 : 0 }}
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                <div
                   className={cn(
-                    "w-4 h-4 flex items-center justify-center shrink-0 transition-opacity duration-200",
-                    recentExpanded ? "opacity-0 group-hover:opacity-60" : "opacity-100"
+                    "w-4 h-4 flex items-center justify-center shrink-0 transition-all duration-200 ease-in-out",
+                    recentExpanded ? "rotate-90 opacity-0 group-hover:opacity-60" : "rotate-0 opacity-100"
                   )}
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
-                </motion.div>
+                </div>
                 <span className="flex-1" />
               </button>
-              <AnimatePresence>
-                {recentExpanded && (
-                  <motion.nav
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: "easeInOut" }}
-                    className="space-y-1 overflow-hidden"
-                  >
+              <div
+                className="grid transition-all duration-250 ease-in-out overflow-hidden"
+                style={{ gridTemplateRows: recentExpanded ? '1fr' : '0fr', opacity: recentExpanded ? 1 : 0 }}
+              >
+                <nav className="space-y-1 min-h-0 overflow-hidden">
                     {recentItems.slice(0, 5).map((item) => (
                       <PinnedItem
                         key={item.id}
@@ -541,9 +544,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                         isSelected={state.selectedItemId === item.id}
                       />
                     ))}
-                  </motion.nav>
-                )}
-              </AnimatePresence>
+                </nav>
+              </div>
             </div>
           )}
 
@@ -558,16 +560,14 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
             >
               <LayoutGrid className="w-4 h-4" />
               <span className="text-left">Lists</span>
-              <motion.div
-                animate={{ rotate: listsExpanded ? 90 : 0 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+              <div
                 className={cn(
-                  "w-4 h-4 flex items-center justify-center shrink-0 transition-opacity duration-200",
-                  listsExpanded ? "opacity-0 group-hover:opacity-60" : "opacity-100"
+                  "w-4 h-4 flex items-center justify-center shrink-0 transition-all duration-200 ease-in-out",
+                  listsExpanded ? "rotate-90 opacity-0 group-hover:opacity-60" : "rotate-0 opacity-100"
                 )}
               >
                 <ChevronRight className="w-3.5 h-3.5" />
-              </motion.div>
+              </div>
               <span className="flex-1" />
               <button
                 onClick={(e) => {
@@ -581,15 +581,11 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               </button>
               <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground/50 min-w-[16px] text-right">{state.lists.length}</span>
             </div>
-            <AnimatePresence>
-              {listsExpanded && (
-                <motion.nav
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
+            <div
+              className="grid transition-all duration-250 ease-in-out overflow-hidden"
+              style={{ gridTemplateRows: listsExpanded ? '1fr' : '0fr', opacity: listsExpanded ? 1 : 0 }}
+            >
+              <nav className="space-y-1 min-h-0 overflow-hidden">
                   {sortedLists.length === 0 ? (
                     <div className="pl-8 pr-2 py-2 text-xs text-muted-foreground/70 italic">
                       No lists yet
@@ -634,9 +630,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                       </DragOverlay>
                     </DndContext>
                   )}
-                </motion.nav>
-              )}
-            </AnimatePresence>
+              </nav>
+            </div>
           </div>
 
           {/* Tags Section */}
@@ -650,16 +645,14 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
             >
               <TagIcon className="w-4 h-4" />
               <span className="text-left">Tags</span>
-              <motion.div
-                animate={{ rotate: tagsExpanded ? 90 : 0 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+              <div
                 className={cn(
-                  "w-4 h-4 flex items-center justify-center shrink-0 transition-opacity duration-200",
-                  tagsExpanded ? "opacity-0 group-hover:opacity-60" : "opacity-100"
+                  "w-4 h-4 flex items-center justify-center shrink-0 transition-all duration-200 ease-in-out",
+                  tagsExpanded ? "rotate-90 opacity-0 group-hover:opacity-60" : "rotate-0 opacity-100"
                 )}
               >
                 <ChevronRight className="w-3.5 h-3.5" />
-              </motion.div>
+              </div>
               <span className="flex-1" />
               <button
                 onClick={(e) => {
@@ -673,15 +666,11 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               </button>
               <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground/50 min-w-[16px] text-right">{state.tags.length}</span>
             </div>
-            <AnimatePresence>
-              {tagsExpanded && (
-                <motion.nav
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
+            <div
+              className="grid transition-all duration-250 ease-in-out overflow-hidden"
+              style={{ gridTemplateRows: tagsExpanded ? '1fr' : '0fr', opacity: tagsExpanded ? 1 : 0 }}
+            >
+              <nav className="space-y-1 min-h-0 overflow-hidden">
                   {state.tags.map((tag) => (
                     <SidebarTagItem
                       key={tag.id}
@@ -699,9 +688,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                       onEdit={() => setEditingTag(tag)}
                     />
                   ))}
-                </motion.nav>
-              )}
-            </AnimatePresence>
+              </nav>
+            </div>
           </div>
         </div>
       </ScrollArea>
@@ -712,7 +700,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
           <UserAvatar size={28} className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.dispatchEvent(new CustomEvent('open-settings', { detail: { section: 'account' } }))} />
           <div className="flex-1 min-w-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.dispatchEvent(new CustomEvent('open-settings', { detail: { section: 'account' } }))} title="Account settings">
             <p className="text-xs font-medium text-foreground truncate leading-tight">
-              {user?.name || user?.email?.split('@')[0] || 'User'}
+              {user?.user_metadata?.full_name || user?.user_metadata?.user_name || user?.email?.split('@')[0] || 'User'}
             </p>
           </div>
           <div className="flex items-center gap-0.5 shrink-0">
@@ -757,7 +745,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               className="h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={() => dispatch({ type: 'TOGGLE_LEFT_PANEL' })}
             >
-              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/NZmQsfhbCmKNvHui.png" alt="Momentum" className="h-4 w-4" />
+              <img src={getThemeConfig().appIconSmallUrl || getThemeConfig().appIconUrl} alt={getThemeConfig().appName} className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
@@ -794,8 +782,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                 className={cn(
                   "h-8 w-8",
                   isActiveFilter({ type: 'tasks' })
-                    ? "text-primary bg-primary/10"
-                    : "text-primary/60 hover:text-primary"
+                    ? "text-blue-500 bg-blue-500/10"
+                    : "text-blue-500/60 hover:text-blue-500"
                 )}
                 onClick={() => setFilter({ type: 'tasks' })}
                 title="Tasks"
