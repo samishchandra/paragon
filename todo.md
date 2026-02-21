@@ -220,3 +220,12 @@
 - [x] Write documentation in README or script header
 - [x] Test the script end-to-end
 - [x] Add SSH URL support (git@github.com:...) as default with HTTPS fallback for private repo access
+
+## Performance Optimizations
+- [x] Audit: bundle size, build output, code splitting, lazy loading
+- [x] Audit: component rendering patterns, memoization, re-render hotspots
+- [x] Audit: data fetching, caching, offline patterns, network waterfall
+- [x] Audit: CSS/animation overhead, font loading, asset optimization
+- [x] Implement high-impact optimizations (manualChunks, compression, cache headers, lucide dedup, font preload)
+- [x] Implement medium-impact optimizations (CSS containment on panels, preconnect hints)
+- [x] Verify optimizations with tests and build checks (451 tests pass, build succeeds)

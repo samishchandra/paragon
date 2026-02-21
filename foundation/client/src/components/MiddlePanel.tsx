@@ -2108,7 +2108,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
 
   return (
     <div
-      className="h-full flex flex-col bg-[#F9FAFB] dark:bg-zinc-900 border-r border-border/50 relative"
+      className="h-full flex flex-col bg-[#F9FAFB] dark:bg-zinc-900 border-r border-border/50 relative contain-layout"
       onDragEnter={handleFileDragEnter}
       onDragLeave={handleFileDragLeave}
       onDragOver={handleFileDragOver}

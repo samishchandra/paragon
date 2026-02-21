@@ -342,7 +342,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
 
   // Mobile-friendly full width sidebar
   const sidebarContent = (
-    <div className="h-full bg-sidebar flex flex-col overflow-hidden">
+    <div className="h-full bg-sidebar flex flex-col overflow-hidden contain-layout">
       {/* Header - hidden on mobile as we have the mobile header */}
       <div className="p-4 border-b border-sidebar-border/50 items-center justify-between hidden md:flex">
         <button

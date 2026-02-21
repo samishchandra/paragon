@@ -210,6 +210,14 @@
     }
   }
   
+  /* CSS containment for scrollable panels — helps browsers skip layout/paint for off-screen content */
+  .contain-layout {
+    contain: layout style;
+  }
+  .contain-strict {
+    contain: strict;
+  }
+
   /* Minimal custom scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;

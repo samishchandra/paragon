@@ -166,6 +166,8 @@ export default defineConfig({
     alias: {
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      // Deduplicate lucide-react (Paragon uses a different version)
+      "lucide-react": path.resolve(import.meta.dirname, "node_modules/lucide-react"),
     },
   },
   envDir: path.resolve(import.meta.dirname),
@@ -174,6 +176,40 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Vendor: React core
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+            return "vendor-react";
+          }
+          // Vendor: Radix UI primitives
+          if (id.includes("node_modules/@radix-ui/")) {
+            return "vendor-radix";
+          }
+          // Vendor: TipTap / ProseMirror (editor engine)
+          if (id.includes("node_modules/@tiptap/") || id.includes("node_modules/prosemirror-") || id.includes("node_modules/@prosemirror/")) {
+            return "vendor-editor";
+          }
+          // Vendor: DnD Kit
+          if (id.includes("node_modules/@dnd-kit/")) {
+            return "vendor-dnd";
+          }
+          // Vendor: framer-motion
+          if (id.includes("node_modules/framer-motion/")) {
+            return "vendor-motion";
+          }
+          // Vendor: tRPC + react-query
+          if (id.includes("node_modules/@trpc/") || id.includes("node_modules/@tanstack/")) {
+            return "vendor-data";
+          }
+          // Vendor: highlight.js (code syntax highlighting)
+          if (id.includes("node_modules/highlight.js/") || id.includes("node_modules/lowlight/")) {
+            return "vendor-highlight";
+          }
+        },
+      },
+    },
   },
   server: {
     host: true,
