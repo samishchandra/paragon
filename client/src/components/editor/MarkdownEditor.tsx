@@ -85,12 +85,11 @@ import type { Editor } from '@tiptap/react';
  * list or vice versa).
  *
  * Solution: Scan the markdown line-by-line. When we detect a blank line between
- * two list item lines whose types differ (regular bullet vs checkbox), insert a
- * zero-width HTML comment <!-- list-break --> that forces marked to close the
- * first list and start a new one.
+ * two list item lines, insert a zero-width HTML comment <!-- list-break --> that
+ * forces marked to close the first list and start a new one.
  *
- * Also handles the case where two lists of the SAME type are separated by a
- * blank line — these should also remain separate.
+ * Handles both different-type transitions (bullet → task) and same-type lists
+ * separated by blank lines — both should remain separate.
  */
 function splitSeparatedLists(markdown: string): string {
   const lines = markdown.split('\n');
@@ -163,8 +162,10 @@ function splitSeparatedLists(markdown: string): string {
         const prevType = classifyLine(line);
         const nextType = classifyLine(lines[j]);
 
-        if (prevType !== null && nextType !== null && prevType !== nextType) {
-          // Different list types separated by blank line — insert separator
+        if (prevType !== null && nextType !== null) {
+          // Lists separated by blank line — insert separator to keep them independent.
+          // This handles both different-type (bullet → task) and same-type (bullet → bullet)
+          // transitions. Without this, marked merges them into a single list.
           // Push the blank lines, then add a separator before the next list item
           for (let k = blankStart; k < j; k++) {
             result.push(lines[k]);
@@ -1552,8 +1553,19 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
 
       let html = marked.parse(processedMarkdown, { async: false }) as string;
       
-      // Remove list-break separator comments (used to force marked to split lists)
-      html = html.replace(/<!--\s*list-break\s*-->/g, '');
+      // Replace list-break separator comments with invisible separator paragraphs.
+      // When two lists of the same type are adjacent in the HTML, TipTap auto-joins
+      // them into a single list. By inserting a zero-height paragraph between them,
+      // we prevent the auto-join while keeping the visual output clean.
+      // For different-type lists (e.g., <ul> followed by <ul data-type="taskList">),
+      // TipTap doesn't auto-join, so the comment can simply be removed.
+      // First, collapse any ZWSP paragraphs adjacent to list-break comments
+      // (these accumulate from previous round-trips via the blankLinePreservation rule).
+      // Then replace the comment with a single separator paragraph.
+      html = html.replace(
+        /(?:<p>\s*\u200B\s*<\/p>\s*)*<!--\s*list-break\s*-->(?:\s*<p>\s*\u200B\s*<\/p>)*/g,
+        '<p class="list-separator" data-list-separator="true">\u200B</p>'
+      );
       
       // Post-process: Convert marked's standard checkbox list HTML to TipTap's task list format.
       // marked outputs: <ul>\n<li><input disabled="" type="checkbox"> text</li>\n</ul>

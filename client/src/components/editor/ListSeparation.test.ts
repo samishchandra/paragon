@@ -5,8 +5,10 @@
  * Covers:
  * - splitSeparatedLists pre-processor
  * - Different list type transitions (bullet → task, task → bullet)
+ * - Same-type list transitions (bullet → bullet, task → task)
  * - Code fence protection
  * - Nested list preservation
+ * - ZWSP separator handling for round-trip stability
  */
 import { describe, it, expect } from 'vitest';
 
@@ -66,7 +68,9 @@ function splitSeparatedLists(markdown: string): string {
         const prevType = classifyLine(line);
         const nextType = classifyLine(lines[j]);
 
-        if (prevType !== null && nextType !== null && prevType !== nextType) {
+        if (prevType !== null && nextType !== null) {
+          // Lists separated by blank line — insert separator to keep them independent.
+          // This handles both different-type (bullet → task) and same-type (bullet → bullet).
           for (let k = blankStart; k < j; k++) {
             result.push(lines[k]);
           }
@@ -82,7 +86,7 @@ function splitSeparatedLists(markdown: string): string {
 }
 
 describe('List Separation', () => {
-  describe('splitSeparatedLists', () => {
+  describe('splitSeparatedLists — different-type transitions', () => {
     it('should insert separator between bullet and task lists', () => {
       const md = `- First bullet
 - Second bullet
@@ -92,12 +96,9 @@ describe('List Separation', () => {
 
       const result = splitSeparatedLists(md);
       expect(result).toContain('<!-- list-break -->');
-      // The separator should be between the bullet and task lists
       const lines = result.split('\n');
       const breakIdx = lines.findIndex(l => l.includes('list-break'));
       expect(breakIdx).toBeGreaterThan(0);
-      // Line before break should be blank (or the last bullet item)
-      // Line after break should be the first task item
       const afterBreak = lines.slice(breakIdx + 1).find(l => l.trim() !== '');
       expect(afterBreak).toMatch(/^- \[ \]/);
     });
@@ -126,40 +127,6 @@ describe('List Separation', () => {
       const result = splitSeparatedLists(md);
       const breakCount = (result.match(/<!-- list-break -->/g) || []).length;
       expect(breakCount).toBe(2);
-    });
-
-    it('should NOT insert separator between same-type lists', () => {
-      const md = `- First bullet
-- Second bullet
-
-- Third bullet
-- Fourth bullet`;
-
-      const result = splitSeparatedLists(md);
-      expect(result).not.toContain('<!-- list-break -->');
-    });
-
-    it('should NOT modify lists without blank line separation', () => {
-      const md = `- First bullet
-- Second bullet
-- [ ] First task
-- [ ] Second task`;
-
-      const result = splitSeparatedLists(md);
-      expect(result).not.toContain('<!-- list-break -->');
-      expect(result).toBe(md);
-    });
-
-    it('should NOT modify content inside code fences', () => {
-      const md = `\`\`\`
-- First bullet
-
-- [ ] First task
-\`\`\``;
-
-      const result = splitSeparatedLists(md);
-      expect(result).not.toContain('<!-- list-break -->');
-      expect(result).toBe(md);
     });
 
     it('should handle ordered list to bullet transition', () => {
@@ -194,6 +161,109 @@ describe('List Separation', () => {
       const result = splitSeparatedLists(md);
       expect(result).toContain('<!-- list-break -->');
     });
+  });
+
+  describe('splitSeparatedLists — same-type transitions', () => {
+    it('should insert separator between same-type bullet lists', () => {
+      const md = `- First bullet
+- Second bullet
+
+- Third bullet
+- Fourth bullet`;
+
+      const result = splitSeparatedLists(md);
+      expect(result).toContain('<!-- list-break -->');
+    });
+
+    it('should insert separator between same-type task lists', () => {
+      const md = `- [ ] First task
+- [ ] Second task
+
+- [ ] Third task
+- [ ] Fourth task`;
+
+      const result = splitSeparatedLists(md);
+      expect(result).toContain('<!-- list-break -->');
+    });
+
+    it('should insert separator between same-type ordered lists', () => {
+      const md = `1. First item
+2. Second item
+
+1. Third item
+2. Fourth item`;
+
+      const result = splitSeparatedLists(md);
+      expect(result).toContain('<!-- list-break -->');
+    });
+
+    it('should handle the user example: bullet, task, bullet', () => {
+      const md = `-   First bullet
+-   Second bullet
+
+- [ ] First bullet
+- [ ] Second bullet
+
+-   First bullet
+-   Second bullet`;
+
+      const result = splitSeparatedLists(md);
+      const breakCount = (result.match(/<!-- list-break -->/g) || []).length;
+      expect(breakCount).toBe(2);
+    });
+
+    it('should handle ZWSP separator from previous round-trip', () => {
+      const md = `- First bullet
+- Second bullet
+
+\u200B
+
+- Third bullet
+- Fourth bullet`;
+
+      const result = splitSeparatedLists(md);
+      expect(result).toContain('<!-- list-break -->');
+    });
+
+    it('should handle multiple same-type bullet lists', () => {
+      const md = `- A
+- B
+
+- C
+- D
+
+- E
+- F`;
+
+      const result = splitSeparatedLists(md);
+      const breakCount = (result.match(/<!-- list-break -->/g) || []).length;
+      expect(breakCount).toBe(2);
+    });
+  });
+
+  describe('splitSeparatedLists — edge cases', () => {
+    it('should NOT modify lists without blank line separation', () => {
+      const md = `- First bullet
+- Second bullet
+- [ ] First task
+- [ ] Second task`;
+
+      const result = splitSeparatedLists(md);
+      expect(result).not.toContain('<!-- list-break -->');
+      expect(result).toBe(md);
+    });
+
+    it('should NOT modify content inside code fences', () => {
+      const md = `\`\`\`
+- First bullet
+
+- [ ] First task
+\`\`\``;
+
+      const result = splitSeparatedLists(md);
+      expect(result).not.toContain('<!-- list-break -->');
+      expect(result).toBe(md);
+    });
 
     it('should handle multiple blank lines between lists', () => {
       const md = `- First bullet
@@ -222,6 +292,26 @@ Some paragraph text.`;
       expect(result).toContain('# Heading');
       expect(result).toContain('Some paragraph text.');
       expect(result).toContain('<!-- list-break -->');
+    });
+
+    it('should not insert separator when list is followed by non-list content', () => {
+      const md = `- First bullet
+- Second bullet
+
+Some paragraph text.`;
+
+      const result = splitSeparatedLists(md);
+      expect(result).not.toContain('<!-- list-break -->');
+    });
+
+    it('should not insert separator when list is preceded by non-list content', () => {
+      const md = `Some paragraph text.
+
+- First bullet
+- Second bullet`;
+
+      const result = splitSeparatedLists(md);
+      expect(result).not.toContain('<!-- list-break -->');
     });
   });
 });
