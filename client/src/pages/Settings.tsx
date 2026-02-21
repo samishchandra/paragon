@@ -1646,8 +1646,35 @@ function OrphanTagPruner() {
 }
 
 export function SettingsDeveloper() {
+  const [debugMode, setDebugModeState] = useState(() => {
+    try { return localStorage.getItem('momentum-debug-mode') === 'true'; } catch { return false; }
+  });
+
+  const toggleDebugMode = (enabled: boolean) => {
+    setDebugModeState(enabled);
+    try {
+      localStorage.setItem('momentum-debug-mode', String(enabled));
+      window.dispatchEvent(new CustomEvent('debug-mode-change', { detail: enabled }));
+    } catch {}
+    toast.success(enabled ? 'Debug mode enabled' : 'Debug mode disabled');
+  };
+
   return (
     <div className="space-y-6">
+      {/* Debug Mode */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Debug Mode</h4>
+        <div className="flex items-center justify-between gap-4 p-3 rounded-lg border border-border/50 bg-card">
+          <div className="space-y-0.5">
+            <Label className="text-sm font-medium">Debug Overlay</Label>
+            <p className="text-xs text-muted-foreground">
+              Show a translucent overlay with console errors, network failures, and app diagnostics
+            </p>
+          </div>
+          <Switch checked={debugMode} onCheckedChange={toggleDebugMode} />
+        </div>
+      </div>
+
       {/* Data Maintenance */}
       <div className="space-y-4">
         <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Data Maintenance</h4>

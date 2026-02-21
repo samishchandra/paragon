@@ -269,7 +269,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                       "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left",
                       isActive
                         ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                        : "text-foreground/70 hover:text-foreground hover:bg-accent/50"
                     )}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
