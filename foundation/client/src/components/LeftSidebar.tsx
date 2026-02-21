@@ -375,7 +375,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
         </div>
       </div>
 
-      <ScrollArea className="flex-1 custom-scrollbar">
+      <ScrollArea className="flex-1 min-h-0 overflow-hidden custom-scrollbar">
         <div className="p-3 space-y-4">
           {/* Views Section - No header, items aligned with chevrons */}
           <div>
