@@ -209,7 +209,10 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
           const targetList = state.lists.find(l => l.id === listId);
           const previousListId = item.listId;
           // Skip if already in this list
-          if (previousListId === listId) return;
+          if (previousListId === listId) {
+            toast.info(`Already in "${targetList?.name || 'list'}"`);
+            return;
+          }
           const previousList = previousListId ? state.lists.find(l => l.id === previousListId) : null;
           updateItem({
             ...item,
