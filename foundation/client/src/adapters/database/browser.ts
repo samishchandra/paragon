@@ -351,32 +351,53 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
 
       // Dynamically read the store's keyPath to ensure every record has the
       // required key field(s). This is robust regardless of schema version.
-      const keyPath = store.keyPath; // string | string[] | null
+      const rawKeyPath = store.keyPath; // string | string[] | DOMStringList | null
       const autoIncrement = store.autoIncrement;
 
+      // Normalize keyPath: IDBObjectStore.keyPath can be a string, a DOMStringList
+      // (which looks like an array but Array.isArray returns false), null, or empty string.
+      let keyPathType: 'none' | 'single' | 'compound' = 'none';
+      let singleKey = '';
+      let compoundKeys: string[] = [];
+
+      if (!rawKeyPath) {
+        // null, undefined, or empty string — no inline keyPath
+        keyPathType = 'none';
+      } else if (typeof rawKeyPath === 'string' && rawKeyPath.length > 0) {
+        keyPathType = 'single';
+        singleKey = rawKeyPath;
+      } else if (typeof rawKeyPath === 'object' && rawKeyPath !== null) {
+        // Could be Array or DOMStringList — normalize to string[]
+        keyPathType = 'compound';
+        compoundKeys = Array.from(rawKeyPath as Iterable<string>);
+      }
+
       const enriched = items.map(item => {
-        // If the store uses autoIncrement with no keyPath, no key is needed
-        if (autoIncrement && !keyPath) return { ...item };
+        // If the store uses autoIncrement with no inline keyPath, no key is needed
+        if (autoIncrement && keyPathType === 'none') return { ...item };
 
         const copy = { ...item };
 
-        if (typeof keyPath === 'string') {
-          // Single keyPath (e.g. 'id', 'user_id', 'key')
-          if (copy[keyPath] === undefined || copy[keyPath] === null) {
-            // Auto-generate UUID for 'id' fields; warn for others
-            if (keyPath === 'id') {
-              copy[keyPath] = crypto.randomUUID();
+        if (keyPathType === 'single') {
+          if (copy[singleKey] === undefined || copy[singleKey] === null || copy[singleKey] === '') {
+            // Auto-generate UUID for 'id' fields; for other keyPaths, generate if it looks
+            // like it should be a UUID (common pattern in our schema)
+            if (singleKey === 'id') {
+              copy[singleKey] = crypto.randomUUID();
             } else {
-              console.warn(`[BrowserDB] insert into '${resolvedTable}' missing keyPath '${keyPath}':`, JSON.stringify(copy).slice(0, 200));
+              console.warn(`[BrowserDB] insert into '${resolvedTable}': record missing keyPath '${singleKey}'. Record keys: [${Object.keys(copy).join(', ')}]`);
             }
           }
-        } else if (Array.isArray(keyPath)) {
-          // Compound keyPath (e.g. ['user_id', 'view_key'] or ['item_id', 'tag_id'])
-          for (const k of keyPath) {
-            if (copy[k] === undefined || copy[k] === null) {
-              console.warn(`[BrowserDB] insert into '${resolvedTable}' missing compound keyPath field '${k}':`, JSON.stringify(copy).slice(0, 200));
+        } else if (keyPathType === 'compound') {
+          for (const k of compoundKeys) {
+            if (copy[k] === undefined || copy[k] === null || copy[k] === '') {
+              console.warn(`[BrowserDB] insert into '${resolvedTable}': record missing compound keyPath field '${k}'. Record keys: [${Object.keys(copy).join(', ')}]`);
             }
           }
+        } else if (keyPathType === 'none' && !autoIncrement) {
+          // Store has no keyPath and no autoIncrement — caller must provide an out-of-line key.
+          // This shouldn't happen in our schema, but log it defensively.
+          console.warn(`[BrowserDB] insert into '${resolvedTable}': store has no keyPath and no autoIncrement. Using record as-is.`);
         }
 
         return copy;
@@ -388,22 +409,25 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
           try {
             store.put(item);
           } catch (putErr: any) {
-            console.error(`[BrowserDB] put failed on table '${resolvedTable}':`, putErr.message,
-              '| keyPath:', JSON.stringify(keyPath),
-              '| autoIncrement:', autoIncrement,
-              '| record keys:', Object.keys(item),
-              '| record:', JSON.stringify(item).slice(0, 300));
+            console.error(
+              `[BrowserDB] put() FAILED on '${resolvedTable}':\n` +
+              `  Error: ${putErr.message}\n` +
+              `  keyPath (raw): ${JSON.stringify(rawKeyPath)} (type: ${typeof rawKeyPath})\n` +
+              `  keyPath (resolved): type=${keyPathType}, single='${singleKey}', compound=[${compoundKeys.join(',')}]\n` +
+              `  autoIncrement: ${autoIncrement}\n` +
+              `  Record keys: [${Object.keys(item).join(', ')}]\n` +
+              `  Record (truncated): ${JSON.stringify(item).slice(0, 400)}`
+            );
             throw putErr;
           }
         }
         tx.oncomplete = () => {
           this.invalidateCache(table);
-          // Return the enriched data (with generated ids) so callers can reference them
           const result = Array.isArray(data) ? enriched : enriched[0];
           resolve({ data: result as T, error: null });
         };
         tx.onerror = () => {
-          console.error(`[BrowserDB] transaction error on table '${resolvedTable}':`, tx.error);
+          console.error(`[BrowserDB] transaction error on '${resolvedTable}':`, tx.error);
           reject(tx.error);
         };
       });
