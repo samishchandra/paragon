@@ -16,7 +16,7 @@
  * - The activate handler deletes every cache that doesn't match the current version.
  */
 
-const CACHE_VERSION = 'momentum-v4';
+const CACHE_VERSION = 'momentum-v5';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;

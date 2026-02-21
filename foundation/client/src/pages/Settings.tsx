@@ -347,7 +347,7 @@ export function SettingsData() {
     if (tagNameToId.has(lower)) return tagNameToId.get(lower)!;
     const { data: existing } = await apiQuery({ table: 'tags', select: 'id', filters: { user_id: userId, name: lower }, limit: 1, single: true });
     if (existing) { tagNameToId.set(lower, existing.id); return existing.id; }
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+    const colors = ['#008948', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
     const color = colors[counters.tags % colors.length];
     const { data: newTag } = await apiQuery({ action: 'insert', table: 'tags', data: { name: lower, color, user_id: userId }, single: true });
     if (newTag) { tagNameToId.set(lower, newTag.id); counters.tags++; return newTag.id; }

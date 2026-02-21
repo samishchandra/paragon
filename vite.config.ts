@@ -160,7 +160,7 @@ const plugins = [
   vitePluginManusDebugCollector(),
 ];
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins,
   resolve: {
     alias: {
@@ -170,12 +170,19 @@ export default defineConfig({
       "lucide-react": path.resolve(import.meta.dirname, "node_modules/lucide-react"),
     },
   },
+  // Force production React in builds (Vite 7 CJS interop may include dev branch)
+  ...(mode === "production" ? {
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("production"),
+    },
+  } : {}),
   envDir: path.resolve(import.meta.dirname),
   root: path.resolve(import.meta.dirname, "client"),
   publicDir: path.resolve(import.meta.dirname, "client", "public"),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    target: "es2020",
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -233,4 +240,4 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
-});
+}));

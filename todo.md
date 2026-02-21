@@ -263,3 +263,11 @@
 - [x] Temporarily disabled SW registration to isolate the issue
 - [x] Made AuthGate isLoading state render a visible spinner instead of null
 - [x] Verified: build succeeds, 451 tests pass
+
+## Bug Fix: vendor-react chunk JS error (C.Activity=R)
+- [x] Fix TypeError: undefined is not an object (evaluating 'C.Activity=R') in vendor-react chunk
+- [x] Root cause: React DEVELOPMENT build (397KB) was bundled into production instead of production build (194KB). Vite 7 CJS interop was resolving react.development.js. Fixed by adding `process.env.NODE_ENV` define in vite.config.ts for production builds.
+- [x] Removed nuclear SW killer and pre-React error overlay diagnostic scripts from index.html
+- [x] Re-enabled service worker registration in main.tsx
+- [x] Bumped SW cache version to v5 for clean deployment
+- [x] Verify fix with build and test — 451 tests pass, vendor-react chunk 194KB (production)

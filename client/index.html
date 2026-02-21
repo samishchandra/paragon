@@ -105,40 +105,6 @@
   </head>
 
   <body>
-    <!-- NUCLEAR: Kill all service workers and clear caches on every load to break stale cache cycle -->
-    <script>
-      (function() {
-        // Unregister ALL service workers immediately
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(regs) {
-            regs.forEach(function(r) { r.unregister(); });
-          }).catch(function() {});
-        }
-        // Clear ALL caches
-        if ('caches' in window) {
-          caches.keys().then(function(keys) {
-            keys.forEach(function(k) { caches.delete(k); });
-          }).catch(function() {});
-        }
-      })();
-    </script>
-
-    <!-- Pre-React error display: show JS errors visibly instead of blank screen -->
-    <script>
-      window.__preReactErrors = [];
-      window.onerror = function(msg, src, line, col, err) {
-        window.__preReactErrors.push(msg + ' at ' + src + ':' + line);
-        var el = document.getElementById('pre-react-error');
-        if (!el) {
-          el = document.createElement('div');
-          el.id = 'pre-react-error';
-          el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:999999;background:#fee;color:#900;padding:12px;font:12px monospace;max-height:40vh;overflow:auto;';
-          document.body.appendChild(el);
-        }
-        el.textContent = 'JS Error: ' + window.__preReactErrors.join(' | ');
-      };
-    </script>
-
     <!-- Loading Splash Screen -->
     <div id="splash-screen">
       <img
