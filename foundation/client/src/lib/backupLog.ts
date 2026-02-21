@@ -98,7 +98,7 @@ export function logAutoBackup(uploaded: number, deleted: number, errors: string[
   });
 }
 
-export function logManualBackup(uploaded: number, deleted: number, unchanged: number, errors: string[], full: boolean): void {
+export function logManualBackup(uploaded: number, deleted: number, unchanged: number, errors: string[], full: boolean, source?: 'dropbox' | 'local'): void {
   const hasErrors = errors.length > 0;
   const typeLabel = full ? 'Full backup' : 'Backup';
   addLogEntry({
@@ -123,9 +123,10 @@ export function logBackupError(message: string): void {
   });
 }
 
-export function logConnection(connected: boolean): void {
+export function logConnection(connected: boolean, source?: 'dropbox' | 'local'): void {
+  const label = source === 'local' ? 'local backup' : 'Dropbox';
   addLogEntry({
     type: connected ? 'connect' : 'disconnect',
-    message: connected ? 'Connected to Dropbox' : 'Disconnected from Dropbox',
+    message: connected ? `Connected to ${label}` : `Disconnected from ${label}`,
   });
 }

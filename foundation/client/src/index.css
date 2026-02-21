@@ -176,3 +176,10 @@
     }
   }
 }
+/* Performance: content-visibility for off-screen elements */
+@layer utilities {
+  .content-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+  }
+}
