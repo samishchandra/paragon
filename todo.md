@@ -229,3 +229,9 @@
 - [x] Implement high-impact optimizations (manualChunks, compression, cache headers, lucide dedup, font preload)
 - [x] Implement medium-impact optimizations (CSS containment on panels, preconnect hints)
 - [x] Verify optimizations with tests and build checks (451 tests pass, build succeeds)
+
+## Bug Fix: Blank Screen After Splash
+- [x] Investigate blank screen on published site after splash screen
+- [x] Identify root cause: SW cache mismatch — stale HTML referencing old chunk filenames after deploy
+- [x] Fix: bumped SW cache version to v2, removed '/' from precache (always network-first for HTML), added stale cache cleanup on activate, added content-type sanity check for cached JS, enhanced chunk error recovery with SW cache clearing and unhandledrejection handler
+- [x] Verify fix with build and tests (451 tests pass, build succeeds)

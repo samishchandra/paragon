@@ -7,27 +7,31 @@
  * 3. Background sync — queue failed mutations for retry when back online
  *
  * Strategy:
- * - App shell: Cache-first with network fallback (stale-while-revalidate)
+ * - Navigation (HTML): Network-first, always fetch fresh index.html
+ * - Hashed assets (/assets/*): Cache-first (content-hash guarantees uniqueness)
  * - API calls: Network-first with cache fallback
- * - Static assets: Cache-first (immutable hashed files)
+ * - Google Fonts: Cache-first (long-lived)
+ *
+ * Cache Versioning:
+ * - Bump CACHE_VERSION on each deploy to purge stale caches.
+ * - The activate handler deletes ALL caches that don't match the current version.
+ * - This prevents stale HTML from referencing old chunk filenames.
  */
 
-const CACHE_VERSION = 'momentum-v1';
+const CACHE_VERSION = 'momentum-v2';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
-// App shell resources to precache
+// App shell resources to precache (only the offline fallback — index.html
+// is always fetched network-first so we never serve a stale shell)
 const APP_SHELL_URLS = [
-  '/',
   '/offline.html',
 ];
 
 // Patterns for different caching strategies
 const isApiRequest = (url) => url.pathname.startsWith('/api/');
-const isStaticAsset = (url) =>
-  url.pathname.match(/\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp)$/) ||
-  url.pathname.startsWith('/assets/');
+const isHashedAsset = (url) => url.pathname.startsWith('/assets/');
 const isNavigationRequest = (request) =>
   request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html');
 const isGoogleFont = (url) =>
@@ -52,10 +56,15 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
+      // Delete ALL caches that don't belong to the current version.
+      // This ensures old HTML/JS/CSS are purged on every deploy.
       return Promise.all(
         keys
-          .filter((key) => key.startsWith('momentum-') && key !== APP_SHELL_CACHE && key !== API_CACHE && key !== STATIC_CACHE)
-          .map((key) => caches.delete(key))
+          .filter((key) => key !== APP_SHELL_CACHE && key !== API_CACHE && key !== STATIC_CACHE)
+          .map((key) => {
+            console.log('[SW] Deleting stale cache:', key);
+            return caches.delete(key);
+          })
       );
     })
   );
@@ -77,35 +86,75 @@ self.addEventListener('fetch', (event) => {
   // Skip tRPC batch requests that contain mutations
   if (url.pathname.startsWith('/api/trpc') && url.search.includes('auth.')) return;
 
-  // Strategy 1: Google Fonts — Cache-first (long-lived)
-  if (isGoogleFont(url)) {
-    event.respondWith(cacheFirst(event.request, STATIC_CACHE));
-    return;
-  }
-
-  // Strategy 2: Static assets with hashes — Cache-first
-  if (isStaticAsset(url)) {
-    event.respondWith(cacheFirst(event.request, STATIC_CACHE));
-    return;
-  }
-
-  // Strategy 3: API requests — Network-first with cache fallback
-  if (isApiRequest(url)) {
-    event.respondWith(networkFirst(event.request, API_CACHE));
-    return;
-  }
-
-  // Strategy 4: Navigation requests — Network-first, fallback to cached shell or offline page
+  // Strategy 1: Navigation requests — ALWAYS network-first
+  // This is critical: we must never serve stale HTML that references old chunks.
   if (isNavigationRequest(event.request)) {
     event.respondWith(navigationHandler(event.request));
     return;
   }
 
-  // Default: Network-first
+  // Strategy 2: Google Fonts — Cache-first (long-lived, versioned by URL)
+  if (isGoogleFont(url)) {
+    event.respondWith(cacheFirst(event.request, STATIC_CACHE));
+    return;
+  }
+
+  // Strategy 3: Hashed assets (/assets/*) — Cache-first
+  // These have content hashes in filenames, so each build produces unique URLs.
+  // Safe to cache aggressively — stale entries are harmless (just unused).
+  if (isHashedAsset(url)) {
+    event.respondWith(cacheFirstWithFallback(event.request, STATIC_CACHE));
+    return;
+  }
+
+  // Strategy 4: API requests — Network-first with cache fallback
+  if (isApiRequest(url)) {
+    event.respondWith(networkFirst(event.request, API_CACHE));
+    return;
+  }
+
+  // Default: Network-first for everything else (manifest.json, icons, etc.)
   event.respondWith(networkFirst(event.request, APP_SHELL_CACHE));
 });
 
 // ─── Caching Strategies ─────────────────────────────────────────────────────
+
+/**
+ * Cache-first with network fallback.
+ * If the cached response is a non-JS content type for a .js request (corruption),
+ * bypass cache and fetch from network.
+ */
+async function cacheFirstWithFallback(request, cacheName) {
+  const cached = await caches.match(request);
+  if (cached) {
+    // Sanity check: if requesting JS but cached response is HTML, skip cache
+    const url = new URL(request.url);
+    if (url.pathname.endsWith('.js')) {
+      const contentType = cached.headers.get('content-type') || '';
+      if (contentType.includes('text/html')) {
+        // Corrupted cache entry — delete it and fetch fresh
+        const cache = await caches.open(cacheName);
+        await cache.delete(request);
+        // Fall through to network fetch below
+      } else {
+        return cached;
+      }
+    } else {
+      return cached;
+    }
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return new Response('', { status: 503, statusText: 'Offline' });
+  }
+}
 
 async function cacheFirst(request, cacheName) {
   const cached = await caches.match(request);
@@ -145,12 +194,13 @@ async function navigationHandler(request) {
   try {
     const response = await fetch(request);
     if (response.ok) {
+      // Cache the fresh HTML for offline fallback
       const cache = await caches.open(APP_SHELL_CACHE);
       cache.put(request, response.clone());
     }
     return response;
   } catch {
-    // Try to serve the cached version of the requested page
+    // Offline: try to serve the cached version of the requested page
     const cached = await caches.match(request);
     if (cached) return cached;
 

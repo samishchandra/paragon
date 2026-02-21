@@ -134,18 +134,49 @@
       setTimeout(function() { window.__dismissSplash && window.__dismissSplash(); }, 10000);
     </script>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Chunk loading error recovery: auto-reload once on stale cache -->
+    <!-- Chunk loading error recovery: clear SW caches and reload on stale chunks -->
     <script>
-      window.addEventListener('error', function(e) {
-        if (e.message && (e.message.includes('Unexpected token') || e.message.includes('Failed to fetch dynamically imported module') || e.message.includes('Loading chunk'))) {
-          var reloaded = sessionStorage.getItem('chunk-error-reload');
-          if (!reloaded) {
-            sessionStorage.setItem('chunk-error-reload', '1');
-            window.location.reload();
-          } else {
-            sessionStorage.removeItem('chunk-error-reload');
-          }
+      function isChunkError(msg) {
+        return msg && (
+          msg.includes('Unexpected token') ||
+          msg.includes('Failed to fetch dynamically imported module') ||
+          msg.includes('Loading chunk') ||
+          msg.includes('error loading dynamically imported module') ||
+          msg.includes('Importing a module script failed')
+        );
+      }
+      function recoverFromStaleCache() {
+        var reloaded = sessionStorage.getItem('chunk-error-reload');
+        if (reloaded) {
+          sessionStorage.removeItem('chunk-error-reload');
+          return; // Already tried once, don't loop
         }
+        sessionStorage.setItem('chunk-error-reload', '1');
+        // 1. Tell SW to clear all caches
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHES' });
+        }
+        // 2. Clear caches directly via Cache API
+        if ('caches' in window) {
+          caches.keys().then(function(keys) {
+            return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+          }).then(function() {
+            window.location.reload();
+          }).catch(function() {
+            window.location.reload();
+          });
+        } else {
+          window.location.reload();
+        }
+      }
+      // Catch synchronous script errors (e.g., syntax errors from HTML served as JS)
+      window.addEventListener('error', function(e) {
+        if (isChunkError(e.message)) recoverFromStaleCache();
+      });
+      // Catch async import() failures
+      window.addEventListener('unhandledrejection', function(e) {
+        var msg = e.reason && (e.reason.message || String(e.reason));
+        if (isChunkError(msg)) recoverFromStaleCache();
       });
       // Clear the reload flag on successful load
       window.addEventListener('load', function() {
