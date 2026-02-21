@@ -11,9 +11,13 @@
  * - Title with pin/3-dot icons on hover (right-aligned)
  * - Content preview (1-2 lines)
  * - TagPill, ListPill, DatePill components for consistent styling
+ * 
+ * Performance: Uses AutoSizer renderProp (not ChildComponent) to avoid
+ * remounting the List on every prop change. react-window v2's internal
+ * `de()` stabilizer + `ue()` memo comparator handle row-level memoization.
  */
 
-import { useEffect, useMemo, ReactElement } from 'react';
+import { useEffect, useCallback, useRef, ReactElement } from 'react';
 import { List, useListRef, useDynamicRowHeight, ListImperativeAPI } from 'react-window';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { Item, SectionType, Task, Tag } from '@/types';
@@ -353,78 +357,6 @@ function Row({
   );
 }
 
-// Inner list component that receives AutoSizer dimensions
-function InnerList({ 
-  height, 
-  width,
-  items,
-  selectedItemId,
-  tags,
-  lists,
-  searchQuery,
-  onSelect,
-  onComplete,
-  onUncomplete,
-  onDelete,
-  onMove,
-  onPin,
-  onMoveToTop,
-  onDuplicate,
-  onDateChange,
-  hideListPill,
-  listRef,
-  rowHeight,
-  onScroll,
-}: { 
-  height: number | undefined; 
-  width: number | undefined;
-  listRef: React.RefObject<ListImperativeAPI | null>;
-  rowHeight: ReturnType<typeof useDynamicRowHeight>;
-  onScroll?: (scrollTop: number, scrollHeight: number, clientHeight: number) => void;
-} & RowProps) {
-  if (!height || !width) return null;
-
-  const rowProps: RowProps = {
-    items,
-    selectedItemId,
-    tags,
-    lists,
-    searchQuery,
-    onSelect,
-    onComplete,
-    onUncomplete,
-    onDelete,
-    onMove,
-    onPin,
-    onMoveToTop,
-    onDuplicate,
-    onDateChange,
-    hideListPill,
-  };
-
-  // Handle scroll events from the list for infinite loading
-  const handleListScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    if (onScroll && height) {
-      const target = event.currentTarget;
-      onScroll(target.scrollTop, target.scrollHeight, height);
-    }
-  };
-
-  return (
-    <List
-      listRef={listRef}
-      className="subtle-scrollbar"
-      style={{ height, width }}
-      rowCount={items.length}
-      rowHeight={rowHeight}
-      rowComponent={Row}
-      rowProps={rowProps}
-      overscanCount={5}
-      onScroll={handleListScroll}
-    />
-  );
-}
-
 export function VirtualizedItemList({
   items,
   selectedItemId,
@@ -455,18 +387,24 @@ export function VirtualizedItemList({
     defaultRowHeight: DEFAULT_ROW_HEIGHT,
   });
 
-  // Scroll to selected item when it changes
+  // Track the previous selectedItemId to avoid unnecessary scrollToRow calls
+  const prevSelectedIdRef = useRef<string | null>(null);
+
+  // Scroll to selected item only when it changes (not on every re-render)
+  // and only if the item was selected programmatically (e.g., keyboard nav).
+  // Clicking an item already scrolls it into view naturally.
   useEffect(() => {
-    if (selectedItemId && listRef.current) {
+    if (selectedItemId && selectedItemId !== prevSelectedIdRef.current && listRef.current) {
       const index = items.findIndex((item) => item.id === selectedItemId);
       if (index >= 0) {
         listRef.current.scrollToRow({ index, align: 'smart' });
       }
     }
+    prevSelectedIdRef.current = selectedItemId;
   }, [selectedItemId, items, listRef]);
 
-  // Handle scroll to detect when near bottom for infinite loading
-  const handleScroll = (scrollTop: number, scrollHeight: number, clientHeight: number) => {
+  // Stable scroll handler for infinite loading
+  const handleScroll = useCallback((scrollTop: number, scrollHeight: number, clientHeight: number) => {
     if (!hasMore || isLoadingMore || !onLoadMore) return;
     
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
@@ -475,6 +413,33 @@ export function VirtualizedItemList({
     if (distanceFromBottom < threshold) {
       onLoadMore();
     }
+  }, [hasMore, isLoadingMore, onLoadMore]);
+
+  // Stable scroll event handler for the List component
+  const handleListScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    handleScroll(target.scrollTop, target.scrollHeight, target.clientHeight);
+  }, [handleScroll]);
+
+  // Build rowProps object — react-window v2's internal `de()` stabilizer
+  // uses useMemo with Object.values() as deps, so it only creates a new
+  // reference when actual values change (not just object identity).
+  const rowProps: RowProps = {
+    items,
+    selectedItemId,
+    tags,
+    lists,
+    searchQuery,
+    onSelect,
+    onComplete,
+    onUncomplete,
+    onDelete,
+    onMove,
+    onPin,
+    onMoveToTop,
+    onDuplicate,
+    onDateChange,
+    hideListPill,
   };
 
   if (items.length === 0) {
@@ -492,31 +457,34 @@ export function VirtualizedItemList({
   return (
     <div className={cn("h-full flex flex-col", className)}>
       <div className="flex-1 min-h-0">
+        {/* 
+         * IMPORTANT: Use renderProp instead of ChildComponent to avoid remounting.
+         * 
+         * AutoSizer wraps ChildComponent in useMemo(() => React.memo(Child), [Child]).
+         * When ChildComponent is an inline function, it creates a NEW function reference
+         * on every render, causing AutoSizer to create a brand new memoized component,
+         * which unmounts the old List and mounts a new one — causing visible flicker.
+         * 
+         * renderProp avoids this because it returns ReactNode directly (not a component
+         * reference), so React reconciles by element type (List) which stays stable.
+         */}
         <AutoSizer
-          ChildComponent={({ height, width }) => (
-            <InnerList
-              height={height}
-              width={width}
-              items={items}
-              selectedItemId={selectedItemId}
-              tags={tags}
-              lists={lists}
-              searchQuery={searchQuery}
-              onSelect={onSelect}
-              onComplete={onComplete}
-              onUncomplete={onUncomplete}
-              onDelete={onDelete}
-              onMove={onMove}
-              onPin={onPin}
-              onMoveToTop={onMoveToTop}
-              onDuplicate={onDuplicate}
-              onDateChange={onDateChange}
-              hideListPill={hideListPill}
-              listRef={listRef}
-              rowHeight={rowHeight}
-              onScroll={handleScroll}
-            />
-          )}
+          renderProp={({ height, width }) => {
+            if (!height || !width) return null;
+            return (
+              <List
+                listRef={listRef}
+                className="subtle-scrollbar"
+                style={{ height, width }}
+                rowCount={items.length}
+                rowHeight={rowHeight}
+                rowComponent={Row}
+                rowProps={rowProps}
+                overscanCount={5}
+                onScroll={handleListScroll}
+              />
+            );
+          }}
         />
       </div>
       
