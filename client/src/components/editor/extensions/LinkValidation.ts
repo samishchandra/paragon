@@ -6,6 +6,12 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
  * LinkValidation Extension
  * Validates URLs and shows visual feedback for invalid/broken links
  * Adds red border styling to invalid links
+ * 
+ * PERFORMANCE: Uses plugin state with incremental decoration mapping.
+ * On each transaction, only changed ranges are re-scanned for link marks.
+ * Unchanged decorations are mapped through the transaction's mapping to
+ * their new positions. This avoids O(n) full-document traversal on every
+ * keystroke or cursor movement.
  */
 
 export interface LinkValidationOptions {
@@ -46,6 +52,55 @@ const defaultValidateUrl = (url: string): boolean => {
   }
 };
 
+const linkValidationPluginKey = new PluginKey('linkValidation');
+
+/** Build decorations for invalid links within a specific range */
+function buildDecorationsInRange(
+  doc: any,
+  from: number,
+  to: number,
+  validator: (url: string) => boolean,
+  invalidLinkClass: string
+): Decoration[] {
+  const decorations: Decoration[] = [];
+  
+  doc.nodesBetween(from, to, (node: any, pos: number) => {
+    if (node.isText) {
+      const linkMark = node.marks.find((m: any) => m.type.name === 'link');
+      if (linkMark) {
+        const href = linkMark.attrs.href;
+        const isValid = validator(href);
+        
+        if (!isValid) {
+          const decorFrom = pos;
+          const decorTo = pos + node.nodeSize;
+          // Only include decorations that overlap with the requested range
+          if (decorTo >= from && decorFrom <= to) {
+            decorations.push(
+              Decoration.inline(decorFrom, decorTo, {
+                class: invalidLinkClass,
+              })
+            );
+          }
+        }
+      }
+    }
+    return true;
+  });
+  
+  return decorations;
+}
+
+/** Build decorations for the entire document (used on init) */
+function buildAllDecorations(
+  doc: any,
+  validator: (url: string) => boolean,
+  invalidLinkClass: string
+): DecorationSet {
+  const decorations = buildDecorationsInRange(doc, 0, doc.content.size, validator, invalidLinkClass);
+  return DecorationSet.create(doc, decorations);
+}
+
 export const LinkValidation = Extension.create<LinkValidationOptions>({
   name: 'linkValidation',
 
@@ -59,40 +114,77 @@ export const LinkValidation = Extension.create<LinkValidationOptions>({
 
   addProseMirrorPlugins() {
     const { validateUrl, invalidLinkClass, validateOnChange } = this.options;
-    const validator = validateUrl || defaultValidateUrl;
+    const validator = (url: string): boolean => {
+      const result = (validateUrl || defaultValidateUrl)(url);
+      // Only support synchronous validation in the decoration plugin
+      return typeof result === 'boolean' ? result : true;
+    };
+    const linkClass = invalidLinkClass || 'link-invalid';
 
     return [
       new Plugin({
-        key: new PluginKey('linkValidation'),
-        props: {
-          decorations: (state) => {
+        key: linkValidationPluginKey,
+        state: {
+          init(_, { doc }) {
             if (!validateOnChange) return DecorationSet.empty;
-
-            const { doc } = state;
-            const decorations: Decoration[] = [];
-
-            doc.descendants((node, pos) => {
-              if (node.isText) {
-                // Check for link marks
-                const linkMark = node.marks.find((m) => m.type.name === 'link');
-                if (linkMark) {
-                  const href = linkMark.attrs.href;
-                  const isValid = validator(href);
-
-                  if (!isValid) {
-                    // Add decoration for invalid link
-                    decorations.push(
-                      Decoration.inline(pos, pos + node.nodeSize, {
-                        class: invalidLinkClass,
-                      })
-                    );
-                  }
-                }
-              }
-              return true;
+            return buildAllDecorations(doc, validator, linkClass);
+          },
+          apply(tr, oldDecorations) {
+            if (!validateOnChange) return DecorationSet.empty;
+            
+            if (!tr.docChanged) {
+              return oldDecorations;
+            }
+            
+            // Map existing decorations through the transaction
+            let decorations = oldDecorations.map(tr.mapping, tr.doc);
+            
+            // Collect changed ranges
+            const changedRanges: Array<{ from: number; to: number }> = [];
+            tr.mapping.maps.forEach((stepMap) => {
+              stepMap.forEach((_oldStart: number, _oldEnd: number, newStart: number, newEnd: number) => {
+                const from = Math.max(0, newStart);
+                const to = Math.min(tr.doc.content.size, newEnd);
+                changedRanges.push({ from, to });
+              });
             });
-
-            return DecorationSet.create(doc, decorations);
+            
+            if (changedRanges.length === 0) {
+              return decorations;
+            }
+            
+            // Merge overlapping ranges
+            changedRanges.sort((a, b) => a.from - b.from);
+            const merged: Array<{ from: number; to: number }> = [changedRanges[0]];
+            for (let i = 1; i < changedRanges.length; i++) {
+              const last = merged[merged.length - 1];
+              if (changedRanges[i].from <= last.to) {
+                last.to = Math.max(last.to, changedRanges[i].to);
+              } else {
+                merged.push(changedRanges[i]);
+              }
+            }
+            
+            // For each changed range: remove old decorations, add new ones
+            for (const range of merged) {
+              decorations = decorations.remove(
+                decorations.find(range.from, range.to)
+              );
+              
+              const newDecorations = buildDecorationsInRange(
+                tr.doc, range.from, range.to, validator, linkClass
+              );
+              if (newDecorations.length > 0) {
+                decorations = decorations.add(tr.doc, newDecorations);
+              }
+            }
+            
+            return decorations;
+          },
+        },
+        props: {
+          decorations(state) {
+            return this.getState(state);
           },
         },
       }),

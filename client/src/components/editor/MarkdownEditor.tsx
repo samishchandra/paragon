@@ -503,9 +503,9 @@ export interface MarkdownEditorProps {
   
   // === AUTO-DETECTION FEATURE TOGGLES ===
   
-  /** Enable auto-detection of #hashtag patterns and conversion to tag pills (default: true) */
+  /** Enable auto-detection of #hashtag patterns and conversion to tag pills (default: false) */
   enableTagAutoDetect?: boolean;
-  /** Enable auto-detection and highlighting of hex color values like #FF0000 (default: true) */
+  /** Enable auto-detection and highlighting of hex color values like #FF0000 (default: false) */
   enableHexColorHighlight?: boolean;
   
   // === ERROR BOUNDARY ===
@@ -609,8 +609,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   // Expand selection
   progressiveSelectAll = false,
   // Auto-detection toggles
-  enableTagAutoDetect = true,
-  enableHexColorHighlight = true,
+  enableTagAutoDetect = false,
+  enableHexColorHighlight = false,
   // Error boundary
   onEditorError,
   // AI writing assistant
@@ -1711,8 +1711,16 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       // Skip if editor is destroyed
       if (editor.isDestroyed) return;
 
-      
-// Cmd/Ctrl+K for link popover
+      // PERFORMANCE: Early return for keys we don't handle.
+      // This avoids extracting text/selection state on every keystroke.
+      const key = event.key;
+      const hasModifier = event.metaKey || event.ctrlKey;
+      if (!hasModifier && key !== ' ') {
+        // We only handle modifier combos (Cmd+K, Cmd+F, Cmd+H) and space shortcuts
+        return;
+      }
+
+      // Cmd/Ctrl+K for link popover
       if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
         event.preventDefault();
         setIsLinkPopoverOpen(true);

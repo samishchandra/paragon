@@ -432,6 +432,7 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
     transform: scale(1);
+    will-change: transform;
   }
   
   ul[data-type="taskList"] li > label input[type="checkbox"]:hover {
@@ -662,6 +663,7 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
     transform: scale(1);
+    will-change: transform;
   }
 
   li.task-item > label input[type="checkbox"]:hover {

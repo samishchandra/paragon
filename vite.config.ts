@@ -166,6 +166,26 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('/react-dom/') || id.includes('/react/')) {
+              return 'vendor-react';
+            }
+            if (id.includes('/prosemirror-')) {
+              return 'vendor-prosemirror';
+            }
+            if (id.includes('/@tiptap/')) {
+              return 'vendor-tiptap';
+            }
+            if (id.includes('/lowlight/') || id.includes('/highlight.js/')) {
+              return 'vendor-highlight';
+            }
+          }
+        },
+      },
+    },
   },
   server: {
     port: 3000,
