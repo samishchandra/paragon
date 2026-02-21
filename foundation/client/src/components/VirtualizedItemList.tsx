@@ -182,24 +182,22 @@ function Row({
 
           {/* Content — starts after icon */}
           <div className="min-w-0 flex-1 flex flex-col gap-1">
-            {/* Title row with pin and 3-dot icons on the right */}
-            <div className="flex items-start justify-between gap-2">
-              {/* Title — max 2 lines */}
-              <div className="min-w-0 flex-1">
-                <h4
-                  className={cn(
-                    'text-sm font-medium line-clamp-2',
-                    isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'
-                  )}
-                >
-                  {searchQuery
-                    ? highlightText(item.title || (isTask ? 'Untitled Task' : 'Untitled Note'), searchQuery)
-                    : (item.title ? linkifyTitle(item.title).elements : (isTask ? 'Untitled Task' : 'Untitled Note'))}
-                </h4>
-              </div>
+            {/* Title row with pin and 3-dot icons overlaid */}
+            <div className="relative">
+              {/* Title — max 2 lines, pr-12 reserves space for icons */}
+              <h4
+                className={cn(
+                  'text-sm font-medium line-clamp-2 pr-12',
+                  isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'
+                )}
+              >
+                {searchQuery
+                  ? highlightText(item.title || (isTask ? 'Untitled Task' : 'Untitled Note'), searchQuery)
+                  : (item.title ? linkifyTitle(item.title).elements : (isTask ? 'Untitled Task' : 'Untitled Note'))}
+              </h4>
 
-              {/* Right side: Pin icon → 3-dot menu (rightmost) */}
-              <div className="flex items-center shrink-0">
+              {/* Right side: Pin icon → 3-dot menu (absolutely positioned, won't affect title reflow) */}
+              <div className="absolute top-0 right-0 flex items-center">
                 {/* Pin icon — hidden by default, expands on hover */}
                 <button
                   onClick={(e) => {
