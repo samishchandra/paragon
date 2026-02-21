@@ -27,7 +27,7 @@ const CALLOUT_TYPES = ['info', 'note', 'prompt', 'resources', 'todo'];
 const AD_CALLOUT_PREFIX = 'ad-';
 
 // Quick check if text looks like markdown (optimized - check most common patterns first)
-function looksLikeMarkdown(text: string): boolean {
+export function looksLikeMarkdown(text: string): boolean {
   // Check length first - very short text unlikely to be markdown
   if (text.length < 3) return false;
   
@@ -118,8 +118,8 @@ function convertLineToBlocks(line: string): string {
  * Parse a list line and return its type, depth, and content.
  * Indentation is 2 spaces per level.
  */
-type ListLineInfo = { type: 'ul' | 'ol' | 'task'; depth: number; text: string; checked?: boolean };
-function parseListLine(rawLine: string): ListLineInfo | null {
+export type ListLineInfo = { type: 'ul' | 'ol' | 'task'; depth: number; text: string; checked?: boolean };
+export function parseListLine(rawLine: string): ListLineInfo | null {
   const indentMatch = rawLine.match(/^( *)/);
   const spaces = indentMatch ? indentMatch[1].length : 0;
   const depth = Math.floor(spaces / 2);
@@ -135,7 +135,7 @@ function parseListLine(rawLine: string): ListLineInfo | null {
   }
   const olMatch = trimmed.match(/^\d+\.\s+(.+)$/);
   if (olMatch) {
-    return { type: 'ol', depth, text: olMatch[2].trim() };
+    return { type: 'ol', depth, text: olMatch[1].trim() };
   }
   return null;
 }
@@ -143,7 +143,7 @@ function parseListLine(rawLine: string): ListLineInfo | null {
 /**
  * Build nested list HTML from a sequence of parsed list lines.
  */
-function buildNestedListHtml(items: ListLineInfo[]): string {
+export function buildNestedListHtml(items: ListLineInfo[]): string {
   if (items.length === 0) return '';
   
   const buildLevel = (startIdx: number, parentDepth: number): { html: string; nextIdx: number } => {
@@ -302,7 +302,7 @@ function parseMarkdownTable(tableText: string): string {
 
 // Optimized markdown to HTML converter
 // Uses a single pass approach where possible
-function markdownToHtml(markdown: string): string {
+export function markdownToHtml(markdown: string): string {
   let html = markdown;
   
   // Tables first - find and replace markdown tables with HTML tables
