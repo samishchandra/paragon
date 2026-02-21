@@ -206,3 +206,6 @@
 
 ## Publish Build Error Fix
 - [x] Fix: Production build verified — `pnpm build` succeeds locally (3195 modules, all chunks generated). Previous publish error was from stale state before adapter/import fixes.
+
+## Publish Build Fix (Docker)
+- [x] Fix: foundation/ submodule not available in Docker deploy — converted submodule to regular tracked files (removed .gitmodules, staged all 127+ foundation files as regular git files)

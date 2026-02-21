@@ -11,7 +11,7 @@ import { clearAllCachedData } from '@/lib/offlineStore';
 import { clearSwCaches } from '@/lib/serviceWorker';
 
 interface AuthContextValue {
-  user: { id: string; email?: string; name?: string } | null;
+  user: { id: string; email?: string; name?: string; user_metadata?: Record<string, any> } | null;
   session: null;
   isLoading: boolean;
   isPasswordRecovery: boolean;
@@ -44,6 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: String(meQuery.data.id),
         email: meQuery.data.email ?? undefined,
         name: meQuery.data.name ?? undefined,
+        user_metadata: {
+          full_name: meQuery.data.name ?? undefined,
+          avatar_url: undefined,
+        },
       }
     : null;
 
