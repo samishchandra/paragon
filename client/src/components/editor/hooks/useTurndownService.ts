@@ -93,6 +93,42 @@ async function createTurndownService(): Promise<TurndownServiceType> {
     },
   });
 
+  // Figure wrapper: serialize the inner <img> as markdown image.
+  // This ensures figure-wrapped images (from TipTap's resizableImage) produce
+  // clean markdown like ![alt | align | width](url) on its own line.
+  td.addRule('imageResizer', {
+    filter: (node) => {
+      return node.nodeName === 'FIGURE' &&
+             (node as HTMLElement).classList.contains('image-resizer');
+    },
+    replacement: (content, node) => {
+      const img = (node as HTMLElement).querySelector('img');
+      if (!img) return content;
+      const src = img.getAttribute('src') || '';
+      const rawAlt = img.getAttribute('alt') || '';
+      const alt = rawAlt.replace(/\s*\|\s*(?:left|center|right)?\s*(?:\|\s*\d+)?\s*$/, '').trim();
+      const widthAttr = img.getAttribute('width');
+      const width = widthAttr ? parseInt(widthAttr, 10) : null;
+      const align = img.getAttribute('data-align') || 'left';
+      const parts: string[] = [alt];
+      const hasNonDefaultAlign = align && align !== 'left';
+      const hasWidth = width && width > 0;
+      if (hasNonDefaultAlign || hasWidth) {
+        parts.push(hasNonDefaultAlign ? align : 'left');
+      }
+      if (hasWidth) {
+        parts.push(String(width));
+      }
+      const md = `![${parts.join(' | ')}](${src})`;
+      // If inside a list item, return just the image markdown (the list item rule handles indentation)
+      const parent = node.parentNode as HTMLElement | null;
+      if (parent && parent.nodeName === 'LI') {
+        return '\n' + md + '\n';
+      }
+      return '\n\n' + md + '\n\n';
+    },
+  });
+
   td.addRule('taskListItem', {
     filter: (node) => {
       return node.nodeName === 'LI' &&
