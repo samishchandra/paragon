@@ -384,31 +384,58 @@ function markdownToHtml(markdown: string): string {
   // Inline code (before other inline formatting)
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
   
-  // Headers (single pass with callback)
-  html = html.replace(/^(#{1,6})\s+(.+)$/gm, (_, hashes, content) => {
-    const level = hashes.length;
-    return `<h${level}>${content}</h${level}>`;
-  });
+  // === Process lines sequentially to handle nested lists properly ===
+  const inputLines = html.split('\n');
+  const outputBlocks: string[] = [];
+  let pendingListItems: ListLineInfo[] = [];
   
-  // Task lists
-  html = html.replace(/^(\s*)[-*]\s*\[x\]\s+(.+)$/gim, '$1<li data-type="taskItem" data-checked="true"><p>$2</p></li>');
-  html = html.replace(/^(\s*)[-*]\s*\[\s*\]\s+(.+)$/gim, '$1<li data-type="taskItem" data-checked="false"><p>$2</p></li>');
+  const flushList = () => {
+    if (pendingListItems.length === 0) return;
+    outputBlocks.push(buildNestedListHtml(pendingListItems));
+    pendingListItems = [];
+  };
   
-  // Unordered lists
-  html = html.replace(/^(\s*)[-*]\s+(?!\[)(.+)$/gm, '$1<li><p>$2</p></li>');
+  for (const rawLine of inputLines) {
+    // Check if this line is a list item
+    const listInfo = parseListLine(rawLine);
+    
+    if (listInfo) {
+      // If switching between list types at root level, flush first
+      if (pendingListItems.length > 0) {
+        const firstType = pendingListItems[0].type;
+        const minDepth = Math.min(...pendingListItems.map(it => it.depth));
+        if (listInfo.depth === minDepth && listInfo.type !== firstType) {
+          flushList();
+        }
+      }
+      pendingListItems.push(listInfo);
+      continue;
+    }
+    
+    // Not a list item — flush any pending list
+    flushList();
+    
+    let line = rawLine;
+    
+    // Headers (single pass with callback)
+    line = line.replace(/^(#{1,6})\s+(.+)$/, (_, hashes, content) => {
+      const level = hashes.length;
+      return `<h${level}>${content}</h${level}>`;
+    });
+    
+    // Blockquotes
+    line = line.replace(/^>\s+(.+)$/, '<blockquote><p>$1</p></blockquote>');
+    
+    // Horizontal rules
+    line = line.replace(/^[-*_]{3,}$/, '<hr>');
+    
+    outputBlocks.push(line);
+  }
   
-  // Ordered lists
-  html = html.replace(/^(\s*)\d+\.\s+(.+)$/gm, '$1<li><p>$2</p></li>');
+  // Flush any remaining list items
+  flushList();
   
-  // Wrap consecutive list items
-  html = html.replace(/(<li data-type="taskItem"[^>]*>[\s\S]*?<\/li>\n?)+/g, '<ul data-type="taskList">$&</ul>');
-  html = html.replace(/(<li><p>[\s\S]*?<\/p><\/li>\n?)+/g, '<ul>$&</ul>');
-  
-  // Blockquotes
-  html = html.replace(/^>\s+(.+)$/gm, '<blockquote><p>$1</p></blockquote>');
-  
-  // Horizontal rules
-  html = html.replace(/^[-*_]{3,}$/gm, '<hr>');
+  html = outputBlocks.join('\n');
   
   // Bold and italic (combined pass)
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
