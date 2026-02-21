@@ -44,6 +44,8 @@ import { TabIndent } from './extensions/TabIndent';
 import { ExpandSelection } from './extensions/ExpandSelection';
 import { HexColorMark } from './extensions/HexColorMark';
 import { SelectAllOccurrences } from './extensions/SelectAllOccurrences';
+import { insertHorizontalRuleClean } from './utils/insertHorizontalRule';
+import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import { ImageUpload } from './extensions/ImageUpload';
 import { ImageDropZone } from './ImageDropZone';
 import { ImageEditPopover } from './ImageEditPopover';
@@ -684,6 +686,10 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         // Disable extensions that we configure separately to avoid duplicates
         link: false, // We configure Link separately with custom options
         underline: false, // We add Underline separately
+        // Disable built-in HorizontalRule input rules - we handle HR creation
+        // via our custom space shortcut handler (insertHorizontalRuleClean)
+        // to avoid the extra empty paragraph that the default command creates
+        horizontalRule: false,
         bold: {
           HTMLAttributes: {
             class: 'font-bold',
@@ -726,6 +732,13 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       SearchHighlight,
       SelectAllOccurrences,
       TabIndent,
+      // Add HorizontalRule back without its built-in input rules
+      // We handle HR creation via our custom space shortcut handler
+      HorizontalRule.extend({
+        addInputRules() {
+          return []; // Disable built-in input rules
+        },
+      }),
     ];
 
     // Conditionally add tables
@@ -1503,7 +1516,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       }
     },
     insertCallout: (type = 'info') => editor?.commands.insertCallout?.({ type: type as 'info' | 'note' | 'prompt' | 'resources' | 'todo' }),
-    insertHorizontalRule: () => editor?.commands.setHorizontalRule(),
+    insertHorizontalRule: () => {
+      if (editor) insertHorizontalRuleClean(editor, editor.state.selection.from, editor.state.selection.from);
+    },
     toggleBold: () => editor?.commands.toggleBold(),
     toggleItalic: () => editor?.commands.toggleItalic(),
     toggleUnderline: () => editor?.commands.toggleUnderline(),
@@ -1810,10 +1825,23 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             return;
           }
           
-          // Horizontal rule
+          // Horizontal rule - use custom insertion to avoid extra empty paragraph
+          // Typography extension converts dashes: '---' may become '\u2014-' (em dash + dash)
+          // or '\u2014' (single em dash) depending on input timing
           if (textBefore === '---' || textBefore === '***') {
             event.preventDefault();
-            editor.chain().focus().deleteRange({ from: $from.pos - 3, to: $from.pos }).setHorizontalRule().run();
+            insertHorizontalRuleClean(editor, $from.pos - 3, $from.pos);
+            return;
+          }
+          if (textBefore === '\u2014-') {
+            event.preventDefault();
+            insertHorizontalRuleClean(editor, $from.pos - 2, $from.pos);
+            return;
+          }
+          if (textBefore === '\u2014') {
+            // Typography converted all 3 dashes to single em dash
+            event.preventDefault();
+            insertHorizontalRuleClean(editor, $from.pos - 1, $from.pos);
             return;
           }
         } catch (error) {
