@@ -63,12 +63,12 @@ jobs:
           fi
 
           
-      - name: Notify momentum
+      - name: Notify momentum-foundation
         if: steps.commit.outputs.changed == 'true'
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.DISPATCH_TOKEN }}
-          repository: samishchandra/momentum
+          repository: samishchandra/momentum-foundation
           event-type: paragon-updated
           client-payload: '{"sha": "${{ github.sha }}"}'
 
