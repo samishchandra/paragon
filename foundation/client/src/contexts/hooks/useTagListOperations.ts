@@ -12,6 +12,7 @@
 import { useCallback } from 'react';
 import { apiQuery } from '@/lib/db';
 import { markItemDirty } from '@/lib/autoBackup';
+import { formatError } from '@/lib/utils';
 import type { Item, Tag, List } from '@/types';
 
 export interface TagListOperationsDeps {
@@ -71,13 +72,13 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
     } else {
       apiQuery({ action: 'delete', table: 'item_tags', filters: { tag_id: id } }).then(({ error: junctionError }) => {
         if (junctionError) {
-          console.error('Failed to delete item_tags for tag:', id, junctionError);
+          console.error('Failed to delete item_tags for tag:', id, formatError(junctionError));
           enqueueOffline({ mutationType: 'delete', table: 'item_tags', payload: {}, filterColumn: 'tag_id', filterValue: id });
         }
         return apiQuery({ action: 'delete', table: 'tags', filters: { id } });
       }).then((result) => {
         if (result && 'error' in result && result.error) {
-          console.error('Failed to delete tag:', id, result.error);
+          console.error('Failed to delete tag:', id, formatError(result.error));
           enqueueOffline({ mutationType: 'delete', table: 'tags', payload: {}, filterColumn: 'id', filterValue: id });
         }
       });
@@ -158,7 +159,7 @@ export function useTagListOperations(deps: TagListOperationsDeps) {
       } else {
         return apiQuery({ action: 'update', table: 'lists', data: payload, filters: { id: list.id } }).then(({ error }) => {
           if (error) {
-            console.error(`Failed to update sort_order for list ${list.name}:`, error);
+            console.error(`Failed to update sort_order for list ${list.name}:`, formatError(error));
             enqueueOffline({ mutationType: 'update', table: 'lists', payload, filterColumn: 'id', filterValue: list.id });
           }
         });

@@ -18,6 +18,7 @@ import { toast } from '@/lib/toast';
 import { clearSearchCache } from '@/lib/serverSearch';
 import { markItemDirty, markItemsDirty, flushNow as flushAutoBackup } from '@/lib/autoBackup';
 import { wikiLinkCache } from '@/lib/wikiLinkCache';
+import { formatError } from '@/lib/utils';
 import type {
   Item,
   Task,
@@ -219,13 +220,13 @@ export function useItemOperations(deps: ItemOperationsDeps) {
 
     apiQuery({ action: 'insert', table: 'items', data: insertPayload }).then(({ error }) => {
       if (error) {
-        console.error('Failed to create task:', error);
+        console.error('Failed to create task:', formatError(error));
         enqueueOffline({ mutationType: 'insert', table: 'items', payload: insertPayload });
         toast.info('Saved offline — will sync when connected');
       } else {
         if (tagIds && tagIds.length > 0) {
           apiQuery({ action: 'insert', table: 'item_tags', data: tagIds.map(tagId => ({ item_id: id, tag_id: tagId })) }).then(({ error: tagError }) => {
-            if (tagError) console.error('Failed to insert item_tags:', tagError);
+            if (tagError) console.error('Failed to insert item_tags:', formatError(tagError));
           });
         }
         refreshCounts();
@@ -240,7 +241,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
 
     // Resolve tags: find existing or create new ones
     const resolvedTagIds: string[] = [];
-    const TAG_COLORS = ['#008948', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+    const TAG_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
     if (tagNames && tagNames.length > 0) {
       const currentTags = [...tagsRef.current];
       for (const name of tagNames) {
@@ -329,13 +330,13 @@ export function useItemOperations(deps: ItemOperationsDeps) {
 
     apiQuery({ action: 'insert', table: 'items', data: insertPayload }).then(({ error }) => {
       if (error) {
-        console.error('Failed to create note:', error);
+        console.error('Failed to create note:', formatError(error));
         enqueueOffline({ mutationType: 'insert', table: 'items', payload: insertPayload });
         toast.info('Saved offline — will sync when connected');
       } else {
         if (resolvedTagIds.length > 0) {
           apiQuery({ action: 'insert', table: 'item_tags', data: resolvedTagIds.map(tagId => ({ item_id: id, tag_id: tagId })) }).then(({ error: tagError }) => {
-            if (tagError) console.error('Failed to insert item_tags:', tagError);
+            if (tagError) console.error('Failed to insert item_tags:', formatError(tagError));
           });
         }
         refreshCounts();
@@ -506,12 +507,12 @@ export function useItemOperations(deps: ItemOperationsDeps) {
       const newTags = [...item.tags];
       apiQuery({ action: 'delete', table: 'item_tags', filters: { item_id: item.id } }).then(({ error: delError }) => {
         if (delError) {
-          console.error('[ITEM_TAGS_SYNC] Delete error:', delError);
+          console.error('[ITEM_TAGS_SYNC] Delete error:', formatError(delError));
           return;
         }
         if (newTags.length > 0) {
           apiQuery({ action: 'insert', table: 'item_tags', data: newTags.map(tagId => ({ item_id: item.id, tag_id: tagId })) }).then(({ error: insError }) => {
-            if (insError) console.error('[ITEM_TAGS_SYNC] Insert error:', insError);
+            if (insError) console.error('[ITEM_TAGS_SYNC] Insert error:', formatError(insError));
           });
         }
       });
@@ -573,7 +574,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
 
       apiQuery({ action: 'update', table: 'items', data: updatePayload, filters: { id: latestItem.id } }).then(({ error }) => {
         if (error) {
-          console.error('Update failed:', error);
+          console.error('Update failed:', formatError(error));
           enqueueOffline({ mutationType: 'update', table: 'items', payload: updatePayload, filterColumn: 'id', filterValue: latestItem.id });
         } else {
           clearSearchCache();
@@ -820,14 +821,14 @@ export function useItemOperations(deps: ItemOperationsDeps) {
         single: true,
       });
       if (error || !data) {
-        console.error('Failed to fetch item:', error);
+        console.error('Failed to fetch item:', formatError(error));
         selectItem(id);
         return;
       }
       const item = dbRowToItem(data);
       dispatch({ type: 'INJECT_ITEM', payload: item });
     } catch (err) {
-      console.error('Failed to fetch item:', err);
+      console.error('Failed to fetch item:', formatError(err));
       selectItem(id);
     } finally {
       setIsFetchingItem(false);
@@ -994,7 +995,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     } else {
       apiQuery({ action: 'upsert', table: 'item_tags', data: rows }).then(({ error }) => {
         if (error) {
-          console.error('[BULK_ADD_TAG] Server sync error:', error);
+          console.error('[BULK_ADD_TAG] Server sync error:', formatError(error));
           rows.forEach(row => {
             enqueueOffline({ mutationType: 'insert', table: 'item_tags', payload: row });
           });
@@ -1045,7 +1046,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
         data: deletePayload,
       }))).then(({ error }) => {
         if (error) {
-          console.error('[BULK_DELETE] Server sync error:', error);
+          console.error('[BULK_DELETE] Server sync error:', formatError(error));
           itemIds.forEach(id => {
             enqueueOffline({ mutationType: 'update', table: 'items', payload: deletePayload, filterColumn: 'id', filterValue: id });
           });
@@ -1071,7 +1072,7 @@ export function useItemOperations(deps: ItemOperationsDeps) {
         data: listPayload,
       }))).then(({ error }) => {
         if (error) {
-          console.error('[BULK_SET_LIST] Server sync error:', error);
+          console.error('[BULK_SET_LIST] Server sync error:', formatError(error));
           itemIds.forEach(id => {
             enqueueOffline({ mutationType: 'update', table: 'items', payload: listPayload, filterColumn: 'id', filterValue: id });
           });

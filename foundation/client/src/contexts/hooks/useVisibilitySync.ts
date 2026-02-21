@@ -10,6 +10,7 @@
  */
 import { useCallback, useRef, useEffect } from 'react';
 import { apiQuery } from '@/lib/db';
+import { formatError } from '@/lib/utils';
 import { clearSearchCache } from '@/lib/serverSearch';
 import type { SortOrder } from '@/types';
 import { fetchTags, fetchLists } from '@/lib/queries';
@@ -81,7 +82,7 @@ export function useVisibilitySync(deps: VisibilitySyncDeps) {
       ]);
       clearSearchCache();
     } catch (err) {
-      console.error('Catch-up sync failed:', err);
+      console.error('Catch-up sync failed:', formatError(err));
     } finally {
       setIsSyncingCatchUp(false);
     }

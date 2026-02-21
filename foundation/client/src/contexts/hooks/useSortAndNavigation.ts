@@ -15,6 +15,7 @@ import { apiQuery } from '@/lib/db';
 import { toast } from 'sonner';
 import type { Item, FilterType, SortOrder } from '@/types';
 import { fetchItems, searchItems, fetchTags, fetchLists } from '@/lib/queries';
+import { formatError } from '@/lib/utils';
 
 export interface SortAndNavigationDeps {
   dispatch: React.Dispatch<any>;
@@ -129,7 +130,7 @@ export function useSortAndNavigation(deps: SortAndNavigationDeps) {
         },
       });
     } catch (error) {
-      console.error('Failed to load more items:', error);
+      console.error('Failed to load more items:', formatError(error));
       toast.error('Failed to load more items');
     } finally {
       dispatch({ type: 'SET_LOADING_MORE', payload: false });

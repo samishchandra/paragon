@@ -27,6 +27,7 @@ import {
 } from './localBackup';
 import { supabase } from './db';
 import { logAutoBackup, logBackupError } from './backupLog';
+import { formatError } from './utils';
 
 // ── Per-item backup status ──
 
@@ -164,7 +165,7 @@ export async function triggerFullBackup() {
       markItemsDirty(ids);
     }
   } catch (err) {
-    console.error('[AutoBackup] Failed to trigger full backup:', err);
+    console.error('[AutoBackup] Failed to trigger full backup:', formatError(err));
   }
 }
 
@@ -236,7 +237,7 @@ async function flushDirtyItems() {
       .in('id', itemIdsToBackup);
 
     if (itemsErr) {
-      console.error('[AutoBackup] Failed to fetch items:', itemsErr);
+      console.error('[AutoBackup] Failed to fetch items:', formatError(itemsErr));
       logBackupError(`Failed to fetch items: ${itemsErr.message}`);
       for (const id of itemIdsToBackup) {
         dirtyItemIds.add(id);
@@ -300,7 +301,7 @@ async function flushDirtyItems() {
         newState.files[item.id] = { path, updatedAt: item.updated_at, contentHash: hash };
         setItemStatus(item.id, 'synced');
       } catch (err) {
-        console.error(`[AutoBackup] Failed to backup item ${item.id}:`, err);
+        console.error(`[AutoBackup] Failed to backup item ${item.id}:`, formatError(err));
         setItemStatus(item.id, 'error');
         dirtyItemIds.add(item.id);
       }
@@ -345,7 +346,7 @@ async function flushDirtyItems() {
     );
 
   } catch (err) {
-    console.error('[AutoBackup] Flush failed:', err);
+    console.error('[AutoBackup] Flush failed:', formatError(err));
     logBackupError(`Auto-backup failed: ${err instanceof Error ? err.message : String(err)}`);
     for (let i = 0; i < itemIdsToBackup.length; i++) {
       const id = itemIdsToBackup[i];

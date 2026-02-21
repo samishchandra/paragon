@@ -16,6 +16,7 @@ import {
   apiRpc,
   apiQuery,
 } from '@/lib/db';
+import { formatError } from '@/lib/utils';
 import type {
   Item,
   Task,
@@ -237,7 +238,7 @@ export async function fetchAllSidebarData(userId: string): Promise<{
 }> {
   const { data, error } = await apiRpc('get_sidebar_counts', { p_user_id: userId });
   if (error) {
-    console.error('Error fetching sidebar counts via RPC:', error);
+    console.error('Error fetching sidebar counts via RPC:', formatError(error));
     return { counts: { all: 0, tasks: 0, notes: 0, pinned: 0, completed: 0, trash: 0, miscellaneous: 0, todo: 0 }, tagCounts: {}, listCounts: {} };
   }
   const result = data as any;

@@ -26,7 +26,7 @@ import {
   putCachedUserSettings,
   setLastSyncTimestamp,
 } from '@/lib/offlineStore';
-
+import { formatError } from '@/lib/utils';
 export interface DataFetchingDeps {
   dispatch: React.Dispatch<any>;
   userId: string;
@@ -181,7 +181,7 @@ export function useDataFetching(deps: DataFetchingDeps) {
         putCachedItems(result.items).catch(() => {});
       }
     } catch (error) {
-      console.error('Failed to fetch items:', error);
+      console.error('Failed to fetch items:', formatError(error));
       dispatch({ type: 'SET_LOADING', payload: false });
       isLoadingRef.current = false;
     } finally {
@@ -287,7 +287,7 @@ export function useDataFetching(deps: DataFetchingDeps) {
         }
         setLastSyncTimestamp(new Date().toISOString()).catch(() => {});
       } catch (err) {
-        console.error('Failed to load tags/lists/settings from server:', err);
+        console.error('Failed to load tags/lists/settings from server:', formatError(err));
       }
     }
     loadMetadata();
@@ -339,7 +339,7 @@ export function useDataFetching(deps: DataFetchingDeps) {
         dispatch({ type: 'REFRESH_TAB_ITEMS', payload: serverItems });
       }
     } catch (err) {
-      console.error('Failed to refresh open tab items:', err);
+      console.error('Failed to refresh open tab items:', formatError(err));
     }
   }, [openTabIds, userId, dispatch]);
 

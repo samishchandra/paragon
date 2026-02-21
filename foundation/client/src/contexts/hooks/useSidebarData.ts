@@ -14,6 +14,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Item } from '@/types';
 import { fetchAllSidebarData, fetchPinnedItems } from '@/lib/queries';
 import { computeSidebarCountsLocally } from '@/lib/offlineStore';
+import { formatError } from '@/lib/utils';
 
 // Sidebar counts shape (matches the context value type)
 export type SidebarCounts = {
@@ -63,7 +64,7 @@ export function useSidebarData(userId: string): UseSidebarDataReturn {
       setSidebarListCounts(sidebarData.listCounts);
       setPinnedItems(pinned);
     } catch (error) {
-      console.error('Failed to refresh counts:', error);
+      console.error('Failed to refresh counts:', formatError(error));
     }
   }, [userId]);
 
