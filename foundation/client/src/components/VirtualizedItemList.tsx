@@ -4,14 +4,17 @@
  * Uses react-window v2 for efficient rendering of large lists.
  * Only renders items that are visible in the viewport.
  * 
+ * Uses useDynamicRowHeight for variable-height rows that adapt
+ * to content (title length, content preview, number of tags/pills).
+ * 
  * Row rendering matches the rich ItemCard style:
  * - Title with pin/3-dot icons on hover (right-aligned)
  * - Content preview (1-2 lines)
  * - TagPill, ListPill, DatePill components for consistent styling
  */
 
-import { memo, useEffect, ReactElement } from 'react';
-import { List, useListRef, ListImperativeAPI } from 'react-window';
+import { useEffect, useMemo, ReactElement } from 'react';
+import { List, useListRef, useDynamicRowHeight, ListImperativeAPI } from 'react-window';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { Item, SectionType, Task, Tag } from '@/types';
 import { cn } from '@/lib/utils';
@@ -46,8 +49,8 @@ import { DatePill } from '@/components/DatePill';
 import { highlightText, getMatchSnippet } from '@/lib/highlightText';
 import { linkifyTitle, extractFirstLineLink, renderFirstLineLink } from '@/lib/linkifyTitle';
 
-// Item height for virtual list — taller to fit content preview + pills
-const ITEM_HEIGHT = 110;
+// Default estimated row height — used as initial estimate before measurement
+const DEFAULT_ROW_HEIGHT = 90;
 
 interface VirtualizedItemListProps {
   items: Item[];
@@ -100,6 +103,8 @@ interface RowComponentProps {
 }
 
 // Row component for react-window v2 — rich rendering matching ItemCard
+// With dynamic heights, the outer div uses style from react-window (position:absolute, top, width)
+// but the inner content renders naturally without height constraints.
 function Row({ 
   index, 
   style,
@@ -138,20 +143,22 @@ function Row({
     }
   };
 
+  // The outer div uses react-window's style (position, top, width) for positioning.
+  // The inner content renders naturally — useDynamicRowHeight's ResizeObserver
+  // will measure the actual height and update the list accordingly.
   return (
     <div style={style} className="px-1">
       <div
         className={cn(
-          "group relative py-3 pr-3 pl-3 rounded-lg transition-colors duration-150 cursor-pointer select-none overflow-hidden border-b border-border/40",
+          "group relative py-3 pr-3 pl-3 rounded-lg transition-colors duration-150 cursor-pointer select-none border-b border-border/40",
           isSelected
             ? ITEM_SELECTED
             : 'bg-transparent ' + ITEM_HOVER,
         )}
-        style={{ height: ITEM_HEIGHT - 4 }}
         onClick={() => onSelect(item.id)}
       >
         {/* Flexbox layout for icon and content */}
-        <div className="flex items-start gap-2 h-full">
+        <div className="flex items-start gap-2">
           {/* Checkbox or Note icon — aligned with first line of title */}
           <div className="shrink-0 flex items-center h-[22px]">
             {isTask ? (
@@ -171,7 +178,7 @@ function Row({
           </div>
 
           {/* Content — starts after icon */}
-          <div className="min-w-0 flex-1 flex flex-col">
+          <div className="min-w-0 flex-1 flex flex-col gap-1">
             {/* Title row with pin and 3-dot icons on the right */}
             <div className="flex items-start justify-between gap-2">
               {/* Title — max 2 lines */}
@@ -294,7 +301,7 @@ function Row({
               </div>
             ) : item.content ? (
               /* Content preview — 1-2 lines of note content */
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+              <p className="text-xs text-muted-foreground line-clamp-2">
                 {searchQuery 
                   ? highlightText(getMatchSnippet(item.content.replace(/<[^>]*>/g, ''), searchQuery, 100), searchQuery)
                   : item.content.replace(/<[^>]*>/g, '').slice(0, 100)}
@@ -303,7 +310,7 @@ function Row({
 
             {/* Bottom row: Date pill, List pill, Tag pills */}
             {(dueDate || (itemList && !hideListPill) || itemTags.length > 0) && (
-              <div className="flex items-center gap-1.5 mt-auto overflow-hidden">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 {/* Date pill */}
                 {dueDate && (
                   <DatePill
@@ -364,11 +371,13 @@ function InnerList({
   onDuplicate,
   hideListPill,
   listRef,
+  rowHeight,
   onScroll,
 }: { 
   height: number | undefined; 
   width: number | undefined;
   listRef: React.RefObject<ListImperativeAPI | null>;
+  rowHeight: ReturnType<typeof useDynamicRowHeight>;
   onScroll?: (scrollTop: number, scrollHeight: number, clientHeight: number) => void;
 } & RowProps) {
   if (!height || !width) return null;
@@ -390,12 +399,11 @@ function InnerList({
     hideListPill,
   };
 
-  // Handle scroll events from the list
+  // Handle scroll events from the list for infinite loading
   const handleListScroll = (event: React.UIEvent<HTMLDivElement>) => {
     if (onScroll && height) {
       const target = event.currentTarget;
-      const scrollHeight = items.length * ITEM_HEIGHT;
-      onScroll(target.scrollTop, scrollHeight, height);
+      onScroll(target.scrollTop, target.scrollHeight, height);
     }
   };
 
@@ -404,7 +412,7 @@ function InnerList({
       listRef={listRef}
       style={{ height, width }}
       rowCount={items.length}
-      rowHeight={ITEM_HEIGHT}
+      rowHeight={rowHeight}
       rowComponent={Row}
       rowProps={rowProps}
       overscanCount={5}
@@ -435,6 +443,12 @@ export function VirtualizedItemList({
   total,
 }: VirtualizedItemListProps) {
   const listRef = useListRef(null);
+
+  // Use dynamic row heights — react-window v2 will measure each row via ResizeObserver
+  // and adjust the list layout accordingly. defaultRowHeight is the initial estimate.
+  const rowHeight = useDynamicRowHeight({
+    defaultRowHeight: DEFAULT_ROW_HEIGHT,
+  });
 
   // Scroll to selected item when it changes
   useEffect(() => {
@@ -493,6 +507,7 @@ export function VirtualizedItemList({
               onDuplicate={onDuplicate}
               hideListPill={hideListPill}
               listRef={listRef}
+              rowHeight={rowHeight}
               onScroll={handleScroll}
             />
           )}
@@ -518,4 +533,5 @@ export function VirtualizedItemList({
   );
 }
 
-export { ITEM_HEIGHT };
+// Export DEFAULT_ROW_HEIGHT for backward compatibility (used as estimate)
+export { DEFAULT_ROW_HEIGHT as ITEM_HEIGHT };
