@@ -23,10 +23,40 @@ declare module '@tiptap/core' {
 
 const collapsibleHeadingPluginKey = new PluginKey('collapsibleHeading');
 
-// Generate a stable ID for a heading based on its content and position
-function getHeadingId(node: { textContent: string }, level: number, pos: number): string {
-  // Include position to handle duplicate heading text
-  return `h${level}-${pos}-${node.textContent.slice(0, 50)}`;
+/**
+ * Generate a stable, position-independent ID for a heading.
+ * Uses level + text content + occurrence index among same-level headings with the same text.
+ * This ensures IDs remain stable when text is inserted/deleted elsewhere in the document.
+ */
+function getHeadingId(level: number, textContent: string, occurrenceIndex: number): string {
+  return `h${level}-${occurrenceIndex}-${textContent.slice(0, 50)}`;
+}
+
+/**
+ * Build a lookup map of heading IDs for the entire document.
+ * Returns a Map from position -> headingId.
+ * This is computed once per document version and shared across all consumers.
+ */
+function buildHeadingIdMap(
+  doc: ProseMirrorNode,
+  levels: number[]
+): Map<number, string> {
+  const idMap = new Map<number, string>();
+  // Track occurrence count per (level, text) pair
+  const occurrenceCounts = new Map<string, number>();
+
+  doc.descendants((node, pos) => {
+    if (node.type.name === 'heading' && levels.includes(node.attrs.level)) {
+      const level = node.attrs.level;
+      const text = node.textContent.slice(0, 50);
+      const key = `h${level}-${text}`;
+      const count = occurrenceCounts.get(key) ?? 0;
+      occurrenceCounts.set(key, count + 1);
+      idMap.set(pos, getHeadingId(level, text, count));
+    }
+  });
+
+  return idMap;
 }
 
 // Store view reference for click handlers
@@ -36,7 +66,6 @@ let currentView: EditorView | null = null;
  * Performance: Extract decoration building into a standalone function.
  * This is called from plugin state management, which caches the result
  * and only rebuilds when the document structure changes or collapse state toggles.
- * Previously, this ran 3 full doc.descendants() passes on EVERY transaction.
  */
 function buildDecorations(
   doc: ProseMirrorNode,
@@ -44,6 +73,7 @@ function buildDecorations(
   options: CollapsibleHeadingOptions
 ): DecorationSet {
   const decorations: Decoration[] = [];
+  const headingIdMap = buildHeadingIdMap(doc, options.levels);
 
   // First pass: collect all headings
   const headings: Array<{
@@ -56,7 +86,7 @@ function buildDecorations(
 
   doc.descendants((node, pos) => {
     if (node.type.name === 'heading' && options.levels.includes(node.attrs.level)) {
-      const headingId = getHeadingId(node, node.attrs.level, pos);
+      const headingId = headingIdMap.get(pos) ?? '';
       headings.push({
         pos,
         level: node.attrs.level,
@@ -111,7 +141,7 @@ function buildDecorations(
   // Third pass: add decorations
   doc.descendants((node, pos) => {
     if (node.type.name === 'heading' && options.levels.includes(node.attrs.level)) {
-      const headingId = getHeadingId(node, node.attrs.level, pos);
+      const headingId = headingIdMap.get(pos) ?? '';
       const isCollapsed = storage.collapsedHeadings.has(headingId);
       const headingIsHidden = isHidden(pos);
 
@@ -183,6 +213,36 @@ function buildDecorations(
   return DecorationSet.create(doc, decorations);
 }
 
+/**
+ * Migrate collapsed heading IDs when the document changes.
+ * Maps old IDs (from the previous document state) to new IDs (in the current document state).
+ * This handles cases where heading positions shift due to edits, which would change
+ * position-based IDs but not occurrence-based IDs.
+ */
+function migrateCollapsedIds(
+  oldDoc: ProseMirrorNode,
+  newDoc: ProseMirrorNode,
+  storage: CollapsibleHeadingStorage,
+  levels: number[]
+): void {
+  if (storage.collapsedHeadings.size === 0) return;
+
+  const newIdMap = buildHeadingIdMap(newDoc, levels);
+  const newIds = new Set(newIdMap.values());
+
+  // Remove any collapsed IDs that no longer exist in the document
+  // (e.g., heading was deleted or its text changed)
+  const toRemove: string[] = [];
+  storage.collapsedHeadings.forEach((id) => {
+    if (!newIds.has(id)) {
+      toRemove.push(id);
+    }
+  });
+  for (const id of toRemove) {
+    storage.collapsedHeadings.delete(id);
+  }
+}
+
 export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, CollapsibleHeadingStorage>({
   name: 'collapsibleHeading',
 
@@ -210,8 +270,11 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
             return false;
           }
 
-          const headingId = getHeadingId(node, node.attrs.level, pos);
+          const headingIdMap = buildHeadingIdMap(tr.doc, this.options.levels);
+          const headingId = headingIdMap.get(pos);
           
+          if (!headingId) return false;
+
           if (storage.collapsedHeadings.has(headingId)) {
             storage.collapsedHeadings.delete(headingId);
           } else {
@@ -234,12 +297,10 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
         () =>
         ({ editor, tr }) => {
           const storage = this.storage as CollapsibleHeadingStorage;
-          const doc = tr.doc;
+          const headingIdMap = buildHeadingIdMap(tr.doc, this.options.levels);
           
-          doc.descendants((node, pos) => {
-            if (node.type.name === 'heading') {
-              storage.collapsedHeadings.add(getHeadingId(node, node.attrs.level, pos));
-            }
+          headingIdMap.forEach((id) => {
+            storage.collapsedHeadings.add(id);
           });
           
           editor.view.dispatch(tr.setMeta('collapsibleHeading', { collapseAll: true }));
@@ -274,11 +335,14 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
               docVersion: 0,
             };
           },
-          apply(tr, value, _oldState, newState) {
+          apply(tr, value, oldState, newState) {
             const meta = tr.getMeta('collapsibleHeading');
             // Performance: Only rebuild decorations when doc changes or collapse state changes
-            // This avoids 3 full doc traversals on every keystroke
             if (meta || tr.docChanged) {
+              // When doc changes, migrate collapsed IDs to account for any structural shifts
+              if (tr.docChanged && !meta) {
+                migrateCollapsedIds(oldState.doc, newState.doc, storage, options.levels);
+              }
               return {
                 collapsedHeadings: new Set(storage.collapsedHeadings),
                 decorations: buildDecorations(newState.doc, storage, options),
@@ -286,7 +350,6 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
               };
             }
             // If doc hasn't changed and no collapse toggle, reuse existing decorations
-            // but map them through the transaction to adjust positions
             return {
               ...value,
               decorations: value.decorations.map(tr.mapping, tr.doc),
@@ -295,8 +358,6 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
         },
         props: {
           decorations(state) {
-            // Performance: Return cached decorations from plugin state
-            // Only falls back to fresh build if plugin state is unavailable
             const pluginState = collapsibleHeadingPluginKey.getState(state);
             if (pluginState?.decorations) {
               return pluginState.decorations;

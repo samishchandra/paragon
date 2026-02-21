@@ -3318,6 +3318,9 @@ pre.with-line-numbers code .line::before {
   position: relative;
   min-height: 0;
   
+  /* Reserve scrollbar space to prevent text reflow when scrollbar appears/disappears */
+  scrollbar-gutter: stable;
+  
   /* Performance optimizations for large documents */
   will-change: scroll-position;
   
