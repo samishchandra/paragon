@@ -12,7 +12,7 @@ declare module '@tiptap/core' {
         };
     }
 }
-/** Validate a tag string: must contain at least one letter */
+/** Validate a tag string: must contain at least one letter, must not be a hex color */
 export declare function isValidTag(tag: string): boolean;
 /** Normalize a tag: lowercase, trim */
 export declare function normalizeTag(tag: string): string;
