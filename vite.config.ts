@@ -195,8 +195,8 @@ export default defineConfig({
           if (id.includes("node_modules/@dnd-kit/")) {
             return "vendor-dnd";
           }
-          // Vendor: framer-motion
-          if (id.includes("node_modules/framer-motion/")) {
+          // Vendor: motion (formerly framer-motion)
+          if (id.includes("node_modules/motion/") || id.includes("node_modules/framer-motion/")) {
             return "vendor-motion";
           }
           // Vendor: tRPC + react-query
