@@ -185,9 +185,25 @@ export default defineConfig(({ mode }) => ({
     target: "es2020",
     rollupOptions: {
       output: {
+        // IMPORTANT: manualChunks must not create circular ES module imports.
+        // React, scheduler, and use-sync-external-store must be in the same
+        // chunk. Highlight.js and lowlight must also be grouped with React
+        // because Rollup places the CJS interop helper (getDefaultExportFromCjs)
+        // in whichever chunk first needs it — if that chunk differs from the
+        // React chunk, a circular import is created that crashes mobile Safari
+        // with "Cannot set properties of undefined (setting 'Activity')".
         manualChunks(id) {
-          // Vendor: React core
-          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+          // Vendor: React core + CJS interop dependencies
+          // Groups React with all packages that share CJS interop helpers
+          // to prevent Rollup from creating circular chunk imports.
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/scheduler/") ||
+            id.includes("node_modules/use-sync-external-store/") ||
+            id.includes("node_modules/highlight.js/") ||
+            id.includes("node_modules/lowlight/")
+          ) {
             return "vendor-react";
           }
           // Vendor: Radix UI primitives
@@ -209,10 +225,6 @@ export default defineConfig(({ mode }) => ({
           // Vendor: tRPC + react-query
           if (id.includes("node_modules/@trpc/") || id.includes("node_modules/@tanstack/")) {
             return "vendor-data";
-          }
-          // Vendor: highlight.js (code syntax highlighting)
-          if (id.includes("node_modules/highlight.js/") || id.includes("node_modules/lowlight/")) {
-            return "vendor-highlight";
           }
         },
       },

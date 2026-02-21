@@ -271,3 +271,9 @@
 - [x] Re-enabled service worker registration in main.tsx
 - [x] Bumped SW cache version to v5 for clean deployment
 - [x] Verify fix with build and test — 451 tests pass, vendor-react chunk 194KB (production)
+
+## Bug Fix: vendor-react Activity error persists after production build fix
+- [x] Investigate: vendor-editor chunk calls into vendor-react and hits 'Cannot set properties of undefined (setting Activity)'
+- [x] Root cause: Circular ES module dependency between vendor-react and vendor-editor chunks. Rollup placed getDefaultExportFromCjs helper in vendor-editor, but vendor-react needed it too. When vendor-editor tried to import from vendor-react during initialization, vendor-react hadn't finished executing (waiting for vendor-editor), so the exports object was undefined.
+- [x] Fix: Merged highlight.js/lowlight + use-sync-external-store + scheduler into vendor-react chunk. vendor-react is now fully self-contained (0 imports from other chunks). All other vendor chunks import one-way from vendor-react.
+- [x] Verified: No circular dependencies, 451 tests pass, production build succeeds (vendor-react 283KB)
