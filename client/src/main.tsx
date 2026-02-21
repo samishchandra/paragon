@@ -57,10 +57,12 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-// Register Service Worker for offline-first capabilities
-if (import.meta.env.PROD) {
-  registerServiceWorker();
-}
+// Service Worker TEMPORARILY DISABLED to diagnose mobile blank screen.
+// The nuclear SW killer in index.html unregisters all existing SWs.
+// Re-enable after confirming the blank screen is fixed.
+// if (import.meta.env.PROD) {
+//   registerServiceWorker();
+// }
 
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>

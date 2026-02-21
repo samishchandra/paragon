@@ -256,3 +256,10 @@
 - [x] Fix: SW registration uses updateViaCache:none and forces update on every page load
 - [x] Fix: SW only handles same-origin requests (skips external URLs)
 - [x] Verified: build succeeds, 451 tests pass
+
+## Bug Fix: Mobile Blank Screen (v3 - still persisting)
+- [x] Added nuclear SW killer inline script to unregister ALL SWs and clear ALL caches on every page load
+- [x] Added pre-React error display to make JS errors visible instead of blank screen
+- [x] Temporarily disabled SW registration to isolate the issue
+- [x] Made AuthGate isLoading state render a visible spinner instead of null
+- [x] Verified: build succeeds, 451 tests pass

@@ -35,9 +35,17 @@ function AuthGate() {
   }, [isLoading, user]);
 
   if (isLoading) {
-    // Keep the HTML splash screen visible while auth loads.
-    // The splash screen covers this, so null is fine here.
-    return null;
+    // Show a visible loading state instead of null.
+    // Even though the splash screen covers this, returning null can cause
+    // a blank screen if the splash auto-dismisses before auth completes.
+    return (
+      <div className="h-dvh w-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span className="text-sm text-muted-foreground">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
