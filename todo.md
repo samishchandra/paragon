@@ -209,3 +209,14 @@
 
 ## Publish Build Fix (Docker)
 - [x] Fix: foundation/ submodule not available in Docker deploy — converted submodule to regular tracked files (removed .gitmodules, staged all 127+ foundation files as regular git files)
+
+## Foundation Sync Script
+- [x] Investigate upstream repo URL, branch, and current commit tracked in foundation/
+- [x] Create sync script (scripts/sync-foundation.mjs) with pull-and-copy workflow
+- [x] Add conflict detection: warn if local overrides exist in client/src/ that shadow foundation files
+- [x] Add dry-run mode to preview changes before applying
+- [x] Add commit hash tracking (.foundation-version) to know what version is synced
+- [x] Add npm script entry (pnpm sync:foundation) in package.json
+- [x] Write documentation in README or script header
+- [x] Test the script end-to-end
+- [x] Add SSH URL support (git@github.com:...) as default with HTTPS fallback for private repo access
