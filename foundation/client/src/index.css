@@ -183,3 +183,22 @@
     contain-intrinsic-size: auto 500px;
   }
 }
+
+/* Safe area insets for notched devices (iPhone X+) */
+.safe-area-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+/* Offset for content areas above a fixed tab bar with safe-area-bottom */
+.safe-area-tab-offset {
+  padding-bottom: calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)));
+}
+/* Bottom offset for absolutely-positioned mobile panels to clear the fixed tab bar */
+.mobile-tab-bottom-offset {
+  bottom: calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)));
+}
+/* Sidebar footer: visible on both desktop and mobile.
+   On mobile, the parent panel already clears the tab bar via mobile-tab-bottom-offset,
+   so no extra bottom padding is needed here. */
+.sidebar-footer-mobile {
+  padding-bottom: 0.75rem;
+}

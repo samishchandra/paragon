@@ -302,14 +302,11 @@
   bottom: calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
 
-/* Sidebar footer: extra bottom padding on mobile to clear the bottom nav bar */
+/* Sidebar footer: visible on both desktop and mobile.
+   On mobile, the parent panel already clears the tab bar via mobile-tab-bottom-offset,
+   so no extra bottom padding is needed here. */
 .sidebar-footer-mobile {
   padding-bottom: 0.75rem;
-}
-@media (min-width: 768px) {
-  .sidebar-footer-mobile {
-    padding-bottom: 0.75rem;
-  }
 }
 
 /* Toast description text - make it more readable */
