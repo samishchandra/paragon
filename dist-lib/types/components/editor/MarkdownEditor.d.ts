@@ -293,6 +293,8 @@ export interface MarkdownEditorProps {
     enableTagAutoDetect?: boolean;
     /** Enable auto-detection and highlighting of hex color values like #FF0000 (default: false) */
     enableHexColorHighlight?: boolean;
+    /** Enable collapsible headings that can be folded/unfolded (default: false) */
+    enableCollapsibleHeadings?: boolean;
     /** Callback when the editor crashes — useful for external error reporting */
     onEditorError?: (error: Error, errorInfo: React.ErrorInfo) => void;
     /**
