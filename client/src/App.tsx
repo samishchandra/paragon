@@ -6,7 +6,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { getLoginUrl } from "./const";
 
 // Lazy-load the entire authenticated app shell
-const AuthenticatedApp = lazy(() => import("./AuthenticatedApp"));
+const AuthenticatedApp = lazy(() => import("@/AuthenticatedApp"));
 
 function AuthGate() {
   const { user, isLoading } = useAuth();

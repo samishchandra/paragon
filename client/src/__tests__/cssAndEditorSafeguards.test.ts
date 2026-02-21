@@ -6,12 +6,38 @@
  * - Editor skeleton: loading state must show skeleton, not text
  * - Slash command: executeCommand must delete slash text before applying
  * - MiddlePanel header: must be hidden on mobile (no double border)
+ *
+ * NOTE: After the foundation submodule refactor, some files live in
+ * foundation/client/src/ instead of client/src/. The resolveProjectFile()
+ * helper checks both locations (repo override first, then foundation).
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
 const PROJECT_ROOT = resolve(__dirname, '..', '..', '..');
+
+/**
+ * Resolve a file path that may exist in client/src/ (repo override)
+ * or foundation/client/src/ (shared foundation code).
+ * Throws if not found in either location.
+ */
+function resolveProjectFile(relativePath: string): string {
+  const repoPath = resolve(PROJECT_ROOT, relativePath);
+  if (existsSync(repoPath)) return repoPath;
+
+  // Try foundation fallback
+  const foundationPath = resolve(
+    PROJECT_ROOT,
+    'foundation',
+    relativePath
+  );
+  if (existsSync(foundationPath)) return foundationPath;
+
+  throw new Error(
+    `File not found in repo or foundation: ${relativePath}`
+  );
+}
 
 // Resolve the paragon package path dynamically
 function resolveParagonPath(relativePath: string): string {
@@ -60,8 +86,7 @@ describe('callout CSS safeguard', () => {
 
 describe('editor loading skeleton safeguard', () => {
   it('EditorWrapper does NOT show "Loading editor..." text', () => {
-    const wrapperPath = resolve(
-      PROJECT_ROOT,
+    const wrapperPath = resolveProjectFile(
       'client/src/components/editor/EditorWrapper.tsx'
     );
     const content = readFileSync(wrapperPath, 'utf-8');
@@ -71,8 +96,7 @@ describe('editor loading skeleton safeguard', () => {
   });
 
   it('EditorWrapper uses skeleton/shimmer animation for loading', () => {
-    const wrapperPath = resolve(
-      PROJECT_ROOT,
+    const wrapperPath = resolveProjectFile(
       'client/src/components/editor/EditorWrapper.tsx'
     );
     const content = readFileSync(wrapperPath, 'utf-8');
@@ -95,8 +119,7 @@ describe('editor loading skeleton safeguard', () => {
 
 describe('MiddlePanel mobile double border safeguard', () => {
   it('MiddlePanel header section is hidden on mobile', () => {
-    const panelPath = resolve(
-      PROJECT_ROOT,
+    const panelPath = resolveProjectFile(
       'client/src/components/MiddlePanel.tsx'
     );
     const content = readFileSync(panelPath, 'utf-8');
@@ -136,16 +159,14 @@ describe('slash command safeguard', () => {
 
 describe('injected item isolation safeguard', () => {
   it('Reducer types define injectedItemIds in State', () => {
-    const typesPath = resolve(
-      PROJECT_ROOT,
+    const typesPath = resolveProjectFile(
       'client/src/contexts/reducers/types.ts'
     );
     const content = readFileSync(typesPath, 'utf-8');
 
     expect(content).toContain('injectedItemIds');
 
-    const indexPath = resolve(
-      PROJECT_ROOT,
+    const indexPath = resolveProjectFile(
       'client/src/contexts/reducers/index.ts'
     );
     const indexContent = readFileSync(indexPath, 'utf-8');
@@ -153,8 +174,7 @@ describe('injected item isolation safeguard', () => {
   });
 
   it('getFilteredItems excludes injected items', () => {
-    const hookPath = resolve(
-      PROJECT_ROOT,
+    const hookPath = resolveProjectFile(
       'client/src/contexts/hooks/useComputedData.ts'
     );
     const content = readFileSync(hookPath, 'utf-8');
@@ -164,8 +184,7 @@ describe('injected item isolation safeguard', () => {
   });
 
   it('SET_FILTER clears injectedItemIds', () => {
-    const uiReducerPath = resolve(
-      PROJECT_ROOT,
+    const uiReducerPath = resolveProjectFile(
       'client/src/contexts/reducers/uiReducer.ts'
     );
     const content = readFileSync(uiReducerPath, 'utf-8');
@@ -182,8 +201,7 @@ describe('injected item isolation safeguard', () => {
 describe('visibility sync safeguard', () => {
   it('context syncs tags and lists during visibility change', () => {
     // visibilitychange logic was extracted to the useVisibilitySync hook
-    const hookPath = resolve(
-      PROJECT_ROOT,
+    const hookPath = resolveProjectFile(
       'client/src/contexts/hooks/useVisibilitySync.ts'
     );
     const content = readFileSync(hookPath, 'utf-8');
@@ -198,8 +216,7 @@ describe('visibility sync safeguard', () => {
 
   it('context exposes isSyncingCatchUp in the context value', () => {
     // isSyncingCatchUp is now assembled in useProviderState orchestrator hook
-    const hookPath = resolve(
-      PROJECT_ROOT,
+    const hookPath = resolveProjectFile(
       'client/src/contexts/hooks/useProviderState.ts'
     );
     const content = readFileSync(hookPath, 'utf-8');
@@ -213,8 +230,7 @@ describe('visibility sync safeguard', () => {
 describe('offline queue wiring safeguard', () => {
   it('context imports offlineQueue module (via useOnlineStatus hook)', () => {
     // offlineQueue import was extracted to the useOnlineStatus hook
-    const hookPath = resolve(
-      PROJECT_ROOT,
+    const hookPath = resolveProjectFile(
       'client/src/contexts/hooks/useOnlineStatus.ts'
     );
     const content = readFileSync(hookPath, 'utf-8');
@@ -231,7 +247,8 @@ describe('offline queue wiring safeguard', () => {
     ];
     let totalCount = 0;
     for (const file of files) {
-      const content = readFileSync(resolve(PROJECT_ROOT, file), 'utf-8');
+      const filePath = resolveProjectFile(file);
+      const content = readFileSync(filePath, 'utf-8');
       totalCount += (content.match(/enqueueOffline|offlineQueue\.enqueue/g) || []).length;
     }
     // Many mutations: create, update, delete, pin, complete, move, tags, lists, etc.
@@ -243,8 +260,7 @@ describe('offline queue wiring safeguard', () => {
 
 describe('duplicate item timestamp safeguard', () => {
   it('duplicateItem flushes pending save before duplicating', () => {
-    const contextPath = resolve(
-      PROJECT_ROOT,
+    const contextPath = resolveProjectFile(
       'client/src/contexts/hooks/useItemOperations.ts'
     );
     const content = readFileSync(contextPath, 'utf-8');
@@ -260,8 +276,7 @@ describe('duplicate item timestamp safeguard', () => {
 
 describe('settings import safeguard', () => {
   it('Settings does NOT have Import from ZIP button', () => {
-    const settingsPath = resolve(
-      PROJECT_ROOT,
+    const settingsPath = resolveProjectFile(
       'client/src/pages/Settings.tsx'
     );
     const content = readFileSync(settingsPath, 'utf-8');
@@ -270,8 +285,7 @@ describe('settings import safeguard', () => {
   });
 
   it('Settings does NOT have Import JSON button', () => {
-    const settingsPath = resolve(
-      PROJECT_ROOT,
+    const settingsPath = resolveProjectFile(
       'client/src/pages/Settings.tsx'
     );
     const content = readFileSync(settingsPath, 'utf-8');
@@ -281,8 +295,7 @@ describe('settings import safeguard', () => {
   });
 
   it('Settings does NOT show Supabase Database card', () => {
-    const settingsPath = resolve(
-      PROJECT_ROOT,
+    const settingsPath = resolveProjectFile(
       'client/src/pages/Settings.tsx'
     );
     const content = readFileSync(settingsPath, 'utf-8');
@@ -292,8 +305,7 @@ describe('settings import safeguard', () => {
   });
 
   it('Settings has Import from Folder with progress bar', () => {
-    const settingsPath = resolve(
-      PROJECT_ROOT,
+    const settingsPath = resolveProjectFile(
       'client/src/pages/Settings.tsx'
     );
     const content = readFileSync(settingsPath, 'utf-8');
@@ -303,8 +315,7 @@ describe('settings import safeguard', () => {
   });
 
   it('Settings has Local Backup section', () => {
-    const settingsPath = resolve(
-      PROJECT_ROOT,
+    const settingsPath = resolveProjectFile(
       'client/src/pages/Settings.tsx'
     );
     const content = readFileSync(settingsPath, 'utf-8');
@@ -314,8 +325,7 @@ describe('settings import safeguard', () => {
   });
 
   it('Export button says "Export Data" not "Export as Folders (ZIP)"', () => {
-    const settingsPath = resolve(
-      PROJECT_ROOT,
+    const settingsPath = resolveProjectFile(
       'client/src/pages/Settings.tsx'
     );
     const content = readFileSync(settingsPath, 'utf-8');
@@ -344,8 +354,7 @@ describe('mobile tab bar bottom offset safeguard', () => {
   });
 
   it('Home.tsx mobile panel wrappers use mobile-tab-bottom-offset', () => {
-    const homePath = resolve(
-      PROJECT_ROOT,
+    const homePath = resolveProjectFile(
       'client/src/pages/Home.tsx'
     );
     const content = readFileSync(homePath, 'utf-8');
@@ -356,8 +365,7 @@ describe('mobile tab bar bottom offset safeguard', () => {
   });
 
   it('Home.tsx mobile panel wrappers do NOT use h-full (height managed by absolute positioning)', () => {
-    const homePath = resolve(
-      PROJECT_ROOT,
+    const homePath = resolveProjectFile(
       'client/src/pages/Home.tsx'
     );
     const content = readFileSync(homePath, 'utf-8');

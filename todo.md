@@ -194,3 +194,9 @@
 
 ## Mobile Bottom Tab Bar Colors
 - [x] Color mobile bottom tab bar icons to match sidebar accent colors (All Items=emerald, Tasks=blue, Notes=orange, Todo=amber, Miscellaneous=violet, Completed=emerald, Deleted=red)
+
+## Foundation Submodule Integration Fix
+- [x] Fix App.tsx relative import of AuthenticatedApp to use @/ path for foundation resolution
+- [x] Update vitest.config.ts with foundation resolve plugin for @/ imports
+- [x] Update cssAndEditorSafeguards.test.ts with resolveProjectFile() helper for foundation fallback
+- [x] All 421 tests passing after foundation submodule integration
