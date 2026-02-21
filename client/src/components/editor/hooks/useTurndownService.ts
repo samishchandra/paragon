@@ -258,6 +258,9 @@ async function createTurndownService(): Promise<TurndownServiceType> {
       (n) => n.nodeType === Node.ELEMENT_NODE && (n as HTMLElement).nodeName === 'LI'
     ) as HTMLElement[];
     
+    // For ordered lists, read the start attribute to preserve custom starting numbers
+    const olStart = tag === 'OL' ? parseInt((listEl as HTMLElement).getAttribute('start') || '1', 10) : 1;
+
     directItems.forEach((li, idx) => {
       const isTask = li.getAttribute('data-type') === 'taskItem';
       const isChecked = li.getAttribute('data-checked') === 'true';
@@ -266,7 +269,7 @@ async function createTurndownService(): Promise<TurndownServiceType> {
       if (isTask) {
         blocks.push(`${indent}- [${isChecked ? 'x' : ' '}] ${text}`);
       } else if (tag === 'OL') {
-        blocks.push(`${indent}${idx + 1}. ${text}`);
+        blocks.push(`${indent}${olStart + idx}. ${text}`);
       } else {
         blocks.push(`${indent}- ${text}`);
       }
