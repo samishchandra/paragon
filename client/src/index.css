@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@source "../../foundation/client/src";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -41,149 +40,78 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-
-  /* Override emerald scale to match #008948 accent hue (153.2) */
-  --color-emerald-50: oklch(0.97 0.02 153.2);
-  --color-emerald-100: oklch(0.94 0.04 153.2);
-  --color-emerald-200: oklch(0.88 0.08 153.2);
-  --color-emerald-300: oklch(0.80 0.10 153.2);
-  --color-emerald-400: oklch(0.70 0.14 153.2);
-  --color-emerald-500: oklch(0.552 0.142 153.2);
-  --color-emerald-600: oklch(0.48 0.13 153.2);
-  --color-emerald-700: oklch(0.42 0.11 153.2);
-  --color-emerald-800: oklch(0.36 0.09 153.2);
-  --color-emerald-900: oklch(0.30 0.07 153.2);
-  --color-emerald-950: oklch(0.22 0.05 153.2);
-
-  /* Override green scale to match #008948 accent hue (153.2) */
-  --color-green-50: oklch(0.97 0.02 153.2);
-  --color-green-100: oklch(0.94 0.04 153.2);
-  --color-green-200: oklch(0.88 0.08 153.2);
-  --color-green-300: oklch(0.80 0.10 153.2);
-  --color-green-400: oklch(0.70 0.14 153.2);
-  --color-green-500: oklch(0.552 0.142 153.2);
-  --color-green-600: oklch(0.48 0.13 153.2);
-  --color-green-700: oklch(0.42 0.11 153.2);
-  --color-green-800: oklch(0.36 0.09 153.2);
-  --color-green-900: oklch(0.30 0.07 153.2);
-  --color-green-950: oklch(0.22 0.05 153.2);
 }
 
-/* Light Theme */
 :root {
-  --radius: 0.375rem;
-  
-  /* Clean light base — #F9FAFB for consistent panel backgrounds */
-  --background: oklch(0.98 0.002 260);
-  --foreground: oklch(0.15 0.01 260);
-  
-  /* Subtle surface elevation */
+  /* Foundation theme: coral/rose #EF476F — overridden at runtime by themeInit.ts */
+  --primary: oklch(0.59 0.22 12);
+  --primary-foreground: oklch(0.98 0.01 12);
+  --sidebar-primary: oklch(0.59 0.22 12);
+  --sidebar-primary-foreground: oklch(0.98 0.01 12);
+  --chart-1: oklch(0.75 0.15 12);
+  --chart-2: oklch(0.65 0.20 12);
+  --chart-3: oklch(0.59 0.22 12);
+  --chart-4: oklch(0.50 0.20 12);
+  --chart-5: oklch(0.42 0.18 12);
+  --radius: 0.65rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.235 0.015 65);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.01 260);
+  --card-foreground: oklch(0.235 0.015 65);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.01 260);
-  
-  /* Accent green #008948 — exact OKLCH conversion */
-  --primary: oklch(0.552 0.142 153.2);
-  --primary-foreground: oklch(0.98 0.005 153);
-  
-  /* Subtle surfaces */
-  --secondary: oklch(0.96 0.002 260);
-  --secondary-foreground: oklch(0.25 0.01 260);
-  
-  /* Muted elements */
-  --muted: oklch(0.94 0.002 260);
-  --muted-foreground: oklch(0.45 0.01 260);
-  
-  /* Soft accent — light green tint of #008948 */
-  --accent: oklch(0.96 0.02 153.2);
-  --accent-foreground: oklch(0.20 0.05 153.2);
-  
-  /* Destructive */
-  --destructive: oklch(0.55 0.18 25);
-  --destructive-foreground: oklch(0.98 0.005 260);
-  
-  /* Subtle borders */
-  --border: oklch(0.90 0.002 260);
-  --input: oklch(0.92 0.002 260);
-  --ring: oklch(0.552 0.142 153.2);
-  
-  /* Charts */
-  --chart-1: oklch(0.552 0.142 153.2);
-  --chart-2: oklch(0.50 0.12 180);
-  --chart-3: oklch(0.50 0.12 140);
-  --chart-4: oklch(0.50 0.12 50);
-  --chart-5: oklch(0.50 0.12 320);
-  
-  /* Sidebar — same #F9FAFB as background for consistency */
-  --sidebar: oklch(0.98 0.002 260);
-  --sidebar-foreground: oklch(0.25 0.01 260);
-  --sidebar-primary: oklch(0.552 0.142 153.2);
-  --sidebar-primary-foreground: oklch(0.98 0.005 153);
-  --sidebar-accent: oklch(0.94 0.025 153.2);
-  --sidebar-accent-foreground: oklch(0.20 0.05 153.2);
-  --sidebar-border: oklch(0.90 0.002 260);
-  --sidebar-ring: oklch(0.552 0.142 153.2);
+  --popover-foreground: oklch(0.235 0.015 65);
+  --secondary: oklch(0.98 0.001 286.375);
+  --secondary-foreground: oklch(0.4 0.015 65);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.141 0.005 285.823);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.59 0.22 12);
+  --sidebar: oklch(0.98 0.002 250);
+  --sidebar-foreground: oklch(0.235 0.015 65);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.59 0.22 12);
 }
 
-/* Dark Theme */
 .dark {
-  --radius: 0.375rem;
-  
-  /* Clean dark base - less saturated */
-  --background: oklch(0.13 0.005 260);
-  --foreground: oklch(0.92 0.005 260);
-  
-  /* Subtle surface elevation - minimal contrast */
-  --card: oklch(0.16 0.005 260);
-  --card-foreground: oklch(0.92 0.005 260);
-  --popover: oklch(0.18 0.005 260);
-  --popover-foreground: oklch(0.92 0.005 260);
-  
-  /* Accent green #008948 (brighter for dark mode readability) */
-  --primary: oklch(0.70 0.155 153.2);
-  --primary-foreground: oklch(0.13 0.005 153);
-  
-  /* Subtle surfaces */
-  --secondary: oklch(0.18 0.005 260);
-  --secondary-foreground: oklch(0.85 0.005 260);
-  
-  /* Muted elements */
-  --muted: oklch(0.20 0.005 260);
-  --muted-foreground: oklch(0.55 0.01 260);
-  
-  /* Soft accent — dark green tint of #008948 */
-  --accent: oklch(0.22 0.03 153.2);
-  --accent-foreground: oklch(0.90 0.03 153.2);
-  
-  /* Destructive */
-  --destructive: oklch(0.55 0.18 25);
-  --destructive-foreground: oklch(0.98 0.005 260);
-  
-  /* Very subtle borders */
-  --border: oklch(0.25 0.005 260);
-  --input: oklch(0.20 0.005 260);
-  --ring: oklch(0.70 0.155 153.2);
-  
-  /* Charts */
-  --chart-1: oklch(0.70 0.155 153.2);
-  --chart-2: oklch(0.60 0.10 180);
-  --chart-3: oklch(0.60 0.10 140);
-  --chart-4: oklch(0.60 0.10 50);
-  --chart-5: oklch(0.60 0.10 320);
-  
-  /* Sidebar - same as background for seamless look */
-  --sidebar: oklch(0.13 0.005 260);
-  --sidebar-foreground: oklch(0.85 0.005 260);
-  --sidebar-primary: oklch(0.70 0.155 153.2);
-  --sidebar-primary-foreground: oklch(0.13 0.005 153);
-  --sidebar-accent: oklch(0.20 0.03 153.2);
-  --sidebar-accent-foreground: oklch(0.90 0.03 153.2);
-  --sidebar-border: oklch(0.22 0.005 260);
-  --sidebar-ring: oklch(0.70 0.155 153.2);
-  
+  --primary: oklch(0.59 0.22 12);
+  --primary-foreground: oklch(0.98 0.01 12);
+  --sidebar-primary: oklch(0.65 0.20 12);
+  --sidebar-primary-foreground: oklch(0.98 0.01 12);
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.85 0.005 65);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.85 0.005 65);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.85 0.005 65);
+  --secondary: oklch(0.24 0.006 286.033);
+  --secondary-foreground: oklch(0.7 0.005 65);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground:  oklch(0.92 0.005 65);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.59 0.22 12);
+  --chart-1: oklch(0.75 0.15 12);
+  --chart-2: oklch(0.65 0.20 12);
+  --chart-3: oklch(0.59 0.22 12);
+  --chart-4: oklch(0.50 0.20 12);
+  --chart-5: oklch(0.42 0.18 12);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.85 0.005 65);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground:  oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.59 0.22 12);
 }
 
 @layer base {
@@ -191,8 +119,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: var(--font-sans);
+    @apply bg-background text-foreground;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -208,108 +135,47 @@
 }
 
 @layer components {
+  /**
+   * Custom container utility that centers content and adds responsive padding.
+   *
+   * This overrides Tailwind's default container behavior to:
+   * - Auto-center content (mx-auto)
+   * - Add responsive horizontal padding
+   * - Set max-width for large screens
+   *
+   * Usage: <div className="container">...</div>
+   *
+   * For custom widths, use max-w-* utilities directly:
+   * <div className="max-w-6xl mx-auto px-4">...</div>
+   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem;
+    padding-left: 1rem; /* 16px - mobile padding */
     padding-right: 1rem;
-  }
-
-  .flex {
-    min-height: 0;
-    min-width: 0;
   }
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem;
+      padding-left: 1.5rem; /* 24px - tablet padding */
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem;
+      padding-left: 2rem; /* 32px - desktop padding */
       padding-right: 2rem;
-      max-width: 1280px;
+      max-width: 1280px; /* Standard content width */
     }
   }
-  
-  /* CSS containment for scrollable panels — helps browsers skip layout/paint for off-screen content */
-  .contain-layout {
-    contain: layout style;
-  }
-  .contain-strict {
-    contain: strict;
-  }
-
-  /* Minimal custom scrollbar */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 2px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: var(--muted-foreground);
-  }
 }
-
-
-/* Confetti burst animation for task completion */
-@keyframes confetti-burst {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 1;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--confetti-x), var(--confetti-y)) scale(0.3);
-    opacity: 0;
-  }
-}
-
-/* Smooth item transition when reordering in list */
-.item-transition-wrapper {
-  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),
-              opacity 0.25s ease;
-}
-
-/* Completion flash effect on the checkmark area */
-@keyframes completion-ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(0, 137, 72, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(0, 137, 72, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(0, 137, 72, 0);
-  }
-}
-
-.completion-ring-pulse {
-  animation: completion-ring 0.5s ease-out;
-}
-
-/* Indeterminate progress bar animation */
-@keyframes indeterminate {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(400%);
+/* Performance: content-visibility for off-screen elements */
+@layer utilities {
+  .content-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
   }
 }
 
@@ -317,17 +183,14 @@
 .safe-area-bottom {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
-
 /* Offset for content areas above a fixed tab bar with safe-area-bottom */
 .safe-area-tab-offset {
   padding-bottom: calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
-
 /* Bottom offset for absolutely-positioned mobile panels to clear the fixed tab bar */
 .mobile-tab-bottom-offset {
   bottom: calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
-
 /* Sidebar footer: visible on both desktop and mobile.
    On mobile, the parent panel already clears the tab bar via mobile-tab-bottom-offset,
    so no extra bottom padding is needed here. */
@@ -335,122 +198,57 @@
   padding-bottom: 0.75rem;
 }
 
-/* Toast description text - make it more readable */
-[data-sonner-toast] [data-description] {
-  color: oklch(0.45 0.01 260) !important;
-  opacity: 1 !important;
+/* Subtle scrollbar — overlay style that doesn't consume layout space.
+   Matches the sidebar's Radix ScrollArea look for native scroll containers
+   (e.g. react-window virtualized lists).
+   Uses overflow:overlay (Webkit) so the scrollbar floats over content. */
+.subtle-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  overflow-y: auto;
+  overflow-y: overlay; /* Webkit: scrollbar overlays content, no layout shift */
+}
+.subtle-scrollbar:hover {
+  scrollbar-color: oklch(0.55 0 0 / 0.3) transparent;
+}
+.subtle-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+.subtle-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.subtle-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s;
+}
+.subtle-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: oklch(0.55 0 0 / 0.35);
+}
+.subtle-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(0.55 0 0 / 0.55);
 }
 
-:is(.dark) [data-sonner-toast] [data-description] {
-  color: oklch(0.65 0.01 260) !important;
+/* Dark mode: lighter scrollbar thumb */
+.dark .subtle-scrollbar:hover {
+  scrollbar-color: oklch(0.75 0 0 / 0.25) transparent;
+}
+.dark .subtle-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: oklch(0.75 0 0 / 0.25);
+}
+.dark .subtle-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(0.75 0 0 / 0.4);
 }
 
-/* Mobile editor padding override: 8px all sides */
-@media (max-width: 639px) {
-  .ProseMirror {
-    padding: 0.5rem !important;
-  }
+/* Hidden scrollbar — completely hides the scrollbar while keeping scroll functionality.
+   Used in the middle panel's virtualized list to reclaim gutter space. */
+.hidden-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
-
-/* Editor font preferences: bridge CSS variables from EditorV2 to ProseMirror */
-.editor-click-area .ProseMirror {
-  font-family: var(--editor-font-family, inherit);
-  font-size: var(--editor-font-size, 15px);
-  line-height: var(--editor-line-height, 1.6);
-}
-
-/* Fix: Ensure task list checkbox checkmarks use a consistent system font
-   regardless of the editor font preference. The ✓ character in the :after
-   pseudo-element inherits font-family from the parent, which causes it to
-   render differently depending on the chosen editor font. */
-.editor-click-area input[type="checkbox"]::after,
-.ProseMirror input[type="checkbox"]::after {
-  font-family: system-ui, -apple-system, sans-serif !important;
-}
-
-/* ============================================================
- * Accent Color Overrides
- * Remap Tailwind emerald/green utilities to the app accent (#008948)
- * so foundation components (VirtualizedItemList, ItemCard, MiddlePanel,
- * LeftSidebar Completed section, etc.) use the brand accent consistently.
- * These overrides live in the app layer and won't be reset by foundation sync.
- * ============================================================ */
-
-/* Completed section & checkmark icons — emerald-400 → accent */
-.text-emerald-400 {
-  color: oklch(0.65 0.14 153.2) !important;
-}
-.text-emerald-400\/10 {
-  color: oklch(0.65 0.14 153.2 / 0.1) !important;
-}
-.text-emerald-400\/60 {
-  color: oklch(0.65 0.14 153.2 / 0.6) !important;
-}
-.bg-emerald-400\/10 {
-  background-color: oklch(0.65 0.14 153.2 / 0.1) !important;
-}
-.hover\:text-emerald-400:hover {
-  color: oklch(0.65 0.14 153.2) !important;
-}
-
-/* Checkmark & status icons — emerald-500 → accent */
-.text-emerald-500 {
-  color: oklch(0.552 0.142 153.2) !important;
-}
-.bg-emerald-500 {
-  background-color: oklch(0.552 0.142 153.2) !important;
-}
-.bg-emerald-500\/10 {
-  background-color: oklch(0.552 0.142 153.2 / 0.1) !important;
-}
-.bg-emerald-500\/15 {
-  background-color: oklch(0.552 0.142 153.2 / 0.15) !important;
-}
-.text-emerald-500\/60 {
-  color: oklch(0.552 0.142 153.2 / 0.6) !important;
-}
-.hover\:text-emerald-500:hover {
-  color: oklch(0.552 0.142 153.2) !important;
-}
-
-/* Emerald foreground text used in badges/pills */
-.text-emerald-600 {
-  color: oklch(0.50 0.13 153.2) !important;
-}
-
-/* Green status indicators → accent */
-.text-green-500 {
-  color: oklch(0.552 0.142 153.2) !important;
-}
-.bg-green-500 {
-  background-color: oklch(0.552 0.142 153.2) !important;
-}
-.bg-green-500\/10 {
-  background-color: oklch(0.552 0.142 153.2 / 0.1) !important;
-}
-
-/* Dark mode adjustments — brighter accent for readability */
-.dark .text-emerald-400 {
-  color: oklch(0.70 0.155 153.2) !important;
-}
-.dark .text-emerald-400\/60 {
-  color: oklch(0.70 0.155 153.2 / 0.6) !important;
-}
-.dark .hover\:text-emerald-400:hover {
-  color: oklch(0.70 0.155 153.2) !important;
-}
-.dark .text-emerald-500 {
-  color: oklch(0.70 0.155 153.2) !important;
-}
-.dark .bg-emerald-500 {
-  background-color: oklch(0.70 0.155 153.2) !important;
-}
-.dark .text-emerald-600 {
-  color: oklch(0.70 0.155 153.2) !important;
-}
-.dark .text-green-500 {
-  color: oklch(0.70 0.155 153.2) !important;
-}
-.dark .bg-green-500 {
-  background-color: oklch(0.70 0.155 153.2) !important;
+.hidden-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Webkit */
 }
