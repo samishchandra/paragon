@@ -511,6 +511,20 @@ export interface MarkdownEditorProps {
   /** Enable collapsible headings that can be folded/unfolded (default: false) */
   enableCollapsibleHeadings?: boolean;
   
+  // === PERFORMANCE MODE ===
+  
+  /**
+   * Performance mode for large documents.
+   * - 'auto': Automatically disables non-essential plugins when document exceeds ~2000 paragraphs (default)
+   * - 'full': All plugins always loaded regardless of document size
+   * - 'lightweight': Non-essential plugins always disabled for maximum performance
+   * 
+   * Non-essential plugins disabled in lightweight mode:
+   * Typography (auto-character conversion), TableSorting, CollapsibleList,
+   * SelectAllOccurrences, CollapsibleHeading, HexColorMark
+   */
+  performanceMode?: 'auto' | 'full' | 'lightweight';
+  
   // === ERROR BOUNDARY ===
   
   /** Callback when the editor crashes — useful for external error reporting */
@@ -615,6 +629,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   enableTagAutoDetect = false,
   enableHexColorHighlight = false,
   enableCollapsibleHeadings = false,
+  // Performance mode
+  performanceMode = 'auto',
   // Error boundary
   onEditorError,
   // AI writing assistant
@@ -680,6 +696,28 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   validateWikiLinkRef.current = validateWikiLink;
   onWikiLinkSearchRef.current = onWikiLinkSearch;
 
+  // === LIGHTWEIGHT MODE ===
+  // Determines whether non-essential plugins are disabled for performance.
+  // In 'auto' mode, we start with a heuristic based on initial content size,
+  // then dynamically switch if the document grows beyond the threshold.
+  const LIGHTWEIGHT_THRESHOLD = 2000; // ~2000 top-level nodes
+  const [isLightweight, setIsLightweight] = useState(() => {
+    if (performanceMode === 'lightweight') return true;
+    if (performanceMode === 'full') return false;
+    // 'auto': estimate from initial content length (rough heuristic: each paragraph ~80 chars)
+    if (content && typeof content === 'string') {
+      const estimatedNodes = Math.ceil(content.length / 80);
+      return estimatedNodes > LIGHTWEIGHT_THRESHOLD;
+    }
+    return false;
+  });
+
+  // In 'auto' mode, monitor document size and toggle lightweight mode dynamically.
+  // We check on every N-th transaction to avoid overhead.
+  const lightweightCheckCounterRef = useRef(0);
+  const isLightweightRef = useRef(isLightweight);
+  isLightweightRef.current = isLightweight;
+
   // Build extensions array - conditionally include problematic extensions on mobile
   const extensions = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -741,10 +779,13 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       Underline,
       Subscript,
       Superscript,
-      Typography,
+      // Typography adds ~5 plugins for auto-character conversion (e.g., -- → em dash)
+      // Skip in lightweight mode to reduce per-transaction overhead
+      ...(!isLightweight ? [Typography] : []),
       MarkdownLinkInputRule,
       SearchHighlight,
-      SelectAllOccurrences,
+      // SelectAllOccurrences adds decoration plugins; skip in lightweight mode
+      ...(!isLightweight ? [SelectAllOccurrences] : []),
       TabIndent,
       // Add HorizontalRule back without its built-in input rules
       // We handle HR creation via our custom space shortcut handler
@@ -767,7 +808,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         TableRow,
         TableCellWithMenu,
         TableHeaderWithMenu,
-        TableSorting
+        // TableSorting adds decoration plugins for sort indicators; skip in lightweight mode
+        ...(!isLightweight ? [TableSorting] : [])
       );
     }
 
@@ -788,8 +830,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       );
     }
 
-    // Collapsible list items (desktop only)
-    if (!isMobile) {
+    // Collapsible list items (desktop only, skip in lightweight mode)
+    if (!isMobile && !isLightweight) {
       baseExtensions.push(
         CollapsibleList.configure({
           listItemTypes: ['listItem', 'taskItem'],
@@ -808,7 +850,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }
 
     // Conditionally add collapsible headings (requires enableCollapsibleHeadings prop)
-    if (enableCollapsibleHeadings && !disabledFeatures.collapsibleHeadings) {
+    // Skip in lightweight mode — heading decorations are expensive on large docs
+    if (enableCollapsibleHeadings && !disabledFeatures.collapsibleHeadings && !isLightweight) {
       baseExtensions.push(
         CollapsibleHeading.configure({
           levels: collapsibleHeadingLevels,
@@ -891,7 +934,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }
 
     // Add HexColorMark for auto-detecting hex color values and rendering with background color
-    if (enableHexColorHighlight) {
+    // Skip in lightweight mode — decoration scanning is expensive on large docs
+    if (enableHexColorHighlight && !isLightweight) {
       baseExtensions.push(HexColorMark);
     }
 
@@ -907,7 +951,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     return baseExtensions;
   // Dependencies: only stable values (primitives, objects compared by reference that don't change).
   // Callback props are accessed via refs, so they don't need to be in the deps array.
-  }, [placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures, progressiveSelectAll, enableCollapsibleHeadings]);
+  }, [placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures, progressiveSelectAll, enableCollapsibleHeadings, isLightweight]);
 
   // Debounced onUpdate ref for HTML serialization performance
   const onUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -968,6 +1012,22 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       },
     },
     onUpdate: ({ editor }) => {
+      // === Auto lightweight mode detection ===
+      // In 'auto' mode, check document size every 50 transactions to avoid overhead.
+      // If the document grows beyond the threshold, switch to lightweight mode.
+      // If it shrinks back, switch to full mode (re-creates editor with all extensions).
+      if (performanceMode === 'auto') {
+        lightweightCheckCounterRef.current++;
+        if (lightweightCheckCounterRef.current >= 50) {
+          lightweightCheckCounterRef.current = 0;
+          const nodeCount = editor.state.doc.content.childCount;
+          const shouldBeLightweight = nodeCount > LIGHTWEIGHT_THRESHOLD;
+          if (shouldBeLightweight !== isLightweightRef.current) {
+            setIsLightweight(shouldBeLightweight);
+          }
+        }
+      }
+
       // Performance: Debounce HTML serialization to avoid calling getHTML() on every keystroke
       // getHTML() serializes the entire document - expensive for large docs
       if (onUpdateTimeoutRef.current) {

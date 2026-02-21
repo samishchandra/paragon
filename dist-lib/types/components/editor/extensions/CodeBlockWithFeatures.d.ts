@@ -12,5 +12,11 @@ declare const lowlight: {
     };
     registered: (aliasOrName: string) => boolean;
 };
-export { lowlight };
+/**
+ * Attempt to lazy-load a language if it's in the extended tier.
+ * Returns a promise that resolves to true if the language was loaded,
+ * false if it's not in the lazy registry.
+ */
+declare function loadLanguageIfNeeded(lang: string): Promise<boolean>;
+export { lowlight, loadLanguageIfNeeded };
 export declare const CodeBlockWithFeatures: import("@tiptap/core").Node<import("@tiptap/extension-code-block-lowlight").CodeBlockLowlightOptions, any>;
