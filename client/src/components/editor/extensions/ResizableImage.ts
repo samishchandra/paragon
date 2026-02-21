@@ -327,17 +327,47 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       dropdown.appendChild(createMenuItem('Copy image', copyIcon, async () => {
         const src = currentNode.attrs.src;
         try {
+          // Try direct fetch first (works for same-origin images)
           const response = await fetch(src);
           const blob = await response.blob();
           await navigator.clipboard.write([
             new ClipboardItem({ [blob.type]: blob })
           ]);
         } catch {
-          // Fallback: copy image URL
+          // Fallback: draw image to canvas to bypass CORS for clipboard
           try {
-            await navigator.clipboard.writeText(src);
+            const img = new window.Image();
+            img.crossOrigin = 'anonymous';
+            await new Promise<void>((resolve, reject) => {
+              img.onload = () => resolve();
+              img.onerror = () => reject(new Error('Image load failed'));
+              img.src = src;
+            });
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              const blob = await new Promise<Blob | null>((resolve) =>
+                canvas.toBlob(resolve, 'image/png')
+              );
+              if (blob) {
+                await navigator.clipboard.write([
+                  new ClipboardItem({ 'image/png': blob })
+                ]);
+              } else {
+                // Final fallback: copy URL
+                await navigator.clipboard.writeText(src);
+              }
+            }
           } catch {
-            // Silent fail
+            // Final fallback: copy image URL
+            try {
+              await navigator.clipboard.writeText(src);
+            } catch {
+              // Silent fail
+            }
           }
         }
       }));

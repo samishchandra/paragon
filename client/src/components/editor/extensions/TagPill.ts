@@ -34,10 +34,13 @@ declare module '@tiptap/core' {
   }
 }
 
-/** Validate a tag string: must contain at least one letter */
+/** Validate a tag string: must contain at least one letter, must not be a hex color */
 export function isValidTag(tag: string): boolean {
   // Must have at least one letter (not purely numeric)
-  return /[a-zA-Z]/.test(tag) && /^[a-zA-Z0-9_-]+$/.test(tag);
+  if (!/[a-zA-Z]/.test(tag) || !/^[a-zA-Z0-9_-]+$/.test(tag)) return false;
+  // Exclude hex color values (#RGB, #RRGGBB, #RRGGBBAA)
+  if (/^[0-9a-fA-F]{3}$/.test(tag) || /^[0-9a-fA-F]{6}$/.test(tag) || /^[0-9a-fA-F]{8}$/.test(tag)) return false;
+  return true;
 }
 
 /** Normalize a tag: lowercase, trim */

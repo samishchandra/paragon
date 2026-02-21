@@ -46,6 +46,40 @@ describe('isValidTag', () => {
   it('should reject empty strings', () => {
     expect(isValidTag('')).toBe(false);
   });
+
+  it('should reject hex color values (3-digit)', () => {
+    expect(isValidTag('fff')).toBe(false);
+    expect(isValidTag('F00')).toBe(false);
+    expect(isValidTag('abc')).toBe(false);
+    expect(isValidTag('ABC')).toBe(false);
+  });
+
+  it('should reject hex color values (6-digit)', () => {
+    expect(isValidTag('2E80F1')).toBe(false);
+    expect(isValidTag('ff82b2')).toBe(false);
+    expect(isValidTag('10B981')).toBe(false);
+    expect(isValidTag('3B82F6')).toBe(false);
+    expect(isValidTag('FB923C')).toBe(false);
+    expect(isValidTag('FBBF24')).toBe(false);
+    expect(isValidTag('A78BFA')).toBe(false);
+    expect(isValidTag('34D399')).toBe(false);
+    expect(isValidTag('F87171')).toBe(false);
+  });
+
+  it('should reject hex color values (8-digit with alpha)', () => {
+    expect(isValidTag('2E80F1FF')).toBe(false);
+    expect(isValidTag('ff82b280')).toBe(false);
+  });
+
+  it('should still accept tags that look similar but are not hex colors', () => {
+    // Tags with non-hex characters or different lengths are still valid
+    expect(isValidTag('abcg')).toBe(true); // 'g' is not a hex char
+    expect(isValidTag('hello')).toBe(true); // 5 chars, not 3/6/8
+    expect(isValidTag('ab')).toBe(true); // 2 chars, not 3/6/8
+    expect(isValidTag('abcde')).toBe(true); // 5 chars
+    expect(isValidTag('abcdefg')).toBe(true); // 7 chars
+    expect(isValidTag('work')).toBe(true);
+  });
 });
 
 describe('normalizeTag', () => {

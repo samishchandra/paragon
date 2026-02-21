@@ -200,6 +200,7 @@
   line-height: var(--editor-line-height, 1.5);
   min-height: 100%;
   padding: 2rem;
+  padding-bottom: 40vh;
   outline: none;
   caret-color: var(--editor-cursor);
   
@@ -5068,6 +5069,7 @@ pre.with-line-numbers code .line::before {
   min-height: 200px;
   flex: 1;
   padding: 1rem 1.5rem;
+  padding-bottom: 40vh;
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 0.9rem;
   line-height: 1.6;

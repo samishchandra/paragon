@@ -42,6 +42,7 @@ import { CalloutInputRule } from './extensions/CalloutInputRule';
 import { SearchHighlight } from './extensions/SearchHighlight';
 import { TabIndent } from './extensions/TabIndent';
 import { ExpandSelection } from './extensions/ExpandSelection';
+import { HexColorMark } from './extensions/HexColorMark';
 import { SelectAllOccurrences } from './extensions/SelectAllOccurrences';
 import { ImageUpload } from './extensions/ImageUpload';
 import { ImageDropZone } from './ImageDropZone';
@@ -858,6 +859,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     if (progressiveSelectAll) {
       baseExtensions.push(ExpandSelection);
     }
+
+    // Add HexColorMark for auto-detecting hex color values and rendering with background color
+    baseExtensions.push(HexColorMark);
 
     // Conditionally add markdown paste
     if (!disabledFeatures.markdownPaste) {
