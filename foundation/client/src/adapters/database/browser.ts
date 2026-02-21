@@ -349,23 +349,37 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
       const store = await this.getStore(table, 'readwrite');
       const items = Array.isArray(data) ? data : [data];
 
-      // Auto-generate keys for stores that require them.
-      // - items, tags, lists: keyPath = 'id'
-      // - user_settings: keyPath = 'user_id'
-      // - meta: keyPath = 'key'
-      // - view_sort_preferences: compound keyPath = ['user_id', 'view_key']
-      // - item_tags: autoIncrement (no keyPath) — no key needed
+      // Dynamically read the store's keyPath to ensure every record has the
+      // required key field(s). This is robust regardless of schema version.
+      const keyPath = store.keyPath; // string | string[] | null
+      const autoIncrement = store.autoIncrement;
+
       const enriched = items.map(item => {
-        if (['items', 'tags', 'lists'].includes(resolvedTable) && !item.id) {
-          return { ...item, id: crypto.randomUUID() };
+        // If the store uses autoIncrement with no keyPath, no key is needed
+        if (autoIncrement && !keyPath) return { ...item };
+
+        const copy = { ...item };
+
+        if (typeof keyPath === 'string') {
+          // Single keyPath (e.g. 'id', 'user_id', 'key')
+          if (copy[keyPath] === undefined || copy[keyPath] === null) {
+            // Auto-generate UUID for 'id' fields; warn for others
+            if (keyPath === 'id') {
+              copy[keyPath] = crypto.randomUUID();
+            } else {
+              console.warn(`[BrowserDB] insert into '${resolvedTable}' missing keyPath '${keyPath}':`, JSON.stringify(copy).slice(0, 200));
+            }
+          }
+        } else if (Array.isArray(keyPath)) {
+          // Compound keyPath (e.g. ['user_id', 'view_key'] or ['item_id', 'tag_id'])
+          for (const k of keyPath) {
+            if (copy[k] === undefined || copy[k] === null) {
+              console.warn(`[BrowserDB] insert into '${resolvedTable}' missing compound keyPath field '${k}':`, JSON.stringify(copy).slice(0, 200));
+            }
+          }
         }
-        if (resolvedTable === 'user_settings' && !item.user_id) {
-          console.warn('[BrowserDB] insert into user_settings without user_id', item);
-        }
-        if (resolvedTable === 'meta' && !item.key) {
-          console.warn('[BrowserDB] insert into meta without key', item);
-        }
-        return item;
+
+        return copy;
       });
 
       return new Promise((resolve, reject) => {
@@ -374,7 +388,11 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
           try {
             store.put(item);
           } catch (putErr: any) {
-            console.error(`[BrowserDB] put failed on table '${resolvedTable}':`, putErr.message, 'record:', JSON.stringify(item).slice(0, 200));
+            console.error(`[BrowserDB] put failed on table '${resolvedTable}':`, putErr.message,
+              '| keyPath:', JSON.stringify(keyPath),
+              '| autoIncrement:', autoIncrement,
+              '| record keys:', Object.keys(item),
+              '| record:', JSON.stringify(item).slice(0, 300));
             throw putErr;
           }
         }
