@@ -247,3 +247,12 @@
 - [x] Fix user initials — UserAvatar uses bg-primary/10 text-primary
 - [x] Fix list/tag text colors — replaced all blue-500/sky-500/#3b82f6 with primary
 - [x] Verify: zero remaining blue-500/sky-500/blue-600/#3b82f6 references in codebase
+
+## Bug Fix: Mobile Blank Screen After Splash (v2)
+- [x] Fix: AuthGate now shows visible loading/redirect states instead of returning null (prevents blank screen)
+- [x] Fix: Suspense fallback now shows a spinner instead of null (prevents blank during chunk load)
+- [x] Fix: SW v4 — navigation handler uses cache:no-store and caches only '/' key (prevents Safari stale HTML)
+- [x] Fix: Extended corruption detection to all script/style requests (not just .js)
+- [x] Fix: SW registration uses updateViaCache:none and forces update on every page load
+- [x] Fix: SW only handles same-origin requests (skips external URLs)
+- [x] Verified: build succeeds, 451 tests pass

@@ -4,38 +4,69 @@
  * Provides true offline-first capabilities:
  * 1. App Shell caching — cache HTML, CSS, JS, fonts so the UI loads offline
  * 2. API caching — cache GET responses for offline reads
- * 3. Background sync — queue failed mutations for retry when back online
  *
  * Strategy:
- * - Navigation (HTML): Network-first, always fetch fresh index.html
+ * - Navigation (HTML): Network-first with no-store fetch, cache only '/' for offline
  * - Hashed assets (/assets/*): Cache-first (content-hash guarantees uniqueness)
  * - API calls: Network-first with cache fallback
  * - Google Fonts: Cache-first (long-lived)
  *
  * Cache Versioning:
- * - Bump CACHE_VERSION on each deploy to purge stale caches.
- * - The activate handler deletes ALL caches that don't match the current version.
- * - This prevents stale HTML from referencing old chunk filenames.
+ * - Bump CACHE_VERSION on each deploy to purge ALL old caches.
+ * - The activate handler deletes every cache that doesn't match the current version.
  */
 
-const CACHE_VERSION = 'momentum-v2';
+const CACHE_VERSION = 'momentum-v4';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
-// App shell resources to precache (only the offline fallback — index.html
-// is always fetched network-first so we never serve a stale shell)
+// Only precache the offline fallback page.
+// index.html is always fetched network-first and cached as '/' on success.
 const APP_SHELL_URLS = [
   '/offline.html',
 ];
 
-// Patterns for different caching strategies
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
 const isApiRequest = (url) => url.pathname.startsWith('/api/');
 const isHashedAsset = (url) => url.pathname.startsWith('/assets/');
-const isNavigationRequest = (request) =>
-  request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html');
 const isGoogleFont = (url) =>
   url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
+
+function isNavigationRequest(request) {
+  // request.mode === 'navigate' is the standard check, but some mobile browsers
+  // (especially PWA mode) may not set it correctly. Also check accept header.
+  if (request.mode === 'navigate') return true;
+  const accept = request.headers.get('accept') || '';
+  // Only treat as navigation if it's a document request (not a script/image/etc.)
+  if (accept.includes('text/html') && request.destination === 'document') return true;
+  // Fallback: if destination is empty and accept includes text/html, it's likely navigation
+  if (accept.includes('text/html') && !request.destination) return true;
+  return false;
+}
+
+/**
+ * Check if a cached response looks corrupted for a script request.
+ * Returns true if the cached response should be discarded.
+ */
+function isCacheCorrupted(request, cachedResponse) {
+  if (!cachedResponse) return false;
+  const url = new URL(request.url);
+  const dest = request.destination;
+  // Check script requests (JS modules, dynamic imports)
+  if (dest === 'script' || url.pathname.endsWith('.js') || url.pathname.endsWith('.mjs')) {
+    const contentType = cachedResponse.headers.get('content-type') || '';
+    // If a JS request returned HTML, the cache is corrupted
+    if (contentType.includes('text/html')) return true;
+  }
+  // Check CSS requests
+  if (dest === 'style' || url.pathname.endsWith('.css')) {
+    const contentType = cachedResponse.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) return true;
+  }
+  return false;
+}
 
 // ─── Install ────────────────────────────────────────────────────────────────
 
@@ -57,12 +88,12 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       // Delete ALL caches that don't belong to the current version.
-      // This ensures old HTML/JS/CSS are purged on every deploy.
+      const currentCaches = new Set([APP_SHELL_CACHE, API_CACHE, STATIC_CACHE]);
       return Promise.all(
         keys
-          .filter((key) => key !== APP_SHELL_CACHE && key !== API_CACHE && key !== STATIC_CACHE)
+          .filter((key) => !currentCaches.has(key))
           .map((key) => {
-            console.log('[SW] Deleting stale cache:', key);
+            console.log('[SW] Purging old cache:', key);
             return caches.delete(key);
           })
       );
@@ -77,37 +108,37 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Skip non-GET requests (mutations should go through the offline queue)
+  // Only handle same-origin requests — skip external URLs entirely
+  if (url.origin !== self.location.origin) {
+    // Exception: cache Google Fonts
+    if (isGoogleFont(url)) {
+      event.respondWith(cacheFirst(event.request, STATIC_CACHE));
+    }
+    return;
+  }
+
+  // Skip non-GET requests (mutations go through the offline queue)
   if (event.request.method !== 'GET') return;
 
   // Skip OAuth/auth endpoints — never cache these
   if (url.pathname.startsWith('/api/oauth') || url.pathname.includes('/auth/')) return;
 
-  // Skip tRPC batch requests that contain mutations
+  // Skip tRPC auth-related batch requests
   if (url.pathname.startsWith('/api/trpc') && url.search.includes('auth.')) return;
 
   // Strategy 1: Navigation requests — ALWAYS network-first
-  // This is critical: we must never serve stale HTML that references old chunks.
   if (isNavigationRequest(event.request)) {
     event.respondWith(navigationHandler(event.request));
     return;
   }
 
-  // Strategy 2: Google Fonts — Cache-first (long-lived, versioned by URL)
-  if (isGoogleFont(url)) {
-    event.respondWith(cacheFirst(event.request, STATIC_CACHE));
-    return;
-  }
-
-  // Strategy 3: Hashed assets (/assets/*) — Cache-first
-  // These have content hashes in filenames, so each build produces unique URLs.
-  // Safe to cache aggressively — stale entries are harmless (just unused).
+  // Strategy 2: Hashed assets (/assets/*) — Cache-first with corruption check
   if (isHashedAsset(url)) {
-    event.respondWith(cacheFirstWithFallback(event.request, STATIC_CACHE));
+    event.respondWith(cacheFirstSafe(event.request, STATIC_CACHE));
     return;
   }
 
-  // Strategy 4: API requests — Network-first with cache fallback
+  // Strategy 3: API requests — Network-first with cache fallback
   if (isApiRequest(url)) {
     event.respondWith(networkFirst(event.request, API_CACHE));
     return;
@@ -120,25 +151,18 @@ self.addEventListener('fetch', (event) => {
 // ─── Caching Strategies ─────────────────────────────────────────────────────
 
 /**
- * Cache-first with network fallback.
- * If the cached response is a non-JS content type for a .js request (corruption),
- * bypass cache and fetch from network.
+ * Cache-first with corruption detection.
+ * If the cached response has wrong content-type (e.g., HTML for a JS request),
+ * delete the corrupted entry and fetch fresh from network.
  */
-async function cacheFirstWithFallback(request, cacheName) {
+async function cacheFirstSafe(request, cacheName) {
   const cached = await caches.match(request);
   if (cached) {
-    // Sanity check: if requesting JS but cached response is HTML, skip cache
-    const url = new URL(request.url);
-    if (url.pathname.endsWith('.js')) {
-      const contentType = cached.headers.get('content-type') || '';
-      if (contentType.includes('text/html')) {
-        // Corrupted cache entry — delete it and fetch fresh
-        const cache = await caches.open(cacheName);
-        await cache.delete(request);
-        // Fall through to network fetch below
-      } else {
-        return cached;
-      }
+    if (isCacheCorrupted(request, cached)) {
+      console.warn('[SW] Corrupted cache entry detected, refetching:', request.url);
+      const cache = await caches.open(cacheName);
+      await cache.delete(request);
+      // Fall through to network
     } else {
       return cached;
     }
@@ -190,31 +214,37 @@ async function networkFirst(request, cacheName) {
   }
 }
 
+/**
+ * Navigation handler — always fetch fresh HTML from network.
+ * Uses cache: 'no-store' to bypass browser HTTP cache (critical for Safari).
+ * Caches the response under a fixed '/' key so all SPA routes share one entry.
+ * On network failure, falls back to the cached '/' (SPA root) or offline page.
+ */
 async function navigationHandler(request) {
   try {
-    const response = await fetch(request);
+    // Always fetch fresh — bypass HTTP cache to avoid Safari serving stale HTML
+    const response = await fetch(request, { cache: 'no-store' });
     if (response.ok) {
-      // Cache the fresh HTML for offline fallback
+      // Cache under the fixed '/' key — all SPA routes serve the same HTML.
+      // This prevents caching redirect pages or per-path stale entries.
       const cache = await caches.open(APP_SHELL_CACHE);
-      cache.put(request, response.clone());
+      const rootRequest = new Request(self.location.origin + '/');
+      cache.put(rootRequest, response.clone());
     }
     return response;
   } catch {
-    // Offline: try to serve the cached version of the requested page
-    const cached = await caches.match(request);
-    if (cached) return cached;
-
-    // Fallback to cached root (SPA — all routes serve the same HTML)
-    const rootCached = await caches.match('/');
+    // Offline: serve the cached SPA root (all routes share the same HTML)
+    const rootCached = await caches.match(new Request(self.location.origin + '/'));
     if (rootCached) return rootCached;
 
     // Last resort: offline page
     const offlineCached = await caches.match('/offline.html');
     if (offlineCached) return offlineCached;
 
-    return new Response('<html><body><h1>Offline</h1><p>Please check your internet connection.</p></body></html>', {
-      headers: { 'Content-Type': 'text/html' },
-    });
+    return new Response(
+      '<html><body><h1>Offline</h1><p>Please check your internet connection.</p></body></html>',
+      { headers: { 'Content-Type': 'text/html' } }
+    );
   }
 }
 

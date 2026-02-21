@@ -1,35 +1,61 @@
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { ToastContainer } from "./components/ToastContainer";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { getLoginUrl } from "./const";
 
 // Lazy-load the entire authenticated app shell
 const AuthenticatedApp = lazy(() => import("@/AuthenticatedApp"));
 
+/**
+ * Minimal loading spinner shown while AuthenticatedApp chunk loads.
+ * Prevents blank screen if the lazy import takes time on slow mobile networks.
+ */
+function AppLoadingFallback() {
+  return (
+    <div className="h-dvh w-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        <span className="text-sm text-muted-foreground">Loading...</span>
+      </div>
+    </div>
+  );
+}
+
 function AuthGate() {
   const { user, isLoading } = useAuth();
+  const redirectingRef = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!isLoading && !user && !redirectingRef.current) {
+      redirectingRef.current = true;
       // Not authenticated — redirect to Manus OAuth login
       window.location.href = getLoginUrl();
     }
   }, [isLoading, user]);
 
   if (isLoading) {
-    // Keep the HTML splash screen visible while auth loads
+    // Keep the HTML splash screen visible while auth loads.
+    // The splash screen covers this, so null is fine here.
     return null;
   }
 
   if (!user) {
-    // Will redirect to login, show nothing
-    return null;
+    // Redirect is in progress — show a visible state instead of blank.
+    // This prevents the blank screen if the redirect takes time on mobile,
+    // or if cookies are blocked and the redirect loops.
+    return (
+      <div className="h-dvh w-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span className="text-sm text-muted-foreground">Redirecting to login...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<AppLoadingFallback />}>
       <AuthenticatedApp userId={user.id} />
     </Suspense>
   );

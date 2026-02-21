@@ -22,9 +22,13 @@ export async function registerServiceWorker(): Promise<void> {
   try {
     registration = await navigator.serviceWorker.register(SW_URL, {
       scope: '/',
+      updateViaCache: 'none', // Always check server for SW updates (critical for mobile)
     });
 
     console.log('[SW] Registered with scope:', registration.scope);
+
+    // Force an immediate update check on every page load
+    registration.update().catch(() => {});
 
     // Check for updates periodically (every 30 minutes)
     setInterval(() => {
