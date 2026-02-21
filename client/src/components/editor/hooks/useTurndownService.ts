@@ -423,6 +423,23 @@ async function createTurndownService(): Promise<TurndownServiceType> {
     },
   });
 
+  // Ensure consecutive lists are separated by blank lines in the markdown output.
+  // Without this, turndown merges consecutive <ul>/<ol> elements into a single
+  // block of list items with no blank line separator, which causes them to be
+  // parsed as a single list on round-trip.
+  td.addRule('listSeparation', {
+    filter: (node) => {
+      return (node.nodeName === 'UL' || node.nodeName === 'OL');
+    },
+    replacement: (content, node) => {
+      // Check if the previous sibling is also a list element
+      const prev = node.previousElementSibling;
+      const needsExtraSeparation = prev && (prev.nodeName === 'UL' || prev.nodeName === 'OL');
+      const prefix = needsExtraSeparation ? '\n\n' : '\n\n';
+      return prefix + content.trim() + '\n\n';
+    },
+  });
+
   cachedService = td;
   return td;
 }
