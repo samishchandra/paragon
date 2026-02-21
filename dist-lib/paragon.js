@@ -14584,7 +14584,7 @@ function tf(e) {
   if (a)
     return { type: "ul", depth: r, text: a[1].trim() };
   const i = o.match(/^\d+\.\s+(.+)$/);
-  return i ? { type: "ol", depth: r, text: i[2].trim() } : null;
+  return i ? { type: "ol", depth: r, text: i[1].trim() } : null;
 }
 function nf(e) {
   if (e.length === 0) return "";
