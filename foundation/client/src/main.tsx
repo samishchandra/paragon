@@ -15,6 +15,7 @@ import { DisabledAIAdapter } from "./adapters/ai/disabled";
 import { NoBackupAdapter } from "./adapters/backup/none";
 import { foundationTheme } from "./adapters/theme/foundation";
 import { applyTheme } from "./lib/themeInit";
+import { registerSW } from "./lib/swRegister";
 import App from "./App";
 import "./index.css";
 
@@ -35,8 +36,11 @@ applyTheme();
 // Initialize the database before rendering
 browserDb.initialize().then(() => {
   createRoot(document.getElementById("root")!).render(<App />);
+  // Register service worker for offline support (production only)
+  registerSW();
 }).catch((err) => {
   console.error('Failed to initialize database:', err);
   // Render anyway — the app can show error states
   createRoot(document.getElementById("root")!).render(<App />);
+  registerSW();
 });
