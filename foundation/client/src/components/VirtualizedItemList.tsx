@@ -474,7 +474,7 @@ export function VirtualizedItemList({
             return (
               <List
                 listRef={listRef}
-                className="subtle-scrollbar"
+                className="hidden-scrollbar"
                 style={{ height, width }}
                 rowCount={items.length}
                 rowHeight={rowHeight}
