@@ -293,3 +293,13 @@
 - [x] Dark mode overrides use brighter oklch(0.70 0.155 153.2) for readability
 - [x] All changes in app layer (index.css + client/src/) — won't be overridden by foundation sync
 - [x] Verified: 451 tests pass, production build succeeds
+
+## New Version Available Toast
+- [x] Review current SW registration and SW file
+- [x] Remove self.skipWaiting() from SW install handler so new SW enters 'waiting' state
+- [x] Add SW update detection in serviceWorker.ts (listen for 'waiting' + 'installed' states)
+- [x] Show non-intrusive info toast with "A new version is available" message and "Refresh" action button (30s duration)
+- [x] Handle skipWaiting via SKIP_WAITING message + window.location.reload() on user action
+- [x] Also detect already-waiting SW on page load (e.g., from previous session)
+- [x] Only show toast once per session to avoid spamming
+- [x] Verified: 451 tests pass, production build succeeds

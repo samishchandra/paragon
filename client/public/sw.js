@@ -78,8 +78,9 @@ self.addEventListener('install', (event) => {
       });
     })
   );
-  // Activate immediately without waiting for existing clients to close
-  self.skipWaiting();
+  // Do NOT call self.skipWaiting() here — let the new SW enter 'waiting' state
+  // so the app can show an "Update available" toast. The user triggers activation
+  // via the SKIP_WAITING message from activateUpdate().
 });
 
 // ─── Activate ───────────────────────────────────────────────────────────────
