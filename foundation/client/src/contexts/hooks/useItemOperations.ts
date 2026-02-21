@@ -12,7 +12,7 @@
  * The main provider calls this hook and spreads its return values into the context.
  */
 import { useCallback, useRef, useEffect } from 'react';
-import { apiQuery } from '@/lib/db';
+import { apiQuery, apiBatchUpdate } from '@/lib/db';
 import { format } from 'date-fns';
 import { toast } from '@/lib/toast';
 import { clearSearchCache } from '@/lib/serverSearch';
@@ -964,14 +964,17 @@ export function useItemOperations(deps: ItemOperationsDeps) {
 
   const reorderItems = useCallback((section: SectionType, itemIds: string[]) => {
     dispatch({ type: 'REORDER_ITEMS', payload: { section, itemIds } });
-
-    itemIds.forEach((id, index) => {
-      if (!isOnlineRef.current) {
+    if (!isOnlineRef.current) {
+      itemIds.forEach((id, index) => {
         enqueueOffline({ mutationType: 'update', table: 'items', payload: { sort_order: index }, filterColumn: 'id', filterValue: id });
-      } else {
-        apiQuery({ action: 'update', table: 'items', data: { sort_order: index }, filters: { id: id } });
-      }
-    });
+      });
+    } else {
+      // Single-transaction batch update instead of N individual writes
+      apiBatchUpdate('items', itemIds.map((id, index) => ({
+        filters: { id },
+        data: { sort_order: index },
+      })));
+    }
   }, [enqueueOffline]);
 
   // ---- Bulk operations ----
@@ -1029,22 +1032,20 @@ export function useItemOperations(deps: ItemOperationsDeps) {
 
   const bulkDeleteItems = useCallback((itemIds: string[]) => {
     dispatch({ type: 'BULK_DELETE_ITEMS', payload: itemIds });
-
     const now = new Date().toISOString();
     const deletePayload = { deleted_at: now, is_pinned: false };
-
     if (!isOnlineRef.current) {
       itemIds.forEach(id => {
         enqueueOffline({ mutationType: 'update', table: 'items', payload: deletePayload, filterColumn: 'id', filterValue: id });
       });
     } else {
-      // Update each item individually
-      Promise.all(itemIds.map(id =>
-        apiQuery({ action: 'update', table: 'items', data: deletePayload, filters: { id } })
-      )).then((results) => {
-        const hasError = results.some(r => r.error);
-        if (hasError) {
-          console.error('[BULK_DELETE] Server sync error');
+      // Single-transaction batch update
+      apiBatchUpdate('items', itemIds.map(id => ({
+        filters: { id },
+        data: deletePayload,
+      }))).then(({ error }) => {
+        if (error) {
+          console.error('[BULK_DELETE] Server sync error:', error);
           itemIds.forEach(id => {
             enqueueOffline({ mutationType: 'update', table: 'items', payload: deletePayload, filterColumn: 'id', filterValue: id });
           });
@@ -1055,24 +1056,22 @@ export function useItemOperations(deps: ItemOperationsDeps) {
     }
   }, [refreshCounts, enqueueOffline]);
 
-  const bulkSetList = useCallback((itemIds: string[], listId: string | null) => {
+   const bulkSetList = useCallback((itemIds: string[], listId: string | null) => {
     dispatch({ type: 'BULK_SET_LIST', payload: { itemIds, listId } });
-
     const now = new Date().toISOString();
     const listPayload = { list_id: listId || null, updated_at: now };
-
     if (!isOnlineRef.current) {
       itemIds.forEach(id => {
         enqueueOffline({ mutationType: 'update', table: 'items', payload: listPayload, filterColumn: 'id', filterValue: id });
       });
     } else {
-      // Update each item individually
-      Promise.all(itemIds.map(id =>
-        apiQuery({ action: 'update', table: 'items', data: listPayload, filters: { id } })
-      )).then((results) => {
-        const hasError = results.some(r => r.error);
-        if (hasError) {
-          console.error('[BULK_SET_LIST] Server sync error');
+      // Single-transaction batch update
+      apiBatchUpdate('items', itemIds.map(id => ({
+        filters: { id },
+        data: listPayload,
+      }))).then(({ error }) => {
+        if (error) {
+          console.error('[BULK_SET_LIST] Server sync error:', error);
           itemIds.forEach(id => {
             enqueueOffline({ mutationType: 'update', table: 'items', payload: listPayload, filterColumn: 'id', filterValue: id });
           });

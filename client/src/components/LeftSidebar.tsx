@@ -61,7 +61,7 @@ import { linkifyTitle, getTitlePlainText, extractFirstLineLink, renderFirstLineL
 import { useLocation } from 'wouter';
 import { FilterType, Item, Tag, List } from '@/types';
 import { EditListDialog } from '@/components/EditListDialog';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { toast } from '@/lib/toast';
 import {
   SIDEBAR_NAV_SELECTED,

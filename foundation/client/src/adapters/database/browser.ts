@@ -438,6 +438,41 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
     }
   }
 
+  // ─── Batch Update ───────────────────────────────────────────────────────
+
+  async batchUpdate<T = any>(table: string, updates: { filters: Record<string, any>; data: any }[]): Promise<MutationResult<T>> {
+    if (updates.length === 0) return { data: [] as any, error: null };
+    try {
+      // Load all rows once, then apply all updates in a single readwrite transaction
+      const allRows = await this.getAllFromStore(table);
+      const store = await this.getStore(table, 'readwrite');
+
+      return new Promise((resolve, reject) => {
+        const tx = store.transaction;
+        const results: any[] = [];
+
+        for (const { filters, data } of updates) {
+          const matched = this.applyFilters(allRows, filters);
+          for (const row of matched) {
+            const merged = { ...row, ...data };
+            store.put(merged);
+            results.push(merged);
+            // Also update the in-memory row so subsequent filter passes see the new values
+            Object.assign(row, data);
+          }
+        }
+
+        tx.oncomplete = () => {
+          this.invalidateCache(table);
+          resolve({ data: results as T, error: null });
+        };
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (err: any) {
+      return { data: null, error: { message: err.message } };
+    }
+  }
+
   // ─── RPC ────────────────────────────────────────────────────────────────
 
   async rpc<T = any>(functionName: string, params?: Record<string, any>): Promise<QueryResult<T>> {

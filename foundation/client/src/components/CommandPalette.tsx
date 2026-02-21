@@ -2,8 +2,10 @@
  * CommandPalette - Desktop modal wrapper around SearchPanel.
  * Renders SearchPanel inside a centered modal overlay with backdrop.
  * On mobile, SearchPanel is rendered directly as a full-screen tab (see Home.tsx).
+ *
+ * Uses CSS animations instead of motion/react for lighter bundle.
  */
-import { motion, AnimatePresence } from 'framer-motion';
+import { memo } from 'react';
 import { SearchPanel } from './SearchPanel';
 
 interface CommandPaletteProps {
@@ -18,7 +20,7 @@ interface CommandPaletteProps {
   onSelectTag: (tagId: string) => void;
 }
 
-export function CommandPalette({
+export const CommandPalette = memo(function CommandPalette({
   isOpen,
   onClose,
   onNewTask,
@@ -32,44 +34,32 @@ export function CommandPalette({
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={onClose}
-          />
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/50 z-50 animate-in fade-in duration-150"
+        onClick={onClose}
+      />
 
-          {/* Dialog */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            transition={{ duration: 0.15 }}
-            className="fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-xl z-50"
-          >
-            <div className="bg-background border border-border rounded-xl shadow-2xl overflow-hidden">
-              <SearchPanel
-                mode="modal"
-                isActive={isOpen}
-                onClose={onClose}
-                onNewTask={onNewTask}
-                onNewNote={onNewNote}
-                onToggleSidebar={onToggleSidebar}
-                onToggleDetailPanel={onToggleDetailPanel}
-                onSelectItem={onSelectItem}
-                onSelectList={onSelectList}
-                onSelectTag={onSelectTag}
-              />
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+      {/* Dialog */}
+      <div
+        className="fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-xl z-50 animate-in fade-in zoom-in-95 slide-in-from-top-5 duration-150"
+      >
+        <div className="bg-background border border-border rounded-xl shadow-2xl overflow-hidden">
+          <SearchPanel
+            mode="modal"
+            isActive={isOpen}
+            onClose={onClose}
+            onNewTask={onNewTask}
+            onNewNote={onNewNote}
+            onToggleSidebar={onToggleSidebar}
+            onToggleDetailPanel={onToggleDetailPanel}
+            onSelectItem={onSelectItem}
+            onSelectList={onSelectList}
+            onSelectTag={onSelectTag}
+          />
+        </div>
+      </div>
+    </>
   );
-}
+});

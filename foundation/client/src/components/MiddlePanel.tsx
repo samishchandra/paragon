@@ -103,7 +103,7 @@ import { highlightText, getMatchSnippet } from '@/lib/highlightText';
 import { DatePickerPopover } from '@/components/DatePickerPopover';
 import { Item, SectionType, Task, SortOrder, DisplaySectionType } from '@/types';
 import { format, isPast, isToday, isTomorrow, parseISO, startOfDay } from 'date-fns';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
 import { useSwipeable } from 'react-swipeable';
 import { TagIcon } from '@/components/icons/TagIcon';
 import { ListPill } from '@/components/ListPill';
@@ -115,6 +115,9 @@ import { CheckConfetti } from '@/components/CheckConfetti';
 import { linkifyTitle, getTitlePlainText, extractFirstLineLink, renderFirstLineLink } from '@/lib/linkifyTitle';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
+
+/** Virtualize lists above this item count for smooth scrolling. Disabled for custom sort (drag-and-drop). */
+const VIRTUALIZATION_THRESHOLD = 30;
 
 // Storage sections (what's stored in DB)
 const STORAGE_SECTIONS: { id: SectionType; title: string }[] = [
@@ -1039,7 +1042,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     if (isNotesView) {
       // Notes view: Flat list of notes (no Pinned section - pinned items show in All Items view only)
       const allNotes = sortItems(organizedItems.all || []);
-      const VIRTUALIZATION_THRESHOLD = 100;
       const useVirtualization = allNotes.length > VIRTUALIZATION_THRESHOLD && state.sortOrder !== 'custom';
       
       if (useVirtualization) {
@@ -1353,7 +1355,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     // Completed view: flat list without sections
     if (isCompletedView) {
       const completedItems = sortItems(getFilteredItems());
-      const VIRTUALIZATION_THRESHOLD = 100;
       const useVirtualization = completedItems.length > VIRTUALIZATION_THRESHOLD && state.sortOrder !== 'custom';
       
       if (useVirtualization) {
@@ -1474,7 +1475,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     // All Items view: Flat list (no sections)
     if (isAllItemsView) {
       const allItems = sortItems(getFilteredItems());
-      const VIRTUALIZATION_THRESHOLD = 100;
       const useVirtualization = allItems.length > VIRTUALIZATION_THRESHOLD && state.sortOrder !== 'custom';
       
       if (useVirtualization) {
@@ -1689,7 +1689,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     // Tag view: Flat list (no sections)
     if (isTagView) {
       const allTagItems = sortItems(getFilteredItems());
-      const VIRTUALIZATION_THRESHOLD = 100;
       const useVirtualization = allTagItems.length > VIRTUALIZATION_THRESHOLD && state.sortOrder !== 'custom';
       
       if (useVirtualization) {
@@ -1807,7 +1806,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     // Note-type List view: Flat list (no sections, same as Notes view)
     if (isNoteListView) {
       const allNoteListItems = sortItems(getFilteredItems());
-      const VIRTUALIZATION_THRESHOLD = 100;
       const useVirtualization = allNoteListItems.length > VIRTUALIZATION_THRESHOLD && state.sortOrder !== 'custom';
       
       if (useVirtualization) {
@@ -2108,7 +2106,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
 
   return (
     <div
-      className="h-full flex flex-col bg-[#F9FAFB] dark:bg-zinc-900 border-r border-border/50 relative contain-layout"
+      className="h-full flex flex-col bg-[#F9FAFB] dark:bg-zinc-900 border-r border-border/50 relative"
       onDragEnter={handleFileDragEnter}
       onDragLeave={handleFileDragLeave}
       onDragOver={handleFileDragOver}

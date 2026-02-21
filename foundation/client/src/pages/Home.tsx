@@ -55,7 +55,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { FilterType, SortOrder } from '@/types';
-import { motion, AnimatePresence } from 'framer-motion';
+// motion/react removed — using CSS transitions for panel collapse/expand
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 
@@ -599,40 +599,26 @@ export default function Home() {
         />
       )}
 
-      <AnimatePresence mode="wait">
-        {!state.rightPanelCollapsed ? (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 'auto', opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="flex-1 h-full overflow-hidden"
+      {!state.rightPanelCollapsed ? (
+        <div className="flex-1 h-full overflow-hidden">
+          <EditorV2 
+            editorType={editorType} 
+            onTogglePanel={() => dispatch({ type: 'TOGGLE_RIGHT_PANEL' })}
+            autoReorderChecklist={autoReorderChecklist}
+          />
+        </div>
+      ) : (
+        <div className="h-full bg-background border-l border-border/50 flex flex-col items-center py-3 w-12">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => dispatch({ type: 'TOGGLE_RIGHT_PANEL' })}
           >
-            <EditorV2 
-              editorType={editorType} 
-              onTogglePanel={() => dispatch({ type: 'TOGGLE_RIGHT_PANEL' })}
-              autoReorderChecklist={autoReorderChecklist}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 48, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="h-full bg-background border-l border-border/50 flex flex-col items-center py-3"
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={() => dispatch({ type: 'TOGGLE_RIGHT_PANEL' })}
-            >
-              <PanelLeftClose className="h-4 w-4" />
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <PanelLeftClose className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
       <Suspense fallback={null}>
         <SettingsDialog open={settingsOpen} onOpenChange={(v) => { setSettingsOpen(v); if (!v) setSettingsInitialSection(undefined); }} initialSection={settingsInitialSection} />
       </Suspense>

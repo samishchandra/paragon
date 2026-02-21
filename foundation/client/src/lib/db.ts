@@ -442,3 +442,26 @@ export const apiDeleteItemTags = dbDeleteItemTags;
 export const apiDeleteTag = dbDeleteTag;
 export const apiSelectUserSettings = dbSelectUserSettings;
 export const apiSelectViewSortPrefs = dbSelectViewSortPrefs;
+
+/**
+ * Batch-update multiple rows in a single transaction.
+ * If the adapter supports batchUpdate, uses it; otherwise falls back to sequential updates.
+ */
+export async function apiBatchUpdate(
+  table: string,
+  updates: { filters: Record<string, any>; data: any }[]
+): Promise<{ data: any; error: any }> {
+  if (updates.length === 0) return { data: [], error: null };
+  const adapter = getDatabaseAdapter();
+  if (adapter.batchUpdate) {
+    return adapter.batchUpdate(table, updates);
+  }
+  // Fallback: sequential updates
+  const results: any[] = [];
+  for (const { filters, data } of updates) {
+    const { data: d, error } = await adapter.update(table, filters, data);
+    if (error) return { data: null, error };
+    results.push(d);
+  }
+  return { data: results, error: null };
+}

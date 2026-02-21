@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { X, Check, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { subscribeToToasts, dismissToast, Toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 export function ToastContainer() {
   const [toasts, setToasts] = useState<Toast[]>([]);

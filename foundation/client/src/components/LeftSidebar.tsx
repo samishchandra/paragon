@@ -62,7 +62,7 @@ import { linkifyTitle, getTitlePlainText, extractFirstLineLink, renderFirstLineL
 import { useLocation } from 'wouter';
 import { FilterType, Item, Tag, List } from '@/types';
 import { EditListDialog } from '@/components/EditListDialog';
-import { motion, AnimatePresence } from 'framer-motion';
+// motion/react removed — using CSS transitions for chevron rotation and collapsible sections
 import { toast } from '@/lib/toast';
 import {
   SIDEBAR_NAV_SELECTED,
@@ -460,28 +460,22 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               >
                 <Pin className="w-4 h-4" />
                 <span className="text-left">Pinned</span>
-                <motion.div
-                  animate={{ rotate: pinnedExpanded ? 90 : 0 }}
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                <div
                   className={cn(
-                    "w-4 h-4 flex items-center justify-center shrink-0 transition-opacity duration-200",
-                    pinnedExpanded ? "opacity-0 group-hover:opacity-60" : "opacity-100"
+                    "w-4 h-4 flex items-center justify-center shrink-0 transition-all duration-200 ease-in-out",
+                    pinnedExpanded ? "rotate-90 opacity-0 group-hover:opacity-60" : "rotate-0 opacity-100"
                   )}
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
-                </motion.div>
+                </div>
                 <span className="flex-1" />
                 <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground/70">{pinnedItems.length}</span>
               </button>
-              <AnimatePresence>
-                {pinnedExpanded && (
-                  <motion.nav
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: "easeInOut" }}
-                    className="space-y-1 overflow-hidden"
-                  >
+              <div
+                className="grid transition-all duration-250 ease-in-out overflow-hidden"
+                style={{ gridTemplateRows: pinnedExpanded ? '1fr' : '0fr', opacity: pinnedExpanded ? 1 : 0 }}
+              >
+                <nav className="space-y-1 min-h-0 overflow-hidden">
                     {pinnedItems.slice(0, 10).map((item) => (
                       <PinnedItem
                         key={item.id}
@@ -498,9 +492,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                         +{pinnedItems.length - 10} more items
                       </button>
                     )}
-                  </motion.nav>
-                )}
-              </AnimatePresence>
+                </nav>
+              </div>
             </div>
           )}
 
@@ -513,27 +506,21 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               >
                 <Clock className="w-4 h-4" />
                 <span className="text-left">Recent</span>
-                <motion.div
-                  animate={{ rotate: recentExpanded ? 90 : 0 }}
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                <div
                   className={cn(
-                    "w-4 h-4 flex items-center justify-center shrink-0 transition-opacity duration-200",
-                    recentExpanded ? "opacity-0 group-hover:opacity-60" : "opacity-100"
+                    "w-4 h-4 flex items-center justify-center shrink-0 transition-all duration-200 ease-in-out",
+                    recentExpanded ? "rotate-90 opacity-0 group-hover:opacity-60" : "rotate-0 opacity-100"
                   )}
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
-                </motion.div>
+                </div>
                 <span className="flex-1" />
               </button>
-              <AnimatePresence>
-                {recentExpanded && (
-                  <motion.nav
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: "easeInOut" }}
-                    className="space-y-1 overflow-hidden"
-                  >
+              <div
+                className="grid transition-all duration-250 ease-in-out overflow-hidden"
+                style={{ gridTemplateRows: recentExpanded ? '1fr' : '0fr', opacity: recentExpanded ? 1 : 0 }}
+              >
+                <nav className="space-y-1 min-h-0 overflow-hidden">
                     {recentItems.slice(0, 5).map((item) => (
                       <PinnedItem
                         key={item.id}
@@ -542,9 +529,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                         isSelected={state.selectedItemId === item.id}
                       />
                     ))}
-                  </motion.nav>
-                )}
-              </AnimatePresence>
+                </nav>
+              </div>
             </div>
           )}
 
@@ -559,16 +545,14 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
             >
               <LayoutGrid className="w-4 h-4" />
               <span className="text-left">Lists</span>
-              <motion.div
-                animate={{ rotate: listsExpanded ? 90 : 0 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+              <div
                 className={cn(
-                  "w-4 h-4 flex items-center justify-center shrink-0 transition-opacity duration-200",
-                  listsExpanded ? "opacity-0 group-hover:opacity-60" : "opacity-100"
+                  "w-4 h-4 flex items-center justify-center shrink-0 transition-all duration-200 ease-in-out",
+                  listsExpanded ? "rotate-90 opacity-0 group-hover:opacity-60" : "rotate-0 opacity-100"
                 )}
               >
                 <ChevronRight className="w-3.5 h-3.5" />
-              </motion.div>
+              </div>
               <span className="flex-1" />
               <button
                 onClick={(e) => {
@@ -582,15 +566,11 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               </button>
               <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground/50 min-w-[16px] text-right">{state.lists.length}</span>
             </div>
-            <AnimatePresence>
-              {listsExpanded && (
-                <motion.nav
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
+            <div
+              className="grid transition-all duration-250 ease-in-out overflow-hidden"
+              style={{ gridTemplateRows: listsExpanded ? '1fr' : '0fr', opacity: listsExpanded ? 1 : 0 }}
+            >
+              <nav className="space-y-1 min-h-0 overflow-hidden">
                   {sortedLists.length === 0 ? (
                     <div className="pl-8 pr-2 py-2 text-xs text-muted-foreground/70 italic">
                       No lists yet
@@ -635,9 +615,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                       </DragOverlay>
                     </DndContext>
                   )}
-                </motion.nav>
-              )}
-            </AnimatePresence>
+              </nav>
+            </div>
           </div>
 
           {/* Tags Section */}
@@ -651,16 +630,14 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
             >
               <TagIcon className="w-4 h-4" />
               <span className="text-left">Tags</span>
-              <motion.div
-                animate={{ rotate: tagsExpanded ? 90 : 0 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+              <div
                 className={cn(
-                  "w-4 h-4 flex items-center justify-center shrink-0 transition-opacity duration-200",
-                  tagsExpanded ? "opacity-0 group-hover:opacity-60" : "opacity-100"
+                  "w-4 h-4 flex items-center justify-center shrink-0 transition-all duration-200 ease-in-out",
+                  tagsExpanded ? "rotate-90 opacity-0 group-hover:opacity-60" : "rotate-0 opacity-100"
                 )}
               >
                 <ChevronRight className="w-3.5 h-3.5" />
-              </motion.div>
+              </div>
               <span className="flex-1" />
               <button
                 onClick={(e) => {
@@ -674,15 +651,11 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               </button>
               <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground/50 min-w-[16px] text-right">{state.tags.length}</span>
             </div>
-            <AnimatePresence>
-              {tagsExpanded && (
-                <motion.nav
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
+            <div
+              className="grid transition-all duration-250 ease-in-out overflow-hidden"
+              style={{ gridTemplateRows: tagsExpanded ? '1fr' : '0fr', opacity: tagsExpanded ? 1 : 0 }}
+            >
+              <nav className="space-y-1 min-h-0 overflow-hidden">
                   {state.tags.map((tag) => (
                     <SidebarTagItem
                       key={tag.id}
@@ -700,9 +673,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                       onEdit={() => setEditingTag(tag)}
                     />
                   ))}
-                </motion.nav>
-              )}
-            </AnimatePresence>
+              </nav>
+            </div>
           </div>
         </div>
       </ScrollArea>

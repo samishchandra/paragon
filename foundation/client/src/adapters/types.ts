@@ -109,6 +109,13 @@ export interface DatabaseAdapter {
   /** Delete rows matching filters */
   delete(table: string, filters: Record<string, any>): Promise<MutationResult>;
 
+  /**
+   * Batch-update multiple rows in a single transaction.
+   * Each entry specifies its own filters and data to merge.
+   * Falls back to sequential updates if not implemented by the adapter.
+   */
+  batchUpdate?<T = any>(table: string, updates: { filters: Record<string, any>; data: any }[]): Promise<MutationResult<T>>;
+
   /** Call a stored procedure / RPC function */
   rpc<T = any>(functionName: string, params?: Record<string, any>): Promise<QueryResult<T>>;
 }
