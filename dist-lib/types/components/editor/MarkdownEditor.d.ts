@@ -289,6 +289,10 @@ export interface MarkdownEditorProps {
     autoReorderChecklist?: boolean;
     /** Enable progressive Cmd+A / Ctrl+A selection that expands to parent nodes instead of immediately selecting all (default: false) */
     progressiveSelectAll?: boolean;
+    /** Enable auto-detection of #hashtag patterns and conversion to tag pills (default: true) */
+    enableTagAutoDetect?: boolean;
+    /** Enable auto-detection and highlighting of hex color values like #FF0000 (default: true) */
+    enableHexColorHighlight?: boolean;
     /** Callback when the editor crashes — useful for external error reporting */
     onEditorError?: (error: Error, errorInfo: React.ErrorInfo) => void;
     /**

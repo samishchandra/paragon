@@ -3,6 +3,8 @@ export interface TagPillOptions {
     HTMLAttributes: Record<string, unknown>;
     /** Callback when a tag pill is clicked */
     onTagClick?: (tag: string) => void;
+    /** Enable auto-detection of #hashtag patterns via input rules and paste handling (default: true) */
+    enableAutoDetect?: boolean;
 }
 declare module '@tiptap/core' {
     interface Commands<ReturnType> {
