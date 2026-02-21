@@ -61,8 +61,9 @@ import { AIDropdownMenu } from './ai/AIDropdownMenu';
 import { AIResultPopover } from './ai/AIResultPopover';
 import { TableOfContents } from './TableOfContents';
 import { useTurndownService } from './hooks/useTurndownService';
-import type TurndownService from 'turndown';
-import { marked } from 'marked';
+// marked and turndown are lazy-loaded for performance
+// marked: dynamically imported in handleModeSwitch (only needed for markdown→WYSIWYG)
+// turndown: lazy-initialized via useTurndownService hook
 import type { Editor } from '@tiptap/react';
 
 /*
@@ -507,6 +508,8 @@ export interface MarkdownEditorProps {
   enableTagAutoDetect?: boolean;
   /** Enable auto-detection and highlighting of hex color values like #FF0000 (default: false) */
   enableHexColorHighlight?: boolean;
+  /** Enable collapsible headings that can be folded/unfolded (default: false) */
+  enableCollapsibleHeadings?: boolean;
   
   // === ERROR BOUNDARY ===
   
@@ -611,6 +614,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   // Auto-detection toggles
   enableTagAutoDetect = false,
   enableHexColorHighlight = false,
+  enableCollapsibleHeadings = false,
   // Error boundary
   onEditorError,
   // AI writing assistant
@@ -803,8 +807,8 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       baseExtensions.push(CalloutWithMenu, CalloutInputRule);
     }
 
-    // Conditionally add collapsible headings
-    if (!disabledFeatures.collapsibleHeadings) {
+    // Conditionally add collapsible headings (requires enableCollapsibleHeadings prop)
+    if (enableCollapsibleHeadings && !disabledFeatures.collapsibleHeadings) {
       baseExtensions.push(
         CollapsibleHeading.configure({
           levels: collapsibleHeadingLevels,
@@ -903,7 +907,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     return baseExtensions;
   // Dependencies: only stable values (primitives, objects compared by reference that don't change).
   // Callback props are accessed via refs, so they don't need to be in the deps array.
-  }, [placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures, progressiveSelectAll]);
+  }, [placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures, progressiveSelectAll, enableCollapsibleHeadings]);
 
   // Debounced onUpdate ref for HTML serialization performance
   const onUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -911,7 +915,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   const onHTMLChangeRef = useRef(onHTMLChange);
   const onMarkdownChangeRef = useRef(onMarkdownChange);
   // Ref for turndownService so onUpdate callback can access it (turndownService is created after useEditor)
-  const turndownServiceRef = useRef<TurndownService | null>(null);
+  const turndownServiceRef = useRef<ReturnType<typeof useTurndownService> | null>(null);
   onChangeRef.current = onChange;
   onHTMLChangeRef.current = onHTMLChange;
   onMarkdownChangeRef.current = onMarkdownChange;
@@ -1104,7 +1108,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   }, [editor, turndownService, initialMode]);
   
   // Handle mode switching
-  const handleModeSwitch = useCallback((newMode: 'wysiwyg' | 'markdown') => {
+  const handleModeSwitch = useCallback(async (newMode: 'wysiwyg' | 'markdown') => {
     if (!editor) return;
     
     if (newMode === 'markdown' && editorModeRef.current === 'wysiwyg') {
@@ -1117,6 +1121,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       // Convert Markdown back to HTML and set in editor using marked
       // Use queueMicrotask to avoid flushSync error when ReactNodeViewRenderer is used
       // This defers the setContent call to after React's render cycle completes
+      
+      // Lazy-load marked (only needed for markdown→WYSIWYG conversion)
+      const { marked } = await import('marked');
       
       // First, convert callout code blocks to callout HTML before parsing
       // Matches ```ad-info, ```ad-note, ```ad-prompt, ```ad-resources, ```ad-todo code blocks
