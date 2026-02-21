@@ -618,7 +618,7 @@ export const SearchPanel = forwardRef<SearchPanelRef, SearchPanelProps>(({
     <>
       {segments.map((seg, i) => (
         seg.highlighted ? (
-          <mark key={i} className="bg-yellow-300/60 dark:bg-yellow-500/50 text-inherit rounded-sm px-0.5 font-medium">
+          <mark key={i} className="bg-primary/20 dark:bg-primary/30 text-inherit rounded-sm px-0.5 font-medium">
             {seg.text}
           </mark>
         ) : (

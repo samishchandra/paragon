@@ -264,7 +264,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                     <Icon className="w-4 h-4 shrink-0" />
                     <span className="flex-1">{section.label}</span>
                     {showConnectedDot && (
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Local folder connected" />
+                      <span className="w-2 h-2 rounded-full bg-primary shrink-0" title="Local folder connected" />
                     )}
                   </button>
                 );
@@ -297,7 +297,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                   <activeSectionInfo.icon className="w-4 h-4 text-primary shrink-0" />
                   <h3 className="text-base font-semibold text-foreground">{activeSectionInfo.label}</h3>
                   {activeSection === 'backup' && backupConnected && (
-                    <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                    <span className="inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
                       Connected
                     </span>
                   )}

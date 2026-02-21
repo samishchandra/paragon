@@ -277,3 +277,19 @@
 - [x] Root cause: Circular ES module dependency between vendor-react and vendor-editor chunks. Rollup placed getDefaultExportFromCjs helper in vendor-editor, but vendor-react needed it too. When vendor-editor tried to import from vendor-react during initialization, vendor-react hadn't finished executing (waiting for vendor-editor), so the exports object was undefined.
 - [x] Fix: Merged highlight.js/lowlight + use-sync-external-store + scheduler into vendor-react chunk. vendor-react is now fully self-contained (0 imports from other chunks). All other vendor chunks import one-way from vendor-react.
 - [x] Verified: No circular dependencies, 451 tests pass, production build succeeds (vendor-react 283KB)
+
+## Accent Color Consistency (#008948) — Round 2
+- [x] Audit all CSS variables and component styles for accent color usage
+- [x] Update --primary CSS variable to exact oklch(0.552 0.142 153.2) matching #008948 in light theme
+- [x] Update --primary dark theme to oklch(0.70 0.155 153.2) for better readability
+- [x] Fix completion-ring animation from rgba(16,185,129) (emerald) to rgba(0,137,72) (accent)
+- [x] Fix LeftSidebar 'All Items' accent from text-emerald-500 to text-primary
+- [x] Fix LeftSidebar mobile 'All Items' button from emerald-500 to primary
+- [x] Fix SearchPanel highlight from bg-yellow-300 to bg-primary/20
+- [x] Fix EditorFooter save/backup status from emerald-500/green-500 to text-primary
+- [x] Fix SettingsDialog connected dot from bg-emerald-500 to bg-primary
+- [x] Fix SettingsDialog 'Connected' badge from emerald-500/600 to primary
+- [x] Add CSS overrides in index.css to remap all Tailwind emerald/green utilities to accent OKLCH values
+- [x] Dark mode overrides use brighter oklch(0.70 0.155 153.2) for readability
+- [x] All changes in app layer (index.css + client/src/) — won't be overridden by foundation sync
+- [x] Verified: 451 tests pass, production build succeeds

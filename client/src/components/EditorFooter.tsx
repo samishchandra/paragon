@@ -162,14 +162,14 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
     switch (saveStatus) {
       case 'saving':
         return (
-          <span className="flex items-center gap-1.5 text-emerald-500 animate-in fade-in duration-200">
+          <span className="flex items-center gap-1.5 text-primary animate-in fade-in duration-200">
             <Loader2 className="w-3 h-3 animate-spin" />
             <span>Saving...</span>
           </span>
         );
       case 'saved':
         return (
-          <span className="flex items-center gap-1.5 text-green-500 animate-in fade-in duration-200">
+          <span className="flex items-center gap-1.5 text-primary animate-in fade-in duration-200">
             <CheckCircle2 className="w-3 h-3" />
             <span>Saved</span>
           </span>
@@ -196,7 +196,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="flex items-center gap-1.5 text-emerald-500/70 cursor-default">
+                <span className="flex items-center gap-1.5 text-primary/70 cursor-default">
                   <HardDrive className="w-3 h-3" />
                   <span className="text-[10px]">Backed up</span>
                 </span>
@@ -253,7 +253,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="flex items-center gap-1.5 text-emerald-500/80 cursor-default animate-in fade-in duration-200">
+                <span className="flex items-center gap-1.5 text-primary/80 cursor-default animate-in fade-in duration-200">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span className="text-[10px]">Backing up</span>
                 </span>

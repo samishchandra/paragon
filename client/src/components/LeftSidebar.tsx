@@ -385,7 +385,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                 count={sidebarCounts?.all ?? state.items.filter((i) => !i.deletedAt).length}
                 isActive={isActiveFilter({ type: 'all' })}
                 onClick={() => setFilter({ type: 'all' })}
-                accentColor="text-emerald-500"
+                accentColor="text-primary"
               />
               {tasksEnabled && (sidebarCounts?.tasks ?? todoCounts.total) > 0 && (
                 <SidebarItem
@@ -779,8 +779,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               className={cn(
                 "h-8 w-8",
                 isActiveFilter({ type: 'all' })
-                  ? "text-emerald-500 bg-emerald-500/10"
-                  : "text-emerald-500/60 hover:text-emerald-500"
+                  ? "text-primary bg-primary/10"
+                  : "text-primary/60 hover:text-primary"
               )}
               onClick={() => setFilter({ type: 'all' })}
               title="All Items"
