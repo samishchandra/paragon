@@ -3,6 +3,11 @@
  * 
  * Uses react-window v2 for efficient rendering of large lists.
  * Only renders items that are visible in the viewport.
+ * 
+ * Row rendering matches the rich ItemCard style:
+ * - Title with pin/3-dot icons on hover (right-aligned)
+ * - Content preview (1-2 lines)
+ * - TagPill, ListPill, DatePill components for consistent styling
  */
 
 import { memo, useEffect, ReactElement } from 'react';
@@ -10,8 +15,8 @@ import { List, useListRef, ListImperativeAPI } from 'react-window';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { Item, SectionType, Task, Tag } from '@/types';
 import { cn } from '@/lib/utils';
+import { ITEM_SELECTED, ITEM_HOVER } from '@/lib/styles';
 import {
-  Check,
   CheckCircle2,
   Circle,
   Copy,
@@ -23,10 +28,8 @@ import {
   ArrowUp,
   Sun,
   Clock,
-  Calendar,
   Loader2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,38 +40,14 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { TagIcon } from '@/components/icons/TagIcon';
-import { highlightText } from '@/lib/highlightText';
+import { TagPill } from '@/components/TagPill';
+import { ListPill } from '@/components/ListPill';
+import { DatePill } from '@/components/DatePill';
+import { highlightText, getMatchSnippet } from '@/lib/highlightText';
 import { linkifyTitle, extractFirstLineLink, renderFirstLineLink } from '@/lib/linkifyTitle';
-import { isPast, isToday, isTomorrow, parseISO, startOfDay, format } from 'date-fns';
 
-// Item height for virtual list
-const ITEM_HEIGHT = 72;
-
-// Date status colors
-const DATE_COLORS = {
-  overdue: '#EF4444',
-  today: '#F59E0B',
-  tomorrow: '#3B82F6',
-  upcoming: '#6B7280',
-} as const;
-
-function getDateDisplay(dueDate: string): { color: string; label: string } {
-  const date = parseISO(dueDate);
-  const today = startOfDay(new Date());
-  const dateOnly = startOfDay(date);
-
-  if (isPast(dateOnly) && !isToday(date)) {
-    return { color: DATE_COLORS.overdue, label: format(date, 'MMM d') };
-  }
-  if (isToday(date)) {
-    return { color: DATE_COLORS.today, label: 'Today' };
-  }
-  if (isTomorrow(date)) {
-    return { color: DATE_COLORS.tomorrow, label: 'Tomorrow' };
-  }
-  return { color: DATE_COLORS.upcoming, label: format(date, 'MMM d') };
-}
+// Item height for virtual list — taller to fit content preview + pills
+const ITEM_HEIGHT = 110;
 
 interface VirtualizedItemListProps {
   items: Item[];
@@ -120,7 +99,7 @@ interface RowComponentProps {
   };
 }
 
-// Row component for react-window v2
+// Row component for react-window v2 — rich rendering matching ItemCard
 function Row({ 
   index, 
   style,
@@ -148,6 +127,7 @@ function Row({
   const itemTags = tags.filter((tag: Tag) => item.tags?.includes(tag.id));
   const itemList = item.listId ? lists.find((l) => l.id === item.listId) : null;
   const dueDate = isTask && (item as Task).dueDate ? (item as Task).dueDate : null;
+  const firstLink = extractFirstLineLink(item.content);
 
   const handleComplete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -162,14 +142,17 @@ function Row({
     <div style={style} className="px-1">
       <div
         className={cn(
-          "group h-[68px] px-3 py-2 rounded-lg transition-colors cursor-pointer",
-          "hover:bg-muted/50 border border-transparent hover:border-border/30",
-          isSelected && "bg-muted/70 border-border/50"
+          "group relative py-3 pr-3 pl-3 rounded-lg transition-colors duration-150 cursor-pointer select-none overflow-hidden border-b border-border/40",
+          isSelected
+            ? ITEM_SELECTED
+            : 'bg-transparent ' + ITEM_HOVER,
         )}
+        style={{ height: ITEM_HEIGHT - 4 }}
         onClick={() => onSelect(item.id)}
       >
-        <div className="flex items-start gap-3 h-full">
-          {/* Checkbox or Note icon */}
+        {/* Flexbox layout for icon and content */}
+        <div className="flex items-start gap-2 h-full">
+          {/* Checkbox or Note icon — aligned with first line of title */}
           <div className="shrink-0 flex items-center h-[22px]">
             {isTask ? (
               <button
@@ -179,188 +162,182 @@ function Row({
                 {isCompleted ? (
                   <CheckCircle2 className="w-[18px] h-[18px] text-emerald-500" />
                 ) : (
-                  <Circle className="w-[18px] h-[18px] text-muted-foreground/60 hover:text-primary transition-colors" />
+                  <Circle className="w-[18px] h-[18px] text-muted-foreground hover:text-primary transition-colors" />
                 )}
               </button>
             ) : (
-              <FileText className="w-[18px] h-[18px] text-muted-foreground/60" />
+              <FileText className="w-[18px] h-[18px] text-muted-foreground" />
             )}
           </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0 flex flex-col justify-center">
-            {/* Title */}
-            <div className="flex items-center gap-2">
-              {item.isPinned && (
-                <Pin className="w-3 h-3 text-amber-500 shrink-0" />
-              )}
-              <span
-                className={cn(
-                  "text-sm font-medium truncate",
-                  isCompleted && "text-muted-foreground line-through"
-                )}
-              >
-                {searchQuery ? (
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: highlightText(
-                        item.title || (isTask ? 'Untitled Task' : 'Untitled Note'),
-                        searchQuery
-                      ) as string,
-                    }}
-                  />
-                ) : (
-                  item.title ? linkifyTitle(item.title).elements : (isTask ? 'Untitled Task' : 'Untitled Note')
-                )}
-              </span>
-            </div>
-
-            {/* First-line content link */}
-            {(() => {
-              const firstLink = extractFirstLineLink(item.content);
-              if (firstLink) {
-                return (
-                  <div className="mt-0.5">
-                    {renderFirstLineLink(firstLink)}
-                  </div>
-                );
-              }
-              return null;
-            })()}
-
-            {/* Metadata row */}
-            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-              {/* Due date - simple display */}
-              {dueDate && (() => {
-                const { color, label } = getDateDisplay(dueDate);
-                return (
-                  <span 
-                    className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-md"
-                    style={{ 
-                      color: color,
-                      backgroundColor: `${color}15`
-                    }}
-                  >
-                    <Calendar className="w-2.5 h-2.5" />
-                    {label}
-                  </span>
-                );
-              })()}
-              
-              {/* Tags - simple display */}
-              {itemTags.slice(0, 2).map((tag: Tag) => (
-                <span 
-                  key={tag.id}
-                  className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-md"
-                  style={{ 
-                    color: tag.color,
-                    backgroundColor: `${tag.color}15`
-                  }}
+          {/* Content — starts after icon */}
+          <div className="min-w-0 flex-1 flex flex-col">
+            {/* Title row with pin and 3-dot icons on the right */}
+            <div className="flex items-start justify-between gap-2">
+              {/* Title — max 2 lines */}
+              <div className="min-w-0 flex-1">
+                <h4
+                  className={cn(
+                    'text-sm font-medium line-clamp-2',
+                    isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'
+                  )}
                 >
-                  <TagIcon className="w-2.5 h-2.5" color={tag.color} />
-                  {tag.name}
-                </span>
-              ))}
-              {itemTags.length > 2 && (
-                <span className="text-xs text-muted-foreground">
-                  +{itemTags.length - 2}
-                </span>
-              )}
-              
-              {/* List name - simple display */}
-              {!hideListPill && itemList && (
-                <span 
-                  className="text-xs px-1.5 py-0.5 rounded-md"
-                  style={{ 
-                    color: itemList.color,
-                    backgroundColor: `${itemList.color}15`
-                  }}
-                >
-                  {itemList.name}
-                </span>
-              )}
-            </div>
-          </div>
+                  {searchQuery
+                    ? highlightText(item.title || (isTask ? 'Untitled Task' : 'Untitled Note'), searchQuery)
+                    : (item.title ? linkifyTitle(item.title).elements : (isTask ? 'Untitled Task' : 'Untitled Note'))}
+                </h4>
+              </div>
 
-          {/* Actions */}
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
+              {/* Right side: Pin icon → 3-dot menu (rightmost) */}
+              <div className="flex items-center shrink-0">
+                {/* Pin icon — hidden by default, expands on hover */}
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onPin(item.id);
                   }}
+                  className={cn(
+                    'h-5 shrink-0 rounded transition-all duration-200 overflow-hidden flex items-center justify-center',
+                    item.isPinned 
+                      ? 'w-5 opacity-100 text-primary hover:bg-muted' 
+                      : 'w-0 opacity-0 group-hover:w-5 group-hover:opacity-100 text-muted-foreground hover:text-primary hover:bg-muted'
+                  )}
+                  title={item.isPinned ? 'Unpin' : 'Pin'}
                 >
-                  <Pin className="w-4 h-4 mr-2" />
-                  {item.isPinned ? 'Unpin' : 'Pin'}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDuplicate(item.id);
-                  }}
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  Duplicate
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMoveToTop(item.id);
-                  }}
-                >
-                  <ArrowUp className="w-4 h-4 mr-2" />
-                  Move to top
-                </DropdownMenuItem>
-                {isTask && (
-                  <>
+                  <Pin className={cn('w-3.5 h-3.5', !item.isPinned && 'rotate-45')} />
+                </button>
+
+                {/* 3-dot menu — hidden by default, appears on hover, rightmost */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-5 shrink-0 rounded transition-all duration-200 overflow-hidden flex items-center justify-center w-0 opacity-0 group-hover:w-5 group-hover:opacity-100 hover:bg-muted"
+                      title="More options"
+                    >
+                      <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onPin(item.id);
+                      }}
+                    >
+                      <Pin className="w-4 h-4 mr-2" />
+                      {item.isPinned ? 'Unpin' : 'Pin'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDuplicate(item.id);
+                      }}
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Duplicate
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMoveToTop(item.id);
+                      }}
+                    >
+                      <ArrowUp className="w-4 h-4 mr-2" />
+                      Move to top
+                    </DropdownMenuItem>
+                    {isTask && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <ArrowRight className="w-4 h-4 mr-2" />
+                            Move to
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuItem onClick={() => onMove(item.id, 'now')}>
+                              <Sun className="w-4 h-4 mr-2 text-amber-500" />
+                              Do
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onMove(item.id, 'later')}>
+                              <Clock className="w-4 h-4 mr-2 text-sky-500" />
+                              Later
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onMove(item.id, 'completed')}>
+                              <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" />
+                              Completed
+                            </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <ArrowRight className="w-4 h-4 mr-2" />
-                        Move to
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent>
-                        <DropdownMenuItem onClick={() => onMove(item.id, 'now')}>
-                          <Sun className="w-4 h-4 mr-2 text-amber-500" />
-                          Do
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onMove(item.id, 'later')}>
-                          <Clock className="w-4 h-4 mr-2 text-primary" />
-                          Later
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onMove(item.id, 'completed')}>
-                          <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" />
-                          Completed
-                        </DropdownMenuItem>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                  </>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(item.id);
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
+            {/* First-line content link */}
+            {firstLink ? (
+              <div className="mt-0.5">
+                {renderFirstLineLink(firstLink)}
+              </div>
+            ) : item.content ? (
+              /* Content preview — 1-2 lines of note content */
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                {searchQuery 
+                  ? highlightText(getMatchSnippet(item.content.replace(/<[^>]*>/g, ''), searchQuery, 100), searchQuery)
+                  : item.content.replace(/<[^>]*>/g, '').slice(0, 100)}
+              </p>
+            ) : null}
+
+            {/* Bottom row: Date pill, List pill, Tag pills */}
+            {(dueDate || (itemList && !hideListPill) || itemTags.length > 0) && (
+              <div className="flex items-center gap-1.5 mt-auto overflow-hidden">
+                {/* Date pill */}
+                {dueDate && (
+                  <DatePill
+                    dueDate={dueDate}
+                    onDateChange={() => {}}
+                    size="sm"
+                    showPlaceholder={false}
+                  />
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(item.id);
-                  }}
-                  className="text-red-500"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                {/* List pill — hidden when viewing a specific list */}
+                {!hideListPill && itemList && (
+                  <ListPill
+                    listId={item.listId}
+                    itemId={item.id}
+                    itemType={item.type}
+                    size="sm"
+                  />
+                )}
+                {/* Tag pills — clickable to open inline tag popover */}
+                {itemTags.slice(0, 3).map((tag: Tag) => (
+                  <TagPill
+                    key={tag.id}
+                    tag={tag}
+                    itemId={item.id}
+                    size="sm"
+                  />
+                ))}
+                {itemTags.length > 3 && (
+                  <span className="text-[10px] text-muted-foreground shrink-0">
+                    +{itemTags.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
