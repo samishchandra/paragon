@@ -319,7 +319,7 @@ export const ItemCard = memo(function ItemCard({
                         setIsSwipeRevealed(false);
                         setShowMobileMenu(false);
                       }}>
-                        <Clock className="w-4 h-4 mr-2 text-sky-500" />
+                        <Clock className="w-4 h-4 mr-2 text-primary" />
                         Later
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => {
@@ -548,7 +548,7 @@ export const ItemCard = memo(function ItemCard({
                               Do
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onMove?.('later')}>
-                              <Clock className="w-4 h-4 mr-2 text-sky-500" />
+                              <Clock className="w-4 h-4 mr-2 text-primary" />
                               Later
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onMove?.('completed')}>

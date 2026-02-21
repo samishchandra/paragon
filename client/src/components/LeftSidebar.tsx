@@ -394,7 +394,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                   count={sidebarCounts?.tasks ?? todoCounts.total}
                   isActive={isActiveFilter({ type: 'tasks' })}
                   onClick={() => setFilter({ type: 'tasks' })}
-                  accentColor="text-blue-500"
+                  accentColor="text-primary"
                 />
               )}
               {tasksEnabled && (
@@ -794,8 +794,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                 className={cn(
                   "h-8 w-8",
                   isActiveFilter({ type: 'tasks' })
-                    ? "text-blue-500 bg-blue-500/10"
-                    : "text-blue-500/60 hover:text-blue-500"
+                    ? "text-primary bg-primary/10"
+                    : "text-primary/60 hover:text-primary"
                 )}
                 onClick={() => setFilter({ type: 'tasks' })}
                 title="Tasks"

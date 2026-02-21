@@ -24,7 +24,7 @@ const COLORS = [
   '#6ee7b7', // emerald-300
   '#f59e0b', // amber-500
   '#fbbf24', // amber-400
-  '#3b82f6', // blue-500
+  '#008948', // primary green
   '#a78bfa', // violet-400
   '#f472b6', // pink-400
 ];

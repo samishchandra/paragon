@@ -347,7 +347,7 @@ export function SettingsData() {
     if (tagNameToId.has(lower)) return tagNameToId.get(lower)!;
     const { data: existing } = await apiQuery({ table: 'tags', select: 'id', filters: { user_id: userId, name: lower }, limit: 1, single: true });
     if (existing) { tagNameToId.set(lower, existing.id); return existing.id; }
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+    const colors = ['#008948', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
     const color = colors[counters.tags % colors.length];
     const { data: newTag } = await apiQuery({ action: 'insert', table: 'tags', data: { name: lower, color, user_id: userId }, single: true });
     if (newTag) { tagNameToId.set(lower, newTag.id); counters.tags++; return newTag.id; }
@@ -749,7 +749,7 @@ export function SettingsData() {
             <div className="space-y-4 py-2">
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <FileText className="w-5 h-5 text-blue-500 shrink-0" />
+                  <FileText className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <div className="text-2xl font-semibold leading-none">{importPreview.files.length}</div>
                     <div className="text-xs text-muted-foreground mt-1">Markdown files</div>
@@ -813,7 +813,7 @@ export function SettingsData() {
 
 function getLogIcon(type: BackupLogType) {
   switch (type) {
-    case 'auto': return <Cloud className="w-3.5 h-3.5 text-sky-500" />;
+    case 'auto': return <Cloud className="w-3.5 h-3.5 text-primary" />;
     case 'manual': return <Upload className="w-3.5 h-3.5 text-primary" />;
     case 'full': return <RefreshCw className="w-3.5 h-3.5 text-violet-500" />;
     case 'error': return <AlertTriangle className="w-3.5 h-3.5 text-destructive" />;

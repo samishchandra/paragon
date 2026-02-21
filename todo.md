@@ -235,3 +235,15 @@
 - [x] Identify root cause: SW cache mismatch — stale HTML referencing old chunk filenames after deploy
 - [x] Fix: bumped SW cache version to v2, removed '/' from precache (always network-first for HTML), added stale cache cleanup on activate, added content-type sanity check for cached JS, enhanced chunk error recovery with SW cache clearing and unhandledrejection handler
 - [x] Verify fix with build and tests (451 tests pass, build succeeds)
+
+## Accent Color Consistency (#008948)
+- [x] Audit all CSS variables and global theme for accent color mismatches
+- [x] Fix CSS --primary to exact oklch(0.55 0.14 153) matching #008948
+- [x] Fix selected item highlight — uses bg-primary/10 via CSS variable (green tint)
+- [x] Fix tab bar bottom border — EditorTabs uses var(--color-primary) via boxShadow
+- [x] Fix settings sidebar active item — SettingsDialog uses bg-primary/10 text-primary
+- [x] Fix toggle switch — Switch component uses data-[state=checked]:bg-primary
+- [x] Fix section headers — Settings uses text-primary for all h4 headers
+- [x] Fix user initials — UserAvatar uses bg-primary/10 text-primary
+- [x] Fix list/tag text colors — replaced all blue-500/sky-500/#3b82f6 with primary
+- [x] Verify: zero remaining blue-500/sky-500/blue-600/#3b82f6 references in codebase

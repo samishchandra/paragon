@@ -113,9 +113,9 @@ export function SyncStatusIndicator({
       case 'syncing':
         return {
           icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-          color: 'text-blue-500',
-          bgColor: 'bg-blue-500/10',
-          borderColor: 'border-blue-500/20',
+          color: 'text-primary',
+          bgColor: 'bg-primary/10',
+          borderColor: 'border-primary/20',
           label: 'Syncing',
           description: 'Fetching latest data...',
         };
@@ -163,7 +163,7 @@ export function SyncStatusIndicator({
               className={cn(
                 "h-2 w-2 rounded-full transition-colors duration-300",
                 syncState === 'synced' && "bg-green-500",
-                syncState === 'syncing' && "bg-blue-500 animate-pulse",
+                syncState === 'syncing' && "bg-primary animate-pulse",
                 syncState === 'offline' && "bg-amber-500",
                 syncState === 'pending-sync' && "bg-orange-500 animate-pulse",
                 className

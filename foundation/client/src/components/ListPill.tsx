@@ -51,7 +51,7 @@ export const ListPill = memo(function ListPill({ listId, itemId, itemType, class
     if (!searchQuery.trim()) return;
     
     // Generate a random color for the new list
-    const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+    const colors = ['#22c55e', '#008948', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     const icons: ListIconName[] = ['folder', 'star', 'bookmark', 'heart', 'flag', 'briefcase', 'lightbulb', 'target'];
     const randomIcon = icons[Math.floor(Math.random() * icons.length)];

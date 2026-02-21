@@ -60,7 +60,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               "animate-in slide-in-from-right-full duration-300",
               toast.type === 'success' && "border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/30",
               toast.type === 'error' && "border-red-500/30 bg-red-50 dark:bg-red-950/30",
-              toast.type === 'info' && "border-blue-500/30 bg-blue-50 dark:bg-blue-950/30"
+              toast.type === 'info' && "border-primary/30 bg-primary/5 dark:bg-primary/10"
             )}
           >
             {toast.type === 'success' && (

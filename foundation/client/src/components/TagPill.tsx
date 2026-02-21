@@ -41,7 +41,7 @@ export const TagPill = memo(function TagPill({ tag, itemId, className, size = 'd
 
   const handleCreateTag = () => {
     if (!newTagName.trim() || !item) return;
-    const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+    const colors = ['#22c55e', '#008948', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     const newTagId = crypto.randomUUID();
     const newTag = { id: newTagId, name: newTagName.trim(), color: randomColor };
