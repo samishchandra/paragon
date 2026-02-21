@@ -69,7 +69,79 @@ export type ListIconName =
   | 'rss'
   | 'clipboard'
   | 'file-text'
-  | 'rocket';
+  | 'rocket'
+  // Finance & Money
+  | 'wallet'
+  | 'dollar-sign'
+  | 'circle-dollar-sign'
+  | 'piggy-bank'
+  | 'receipt'
+  | 'percent'
+  | 'calculator'
+  | 'trending-up'
+  | 'bar-chart-3'
+  // Security & Privacy
+  | 'lock'
+  | 'unlock'
+  | 'key'
+  | 'shield'
+  | 'shield-check'
+  | 'eye'
+  // Tools & Creative
+  | 'settings'
+  | 'wrench'
+  | 'hammer'
+  | 'paintbrush'
+  | 'palette'
+  | 'pen'
+  | 'scissors'
+  // Food & Drink
+  | 'coffee'
+  | 'wine'
+  | 'utensils-crossed'
+  | 'pizza'
+  | 'apple'
+  // Nature & Weather
+  | 'leaf'
+  | 'tree-pine'
+  | 'flower'
+  | 'flame'
+  | 'snowflake'
+  | 'mountain'
+  | 'waves'
+  | 'cloud'
+  | 'umbrella'
+  // Fitness & Health
+  | 'dumbbell'
+  | 'activity'
+  | 'heart-pulse'
+  | 'pill'
+  | 'brain'
+  // Science & Education
+  | 'atom'
+  | 'flask-conical'
+  | 'microscope'
+  // Social & Events
+  | 'crown'
+  | 'diamond'
+  | 'sparkles'
+  | 'party-popper'
+  | 'cake'
+  | 'baby'
+  // Audio & Media
+  | 'headphones'
+  | 'podcast'
+  | 'megaphone'
+  | 'bell'
+  // Organization
+  | 'tag'
+  | 'hash'
+  | 'paperclip'
+  | 'layers'
+  | 'kanban'
+  | 'list-todo'
+  | 'anchor'
+  | 'compass';
 
 export interface List {
   id: string;
@@ -218,4 +290,74 @@ export const LIST_ICONS: { name: ListIconName; label: string }[] = [
   { name: 'rss', label: 'RSS' },
   { name: 'clipboard', label: 'Clipboard' },
   { name: 'file-text', label: 'Document' },
+  // Row 8: Finance & Money
+  { name: 'wallet', label: 'Wallet' },
+  { name: 'dollar-sign', label: 'Dollar' },
+  { name: 'circle-dollar-sign', label: 'Money' },
+  { name: 'piggy-bank', label: 'Savings' },
+  { name: 'receipt', label: 'Receipt' },
+  { name: 'percent', label: 'Percent' },
+  { name: 'calculator', label: 'Calculator' },
+  { name: 'trending-up', label: 'Trending' },
+  // Row 9: Security & Tools
+  { name: 'bar-chart-3', label: 'Chart' },
+  { name: 'lock', label: 'Lock' },
+  { name: 'unlock', label: 'Unlock' },
+  { name: 'key', label: 'Key' },
+  { name: 'shield', label: 'Shield' },
+  { name: 'shield-check', label: 'Verified' },
+  { name: 'eye', label: 'Eye' },
+  { name: 'settings', label: 'Settings' },
+  // Row 10: Tools & Creative
+  { name: 'wrench', label: 'Wrench' },
+  { name: 'hammer', label: 'Hammer' },
+  { name: 'paintbrush', label: 'Paintbrush' },
+  { name: 'palette', label: 'Palette' },
+  { name: 'pen', label: 'Pen' },
+  { name: 'scissors', label: 'Scissors' },
+  { name: 'coffee', label: 'Coffee' },
+  { name: 'wine', label: 'Wine' },
+  // Row 11: Food & Nature
+  { name: 'utensils-crossed', label: 'Dining' },
+  { name: 'pizza', label: 'Pizza' },
+  { name: 'apple', label: 'Apple' },
+  { name: 'leaf', label: 'Leaf' },
+  { name: 'tree-pine', label: 'Tree' },
+  { name: 'flower', label: 'Flower' },
+  { name: 'flame', label: 'Flame' },
+  { name: 'snowflake', label: 'Snowflake' },
+  // Row 12: Nature & Weather
+  { name: 'mountain', label: 'Mountain' },
+  { name: 'waves', label: 'Waves' },
+  { name: 'cloud', label: 'Cloud' },
+  { name: 'umbrella', label: 'Umbrella' },
+  { name: 'dumbbell', label: 'Fitness' },
+  { name: 'activity', label: 'Activity' },
+  { name: 'heart-pulse', label: 'Health' },
+  { name: 'pill', label: 'Pill' },
+  // Row 13: Science & Social
+  { name: 'brain', label: 'Brain' },
+  { name: 'atom', label: 'Atom' },
+  { name: 'flask-conical', label: 'Science' },
+  { name: 'microscope', label: 'Research' },
+  { name: 'crown', label: 'Crown' },
+  { name: 'diamond', label: 'Diamond' },
+  { name: 'sparkles', label: 'Sparkles' },
+  { name: 'party-popper', label: 'Party' },
+  // Row 14: Events & Media
+  { name: 'cake', label: 'Cake' },
+  { name: 'baby', label: 'Baby' },
+  { name: 'headphones', label: 'Headphones' },
+  { name: 'podcast', label: 'Podcast' },
+  { name: 'megaphone', label: 'Announce' },
+  { name: 'bell', label: 'Bell' },
+  { name: 'tag', label: 'Tag' },
+  { name: 'hash', label: 'Hash' },
+  // Row 15: Organization
+  { name: 'paperclip', label: 'Paperclip' },
+  { name: 'layers', label: 'Layers' },
+  { name: 'kanban', label: 'Kanban' },
+  { name: 'list-todo', label: 'Todo List' },
+  { name: 'anchor', label: 'Anchor' },
+  { name: 'compass', label: 'Compass' },
 ];
