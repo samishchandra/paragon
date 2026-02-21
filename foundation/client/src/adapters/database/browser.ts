@@ -345,17 +345,31 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
 
   async insert<T = any>(table: string, data: any | any[]): Promise<MutationResult<T>> {
     try {
+      const resolvedTable = resolveTable(table);
       const store = await this.getStore(table, 'readwrite');
       const items = Array.isArray(data) ? data : [data];
 
+      // Stores with keyPath: 'id' need an id on every record.
+      // Auto-generate a UUID when the caller omits it (e.g. test-data generator).
+      const needsId = ['items', 'tags', 'lists'].includes(resolvedTable);
+
+      const enriched = items.map(item => {
+        if (needsId && !item.id) {
+          return { ...item, id: crypto.randomUUID() };
+        }
+        return item;
+      });
+
       return new Promise((resolve, reject) => {
         const tx = store.transaction;
-        for (const item of items) {
-          store.put(item); // put handles both insert and update
+        for (const item of enriched) {
+          store.put(item);
         }
         tx.oncomplete = () => {
           this.invalidateCache(table);
-          resolve({ data: data as T, error: null });
+          // Return the enriched data (with generated ids) so callers can reference them
+          const result = Array.isArray(data) ? enriched : enriched[0];
+          resolve({ data: result as T, error: null });
         };
         tx.onerror = () => reject(tx.error);
       });
