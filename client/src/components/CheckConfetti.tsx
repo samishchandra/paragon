@@ -19,12 +19,12 @@ interface Particle {
 }
 
 const COLORS = [
-  '#10b981', // emerald-500
-  '#34d399', // emerald-400
-  '#6ee7b7', // emerald-300
+  '#008948', // primary accent
+  '#00a85a', // lighter accent
+  '#66c89a', // light accent
   '#f59e0b', // amber-500
   '#fbbf24', // amber-400
-  '#059669', // emerald-600
+  '#006634', // darker accent
   '#a78bfa', // violet-400
   '#f472b6', // pink-400
 ];

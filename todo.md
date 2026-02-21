@@ -303,3 +303,15 @@
 - [x] Also detect already-waiting SW on page load (e.g., from previous session)
 - [x] Only show toast once per session to avoid spamming
 - [x] Verified: 451 tests pass, production build succeeds
+
+## Accent Color Fix Round 2 — Remaining Issues from Screenshots
+- [x] Fix task checkmarks (CheckCircle2) — overrode Tailwind emerald scale at @theme level to use hue 153.2
+- [x] Fix left sidebar "All Items" icon — already using text-primary from previous fix
+- [x] Fix command palette highlight — changed --accent from neutral blue-gray to green-tinted oklch(0.96 0.02 153.2)
+- [x] Fix tag dots — overrode Tailwind emerald/green color scales at @theme level
+- [x] Fix active editor tab indicator — already using var(--color-primary)
+- [x] Verify CSS overrides — confirmed @theme inline overrides for --color-emerald-* and --color-green-* are applied in build
+- [x] Changed --sidebar-accent to green-tinted oklch(0.94 0.025 153.2)
+- [x] Updated CheckConfetti hardcoded hex colors from emerald to #008948 variants
+- [x] Dark mode: --accent oklch(0.22 0.03 153.2), --sidebar-accent oklch(0.20 0.03 153.2)
+- [x] Verified: 451 tests pass, production build succeeds

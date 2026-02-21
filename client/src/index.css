@@ -43,6 +43,32 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+  /* Override emerald scale to match #008948 accent hue (153.2) */
+  --color-emerald-50: oklch(0.97 0.02 153.2);
+  --color-emerald-100: oklch(0.94 0.04 153.2);
+  --color-emerald-200: oklch(0.88 0.08 153.2);
+  --color-emerald-300: oklch(0.80 0.10 153.2);
+  --color-emerald-400: oklch(0.70 0.14 153.2);
+  --color-emerald-500: oklch(0.552 0.142 153.2);
+  --color-emerald-600: oklch(0.48 0.13 153.2);
+  --color-emerald-700: oklch(0.42 0.11 153.2);
+  --color-emerald-800: oklch(0.36 0.09 153.2);
+  --color-emerald-900: oklch(0.30 0.07 153.2);
+  --color-emerald-950: oklch(0.22 0.05 153.2);
+
+  /* Override green scale to match #008948 accent hue (153.2) */
+  --color-green-50: oklch(0.97 0.02 153.2);
+  --color-green-100: oklch(0.94 0.04 153.2);
+  --color-green-200: oklch(0.88 0.08 153.2);
+  --color-green-300: oklch(0.80 0.10 153.2);
+  --color-green-400: oklch(0.70 0.14 153.2);
+  --color-green-500: oklch(0.552 0.142 153.2);
+  --color-green-600: oklch(0.48 0.13 153.2);
+  --color-green-700: oklch(0.42 0.11 153.2);
+  --color-green-800: oklch(0.36 0.09 153.2);
+  --color-green-900: oklch(0.30 0.07 153.2);
+  --color-green-950: oklch(0.22 0.05 153.2);
 }
 
 /* Light Theme */
@@ -71,9 +97,9 @@
   --muted: oklch(0.94 0.002 260);
   --muted-foreground: oklch(0.45 0.01 260);
   
-  /* Soft accent */
-  --accent: oklch(0.96 0.002 260);
-  --accent-foreground: oklch(0.15 0.01 260);
+  /* Soft accent — light green tint of #008948 */
+  --accent: oklch(0.96 0.02 153.2);
+  --accent-foreground: oklch(0.20 0.05 153.2);
   
   /* Destructive */
   --destructive: oklch(0.55 0.18 25);
@@ -96,8 +122,8 @@
   --sidebar-foreground: oklch(0.25 0.01 260);
   --sidebar-primary: oklch(0.552 0.142 153.2);
   --sidebar-primary-foreground: oklch(0.98 0.005 153);
-  --sidebar-accent: oklch(0.94 0.002 260);
-  --sidebar-accent-foreground: oklch(0.15 0.01 260);
+  --sidebar-accent: oklch(0.94 0.025 153.2);
+  --sidebar-accent-foreground: oklch(0.20 0.05 153.2);
   --sidebar-border: oklch(0.90 0.002 260);
   --sidebar-ring: oklch(0.552 0.142 153.2);
 }
@@ -128,9 +154,9 @@
   --muted: oklch(0.20 0.005 260);
   --muted-foreground: oklch(0.55 0.01 260);
   
-  /* Soft accent */
-  --accent: oklch(0.22 0.005 260);
-  --accent-foreground: oklch(0.92 0.005 260);
+  /* Soft accent — dark green tint of #008948 */
+  --accent: oklch(0.22 0.03 153.2);
+  --accent-foreground: oklch(0.90 0.03 153.2);
   
   /* Destructive */
   --destructive: oklch(0.55 0.18 25);
@@ -153,8 +179,8 @@
   --sidebar-foreground: oklch(0.85 0.005 260);
   --sidebar-primary: oklch(0.70 0.155 153.2);
   --sidebar-primary-foreground: oklch(0.13 0.005 153);
-  --sidebar-accent: oklch(0.18 0.005 260);
-  --sidebar-accent-foreground: oklch(0.92 0.005 260);
+  --sidebar-accent: oklch(0.20 0.03 153.2);
+  --sidebar-accent-foreground: oklch(0.90 0.03 153.2);
   --sidebar-border: oklch(0.22 0.005 260);
   --sidebar-ring: oklch(0.70 0.155 153.2);
   
