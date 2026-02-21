@@ -343,19 +343,27 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
 
   // ─── Insert ─────────────────────────────────────────────────────────────
 
-  async insert<T = any>(table: string, data: any | any[]): Promise<MutationResult<T>> {
+    async insert<T = any>(table: string, data: any | any[]): Promise<MutationResult<T>> {
     try {
       const resolvedTable = resolveTable(table);
       const store = await this.getStore(table, 'readwrite');
       const items = Array.isArray(data) ? data : [data];
 
-      // Stores with keyPath: 'id' need an id on every record.
-      // Auto-generate a UUID when the caller omits it (e.g. test-data generator).
-      const needsId = ['items', 'tags', 'lists'].includes(resolvedTable);
-
+      // Auto-generate keys for stores that require them.
+      // - items, tags, lists: keyPath = 'id'
+      // - user_settings: keyPath = 'user_id'
+      // - meta: keyPath = 'key'
+      // - view_sort_preferences: compound keyPath = ['user_id', 'view_key']
+      // - item_tags: autoIncrement (no keyPath) — no key needed
       const enriched = items.map(item => {
-        if (needsId && !item.id) {
+        if (['items', 'tags', 'lists'].includes(resolvedTable) && !item.id) {
           return { ...item, id: crypto.randomUUID() };
+        }
+        if (resolvedTable === 'user_settings' && !item.user_id) {
+          console.warn('[BrowserDB] insert into user_settings without user_id', item);
+        }
+        if (resolvedTable === 'meta' && !item.key) {
+          console.warn('[BrowserDB] insert into meta without key', item);
         }
         return item;
       });
@@ -363,7 +371,12 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
       return new Promise((resolve, reject) => {
         const tx = store.transaction;
         for (const item of enriched) {
-          store.put(item);
+          try {
+            store.put(item);
+          } catch (putErr: any) {
+            console.error(`[BrowserDB] put failed on table '${resolvedTable}':`, putErr.message, 'record:', JSON.stringify(item).slice(0, 200));
+            throw putErr;
+          }
         }
         tx.oncomplete = () => {
           this.invalidateCache(table);
@@ -371,7 +384,10 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
           const result = Array.isArray(data) ? enriched : enriched[0];
           resolve({ data: result as T, error: null });
         };
-        tx.onerror = () => reject(tx.error);
+        tx.onerror = () => {
+          console.error(`[BrowserDB] transaction error on table '${resolvedTable}':`, tx.error);
+          reject(tx.error);
+        };
       });
     } catch (err: any) {
       return { data: null, error: { message: err.message } };
