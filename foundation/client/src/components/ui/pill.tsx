@@ -22,11 +22,11 @@ const pillVariants = cva(
     variants: {
       variant: {
         // Filled pill with background color
-        filled: 'hover:ring-2 hover:ring-[var(--pill-ring-color)] hover:shadow-sm',
+        filled: 'hover:ring-1 hover:ring-[var(--pill-ring-color)] hover:shadow-sm',
         // Placeholder pill with dashed border (for "+ Add" buttons)
         placeholder: 'text-muted-foreground/70 hover:bg-accent/50 hover:text-muted-foreground border border-dashed border-muted-foreground/30 hover:border-muted-foreground/50',
         // Outline pill with solid border
-        outline: 'border hover:ring-2 hover:ring-[var(--pill-ring-color)] hover:shadow-sm',
+        outline: 'border hover:ring-1 hover:ring-[var(--pill-ring-color)] hover:shadow-sm',
       },
       size: {
         // Default size for editor header pills
