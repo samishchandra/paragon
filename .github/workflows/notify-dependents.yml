@@ -80,4 +80,3 @@ jobs:
           repository: samishchandra/mighty
           event-type: paragon-updated
           client-payload: '{"sha": "${{ github.sha }}"}'
-
