@@ -20,6 +20,7 @@ import { useVisibilitySync } from './useVisibilitySync';
 import { useTagListOperations } from './useTagListOperations';
 import { useDataFetching } from './useDataFetching';
 import { useLocalBackup } from './useLocalBackup';
+import { getBackupInitHooks } from '@/adapters/registry';
 import { useLocalStoragePersistence } from './useLocalStoragePersistence';
 import { useComputedData } from './useComputedData';
 import { useWikiLinks } from './useWikiLinks';
@@ -169,10 +170,18 @@ export function useProviderState(userId: string): ServerMomentumContextValue {
     setRecentItemsData,
     applySettingsFromServer,
     isLoadingRef,
+    isOnlineRef,
   });
 
   // ── Auto-backup initialization ──
   useLocalBackup(userId);
+  // Call any additional backup hooks registered by the embedding repo
+  // (e.g., Dropbox, iCloud). These are stable across renders because
+  // the adapter config is set once at startup.
+  const backupInitHooks = getBackupInitHooks();
+  for (const hook of backupInitHooks) {
+    hook(userId);
+  }
 
   // ── Visibility & focus-based catch-up sync ──
   useVisibilitySync({

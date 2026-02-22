@@ -77,6 +77,14 @@ export function getSearchAdapter(): SearchAdapter {
 }
 
 /**
+ * Get additional backup initialization hooks.
+ * Returns an empty array if none are registered.
+ */
+export function getBackupInitHooks(): Array<(userId: string) => void> {
+  return ensureConfigured().backupInitHooks ?? [];
+}
+
+/**
  * Get the full adapter configuration.
  */
 export function getAdapterConfig(): AdapterConfig {

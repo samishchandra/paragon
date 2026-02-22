@@ -134,6 +134,15 @@ export interface DatabaseAdapter {
 
   /** Call a stored procedure / RPC function */
   rpc<T = any>(functionName: string, params?: Record<string, any>): Promise<QueryResult<T>>;
+
+  /**
+   * Get the underlying native database client (e.g., SupabaseClient).
+   * Optional — only implemented by adapters that wrap a platform-specific SDK.
+   * Used for platform-specific features not covered by the adapter interface
+   * (e.g., Supabase auth.mfa.*, realtime subscriptions).
+   * Returns `unknown` to avoid coupling the interface to any specific SDK type.
+   */
+  getNativeClient?(): unknown;
 }
 
 // ─── AI Adapter ──────────────────────────────────────────────────────────────
@@ -377,4 +386,11 @@ export interface AdapterConfig {
   backup: BackupAdapter;
   theme: ThemeConfig;
   search: SearchAdapter;
+  /**
+   * Optional additional backup initialization hooks.
+   * Each function is called as a React hook with (userId) in useProviderState.
+   * Use this to register Dropbox, iCloud, or other backup integrations
+   * without overriding useProviderState.
+   */
+  backupInitHooks?: Array<(userId: string) => void>;
 }

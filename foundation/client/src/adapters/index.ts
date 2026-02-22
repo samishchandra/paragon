@@ -39,6 +39,7 @@ export {
   getBackupAdapter,
   getThemeConfig,
   getSearchAdapter,
+  getBackupInitHooks,
   getAdapterConfig,
 } from './registry';
 
