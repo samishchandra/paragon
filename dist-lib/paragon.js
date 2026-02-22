@@ -21581,13 +21581,13 @@ const bx = () => {
         ue = hx(ue), pe.forEach((ae) => {
           const se = new RegExp(`\`\`\`ad-${ae}\\s*\\n([\\s\\S]*?)\`\`\``, "g");
           ue = ue.replace(se, (Ne, de) => {
-            const Me = F.parse(de.trim(), { async: !1 });
+            const Me = F.parse(de.trim(), { async: !1, breaks: !0 });
             return `<div data-callout="" data-type="${ae}" class="callout callout-${ae}">${Me}</div>`;
           });
         }), pe.forEach((ae) => {
           const se = new RegExp(`\`\`\`${ae}\\s*\\n([\\s\\S]*?)\`\`\``, "g");
           ue = ue.replace(se, (Ne, de) => {
-            const Me = F.parse(de.trim(), { async: !1 });
+            const Me = F.parse(de.trim(), { async: !1, breaks: !0 });
             return `<div data-callout="" data-type="${ae}" class="callout callout-${ae}">${Me}</div>`;
           });
         }), ue = ue.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (ae, se, Ne) => {
@@ -21607,7 +21607,7 @@ const bx = () => {
           const Ne = wo(se);
           return An(Ne) ? `<span data-type="tag-pill" data-tag="${Ne}" class="tag-pill"><span class="tag-icon">#</span><span class="tag-text">${Ne}</span></span>` : ae;
         })), ue = ue.split(/(```[\s\S]*?```|`[^`\n]+`)/g).map((ae, se) => se % 2 === 1 ? ae : ae.replace(/\[\[([^\[\]]+)\]\]/g, (Ne, de) => `<span data-wiki-link data-page-name="${de.trim()}" class="wiki-link">${de.trim()}</span>`)).join("");
-        let Te = F.parse(ue, { async: !1 });
+        let Te = F.parse(ue, { async: !1, breaks: !0 });
         Te = Te.replace(
           /(?:<p>\s*\u200B\s*<\/p>\s*)*<!--\s*list-break\s*-->(?:\s*<p>\s*\u200B\s*<\/p>)*/g,
           '<p class="list-separator" data-list-separator="true">​</p>'

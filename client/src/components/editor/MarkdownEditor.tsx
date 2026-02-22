@@ -1456,7 +1456,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       calloutTypes.forEach(type => {
         const regex = new RegExp(`\`\`\`ad-${type}\\s*\\n([\\s\\S]*?)\`\`\``, 'g');
         processedMarkdown = processedMarkdown.replace(regex, (match, content) => {
-          const innerHtml = marked.parse(content.trim(), { async: false }) as string;
+          const innerHtml = marked.parse(content.trim(), { async: false, breaks: true }) as string;
           return `<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`;
         });
       });
@@ -1464,7 +1464,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       calloutTypes.forEach(type => {
         const regex = new RegExp(`\`\`\`${type}\\s*\\n([\\s\\S]*?)\`\`\``, 'g');
         processedMarkdown = processedMarkdown.replace(regex, (match, content) => {
-          const innerHtml = marked.parse(content.trim(), { async: false }) as string;
+          const innerHtml = marked.parse(content.trim(), { async: false, breaks: true }) as string;
           return `<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`;
         });
       });
@@ -1551,7 +1551,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         });
       }).join('');
 
-      let html = marked.parse(processedMarkdown, { async: false }) as string;
+      let html = marked.parse(processedMarkdown, { async: false, breaks: true }) as string;
       
       // Replace list-break separator comments with invisible separator paragraphs.
       // When two lists of the same type are adjacent in the HTML, TipTap auto-joins
