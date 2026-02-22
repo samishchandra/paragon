@@ -407,7 +407,7 @@ router.post('/rpc', async (req: Request, res: Response) => {
         completed: active.filter(i => i.isCompleted).length,
         trash: deleted.length,
         miscellaneous: nonCompleted.filter(i => !i.listId).length,
-        todo: nonCompleted.filter(i => i.type === 'task' && i.section !== 'completed').length,
+        todo: nonCompleted.filter(i => i.hasUncompletedTodos).length,
         tag_counts: tagCountsMap,
         list_counts: listCountsMap,
       };

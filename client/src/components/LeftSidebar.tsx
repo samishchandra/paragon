@@ -431,7 +431,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               {(sidebarCounts?.todo ?? 0) > 0 && (
                 <SidebarItem
                   icon={<CheckSquare className="w-4 h-4" />}
-                  label="Todo"
+                  label="Todo Notes"
                   count={sidebarCounts?.todo ?? 0}
                   isActive={isActiveFilter({ type: 'todo' })}
                   onClick={() => setFilter({ type: 'todo' })}
@@ -823,7 +823,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                     : "text-amber-400/60 hover:text-amber-400"
                 )}
                 onClick={() => setFilter({ type: 'todo' })}
-                title="Todo"
+                title="Todo Notes"
               >
                 <CheckSquare className="h-4 w-4" />
               </Button>

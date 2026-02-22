@@ -464,7 +464,7 @@ export async function computeSidebarCountsLocally(userId: string): Promise<{
     if (item.type === 'note') notes++;
     if (item.is_pinned) pinned++;
     if (!item.list_id) miscellaneous++;
-    if (item.type === 'task' && item.section !== 'completed') todo++;
+    if (item.has_uncompleted_todos) todo++;
 
     // Count tags (excluding completed items)
     const itemTags = itemTagMap[item.id] || [];

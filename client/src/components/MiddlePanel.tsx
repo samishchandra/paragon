@@ -1054,7 +1054,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     if (isAllItemsView) return { title: 'All Items', icon: Sparkles, color: undefined };
     if (isTasksView) return { title: 'Tasks', icon: ListTodo, color: undefined };
     if (isNotesView) return { title: 'Notes', icon: FileText, color: undefined };
-    if (isTodoView) return { title: 'Todo', icon: CheckSquare, color: '#fbbf24' }; // amber-400 color
+    if (isTodoView) return { title: 'Todo Notes', icon: CheckSquare, color: '#fbbf24' }; // amber-400 color
     if (isMiscellaneousView) return { title: 'Miscellaneous', icon: LayoutGrid, color: '#a78bfa' }; // violet-400 color
     if (isCompletedView) return { title: 'Completed', icon: CheckCircle2, color: '#34d399' }; // emerald-400 color
     if (isTrashView) return { title: 'Recently Deleted', icon: Trash2, color: undefined };
