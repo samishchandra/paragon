@@ -1,56 +1,30 @@
 /**
  * Server-Side Search Service
- * 
- * Uses the Manus backend API for full-text search with:
+ *
+ * Orchestrates search with:
  * - Debounced queries (200ms) to avoid firing on every keystroke
  * - AbortController to cancel in-flight requests when user types more
  * - LRU cache (50 entries, 30s TTL) for instant repeat queries
  * - Stale-while-revalidate pattern for perceived speed
- * - Fallback to ILIKE-based fuzzy search for partial matches
+ * - Delegates to the registered SearchAdapter for actual search execution
+ *
+ * Re-exports SearchResult, SearchFilters, SearchState from adapter types
+ * for backward compatibility.
  */
 
-import { apiRpc, apiQuery, apiSelectItemTags } from './db';
-import { searchItemsLocally } from './offlineStore';
+import { getSearchAdapter } from '@/adapters/registry';
+import type { SearchResult, SearchFilters, SearchState } from '@/adapters/types';
 
-// --- Types ---
+// Re-export types for backward compatibility
+export type { SearchResult, SearchFilters, SearchState };
 
-export interface ServerSearchResult {
-  id: string;
-  type: 'task' | 'note';
-  title: string;
-  content: string;
-  isPinned: boolean;
-  isCompleted: boolean;
-  dueDate: string | null;
-  listId: string | null;
-  section: string;
-  sortOrder: number;
-  deletedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  rank: number;
-  titleHighlight: string;
-  contentHighlight: string;
-}
-
-export interface SearchFilters {
-  listId?: string | null;
-  tagId?: string | null;
-}
-
-export interface SearchState {
-  results: ServerSearchResult[];
-  isLoading: boolean;
-  query: string;
-  fromCache: boolean;
-  error: string | null;
-  filters?: SearchFilters;
-}
+// Keep the old name as an alias
+export type ServerSearchResult = SearchResult;
 
 // --- LRU Cache ---
 
 interface CacheEntry {
-  results: ServerSearchResult[];
+  results: SearchResult[];
   timestamp: number;
 }
 
@@ -64,7 +38,7 @@ class SearchCache {
     this.ttlMs = ttlSeconds * 1000;
   }
 
-  get(key: string): ServerSearchResult[] | null {
+  get(key: string): SearchResult[] | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
 
@@ -80,7 +54,7 @@ class SearchCache {
     return entry.results;
   }
 
-  set(key: string, results: ServerSearchResult[]): void {
+  set(key: string, results: SearchResult[]): void {
     // Evict oldest if at capacity
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
@@ -105,77 +79,8 @@ let currentAbortController: AbortController | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
- * Map a raw API row to our typed SearchResult
- */
-function mapRow(row: any): ServerSearchResult {
-  return {
-    id: row.id,
-    type: row.type as 'task' | 'note',
-    title: row.title,
-    content: row.content || '',
-    isPinned: row.is_pinned,
-    isCompleted: row.is_completed,
-    dueDate: row.due_date,
-    listId: row.list_id,
-    section: row.section,
-    sortOrder: row.sort_order,
-    deletedAt: row.deleted_at,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    rank: row.rank,
-    titleHighlight: row.title_highlight || row.title,
-    contentHighlight: row.content_highlight || '',
-  };
-}
-
-/**
- * Execute server-side search via RPC.
- * First tries FTS (search_items), falls back to fuzzy (search_items_fuzzy) if no results.
- */
-async function executeSearch(
-  query: string,
-  signal: AbortSignal,
-  maxResults = 20,
-  filters?: SearchFilters
-): Promise<ServerSearchResult[]> {
-  if (!query.trim()) return [];
-
-  // Build RPC params with optional filters
-  const rpcParams: any = { search_text: query, max_results: maxResults };
-  if (filters?.listId) rpcParams.filter_list_id = filters.listId;
-  if (filters?.tagId) rpcParams.filter_tag_id = filters.tagId;
-
-  // Try FTS first
-  const { data: ftsData, error: ftsError } = await apiRpc('search_items', rpcParams);
-
-  if (ftsError) {
-    // If aborted, don't throw — just return empty
-    if (signal.aborted) return [];
-    console.warn('FTS search error:', ftsError.message);
-  }
-
-  const ftsResults = (ftsData || []).map(mapRow);
-
-  // If FTS returned results, use them
-  if (ftsResults.length > 0) {
-    return ftsResults;
-  }
-
-  // Fallback to fuzzy/ILIKE search for partial matches
-  const { data: fuzzyData, error: fuzzyError } = await apiRpc('search_items_fuzzy', rpcParams);
-
-  if (fuzzyError) {
-    if (signal.aborted) return [];
-    console.warn('Fuzzy search error:', fuzzyError.message);
-    return [];
-  }
-
-  return (fuzzyData || []).map(mapRow);
-}
-
-/**
  * Debounced search with caching, abort, and stale-while-revalidate.
- * 
+ *
  * @param query - The search query string
  * @param onUpdate - Callback fired with search state updates
  * @param debounceMs - Debounce delay in milliseconds (default 200ms)
@@ -214,8 +119,6 @@ export function debouncedSearch(
   const cached = searchCache.get(cacheKey);
   if (cached) {
     onUpdate({ results: cached, isLoading: false, query: trimmed, fromCache: true, error: null });
-    // Still revalidate in background after a short delay
-    // (but don't block the UI)
   }
 
   // Show loading state (with cached results if available)
@@ -223,27 +126,9 @@ export function debouncedSearch(
     // Instant local search from IndexedDB — show results immediately while server loads
     if (userId) {
       onUpdate({ results: [], isLoading: true, query: trimmed, fromCache: false, error: null });
-      searchItemsLocally(trimmed, userId, 20).then(localItems => {
-        if (localItems.length > 0) {
-          // Convert raw IndexedDB items to ServerSearchResult[] for display
-          const localResults: ServerSearchResult[] = localItems.map(item => ({
-            id: item.id,
-            type: item.type as 'task' | 'note',
-            title: item.title,
-            content: item.content || '',
-            isPinned: item.is_pinned,
-            isCompleted: item.is_completed || false,
-            dueDate: item.due_date || null,
-            listId: item.list_id || null,
-            section: item.section || '',
-            sortOrder: item.sort_order || 0,
-            deletedAt: item.deleted_at || null,
-            createdAt: item.created_at,
-            updatedAt: item.updated_at,
-            rank: 0,
-            titleHighlight: item.title,
-            contentHighlight: (item.content || '').substring(0, 200),
-          }));
+      const searchAdapter = getSearchAdapter();
+      searchAdapter.searchLocally(trimmed, userId, 20).then(localResults => {
+        if (localResults.length > 0) {
           // Only show local results if server hasn't responded yet
           onUpdate({ results: localResults, isLoading: true, query: trimmed, fromCache: true, error: null });
         }
@@ -264,7 +149,8 @@ export function debouncedSearch(
         onUpdate({ results: cached, isLoading: true, query: trimmed, fromCache: true, error: null });
       }
 
-      const results = await executeSearch(trimmed, controller.signal, 20, filters);
+      const searchAdapter = getSearchAdapter();
+      const results = await searchAdapter.search(trimmed, 20, filters);
 
       // Only update if this request wasn't aborted
       if (!controller.signal.aborted) {
@@ -291,60 +177,14 @@ export function debouncedSearch(
 
 /**
  * Browse items with active filters but no search query.
- * Fetches items matching the given list/tag filter, sorted by updated_at.
+ * Delegates to the SearchAdapter.browse() method.
  */
 export async function browseFilteredItems(
   filters: SearchFilters,
   maxResults = 20
-): Promise<ServerSearchResult[]> {
-  const queryFilters: Record<string, any> = {
-    'deleted_at__is': null,
-  };
-
-  if (filters.listId) {
-    queryFilters['list_id'] = filters.listId;
-  }
-
-  if (filters.tagId) {
-    // For tag filter, we need to get item IDs from item_tags first
-    const { data: tagItems } = await apiSelectItemTags({ tag_id: filters.tagId });
-    
-    if (!tagItems || tagItems.length === 0) return [];
-    const itemIds = tagItems.map((t: any) => t.item_id);
-    queryFilters['id__in'] = itemIds;
-  }
-
-  const { data, error } = await apiQuery({
-    table: 'items',
-    select: 'id, type, title, content, is_pinned, is_completed, due_date, list_id, section, sort_order, deleted_at, created_at, updated_at',
-    filters: queryFilters,
-    order: { column: 'updated_at', ascending: false },
-    limit: maxResults,
-  });
-
-  if (error) {
-    console.warn('Browse filtered items error:', error.message);
-    return [];
-  }
-
-  return (data || []).map((row: any) => ({
-    id: row.id,
-    type: row.type as 'task' | 'note',
-    title: row.title,
-    content: row.content || '',
-    isPinned: row.is_pinned,
-    isCompleted: row.is_completed,
-    dueDate: row.due_date,
-    listId: row.list_id,
-    section: row.section,
-    sortOrder: row.sort_order,
-    deletedAt: row.deleted_at,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    rank: 0,
-    titleHighlight: row.title,
-    contentHighlight: '',
-  }));
+): Promise<SearchResult[]> {
+  const searchAdapter = getSearchAdapter();
+  return searchAdapter.browse(filters, maxResults);
 }
 
 /**
@@ -363,9 +203,16 @@ export function cancelSearch(): void {
 
 /**
  * Clear the search cache (e.g., after bulk operations that change data).
+ * Also clears the adapter's own cache if it has one.
  */
 export function clearSearchCache(): void {
   searchCache.clear();
+  try {
+    const searchAdapter = getSearchAdapter();
+    searchAdapter.clearCache();
+  } catch {
+    // Adapter not configured yet — ignore
+  }
 }
 
 /**

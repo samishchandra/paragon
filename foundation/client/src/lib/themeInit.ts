@@ -4,6 +4,10 @@
  * Called once at app startup from main.tsx, after configureAdapters().
  * This allows each embedding repo to define its own accent color, chart colors, etc.
  * without modifying the shared index.css.
+ *
+ * Supports two modes:
+ *  1. Full palette (lightPalette / darkPalette) — replaces ALL CSS variables
+ *  2. Partial overrides (lightCssVariables / darkCssVariables) — deprecated, accent-only
  */
 import { getThemeConfig } from '@/adapters/registry';
 
@@ -15,25 +19,29 @@ export function applyTheme(): void {
   const theme = getThemeConfig();
   const root = document.documentElement;
 
+  // Prefer full palette; fall back to deprecated partial overrides
+  const lightVars = theme.lightPalette ?? theme.lightCssVariables;
+  const darkVars = theme.darkPalette ?? theme.darkCssVariables;
+
   // Apply light theme variables to :root
-  if (theme.lightCssVariables) {
-    for (const [key, value] of Object.entries(theme.lightCssVariables)) {
+  if (lightVars) {
+    for (const [key, value] of Object.entries(lightVars)) {
       root.style.setProperty(key, value);
     }
   }
 
   // Apply dark theme variables via a <style> tag
-  if (theme.darkCssVariables) {
+  if (darkVars) {
     let darkStyleEl = document.getElementById('theme-dark-overrides');
     if (!darkStyleEl) {
       darkStyleEl = document.createElement('style');
       darkStyleEl.id = 'theme-dark-overrides';
       document.head.appendChild(darkStyleEl);
     }
-    const darkVars = Object.entries(theme.darkCssVariables)
+    const darkCss = Object.entries(darkVars)
       .map(([key, value]) => `  ${key}: ${value};`)
       .join('\n');
-    darkStyleEl.textContent = `.dark {\n${darkVars}\n}`;
+    darkStyleEl.textContent = `.dark {\n${darkCss}\n}`;
   }
 
   // Update PWA theme-color meta tag

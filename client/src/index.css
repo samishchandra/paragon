@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Scan foundation directory for Tailwind class names */
+@source "../../foundation/client/src";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -42,76 +45,16 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/*
+ * Structural tokens only — all color values are injected at runtime
+ * by themeInit.ts from the registered ThemeConfig's lightPalette / darkPalette.
+ *
+ * The :root block below sets ONLY non-color tokens (radius, font-family, etc.).
+ * Color variables (--primary, --background, etc.) are set by themeInit.ts
+ * before the first React render, so they're available immediately.
+ */
 :root {
-  /* Foundation theme: coral/rose #EF476F — overridden at runtime by themeInit.ts */
-  --primary: oklch(0.59 0.22 12);
-  --primary-foreground: oklch(0.98 0.01 12);
-  --sidebar-primary: oklch(0.59 0.22 12);
-  --sidebar-primary-foreground: oklch(0.98 0.01 12);
-  --chart-1: oklch(0.75 0.15 12);
-  --chart-2: oklch(0.65 0.20 12);
-  --chart-3: oklch(0.59 0.22 12);
-  --chart-4: oklch(0.50 0.20 12);
-  --chart-5: oklch(0.42 0.18 12);
   --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.59 0.22 12);
-  --sidebar: oklch(0.98 0.002 250);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.59 0.22 12);
-}
-
-.dark {
-  --primary: oklch(0.59 0.22 12);
-  --primary-foreground: oklch(0.98 0.01 12);
-  --sidebar-primary: oklch(0.65 0.20 12);
-  --sidebar-primary-foreground: oklch(0.98 0.01 12);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.59 0.22 12);
-  --chart-1: oklch(0.75 0.15 12);
-  --chart-2: oklch(0.65 0.20 12);
-  --chart-3: oklch(0.59 0.22 12);
-  --chart-4: oklch(0.50 0.20 12);
-  --chart-5: oklch(0.42 0.18 12);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.59 0.22 12);
 }
 
 @layer base {
@@ -171,11 +114,39 @@
     }
   }
 }
-/* Performance: content-visibility for off-screen elements */
+
+/*
+ * Override Tailwind's .flex to also reset min-width/min-height.
+ * MUST be in @layer utilities (not components) so it has the same
+ * cascade-layer priority as Tailwind's .flex{display:flex} and
+ * the two declarations merge instead of the utility layer winning.
+ */
 @layer utilities {
-  .content-auto {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 500px;
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+}
+
+/* ── Performance Utilities ─────────────────────────────────────────────── */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+.gpu-layer {
+  will-change: transform;
+  transform: translateZ(0);
+}
+.scroll-smooth-touch {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -183,30 +154,22 @@
 .safe-area-bottom {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
-/* Offset for content areas above a fixed tab bar with safe-area-bottom */
 .safe-area-tab-offset {
   padding-bottom: calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
-/* Bottom offset for absolutely-positioned mobile panels to clear the fixed tab bar */
 .mobile-tab-bottom-offset {
   bottom: calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)));
 }
-/* Sidebar footer: visible on both desktop and mobile.
-   On mobile, the parent panel already clears the tab bar via mobile-tab-bottom-offset,
-   so no extra bottom padding is needed here. */
 .sidebar-footer-mobile {
   padding-bottom: 0.75rem;
 }
 
-/* Subtle scrollbar — overlay style that doesn't consume layout space.
-   Matches the sidebar's Radix ScrollArea look for native scroll containers
-   (e.g. react-window virtualized lists).
-   Uses overflow:overlay (Webkit) so the scrollbar floats over content. */
+/* Subtle scrollbar — overlay style that doesn't consume layout space. */
 .subtle-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
   overflow-y: auto;
-  overflow-y: overlay; /* Webkit: scrollbar overlays content, no layout shift */
+  overflow-y: overlay;
 }
 .subtle-scrollbar:hover {
   scrollbar-color: oklch(0.55 0 0 / 0.3) transparent;
@@ -243,12 +206,11 @@
   background-color: oklch(0.75 0 0 / 0.4);
 }
 
-/* Hidden scrollbar — completely hides the scrollbar while keeping scroll functionality.
-   Used in the middle panel's virtualized list to reclaim gutter space. */
+/* Hidden scrollbar */
 .hidden-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 .hidden-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome/Safari/Webkit */
+  display: none;
 }

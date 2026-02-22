@@ -1,12 +1,16 @@
 /**
  * Vite Plugin: Foundation Resolve
  * 
- * Implements a cascading resolution strategy for the @/ path alias:
- * 1. First checks `client/src/` (repo-specific overrides)
- * 2. Falls back to `foundation/client/src/` (shared foundation code)
+ * Implements a cascading resolution strategy:
+ * 
+ * 1. **@/ alias imports**: First checks `client/src/`, falls back to `foundation/client/src/`
+ * 2. **Relative imports from client/src/**: If a relative import from a file in `client/src/`
+ *    can't be resolved locally, falls back to the equivalent path in `foundation/client/src/`
  * 
  * This allows embedding repos to override any foundation file by placing
- * a file at the same relative path in their own `client/src/` directory.
+ * a file at the same relative path in their own `client/src/` directory,
+ * while still allowing client overrides to use relative imports for
+ * foundation files that haven't been overridden.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -46,26 +50,56 @@ export function foundationResolvePlugin(projectRoot: string): Plugin {
     name: "foundation-resolve",
     enforce: "pre",
     resolveId(source, importer) {
-      // Only handle @/ imports
-      if (!source.startsWith("@/")) return null;
+      // ── Handle @/ alias imports ──
+      if (source.startsWith("@/")) {
+        const relativePath = source.slice(2); // Remove "@/"
 
-      const relativePath = source.slice(2); // Remove "@/"
+        // 1. Try repo-specific override first
+        const overridePath = path.resolve(clientSrc, relativePath);
+        const overrideResolved = tryResolve(overridePath);
+        if (overrideResolved) {
+          return overrideResolved;
+        }
 
-      // 1. Try repo-specific override first
-      const overridePath = path.resolve(clientSrc, relativePath);
-      const overrideResolved = tryResolve(overridePath);
-      if (overrideResolved) {
-        return overrideResolved;
+        // 2. Fall back to foundation
+        const foundationPath = path.resolve(foundationSrc, relativePath);
+        const foundationResolved = tryResolve(foundationPath);
+        if (foundationResolved) {
+          return foundationResolved;
+        }
+
+        return null;
       }
 
-      // 2. Fall back to foundation
-      const foundationPath = path.resolve(foundationSrc, relativePath);
-      const foundationResolved = tryResolve(foundationPath);
-      if (foundationResolved) {
-        return foundationResolved;
+      // ── Handle relative imports from client/src/ files ──
+      // When a file in client/src/ uses a relative import (e.g., ./useItemOperations)
+      // and the target doesn't exist in client/src/, fall back to foundation/client/src/
+      if (source.startsWith("./") || source.startsWith("../")) {
+        if (!importer) return null;
+
+        const normalizedImporter = path.normalize(importer);
+
+        // Only apply fallback for files inside client/src/
+        if (!normalizedImporter.startsWith(clientSrc + path.sep)) return null;
+
+        // Compute the absolute path the relative import would resolve to
+        const importerDir = path.dirname(normalizedImporter);
+        const absoluteTarget = path.resolve(importerDir, source);
+
+        // If it already resolves in client/src/, let Vite handle it normally
+        if (tryResolve(absoluteTarget)) return null;
+
+        // Compute the equivalent path in foundation/client/src/
+        const relativeFromClient = path.relative(clientSrc, absoluteTarget);
+        const foundationTarget = path.resolve(foundationSrc, relativeFromClient);
+        const foundationResolved = tryResolve(foundationTarget);
+
+        if (foundationResolved) {
+          return foundationResolved;
+        }
       }
 
-      // Not found in either location — let Vite handle the error
+      // Not handled — let Vite's default resolution proceed
       return null;
     },
   };

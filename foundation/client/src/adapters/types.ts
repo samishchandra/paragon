@@ -54,6 +54,22 @@ export interface AuthAdapter {
   signInWithOAuth?(provider: string): Promise<{ error: string | null }>;
   resetPassword?(email: string): Promise<{ error: string | null }>;
   updatePassword?(newPassword: string): Promise<{ error: string | null }>;
+
+  // ── MFA methods (optional, used when supportsMFA is true) ──
+  /** Check if MFA is required for the current user */
+  checkMFARequired?(): Promise<boolean>;
+  /** Verify MFA has been completed (called after TOTP verification) */
+  verifyMFA?(): void;
+
+  // ── Auth event methods (optional) ──
+  /** Enhanced auth state change with event type */
+  onAuthStateChangeWithEvent?(callback: (event: string, user: AuthUser | null) => void): () => void;
+
+  // ── Cleanup methods (optional) ──
+  /** Additional localStorage keys to clear on sign-out (beyond the defaults) */
+  getAdditionalCleanupKeys?(): string[];
+  /** Additional IndexedDB databases to delete on sign-out */
+  getAdditionalCleanupDatabases?(): string[];
 }
 
 // ─── Database Adapter ────────────────────────────────────────────────────────
@@ -220,6 +236,48 @@ export interface BackupAdapter {
 
 // ─── Theme Config ────────────────────────────────────────────────────────────
 
+/**
+ * Full CSS variable palette for a theme mode (light or dark).
+ * Every variable here maps to a CSS custom property on :root / .dark.
+ * Values must be in OKLCH format (e.g., 'oklch(0.59 0.22 12)').
+ */
+export interface ThemePalette {
+  '--primary': string;
+  '--primary-foreground': string;
+  '--background': string;
+  '--foreground': string;
+  '--card': string;
+  '--card-foreground': string;
+  '--popover': string;
+  '--popover-foreground': string;
+  '--secondary': string;
+  '--secondary-foreground': string;
+  '--muted': string;
+  '--muted-foreground': string;
+  '--accent': string;
+  '--accent-foreground': string;
+  '--destructive': string;
+  '--destructive-foreground': string;
+  '--border': string;
+  '--input': string;
+  '--ring': string;
+  '--chart-1': string;
+  '--chart-2': string;
+  '--chart-3': string;
+  '--chart-4': string;
+  '--chart-5': string;
+  '--sidebar': string;
+  '--sidebar-foreground': string;
+  '--sidebar-primary': string;
+  '--sidebar-primary-foreground': string;
+  '--sidebar-accent': string;
+  '--sidebar-accent-foreground': string;
+  '--sidebar-border': string;
+  '--sidebar-ring': string;
+  /** Additional custom variables (e.g., '--radius') */
+  [key: `--${string}`]: string;
+}
+
 export interface ThemeConfig {
   /** Primary accent color hex (e.g., '#EF476F') */
   accentColor: string;
@@ -237,10 +295,87 @@ export interface ThemeConfig {
   pwaIcon512Url?: string;
   /** PWA theme color for browser tab bar */
   pwaThemeColor: string;
-  /** CSS variable overrides for light theme */
+  /**
+   * Complete light-mode palette. When provided, themeInit.ts applies every
+   * variable to :root, replacing the CSS defaults entirely.
+   */
+  lightPalette?: ThemePalette;
+  /**
+   * Complete dark-mode palette. When provided, themeInit.ts injects a
+   * <style>.dark { ... }</style> block that replaces the CSS defaults.
+   */
+  darkPalette?: ThemePalette;
+  /**
+   * @deprecated Use lightPalette / darkPalette instead.
+   * Partial CSS variable overrides for light theme (accent-only).
+   */
   lightCssVariables?: Record<string, string>;
-  /** CSS variable overrides for dark theme */
+  /**
+   * @deprecated Use lightPalette / darkPalette instead.
+   * Partial CSS variable overrides for dark theme (accent-only).
+   */
   darkCssVariables?: Record<string, string>;
+}
+
+// ─── Search Adapter ─────────────────────────────────────────────────────────
+
+export interface SearchResult {
+  id: string;
+  type: 'task' | 'note';
+  title: string;
+  content: string;
+  isPinned: boolean;
+  isCompleted: boolean;
+  dueDate: string | null;
+  listId: string | null;
+  section: string;
+  sortOrder: number;
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  rank: number;
+  titleHighlight: string;
+  contentHighlight: string;
+}
+
+export interface SearchFilters {
+  listId?: string | null;
+  tagId?: string | null;
+}
+
+export interface SearchState {
+  results: SearchResult[];
+  isLoading: boolean;
+  query: string;
+  fromCache: boolean;
+  error: string | null;
+  filters?: SearchFilters;
+}
+
+export interface SearchAdapter {
+  readonly type: string;
+
+  /**
+   * Execute a full-text search. Returns results ranked by relevance.
+   * Implementations may use server-side FTS (Supabase RPC), a local
+   * inverted index, or any other strategy.
+   */
+  search(query: string, maxResults?: number, filters?: SearchFilters): Promise<SearchResult[]>;
+
+  /**
+   * Browse items matching filters without a search query.
+   * Returns items sorted by updated_at descending.
+   */
+  browse(filters: SearchFilters, maxResults?: number): Promise<SearchResult[]>;
+
+  /**
+   * Search the local offline cache (IndexedDB) for instant results.
+   * Returns empty array if offline search is not supported.
+   */
+  searchLocally(query: string, userId: string, maxResults?: number): Promise<SearchResult[]>;
+
+  /** Clear any in-memory search caches (e.g., after bulk data changes). */
+  clearCache(): void;
 }
 
 // ─── Adapter Registry ────────────────────────────────────────────────────────
@@ -251,4 +386,5 @@ export interface AdapterConfig {
   ai: AIAdapter;
   backup: BackupAdapter;
   theme: ThemeConfig;
+  search: SearchAdapter;
 }

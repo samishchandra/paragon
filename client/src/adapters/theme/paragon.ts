@@ -1,0 +1,91 @@
+/**
+ * Paragon Theme — Branding for the Paragon (momentum3) app.
+ *
+ * Green accent (#008948) to distinguish from foundation (coral) and momentum (blue).
+ * Defines the COMPLETE light and dark palettes so that index.css
+ * only needs structural defaults (no hardcoded colors).
+ */
+import type { ThemeConfig, ThemePalette } from '@/adapters/types';
+
+const lightPalette: ThemePalette = {
+  '--primary': 'oklch(0.55 0.15 155)',
+  '--primary-foreground': 'oklch(0.98 0.02 155)',
+  '--background': 'oklch(1 0 0)',
+  '--foreground': 'oklch(0.235 0.015 65)',
+  '--card': 'oklch(1 0 0)',
+  '--card-foreground': 'oklch(0.235 0.015 65)',
+  '--popover': 'oklch(1 0 0)',
+  '--popover-foreground': 'oklch(0.235 0.015 65)',
+  '--secondary': 'oklch(0.98 0.001 286.375)',
+  '--secondary-foreground': 'oklch(0.4 0.015 65)',
+  '--muted': 'oklch(0.967 0.001 286.375)',
+  '--muted-foreground': 'oklch(0.552 0.016 285.938)',
+  '--accent': 'oklch(0.967 0.001 286.375)',
+  '--accent-foreground': 'oklch(0.141 0.005 285.823)',
+  '--destructive': 'oklch(0.577 0.245 27.325)',
+  '--destructive-foreground': 'oklch(0.985 0 0)',
+  '--border': 'oklch(0.92 0.004 286.32)',
+  '--input': 'oklch(0.92 0.004 286.32)',
+  '--ring': 'oklch(0.55 0.15 155)',
+  '--chart-1': 'oklch(0.75 0.12 155)',
+  '--chart-2': 'oklch(0.65 0.15 155)',
+  '--chart-3': 'oklch(0.55 0.15 155)',
+  '--chart-4': 'oklch(0.45 0.12 155)',
+  '--chart-5': 'oklch(0.38 0.10 155)',
+  '--sidebar': 'oklch(0.985 0 0)',
+  '--sidebar-foreground': 'oklch(0.235 0.015 65)',
+  '--sidebar-primary': 'oklch(0.55 0.15 155)',
+  '--sidebar-primary-foreground': 'oklch(0.98 0.02 155)',
+  '--sidebar-accent': 'oklch(0.967 0.001 286.375)',
+  '--sidebar-accent-foreground': 'oklch(0.141 0.005 285.823)',
+  '--sidebar-border': 'oklch(0.92 0.004 286.32)',
+  '--sidebar-ring': 'oklch(0.55 0.15 155)',
+};
+
+const darkPalette: ThemePalette = {
+  '--primary': 'oklch(0.65 0.15 155)',
+  '--primary-foreground': 'oklch(0.98 0.02 155)',
+  '--background': 'oklch(0.141 0.005 285.823)',
+  '--foreground': 'oklch(0.85 0.005 65)',
+  '--card': 'oklch(0.21 0.006 285.885)',
+  '--card-foreground': 'oklch(0.85 0.005 65)',
+  '--popover': 'oklch(0.21 0.006 285.885)',
+  '--popover-foreground': 'oklch(0.85 0.005 65)',
+  '--secondary': 'oklch(0.24 0.006 286.033)',
+  '--secondary-foreground': 'oklch(0.7 0.005 65)',
+  '--muted': 'oklch(0.274 0.006 286.033)',
+  '--muted-foreground': 'oklch(0.705 0.015 286.067)',
+  '--accent': 'oklch(0.274 0.006 286.033)',
+  '--accent-foreground': 'oklch(0.92 0.005 65)',
+  '--destructive': 'oklch(0.704 0.191 22.216)',
+  '--destructive-foreground': 'oklch(0.985 0 0)',
+  '--border': 'oklch(1 0 0 / 10%)',
+  '--input': 'oklch(1 0 0 / 15%)',
+  '--ring': 'oklch(0.65 0.15 155)',
+  '--chart-1': 'oklch(0.75 0.12 155)',
+  '--chart-2': 'oklch(0.65 0.15 155)',
+  '--chart-3': 'oklch(0.55 0.15 155)',
+  '--chart-4': 'oklch(0.45 0.12 155)',
+  '--chart-5': 'oklch(0.38 0.10 155)',
+  '--sidebar': 'oklch(0.21 0.006 285.885)',
+  '--sidebar-foreground': 'oklch(0.85 0.005 65)',
+  '--sidebar-primary': 'oklch(0.65 0.15 155)',
+  '--sidebar-primary-foreground': 'oklch(0.98 0.02 155)',
+  '--sidebar-accent': 'oklch(0.274 0.006 286.033)',
+  '--sidebar-accent-foreground': 'oklch(0.985 0 0)',
+  '--sidebar-border': 'oklch(1 0 0 / 10%)',
+  '--sidebar-ring': 'oklch(0.65 0.15 155)',
+};
+
+export const paragonTheme: ThemeConfig = {
+  accentColor: '#008948',
+  appName: 'Momentum Notes',
+  appIconUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/NZmQsfhbCmKNvHui.png',
+  appIconSmallUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/NZmQsfhbCmKNvHui.png',
+  appIconLargeUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/AHAWWKQnAGRFaBpX.png',
+  pwaIcon192Url: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/QzBngxBiEWBxxiys.png',
+  pwaIcon512Url: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663318957742/AHAWWKQnAGRFaBpX.png',
+  pwaThemeColor: '#059669',
+  lightPalette,
+  darkPalette,
+};

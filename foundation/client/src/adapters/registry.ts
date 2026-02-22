@@ -4,7 +4,7 @@
  * Embedding repos configure this at app startup before rendering React.
  * The foundation provides sensible defaults (NoAuth, BrowserDB, etc.).
  */
-import type { AdapterConfig, AuthAdapter, DatabaseAdapter, AIAdapter, BackupAdapter, ThemeConfig } from './types';
+import type { AdapterConfig, AuthAdapter, DatabaseAdapter, AIAdapter, BackupAdapter, ThemeConfig, SearchAdapter } from './types';
 
 let _config: AdapterConfig | null = null;
 let _initialized = false;
@@ -67,6 +67,13 @@ export function getBackupAdapter(): BackupAdapter {
  */
 export function getThemeConfig(): ThemeConfig {
   return ensureConfigured().theme;
+}
+
+/**
+ * Get the search adapter.
+ */
+export function getSearchAdapter(): SearchAdapter {
+  return ensureConfigured().search;
 }
 
 /**
