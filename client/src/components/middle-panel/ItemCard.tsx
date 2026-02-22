@@ -62,6 +62,7 @@ export interface ItemCardProps {
   hideListPill?: boolean;
   isMultiSelectMode?: boolean;
   isMultiSelected?: boolean;
+  selectedItemIds?: string[];
   onToggleMultiSelect?: () => void;
 }
 
@@ -96,6 +97,7 @@ export function itemCardAreEqual(prev: ItemCardProps, next: ItemCardProps): bool
     prev.searchQuery === next.searchQuery &&
     prev.hideListPill === next.hideListPill &&
     prev.isMultiSelectMode === next.isMultiSelectMode &&
+    prev.selectedItemIds === next.selectedItemIds &&
     prev.isMultiSelected === next.isMultiSelected &&
     prev.tags === next.tags
   );
@@ -123,6 +125,7 @@ export const ItemCard = memo(function ItemCard({
   hideListPill,
   isMultiSelectMode,
   isMultiSelected,
+  selectedItemIds,
   onToggleMultiSelect,
 }: ItemCardProps) {
   const itemTags = tags.filter((tag) => item.tags?.includes(tag.id));
@@ -173,7 +176,12 @@ export const ItemCard = memo(function ItemCard({
 
   // Handle native drag start for cross-panel dragging (to sidebar tags/lists)
   const handleNativeDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('application/json', JSON.stringify({ itemId: item.id }));
+    // If in multi-select mode and this item is selected, drag all selected items
+    if (isMultiSelectMode && isMultiSelected && selectedItemIds && selectedItemIds.length > 1) {
+      e.dataTransfer.setData('application/json', JSON.stringify({ itemIds: selectedItemIds }));
+    } else {
+      e.dataTransfer.setData('application/json', JSON.stringify({ itemIds: [item.id] }));
+    }
     e.dataTransfer.effectAllowed = 'copy';
   };
 
@@ -312,8 +320,8 @@ export const ItemCard = memo(function ItemCard({
       <div
         {...swipeHandlers}
         onClick={onSelect}
-        draggable={isDragDisabled}
-        onDragStart={isDragDisabled ? handleNativeDragStart : undefined}
+        draggable={isDragDisabled || (isMultiSelectMode && isMultiSelected)}
+        onDragStart={(isDragDisabled || (isMultiSelectMode && isMultiSelected)) ? handleNativeDragStart : undefined}
         {...(!isDragDisabled ? dragHandleProps : {})}
         style={{
           transform: `translateX(-${swipeOffset}px)`,

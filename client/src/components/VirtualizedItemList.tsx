@@ -129,7 +129,12 @@ function Row({
 
   // Native drag start for cross-panel dragging (to sidebar tags/lists)
   const handleNativeDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('application/json', JSON.stringify({ itemId: item.id }));
+    // If in multi-select mode and this item is selected, drag all selected items
+    if (isMultiSelectMode && isMultiSelected && selectedItemIds && selectedItemIds.length > 1) {
+      e.dataTransfer.setData('application/json', JSON.stringify({ itemIds: selectedItemIds }));
+    } else {
+      e.dataTransfer.setData('application/json', JSON.stringify({ itemIds: [item.id] }));
+    }
     e.dataTransfer.effectAllowed = 'copy';
   };
 
@@ -153,7 +158,7 @@ function Row({
               : 'bg-transparent ' + ITEM_HOVER,
         )}
         onClick={handleClick}
-        draggable={!isMultiSelectMode}
+        draggable={!isMultiSelectMode || isMultiSelected}
         onDragStart={handleNativeDragStart}
       >
         {/* Multi-select checkbox */}

@@ -7,56 +7,29 @@
  * Uses useDynamicRowHeight for variable-height rows that adapt
  * to content (title length, content preview, number of tags/pills).
  * 
- * Row rendering matches the rich ItemCard style:
- * - Title with pin/3-dot icons on hover (right-aligned)
- * - Content preview (1-2 lines)
- * - TagPill, ListPill, DatePill components for consistent styling
+ * Row rendering delegates to the shared ItemCardContent component
+ * so UI changes only need to be made in one place.
+ * 
+ * Supports native HTML drag for drag-to-sidebar (assign list/tag).
  * 
  * Performance: Uses AutoSizer renderProp (not ChildComponent) to avoid
  * remounting the List on every prop change. react-window v2's internal
  * `de()` stabilizer + `ue()` memo comparator handle row-level memoization.
  */
 
-import { useEffect, useCallback, useRef, ReactElement } from 'react';
-import { List, useListRef, useDynamicRowHeight, ListImperativeAPI } from 'react-window';
+import { useEffect, useCallback, useRef, ReactElement, ReactNode, KeyboardEvent } from 'react';
+import { List, useListRef, useDynamicRowHeight } from 'react-window';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { Item, SectionType, Task, Tag } from '@/types';
 import { cn } from '@/lib/utils';
 import { ITEM_SELECTED, ITEM_HOVER } from '@/lib/styles';
-import {
-  CheckCircle2,
-  Circle,
-  Copy,
-  FileText,
-  Pin,
-  MoreHorizontal,
-  Trash2,
-  ArrowRight,
-  ArrowUp,
-  Sun,
-  Clock,
-  Loader2,
-} from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { TagPill } from '@/components/TagPill';
-import { ListPill } from '@/components/ListPill';
-import { DatePill } from '@/components/DatePill';
-import { highlightText, getMatchSnippet } from '@/lib/highlightText';
-import { linkifyTitle, extractFirstLineLink, renderFirstLineLink } from '@/lib/linkifyTitle';
+import { Clock, Loader2 } from 'lucide-react';
+import { ItemCardContent } from '@/components/middle-panel/ItemCardContent';
 
 // Default estimated row height — used as initial estimate before measurement
 const DEFAULT_ROW_HEIGHT = 90;
 
-interface VirtualizedItemListProps {
+export interface VirtualizedItemListProps {
   items: Item[];
   selectedItemId: string | null;
   tags: Tag[];
@@ -71,8 +44,15 @@ interface VirtualizedItemListProps {
   onMoveToTop: (id: string) => void;
   onDuplicate: (id: string) => void;
   onDateChange?: (id: string, date: string | null) => void;
+  onTagClick?: (id: string) => void;
   hideListPill?: boolean;
   className?: string;
+  /** Custom empty state ReactNode. If not provided, a default empty state is shown. */
+  emptyState?: ReactNode;
+  // Multi-select support
+  isMultiSelectMode?: boolean;
+  selectedItemIds?: string[];
+  onToggleMultiSelect?: (id: string) => void;
   // Infinite scroll props
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -95,7 +75,11 @@ interface RowProps {
   onMoveToTop: (id: string) => void;
   onDuplicate: (id: string) => void;
   onDateChange?: (id: string, date: string | null) => void;
+  onTagClick?: (id: string) => void;
   hideListPill?: boolean;
+  isMultiSelectMode?: boolean;
+  selectedItemIds?: string[];
+  onToggleMultiSelect?: (id: string) => void;
 }
 
 interface RowComponentProps {
@@ -108,16 +92,16 @@ interface RowComponentProps {
   };
 }
 
-// Row component for react-window v2 — rich rendering matching ItemCard
-// With dynamic heights, the outer div uses style from react-window (position:absolute, top, width)
-// but the inner content renders naturally without height constraints.
+// Row component for react-window v2 — delegates inner rendering to ItemCardContent.
+// The outer div uses react-window's style (position:absolute, top, width) for positioning.
+// The inner content renders naturally — useDynamicRowHeight's ResizeObserver
+// will measure the actual height and update the list accordingly.
 function Row({ 
   index, 
   style,
   items,
   selectedItemId,
   tags,
-  lists,
   searchQuery,
   onSelect,
   onComplete,
@@ -128,7 +112,11 @@ function Row({
   onMoveToTop,
   onDuplicate,
   onDateChange,
+  onTagClick,
   hideListPill,
+  isMultiSelectMode,
+  selectedItemIds,
+  onToggleMultiSelect,
 }: RowComponentProps & RowProps): ReactElement | null {
   const item = items[index];
   if (!item) return null;
@@ -137,22 +125,27 @@ function Row({
   const isTask = item.type === 'task';
   const isCompleted = isTask && (item as Task).isCompleted;
   const itemTags = tags.filter((tag: Tag) => item.tags?.includes(tag.id));
-  const itemList = item.listId ? lists.find((l) => l.id === item.listId) : null;
-  const dueDate = isTask && (item as Task).dueDate ? (item as Task).dueDate : null;
-  const firstLink = extractFirstLineLink(item.content);
+  const isMultiSelected = isMultiSelectMode && selectedItemIds?.includes(item.id);
 
-  const handleComplete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isCompleted) {
-      onUncomplete(item.id);
+  // Native drag start for cross-panel dragging (to sidebar tags/lists)
+  const handleNativeDragStart = (e: React.DragEvent) => {
+    // If in multi-select mode and this item is selected, drag all selected items
+    if (isMultiSelectMode && isMultiSelected && selectedItemIds && selectedItemIds.length > 1) {
+      e.dataTransfer.setData('application/json', JSON.stringify({ itemIds: selectedItemIds }));
     } else {
-      onComplete(item.id);
+      e.dataTransfer.setData('application/json', JSON.stringify({ itemIds: [item.id] }));
+    }
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const handleClick = () => {
+    if (isMultiSelectMode && onToggleMultiSelect) {
+      onToggleMultiSelect(item.id);
+    } else {
+      onSelect(item.id);
     }
   };
 
-  // The outer div uses react-window's style (position, top, width) for positioning.
-  // The inner content renders naturally — useDynamicRowHeight's ResizeObserver
-  // will measure the actual height and update the list accordingly.
   return (
     <div style={style}>
       <div
@@ -160,197 +153,48 @@ function Row({
           "group relative py-3 pr-3 pl-3 transition-colors duration-150 cursor-pointer select-none border-b border-border/30",
           isSelected
             ? ITEM_SELECTED
-            : 'bg-transparent ' + ITEM_HOVER,
+            : isMultiSelected
+              ? 'bg-primary/10'
+              : 'bg-transparent ' + ITEM_HOVER,
         )}
-        onClick={() => onSelect(item.id)}
+        onClick={handleClick}
+        draggable={!isMultiSelectMode || isMultiSelected}
+        onDragStart={handleNativeDragStart}
       >
-        {/* Flexbox layout for icon and content */}
-        <div className="flex items-start gap-2">
-          {/* Checkbox or Note icon — aligned with first line of title */}
-          <div className="shrink-0 flex items-center h-[22px]">
-            {isTask ? (
-              <button
-                onClick={handleComplete}
-                className="flex items-center justify-center"
-              >
-                {isCompleted ? (
-                  <CheckCircle2 className="w-[18px] h-[18px] text-emerald-500" />
-                ) : (
-                  <Circle className="w-[18px] h-[18px] text-muted-foreground hover:text-primary transition-colors" />
-                )}
-              </button>
-            ) : (
-              <FileText className="w-[18px] h-[18px] text-muted-foreground" />
-            )}
-          </div>
-
-          {/* Content — starts after icon */}
-          <div className="min-w-0 flex-1 flex flex-col gap-1">
-            {/* Title row with pin and 3-dot icons overlaid */}
-            <div className="relative">
-              {/* Title — max 2 lines, pr-12 reserves space for icons */}
-              <h4
-                className={cn(
-                  'text-sm font-medium line-clamp-2 pr-12',
-                  isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'
-                )}
-              >
-                {searchQuery
-                  ? highlightText(item.title || (isTask ? 'Untitled Task' : 'Untitled Note'), searchQuery)
-                  : (item.title ? linkifyTitle(item.title).elements : (isTask ? 'Untitled Task' : 'Untitled Note'))}
-              </h4>
-
-              {/* Right side: Pin icon → 3-dot menu (absolutely positioned, won't affect title reflow) */}
-              <div className="absolute top-0 right-0 flex items-center">
-                {/* Pin icon — hidden by default, expands on hover */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onPin(item.id);
-                  }}
-                  className={cn(
-                    'h-5 shrink-0 rounded transition-all duration-200 overflow-hidden flex items-center justify-center',
-                    item.isPinned 
-                      ? 'w-5 opacity-100 text-primary hover:bg-muted' 
-                      : 'w-0 opacity-0 group-hover:w-5 group-hover:opacity-100 text-muted-foreground hover:text-primary hover:bg-muted'
-                  )}
-                  title={item.isPinned ? 'Unpin' : 'Pin'}
-                >
-                  <Pin className={cn('w-3.5 h-3.5', !item.isPinned && 'rotate-45')} />
-                </button>
-
-                {/* 3-dot menu — hidden by default, appears on hover, rightmost */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      onClick={(e) => e.stopPropagation()}
-                      className="h-5 shrink-0 rounded transition-all duration-200 overflow-hidden flex items-center justify-center w-0 opacity-0 group-hover:w-5 group-hover:opacity-100 hover:bg-muted"
-                      title="More options"
-                    >
-                      <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onPin(item.id);
-                      }}
-                    >
-                      <Pin className="w-4 h-4 mr-2" />
-                      {item.isPinned ? 'Unpin' : 'Pin'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDuplicate(item.id);
-                      }}
-                    >
-                      <Copy className="w-4 h-4 mr-2" />
-                      Duplicate
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onMoveToTop(item.id);
-                      }}
-                    >
-                      <ArrowUp className="w-4 h-4 mr-2" />
-                      Move to top
-                    </DropdownMenuItem>
-                    {isTask && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger>
-                            <ArrowRight className="w-4 h-4 mr-2" />
-                            Move to
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuSubContent>
-                            <DropdownMenuItem onClick={() => onMove(item.id, 'now')}>
-                              <Sun className="w-4 h-4 mr-2 text-amber-500" />
-                              Do
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onMove(item.id, 'later')}>
-                              <Clock className="w-4 h-4 mr-2 text-sky-500" />
-                              Later
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onMove(item.id, 'completed')}>
-                              <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" />
-                              Completed
-                            </DropdownMenuItem>
-                          </DropdownMenuSubContent>
-                        </DropdownMenuSub>
-                      </>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(item.id);
-                      }}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+        {/* Multi-select checkbox */}
+        {isMultiSelectMode && (
+          <div className="absolute left-1 top-1/2 -translate-y-1/2 z-10">
+            <div className={cn(
+              "w-4 h-4 rounded border-2 flex items-center justify-center transition-colors",
+              isMultiSelected
+                ? "bg-primary border-primary text-primary-foreground"
+                : "border-muted-foreground/40 hover:border-primary"
+            )}>
+              {isMultiSelected && (
+                <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
             </div>
-
-            {/* First-line content link */}
-            {firstLink ? (
-              <div className="mt-0.5">
-                {renderFirstLineLink(firstLink)}
-              </div>
-            ) : item.content ? (
-              /* Content preview — 1-2 lines of note content */
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {searchQuery 
-                  ? highlightText(getMatchSnippet(item.content.replace(/<[^>]*>/g, ''), searchQuery, 100), searchQuery)
-                  : item.content.replace(/<[^>]*>/g, '').slice(0, 100)}
-              </p>
-            ) : null}
-
-            {/* Bottom row: Date pill, List pill, Tag pills */}
-            {(dueDate || (itemList && !hideListPill) || itemTags.length > 0) && (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {/* Date pill */}
-                {dueDate && (
-                  <DatePill
-                    dueDate={dueDate}
-                    onDateChange={(newDate) => onDateChange?.(item.id, newDate ? newDate.toISOString() : null)}
-                    size="sm"
-                    showPlaceholder={false}
-                  />
-                )}
-                {/* List pill — hidden when viewing a specific list */}
-                {!hideListPill && itemList && (
-                  <ListPill
-                    listId={item.listId}
-                    itemId={item.id}
-                    itemType={item.type}
-                    size="sm"
-                  />
-                )}
-                {/* Tag pills — clickable to open inline tag popover */}
-                {itemTags.slice(0, 3).map((tag: Tag) => (
-                  <TagPill
-                    key={tag.id}
-                    tag={tag}
-                    itemId={item.id}
-                    size="sm"
-                  />
-                ))}
-                {itemTags.length > 3 && (
-                  <span className="text-[10px] text-muted-foreground shrink-0">
-                    +{itemTags.length - 3}
-                  </span>
-                )}
-              </div>
-            )}
           </div>
+        )}
+        <div className={isMultiSelectMode ? "ml-5" : ""}>
+          <ItemCardContent
+            item={item}
+            isCompleted={isCompleted}
+            isTask={isTask}
+            itemTags={itemTags}
+            searchQuery={searchQuery}
+            hideListPill={hideListPill}
+            onComplete={onComplete}
+            onUncomplete={onUncomplete}
+            onPin={onPin}
+            onDelete={onDelete}
+            onMove={onMove}
+            onMoveToTop={onMoveToTop}
+            onDuplicate={onDuplicate}
+            onDateChange={onDateChange}
+          />
         </div>
       </div>
     </div>
@@ -372,8 +216,13 @@ export function VirtualizedItemList({
   onMoveToTop,
   onDuplicate,
   onDateChange,
+  onTagClick,
   hideListPill,
   className,
+  emptyState,
+  isMultiSelectMode,
+  selectedItemIds,
+  onToggleMultiSelect,
   hasMore = false,
   isLoadingMore = false,
   onLoadMore,
@@ -421,6 +270,32 @@ export function VirtualizedItemList({
     handleScroll(target.scrollTop, target.scrollHeight, target.clientHeight);
   }, [handleScroll]);
 
+  // Keyboard arrow-key navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    if (items.length === 0) return;
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const currentIndex = selectedItemId
+        ? items.findIndex(i => i.id === selectedItemId)
+        : -1;
+
+      let nextIndex: number;
+      if (e.key === 'ArrowDown') {
+        nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : currentIndex;
+      } else {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+      }
+
+      if (nextIndex !== currentIndex || currentIndex === -1) {
+        const nextItem = items[nextIndex];
+        if (nextItem) {
+          onSelect(nextItem.id);
+        }
+      }
+    }
+  }, [items, selectedItemId, onSelect]);
+
   // Build rowProps object — react-window v2's internal `de()` stabilizer
   // uses useMemo with Object.values() as deps, so it only creates a new
   // reference when actual values change (not just object identity).
@@ -439,10 +314,15 @@ export function VirtualizedItemList({
     onMoveToTop,
     onDuplicate,
     onDateChange,
+    onTagClick,
     hideListPill,
+    isMultiSelectMode,
+    selectedItemIds,
+    onToggleMultiSelect,
   };
 
   if (items.length === 0) {
+    if (emptyState) return <>{emptyState}</>;
     return (
       <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
         <Clock className="w-12 h-12 opacity-30" />
@@ -455,7 +335,12 @@ export function VirtualizedItemList({
   }
 
   return (
-    <div className={cn("h-full flex flex-col", className)}>
+    <div
+      className={cn("h-full flex flex-col", className)}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      style={{ outline: 'none' }}
+    >
       <div className="flex-1 min-h-0">
         {/* 
          * IMPORTANT: Use renderProp instead of ChildComponent to avoid remounting.

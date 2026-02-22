@@ -1,13 +1,15 @@
 /**
  * Middle Panel Component - Clean Minimalist Design
- * Shows list of notes and tasks with draggable sections
+ * Shows list of notes and tasks with virtualized rendering.
  * 
- * Section Structure:
- * - Notes view: Flat list (no sections), with Pinned section at top if any pinned notes
- * - Tasks view: Pinned (if any) → Now (overdue + today) → Do → Later → Completed
+ * Flat views (Notes, Tasks, Completed, Pinned, Todo, AllItems, Tag, NoteList)
+ * use VirtualizedItemList for efficient rendering of 1000+ items.
  * 
- * Features: DnD-kit for drag-and-drop, collapsible sections, search, sort order
- * Mobile responsive with inline title editing
+ * Sectioned views (Tasks, TaskList, Miscellaneous) use Section + ItemCard
+ * for collapsible section headers with items inside.
+ * 
+ * Features: Virtualized lists, collapsible sections, search, sort order
+ * Native drag-to-sidebar for assigning lists/tags. Mobile responsive.
  */
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -16,25 +18,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 
 
-
-import {
-  DndContext,
-  DragOverlay,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragStartEvent,
-  DragEndEvent,
-  DragOverEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  arrayMove,
-  sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable';
 import {
   Pin,
   CheckCircle2,
@@ -42,7 +25,6 @@ import {
   Circle,
   FileText,
   FilePlus2,
-  Calendar,
   ArrowUpDown,
   CheckSquare,
   ListChecks,
@@ -74,25 +56,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { CARD_DEFAULT, CARD_SELECTED_SUFFIX } from '@/lib/styles';
-import { highlightText } from '@/lib/highlightText';
-import { DatePickerPopover } from '@/components/DatePickerPopover';
 import { Item, SectionType, Task, SortOrder, DisplaySectionType } from '@/types';
-import { format, isPast, isToday, isTomorrow, parseISO, startOfDay } from 'date-fns';
-import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
+import { format, parseISO, startOfDay } from 'date-fns';
+import { motion, AnimatePresence } from 'motion/react';
 
 import { TagIcon } from '@/components/icons/TagIcon';
 import { ListPill } from '@/components/ListPill';
-import { TagPill } from '@/components/TagPill';
-import { DatePill } from '@/components/DatePill';
+
 
 import { VirtualizedItemList } from '@/components/VirtualizedItemList';
-import { ItemCard, SortableItem, Section } from '@/components/middle-panel';
+import { ItemCard, Section } from '@/components/middle-panel';
 import { linkifyTitle, extractFirstLineLink, renderFirstLineLink } from '@/lib/linkifyTitle';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
 
-/** Virtualize lists above this item count for smooth scrolling. Disabled for custom sort (drag-and-drop). */
-const VIRTUALIZATION_THRESHOLD = 30;
 
 // Storage sections (what's stored in DB)
 const STORAGE_SECTIONS: { id: SectionType; title: string }[] = [
@@ -113,7 +90,6 @@ const TASK_DISPLAY_SECTIONS: { id: DisplaySectionType; title: string; descriptio
 const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
   { value: 'modified', label: 'Date Modified' },
   { value: 'dueDate', label: 'Due Date' },
-  { value: 'custom', label: 'Custom Order' },
 ];
 
 interface MiddlePanelProps {
@@ -212,23 +188,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'copy';
-  }, []);
-
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [overId, setOverId] = useState<string | null>(null);
-  const [dropPosition, setDropPosition] = useState<'before' | 'after' | null>(null);
-  
-  // Mobile detection - disable drag on mobile/tablet
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  
+  }, []);  
   
   // Scroll viewport ref for programmatic scroll control
   const scrollViewportRef = useRef<HTMLDivElement>(null);
@@ -240,85 +200,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     viewport.scrollTop = 0;
   }, [state.activeFilter]);
 
-  // ─── Suppress Framer Motion layout animations during panel resize ────────
-  // When the sidebar or editor panel toggles, the middle panel width changes.
-  // Framer Motion's `layout` prop detects this and animates every item card,
-  // causing an unwanted "expand" effect. We suppress layout for 250ms after
-  // any panel collapse state change so items snap instantly instead.
-  // Start suppressed: on mobile, MiddlePanel remounts on tab switch, so we
-  // suppress layout on initial mount to prevent the "expand" animation.
-  const [suppressLayout, setSuppressLayout] = useState(true);
-  const suppressLayoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevLeftCollapsed = useRef(state.leftPanelCollapsed);
-  const prevRightCollapsed = useRef(state.rightPanelCollapsed);
-
-  // Allow layout animations after initial mount settles
-  useEffect(() => {
-    suppressLayoutTimerRef.current = setTimeout(() => {
-      setSuppressLayout(false);
-    }, 250);
-    return () => {
-      if (suppressLayoutTimerRef.current) clearTimeout(suppressLayoutTimerRef.current);
-    };
-  }, []);
-
-  // Suppress layout during panel collapse/expand transitions (desktop)
-  useEffect(() => {
-    if (
-      state.leftPanelCollapsed !== prevLeftCollapsed.current ||
-      state.rightPanelCollapsed !== prevRightCollapsed.current
-    ) {
-      prevLeftCollapsed.current = state.leftPanelCollapsed;
-      prevRightCollapsed.current = state.rightPanelCollapsed;
-      setSuppressLayout(true);
-      if (suppressLayoutTimerRef.current) clearTimeout(suppressLayoutTimerRef.current);
-      suppressLayoutTimerRef.current = setTimeout(() => {
-        setSuppressLayout(false);
-      }, 250);
-    }
-  }, [state.leftPanelCollapsed, state.rightPanelCollapsed]);
-
-  // Suppress layout during data fetches to prevent overlap when items array
-  // is replaced in bulk (e.g., IndexedDB cache load → server sync, filter change).
-  // We track the items array reference: when it changes, suppress layout briefly
-  // so items snap into place instead of animating from stale positions.
-  const prevItemsRef = useRef(state.items);
-  const prevItemsLenRef = useRef(state.items.length);
-  useEffect(() => {
-    const prevItems = prevItemsRef.current;
-    const prevLen = prevItemsLenRef.current;
-    prevItemsRef.current = state.items;
-    prevItemsLenRef.current = state.items.length;
-
-    // Detect bulk replacement: different array reference AND significant length change
-    // (single-item edits reuse the same length but still create a new array,
-    //  so we also check if the first/last IDs shifted — a sign of a full reload)
-    if (prevItems !== state.items) {
-      const lenDelta = Math.abs(state.items.length - prevLen);
-      const firstChanged = state.items[0]?.id !== prevItems[0]?.id;
-      const lastChanged = state.items[state.items.length - 1]?.id !== prevItems[prevLen - 1]?.id;
-
-      if (lenDelta >= 2 || (lenDelta >= 1 && (firstChanged || lastChanged)) || (firstChanged && lastChanged)) {
-        setSuppressLayout(true);
-        if (suppressLayoutTimerRef.current) clearTimeout(suppressLayoutTimerRef.current);
-        suppressLayoutTimerRef.current = setTimeout(() => {
-          setSuppressLayout(false);
-        }, 100);
-      }
-    }
-  }, [state.items]);
-
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 10,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   // Determine current view type
   const isNotesView = state.activeFilter.type === 'notes';
@@ -526,10 +407,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     const filtered = getFilteredItems();
     const today = startOfDay(new Date());
     
-    if (isTodoView) {
-      // Todo view: flat list of items with uncompleted todos
-      return { all: filtered };
-    }
+    // isTodoView — handled by virtualizedProps path
 
     if (isNotesView || isMiscellaneousView || isAllItemsView) {
       // Notes/Miscellaneous/All Items view: Pinned section + flat Items list
@@ -645,159 +523,11 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     }
   };
 
-  // Map display section to storage section for drag operations
-  const displayToStorageSection = (displaySection: DisplaySectionType): SectionType => {
-    switch (displaySection) {
-      case 'pinned':
-        return 'now'; // Pinned items go to 'now' storage section
-      case 'now':
-        return 'now'; // Now display section maps to 'now' storage
-      case 'do':
-        return 'now'; // Do display section maps to 'now' storage
-      case 'later':
-        return 'later';
-      case 'completed':
-        return 'completed';
-      default:
-        return 'now';
-    }
-  };
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
-
-  // Track the last processed drag state to prevent duplicate updates
-  const lastDragStateRef = useRef<{ activeId: string; overId: string; section: string } | null>(null);
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) {
-      setOverId(null);
-      setDropPosition(null);
-      return;
-    }
-    
-    const overIdStr = over.id as string;
-    setOverId(overIdStr);
-    
-    // Calculate drop position (before or after) based on cursor position
-    const overRect = over.rect;
-    if (overRect && event.activatorEvent instanceof MouseEvent) {
-      const mouseY = event.activatorEvent.clientY;
-      const midY = overRect.top + overRect.height / 2;
-      setDropPosition(mouseY < midY ? 'before' : 'after');
-    } else {
-      setDropPosition('after');
-    }
-
-    // Don't process state updates during drag - only show visual feedback
-    // All actual reordering happens in handleDragEnd
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    // Clear drag state first
-    setActiveId(null);
-    setOverId(null);
-    setDropPosition(null);
-    lastDragStateRef.current = null;
-    
-    if (!over || active.id === over.id) {
-      return;
-    }
-    
-    const activeItem = state.items.find((item) => item.id === active.id);
-    if (!activeItem) return;
-    
-    const overItem = state.items.find((item) => item.id === over.id);
-    
-    // Check if dropping on a display section header
-    const targetDisplaySection = TASK_DISPLAY_SECTIONS.find((s) => s.id === over.id);
-    const targetStorageSection = STORAGE_SECTIONS.find((s) => s.id === over.id);
-    
-    let targetSection: SectionType | null = null;
-    let shouldSetDueDate = false;
-    
-    if (targetDisplaySection) {
-      targetSection = displayToStorageSection(targetDisplaySection.id);
-      // If dropping on "Now" display section, set due date to today
-      if (targetDisplaySection.id === 'now' && activeItem.type === 'task') {
-        shouldSetDueDate = true;
-      }
-    } else if (targetStorageSection) {
-      targetSection = targetStorageSection.id;
-    } else if (overItem && overItem.section !== activeItem.section) {
-      targetSection = overItem.section;
-    }
-
-    // Move item to new section
-    if (targetSection && targetSection !== activeItem.section) {
-      // Don't move notes to completed
-      if (activeItem.type === 'note' && targetSection === 'completed') {
-        return;
-      }
-      
-      // Calculate position in target section
-      const targetItems = getItemsBySection(targetSection);
-      let newOrder: number;
-      
-      if (overItem) {
-        const insertIndex = targetItems.findIndex((item) => item.id === over.id);
-        newOrder = insertIndex >= 0 ? insertIndex : targetItems.length;
-      } else {
-        newOrder = targetItems.length > 0 
-          ? Math.max(...targetItems.map(i => i.order)) + 1 
-          : 0;
-      }
-      
-      // Move item to new section
-      moveItem(activeItem.id, targetSection, newOrder);
-      
-      // If dropping on "Now" display section and task has no due date, set it to today
-      if (shouldSetDueDate && activeItem.type === 'task' && !(activeItem as Task).dueDate) {
-        const today = new Date();
-        today.setHours(23, 59, 59, 999);
-        updateItem({ ...activeItem, section: targetSection, dueDate: today.toISOString() } as Task);
-      }
-      
-      // Reorder items in target section
-      if (overItem) {
-        const newItemIds = targetItems.filter(i => i.id !== activeItem.id).map(i => i.id);
-        const insertIndex = targetItems.findIndex((item) => item.id === over.id);
-        if (insertIndex >= 0) {
-          newItemIds.splice(insertIndex, 0, activeItem.id);
-        } else {
-          newItemIds.push(activeItem.id);
-        }
-        reorderItems(targetSection, newItemIds);
-      }
-    } else if (overItem && overItem.section === activeItem.section) {
-      // Same section - reorder items
-      const sectionItems = getItemsBySection(activeItem.section);
-      const oldIndex = sectionItems.findIndex((item) => item.id === active.id);
-      const newIndex = sectionItems.findIndex((item) => item.id === over.id);
-      
-      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        const newOrder = arrayMove(
-          sectionItems.map((item) => item.id),
-          oldIndex,
-          newIndex
-        );
-        reorderItems(activeItem.section, newOrder);
-      }
-    }
-  };
-
   const handleItemSelect = (id: string) => {
     selectItem(id);
     addRecentItem(id); // Track recently viewed items
     onItemSelect?.();
   };
-
-  const activeItem = activeId ? state.items.find((item) => item.id === activeId) : null;
-
   // Render sections based on view type
   const renderSections = () => {
     // Trash view: Show deleted items with restore/permanent delete options
@@ -941,192 +671,10 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
       );
     }
     
-    if (isTodoView) {
-      // Todo view: flat list of items with uncompleted checklists
-      const allTodoItems = sortItems(organizedItems.all || []);
-      
-      return (
-        <div className="space-y-0">
-          <LayoutGroup>
-            <SortableContext
-              items={allTodoItems.map((item) => item.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <AnimatePresence mode="popLayout">
-                {allTodoItems.map((item) => {
-                  const isOverItem = overId === item.id && activeId && activeId !== item.id;
-                  const showIndicator = isOverItem ? dropPosition : null;
-                  
-                  return (
-                    <SortableItem
-                      key={item.id}
-                      item={item}
-                      isSelected={state.selectedItemId === item.id}
-                      onSelect={() => handleItemSelect(item.id)}
-                      onComplete={() => {}}
-                      onTitleChange={(newTitle) => {
-                        updateItem({ ...item, title: newTitle });
-                      }}
-                      onDelete={() => softDeleteItem(item.id)}
-                      onMove={(targetSection) => {
-                        if (item.type === 'note' && targetSection === 'completed') return;
-                        updateItem({ ...item, section: targetSection } as Item);
-                      }}
-                      onPin={() => togglePin(item.id)}
-                      onMoveToTop={() => {
-                        const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                        const otherItems = sectionItems.filter(i => i.id !== item.id);
-                        const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                        updateItem({ ...item, order: newOrder });
-                      }}
-                      onDuplicate={() => duplicateItem(item.id)}
-                      onDueDateChange={() => {}}
-                      onTagClick={() => {
-                        handleItemSelect(item.id);
-                        dispatch({ type: 'OPEN_TAG_POPOVER' });
-                      }}
-                      tags={state.tags}
-                      isDragDisabled={true}
-                      showDropIndicator={showIndicator}
-                      searchQuery={state.searchQuery}
-                      hideListPill={false}
-                      isMultiSelectMode={state.isMultiSelectMode}
-                      isMultiSelected={state.selectedItemIds.includes(item.id)}
-                      onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
-                      suppressLayout={suppressLayout}
-                    />
-                  );
-                })}
-              </AnimatePresence>
-            </SortableContext>
-          </LayoutGroup>
-          {allTodoItems.length === 0 && (
-            <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-              <CheckSquare className="w-12 h-12 opacity-30" />
-              <div className="text-center">
-                <p className="text-sm font-medium">All done!</p>
-                <p className="text-xs mt-1 opacity-70">No items with uncompleted checklists</p>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
+    // isTodoView — handled by virtualizedProps path
 
-    if (isNotesView) {
-      // Notes view: Flat list of notes (no Pinned section - pinned items show in All Items view only)
-      const allNotes = sortItems(organizedItems.all || []);
-      const useVirtualization = allNotes.length > VIRTUALIZATION_THRESHOLD && state.sortOrder !== 'custom';
-      
-      if (useVirtualization) {
-        // Use virtualized list for large datasets (100+ items)
-        return (
-            <VirtualizedItemList
-              items={allNotes}
-              selectedItemId={state.selectedItemId}
-              tags={state.tags}
-              lists={state.lists}
-              searchQuery={state.searchQuery}
-              onSelect={handleItemSelect}
-              onComplete={() => {}}
-              onUncomplete={() => {}}
-              onDelete={(id) => softDeleteItem(id)}
-              onMove={(id, section) => {
-                const item = state.items.find(i => i.id === id);
-                if (item && item.type === 'note' && section === 'completed') return;
-                if (item) updateItem({ ...item, section } as Item);
-              }}
-              onPin={(id) => togglePin(id)}
-              onMoveToTop={(id) => {
-                const item = state.items.find(i => i.id === id);
-                if (item) {
-                  const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                  const otherItems = sectionItems.filter(i => i.id !== item.id);
-                  const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                  updateItem({ ...item, order: newOrder });
-                }
-              }}
-              onDuplicate={(id) => duplicateItem(id)}
-              onDateChange={(id, date) => {
-                const item = state.items.find(i => i.id === id);
-                if (item && item.type === 'task') {
-                  updateItem({ ...item, dueDate: date } as Item);
-                }
-              }}
-              hideListPill={isListView}
-              className="-mx-3 -mb-4"
-            />
-        );
-      }
+    // isNotesView — handled by virtualizedProps path
 
-      // Use regular rendering for small datasets or when drag-and-drop is needed
-      return (
-        <div className="space-y-0">
-          <LayoutGroup>
-            <SortableContext
-              items={allNotes.map((item) => item.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <AnimatePresence mode="popLayout">
-                {allNotes.map((item) => {
-                  const isOverItem = overId === item.id && activeId && activeId !== item.id;
-                  const showIndicator = isOverItem ? dropPosition : null;
-                  
-                  return (
-                    <SortableItem
-                      key={item.id}
-                      item={item}
-                      isSelected={state.selectedItemId === item.id}
-                      onSelect={() => handleItemSelect(item.id)}
-                      onComplete={() => {}}
-                      onTitleChange={(newTitle) => {
-                        updateItem({ ...item, title: newTitle });
-                      }}
-                      onDelete={() => softDeleteItem(item.id)}
-                      onMove={(targetSection) => {
-                        if (item.type === 'note' && targetSection === 'completed') return;
-                        updateItem({ ...item, section: targetSection } as Item);
-                      }}
-                      onPin={() => togglePin(item.id)}
-                      onMoveToTop={() => {
-                        const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                        const otherItems = sectionItems.filter(i => i.id !== item.id);
-                        const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                        updateItem({ ...item, order: newOrder });
-                      }}
-                      onDuplicate={() => duplicateItem(item.id)}
-                      onDueDateChange={() => {}}
-                      onTagClick={() => {
-                        handleItemSelect(item.id);
-                        dispatch({ type: 'OPEN_TAG_POPOVER' });
-                      }}
-                      tags={state.tags}
-                      isDragDisabled={state.sortOrder !== 'custom' || isMobile}
-                      showDropIndicator={showIndicator}
-                      searchQuery={state.searchQuery}
-                      hideListPill={isListView}
-                      isMultiSelectMode={state.isMultiSelectMode}
-                      isMultiSelected={state.selectedItemIds.includes(item.id)}
-                      onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
-                      suppressLayout={suppressLayout}
-                    />
-                  );
-                })}
-              </AnimatePresence>
-            </SortableContext>
-          </LayoutGroup>
-          {allNotes.length === 0 && (
-            <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-              <FileText className="w-12 h-12 opacity-30" />
-              <div className="text-center">
-                <p className="text-sm font-medium">No notes yet</p>
-                <p className="text-xs mt-1 opacity-70">Create a note to get started</p>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
     
     if (isTasksView) {
       // Tasks view: Pinned → Now → Do → Later (Completed items shown in Completed view)
@@ -1168,18 +716,9 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
             color={section.color}
             icon={section.icon}
           >
-            <LayoutGroup>
-            <SortableContext
-              items={section.items.map((item) => item.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <AnimatePresence mode="popLayout">
                 {section.items.map((item) => {
-                  const isOverItem = overId === item.id && activeId && activeId !== item.id;
-                  const showIndicator = isOverItem ? dropPosition : null;
-                  
                   return (
-                    <SortableItem
+                    <ItemCard
                       key={item.id}
                       item={item}
                       isSelected={state.selectedItemId === item.id}
@@ -1217,20 +756,15 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                         dispatch({ type: 'OPEN_TAG_POPOVER' });
                       }}
                       tags={state.tags}
-                      isDragDisabled={state.sortOrder !== 'custom' || isMobile}
-                      showDropIndicator={showIndicator}
                       searchQuery={state.searchQuery}
                       hideListPill={isListView}
                       isMultiSelectMode={state.isMultiSelectMode}
                       isMultiSelected={state.selectedItemIds.includes(item.id)}
+                      selectedItemIds={state.selectedItemIds}
                       onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
-                      suppressLayout={suppressLayout}
                     />
                   );
                 })}
-              </AnimatePresence>
-            </SortableContext>
-            </LayoutGroup>
             {section.items.length === 0 && !isCollapsed && (
               <div className="py-8 flex flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
                 {section.id === 'completed' ? (
@@ -1254,329 +788,16 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     }
     
     // Pinned view: flat list without sections
-    if (isPinnedView) {
-      const pinnedItems = sortItems(getFilteredItems());
-      
-      return (
-        <div className="space-y-0">
-          <LayoutGroup>
-          <SortableContext
-            items={pinnedItems.map((item) => item.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <AnimatePresence mode="popLayout">
-              {pinnedItems.map((item) => {
-                const isOverItem = overId === item.id && activeId && activeId !== item.id;
-                const showIndicator = isOverItem ? dropPosition : null;
-                
-                return (
-                  <SortableItem
-                    key={item.id}
-                    item={item}
-                    isSelected={state.selectedItemId === item.id}
-                    onSelect={() => handleItemSelect(item.id)}
-                    onComplete={() =>
-                      item.type === 'task' &&
-                      ((item as Task).isCompleted
-                        ? uncompleteTask(item.id)
-                        : completeTask(item.id))
-                    }
-                    onTitleChange={(newTitle) => {
-                      updateItem({ ...item, title: newTitle });
-                    }}
-                    onDelete={() => softDeleteItem(item.id)}
-                    onMove={(targetSection) => {
-                      if (item.type === 'note' && targetSection === 'completed') return;
-                      updateItem({ ...item, section: targetSection } as Item);
-                    }}
-                    onPin={() => togglePin(item.id)}
-                    onMoveToTop={() => {
-                      const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                      const otherItems = sectionItems.filter(i => i.id !== item.id);
-                      const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                      updateItem({ ...item, order: newOrder });
-                    }}
-                    onDuplicate={() => duplicateItem(item.id)}
-                    onDueDateChange={(date) => {
-                      if (item.type === 'task') {
-                        updateItem({ ...item, dueDate: date?.toISOString() } as Task);
-                      }
-                    }}
-                    onTagClick={() => {
-                      handleItemSelect(item.id);
-                      dispatch({ type: 'OPEN_TAG_POPOVER' });
-                    }}
-                    tags={state.tags}
-                    isDragDisabled={state.sortOrder !== 'custom' || isMobile}
-                    showDropIndicator={showIndicator}
-                    searchQuery={state.searchQuery}
-                    hideListPill={isListView}
-                    isMultiSelectMode={state.isMultiSelectMode}
-                    isMultiSelected={state.selectedItemIds.includes(item.id)}
-                    onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
-                    suppressLayout={suppressLayout}
-                  />
-                );
-              })}
-            </AnimatePresence>
-          </SortableContext>
-          </LayoutGroup>
-          {pinnedItems.length === 0 && (
-            <div className="py-8 flex flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
-              <Pin className="w-8 h-8 opacity-40" />
-              <span>No pinned items yet</span>
-            </div>
-          )}
-        </div>
-      );
-    }
+    // isPinnedView — handled by virtualizedProps path
+
     
     // Completed view: flat list without sections
-    if (isCompletedView) {
-      const completedItems = sortItems(getFilteredItems());
-      const useVirtualization = completedItems.length > VIRTUALIZATION_THRESHOLD && state.sortOrder !== 'custom';
-      
-      if (useVirtualization) {
-        // Use virtualized list for large datasets (100+ items)
-        return (
-            <VirtualizedItemList
-              items={completedItems}
-              selectedItemId={state.selectedItemId}
-              tags={state.tags}
-              lists={state.lists}
-              searchQuery={state.searchQuery}
-              onSelect={handleItemSelect}
-              onComplete={(id) => {
-                const item = state.items.find(i => i.id === id);
-                if (item?.type === 'task') {
-                  (item as Task).isCompleted ? uncompleteTask(id) : completeTask(id);
-                }
-              }}
-              onUncomplete={(id) => uncompleteTask(id)}
-              onDelete={(id) => softDeleteItem(id)}
-              onMove={(id, section) => {
-                const item = state.items.find(i => i.id === id);
-                if (item && item.type === 'note' && section === 'completed') return;
-                if (item) updateItem({ ...item, section } as Item);
-              }}
-              onPin={(id) => togglePin(id)}
-              onMoveToTop={(id) => {
-                const item = state.items.find(i => i.id === id);
-                if (item) {
-                  const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                  const otherItems = sectionItems.filter(i => i.id !== item.id);
-                  const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                  updateItem({ ...item, order: newOrder });
-                }
-              }}
-              onDuplicate={(id) => duplicateItem(id)}
-              onDateChange={(id, date) => {
-                const item = state.items.find(i => i.id === id);
-                if (item && item.type === 'task') {
-                  updateItem({ ...item, dueDate: date } as Item);
-                }
-              }}
-              hideListPill={isListView}
-              className="-mx-3 -mb-4"
-            />
-        );
-      }
-      
-      return (
-        <div className="space-y-0">
-          <LayoutGroup>
-          <SortableContext
-            items={completedItems.map((item) => item.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <AnimatePresence mode="popLayout">
-              {completedItems.map((item) => {
-                const isOverItem = overId === item.id && activeId && activeId !== item.id;
-                const showIndicator = isOverItem ? dropPosition : null;
-                
-                return (
-                  <SortableItem
-                    key={item.id}
-                    item={item}
-                    isSelected={state.selectedItemId === item.id}
-                    onSelect={() => handleItemSelect(item.id)}
-                    onComplete={() =>
-                      item.type === 'task' &&
-                      ((item as Task).isCompleted
-                        ? uncompleteTask(item.id)
-                        : completeTask(item.id))
-                    }
-                    onTitleChange={(newTitle) => {
-                      updateItem({ ...item, title: newTitle });
-                    }}
-                    onDelete={() => softDeleteItem(item.id)}
-                    onMove={(targetSection) => {
-                      if (item.type === 'note' && targetSection === 'completed') return;
-                      updateItem({ ...item, section: targetSection } as Item);
-                    }}
-                    onPin={() => togglePin(item.id)}
-                    onMoveToTop={() => {
-                      const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                      const otherItems = sectionItems.filter(i => i.id !== item.id);
-                      const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                      updateItem({ ...item, order: newOrder });
-                    }}
-                    onDuplicate={() => duplicateItem(item.id)}
-                    onDueDateChange={(date) => {
-                      if (item.type === 'task') {
-                        updateItem({ ...item, dueDate: date?.toISOString() } as Task);
-                      }
-                    }}
-                    onTagClick={() => {
-                      handleItemSelect(item.id);
-                      dispatch({ type: 'OPEN_TAG_POPOVER' });
-                    }}
-                    tags={state.tags}
-                    isDragDisabled={state.sortOrder !== 'custom' || isMobile}
-                    showDropIndicator={showIndicator}
-                    searchQuery={state.searchQuery}
-                    hideListPill={isListView}
-                    isMultiSelectMode={state.isMultiSelectMode}
-                    isMultiSelected={state.selectedItemIds.includes(item.id)}
-                    onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
-                    suppressLayout={suppressLayout}
-                  />
-                );
-              })}
-            </AnimatePresence>
-          </SortableContext>
-          </LayoutGroup>
-          {completedItems.length === 0 && (
-            <div className="py-8 flex flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
-              <CheckCircle2 className="w-8 h-8 opacity-40" />
-              <span>No completed items yet</span>
-            </div>
-          )}
-        </div>
-      );
-    }
+    // isCompletedView — handled by virtualizedProps path
+
     
     // All Items view: Flat list (no sections)
-    if (isAllItemsView) {
-      const allItems = sortItems(getFilteredItems());
-      const useVirtualization = allItems.length > VIRTUALIZATION_THRESHOLD && state.sortOrder !== 'custom';
-      
-      if (useVirtualization) {
-        return (
-            <VirtualizedItemList
-              items={allItems}
-              selectedItemId={state.selectedItemId}
-              tags={state.tags}
-              lists={state.lists}
-              searchQuery={state.searchQuery}
-              onSelect={handleItemSelect}
-              onComplete={() => {}}
-              onUncomplete={() => {}}
-              onDelete={(id) => softDeleteItem(id)}
-              onMove={(id, section) => {
-                const item = state.items.find(i => i.id === id);
-                if (item && item.type === 'note' && section === 'completed') return;
-                if (item) updateItem({ ...item, section } as Item);
-              }}
-              onPin={(id) => togglePin(id)}
-              onMoveToTop={(id) => {
-                const item = state.items.find(i => i.id === id);
-                if (item) {
-                  const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                  const otherItems = sectionItems.filter(i => i.id !== item.id);
-                  const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                  updateItem({ ...item, order: newOrder });
-                }
-              }}
-              onDuplicate={(id) => duplicateItem(id)}
-              onDateChange={(id, date) => {
-                const item = state.items.find(i => i.id === id);
-                if (item && item.type === 'task') {
-                  updateItem({ ...item, dueDate: date } as Item);
-                }
-              }}
-              hideListPill={false}
-              className="-mx-3 -mb-4"
-            />
-        );
-      }
+    // isAllItemsView — handled by virtualizedProps path
 
-      return (
-        <div className="space-y-0">
-          <LayoutGroup>
-            <SortableContext
-              items={allItems.map((item: Item) => item.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <AnimatePresence mode="popLayout">
-              {allItems.map((item: Item) => {
-                const isOverItem = overId === item.id && activeId && activeId !== item.id;
-                const showIndicator = isOverItem ? dropPosition : null;
-                
-                return (
-                  <SortableItem
-                    key={item.id}
-                    item={item}
-                    isSelected={state.selectedItemId === item.id}
-                    onSelect={() => handleItemSelect(item.id)}
-                    onComplete={() =>
-                      item.type === 'task' &&
-                      ((item as Task).isCompleted
-                        ? uncompleteTask(item.id)
-                        : completeTask(item.id))
-                    }
-                    onTitleChange={(newTitle) => {
-                      updateItem({ ...item, title: newTitle });
-                    }}
-                    onDelete={() => softDeleteItem(item.id)}
-                    onMove={(targetSection) => {
-                      if (item.type === 'note' && targetSection === 'completed') return;
-                      updateItem({ ...item, section: targetSection } as Item);
-                    }}
-                    onPin={() => togglePin(item.id)}
-                    onMoveToTop={() => {
-                      const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                      const otherItems = sectionItems.filter(i => i.id !== item.id);
-                      const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                      updateItem({ ...item, order: newOrder });
-                    }}
-                    onDuplicate={() => duplicateItem(item.id)}
-                    onDueDateChange={(date) => {
-                      if (item.type === 'task') {
-                        updateItem({ ...item, dueDate: date?.toISOString() } as Task);
-                      }
-                    }}
-                    onTagClick={() => {
-                      handleItemSelect(item.id);
-                      dispatch({ type: 'OPEN_TAG_POPOVER' });
-                    }}
-                    tags={state.tags}
-                    isDragDisabled={state.sortOrder !== 'custom' || isMobile}
-                    showDropIndicator={showIndicator}
-                    searchQuery={state.searchQuery}
-                    hideListPill={false}
-                    isMultiSelectMode={state.isMultiSelectMode}
-                    isMultiSelected={state.selectedItemIds.includes(item.id)}
-                    onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
-                    suppressLayout={suppressLayout}
-                  />
-                );
-              })}
-            </AnimatePresence>
-          </SortableContext>
-          </LayoutGroup>
-          {allItems.length === 0 && (
-            <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-              <Sparkles className="w-12 h-12 opacity-30" />
-              <div className="text-center">
-                <p className="text-sm font-medium">No items yet</p>
-                <p className="text-xs mt-1 opacity-70">Create a task or note to get started</p>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
     
     // Miscellaneous view: Pinned → Items sections (same as All Items)
     if (isMiscellaneousView) {
@@ -1602,18 +823,9 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
             color={section.color}
             icon={section.icon}
           >
-            <LayoutGroup>
-            <SortableContext
-              items={section.items.map((item) => item.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <AnimatePresence mode="popLayout">
                 {section.items.map((item) => {
-                  const isOverItem = overId === item.id && activeId && activeId !== item.id;
-                  const showIndicator = isOverItem ? dropPosition : null;
-                  
                   return (
-                    <SortableItem
+                    <ItemCard
                       key={item.id}
                       item={item}
                       isSelected={state.selectedItemId === item.id}
@@ -1650,20 +862,15 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                         dispatch({ type: 'OPEN_TAG_POPOVER' });
                       }}
                       tags={state.tags}
-                      isDragDisabled={state.sortOrder !== 'custom' || isMobile}
-                      showDropIndicator={showIndicator}
                       searchQuery={state.searchQuery}
                       hideListPill={false}
                       isMultiSelectMode={state.isMultiSelectMode}
                       isMultiSelected={state.selectedItemIds.includes(item.id)}
+                      selectedItemIds={state.selectedItemIds}
                       onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
-                      suppressLayout={suppressLayout}
                     />
                   );
                 })}
-              </AnimatePresence>
-            </SortableContext>
-            </LayoutGroup>
             {section.items.length === 0 && !isCollapsed && (
               <div className="py-8 flex flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
                 <Clock className="w-8 h-8 opacity-40" />
@@ -1676,239 +883,12 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     }
     
     // Tag view: Flat list (no sections)
-    if (isTagView) {
-      const allTagItems = sortItems(getFilteredItems());
-      const useVirtualization = allTagItems.length > VIRTUALIZATION_THRESHOLD && state.sortOrder !== 'custom';
-      
-      if (useVirtualization) {
-        return (
-            <VirtualizedItemList
-              items={allTagItems}
-              selectedItemId={state.selectedItemId}
-              tags={state.tags}
-              lists={state.lists}
-              searchQuery={state.searchQuery}
-              onSelect={handleItemSelect}
-              onComplete={() => {}}
-              onUncomplete={() => {}}
-              onDelete={(id) => softDeleteItem(id)}
-              onMove={(id, section) => {
-                const item = state.items.find(i => i.id === id);
-                if (item && item.type === 'note' && section === 'completed') return;
-                if (item) updateItem({ ...item, section } as Item);
-              }}
-              onPin={(id) => togglePin(id)}
-              onMoveToTop={(id) => {
-                const item = state.items.find(i => i.id === id);
-                if (item) {
-                  const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                  const otherItems = sectionItems.filter(i => i.id !== item.id);
-                  const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                  updateItem({ ...item, order: newOrder });
-                }
-              }}
-              onDuplicate={(id) => duplicateItem(id)}
-              onDateChange={(id, date) => {
-                const item = state.items.find(i => i.id === id);
-                if (item && item.type === 'task') {
-                  updateItem({ ...item, dueDate: date } as Item);
-                }
-              }}
-              hideListPill={false}
-              className="-mx-3 -mb-4"
-            />
-        );
-      }
-      
-      return (
-        <div className="space-y-0">
-          <LayoutGroup>
-          <SortableContext
-            items={allTagItems.map((item) => item.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <AnimatePresence mode="popLayout">
-              {allTagItems.map((item) => {
-                const isOverItem = overId === item.id && activeId && activeId !== item.id;
-                const showIndicator = isOverItem ? dropPosition : null;
-                
-                return (
-                  <SortableItem
-                    key={item.id}
-                    item={item}
-                    isSelected={state.selectedItemId === item.id}
-                    onSelect={() => handleItemSelect(item.id)}
-                    onComplete={() =>
-                      item.type === 'task' &&
-                      ((item as Task).isCompleted
-                        ? uncompleteTask(item.id)
-                        : completeTask(item.id))
-                    }
-                    onTitleChange={(newTitle) => {
-                      updateItem({ ...item, title: newTitle });
-                    }}
-                    onDelete={() => softDeleteItem(item.id)}
-                    onMove={(targetSection) => {
-                      if (item.type === 'note' && targetSection === 'completed') return;
-                      updateItem({ ...item, section: targetSection } as Item);
-                    }}
-                    onPin={() => togglePin(item.id)}
-                    onMoveToTop={() => {
-                      const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                      const otherItems = sectionItems.filter(i => i.id !== item.id);
-                      const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                      updateItem({ ...item, order: newOrder });
-                    }}
-                    onDuplicate={() => duplicateItem(item.id)}
-                    onDueDateChange={(date) => {
-                      if (item.type === 'task') {
-                        updateItem({ ...item, dueDate: date?.toISOString() } as Task);
-                      }
-                    }}
-                    onTagClick={() => {
-                      handleItemSelect(item.id);
-                      dispatch({ type: 'OPEN_TAG_POPOVER' });
-                    }}
-                    tags={state.tags}
-                    isDragDisabled={state.sortOrder !== 'custom' || isMobile}
-                    showDropIndicator={showIndicator}
-                    searchQuery={state.searchQuery}
-                    hideListPill={false}
-                    isMultiSelectMode={state.isMultiSelectMode}
-                    isMultiSelected={state.selectedItemIds.includes(item.id)}
-                    onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
-                    suppressLayout={suppressLayout}
-                  />
-                );
-              })}
-            </AnimatePresence>
-          </SortableContext>
-          </LayoutGroup>
-          {allTagItems.length === 0 && (
-            <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-              <Tag className="w-12 h-12 opacity-30" />
-              <div className="text-center">
-                <p className="text-sm font-medium">No items with this tag</p>
-                <p className="text-xs mt-1 opacity-70">Tag items to see them here</p>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
+    // isTagView — handled by virtualizedProps path
+
     
     // Note-type List view: Flat list (no sections, same as Notes view)
-    if (isNoteListView) {
-      const allNoteListItems = sortItems(getFilteredItems());
-      const useVirtualization = allNoteListItems.length > VIRTUALIZATION_THRESHOLD && state.sortOrder !== 'custom';
-      
-      if (useVirtualization) {
-        return (
-            <VirtualizedItemList
-              items={allNoteListItems}
-              selectedItemId={state.selectedItemId}
-              tags={state.tags}
-              lists={state.lists}
-              searchQuery={state.searchQuery}
-              onSelect={handleItemSelect}
-              onComplete={() => {}}
-              onUncomplete={() => {}}
-              onDelete={(id) => softDeleteItem(id)}
-              onMove={(id, section) => {
-                const item = state.items.find(i => i.id === id);
-                if (item && item.type === 'note' && section === 'completed') return;
-                if (item) updateItem({ ...item, section } as Item);
-              }}
-              onPin={(id) => togglePin(id)}
-              onMoveToTop={(id) => {
-                const item = state.items.find(i => i.id === id);
-                if (item) {
-                  const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                  const otherItems = sectionItems.filter(i => i.id !== item.id);
-                  const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                  updateItem({ ...item, order: newOrder });
-                }
-              }}
-               onDuplicate={(id) => duplicateItem(id)}
-              onDateChange={(id, date) => {
-                const item = state.items.find(i => i.id === id);
-                if (item && item.type === 'task') {
-                  updateItem({ ...item, dueDate: date } as Item);
-                }
-              }}
-              hideListPill={true}
-              className="-mx-3 -mb-4"
-            />
-        );
-      }
+    // isNoteListView — handled by virtualizedProps path
 
-      return (
-        <div className="space-y-0">
-          <LayoutGroup>
-            <SortableContext
-              items={allNoteListItems.map((item: Item) => item.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <AnimatePresence mode="popLayout">
-              {allNoteListItems.map((item) => {
-                const isOverItem = overId === item.id && activeId && activeId !== item.id;
-                const showIndicator = isOverItem ? dropPosition : null;
-                
-                return (
-                  <SortableItem
-                    key={item.id}
-                    item={item}
-                    isSelected={state.selectedItemId === item.id}
-                    onSelect={() => handleItemSelect(item.id)}
-                    onComplete={() => {}}
-                    onTitleChange={(newTitle) => {
-                      updateItem({ ...item, title: newTitle });
-                    }}
-                    onDelete={() => softDeleteItem(item.id)}
-                    onMove={(targetSection) => {
-                      if (item.type === 'note' && targetSection === 'completed') return;
-                      updateItem({ ...item, section: targetSection } as Item);
-                    }}
-                    onPin={() => togglePin(item.id)}
-                    onMoveToTop={() => {
-                      const sectionItems = state.items.filter(i => i.section === item.section && i.type === item.type);
-                      const otherItems = sectionItems.filter(i => i.id !== item.id);
-                      const newOrder = otherItems.length > 0 ? Math.min(...otherItems.map(i => i.order)) - 1 : 0;
-                      updateItem({ ...item, order: newOrder });
-                    }}
-                    onDuplicate={() => duplicateItem(item.id)}
-                    onDueDateChange={() => {}}
-                    onTagClick={() => {
-                      handleItemSelect(item.id);
-                      dispatch({ type: 'OPEN_TAG_POPOVER' });
-                    }}
-                    tags={state.tags}
-                    isDragDisabled={state.sortOrder !== 'custom' || isMobile}
-                    showDropIndicator={showIndicator}
-                    searchQuery={state.searchQuery}
-                    hideListPill={true}
-                    isMultiSelectMode={state.isMultiSelectMode}
-                    isMultiSelected={state.selectedItemIds.includes(item.id)}
-                    onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
-                    suppressLayout={suppressLayout}
-                  />
-                );
-              })}
-            </AnimatePresence>
-          </SortableContext>
-          </LayoutGroup>
-          {allNoteListItems.length === 0 && (
-            <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-              <FileText className="w-12 h-12 opacity-30" />
-              <div className="text-center">
-                <p className="text-sm font-medium">No notes in this list</p>
-                <p className="text-xs mt-1 opacity-70">Create a note to get started</p>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
     
     // Task-type List views: Now → Do → Later → Completed sections
     // First, separate now items into overdue/today vs regular
@@ -1997,18 +977,9 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
           color={section.color}
           icon={section.icon}
         >
-          <LayoutGroup>
-          <SortableContext
-            items={section.items.map((item) => item.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <AnimatePresence mode="popLayout">
               {section.items.map((item) => {
-                const isOverItem = overId === item.id && activeId && activeId !== item.id;
-                const showIndicator = isOverItem ? dropPosition : null;
-                
                 return (
-                  <SortableItem
+                  <ItemCard
                     key={item.id}
                     item={item}
                     isSelected={state.selectedItemId === item.id}
@@ -2045,20 +1016,15 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                       dispatch({ type: 'OPEN_TAG_POPOVER' });
                     }}
                     tags={state.tags}
-                    isDragDisabled={state.sortOrder !== 'custom' || isMobile}
-                    showDropIndicator={showIndicator}
                     searchQuery={state.searchQuery}
                     hideListPill={isListView}
                     isMultiSelectMode={state.isMultiSelectMode}
                     isMultiSelected={state.selectedItemIds.includes(item.id)}
+                    selectedItemIds={state.selectedItemIds}
                     onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
-                    suppressLayout={suppressLayout}
                   />
                 );
               })}
-            </AnimatePresence>
-          </SortableContext>
-          </LayoutGroup>
           {section.items.length === 0 && !isCollapsed && (
             <div className="py-8 flex flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
               {section.id === 'completed' ? (
@@ -2091,7 +1057,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
     if (isAllItemsView) return { title: 'All Items', icon: Sparkles, color: undefined };
     if (isTasksView) return { title: 'Tasks', icon: ListTodo, color: undefined };
     if (isNotesView) return { title: 'Notes', icon: FileText, color: undefined };
-    if (isTodoView) return { title: 'Todo', icon: CheckSquare, color: '#fbbf24' }; // amber-400 color
+    if (isTodoView) return { title: 'Todo Notes', icon: CheckSquare, color: '#fbbf24' }; // amber-400 color
     if (isMiscellaneousView) return { title: 'Miscellaneous', icon: LayoutGrid, color: '#a78bfa' }; // violet-400 color
     if (isCompletedView) return { title: 'Completed', icon: CheckCircle2, color: '#34d399' }; // emerald-400 color
     if (isTrashView) return { title: 'Recently Deleted', icon: Trash2, color: undefined };
@@ -2103,28 +1069,92 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
   
   const viewInfo = getViewInfo();
 
-  // Check if the current view should use virtualization.
-  // When virtualized, we render VirtualizedItemList directly in the flex-1 container
-  // (outside ScrollArea) so AutoSizer can measure the parent's height correctly.
-  const getVirtualizedListProps = (): { items: Item[]; hideListPill: boolean } | null => {
-    if (state.sortOrder === 'custom') return null;
+  // Determine if the current view should use virtualization (all flat views).
+  // Sectioned views (Tasks, TaskList, Miscellaneous) use ScrollArea with ItemCard instead.
+  const getVirtualizedListProps = (): { items: Item[]; hideListPill: boolean; emptyState?: React.ReactNode } | null => {
     const filtered = getFilteredItems();
     
     if (isAllItemsView) {
-      const allItems = sortItems(filtered);
-      if (allItems.length > VIRTUALIZATION_THRESHOLD) return { items: allItems, hideListPill: false };
+      return { items: sortItems(filtered), hideListPill: false, emptyState: (
+        <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <Sparkles className="w-12 h-12 opacity-30" />
+          <div className="text-center">
+            <p className="text-sm font-medium">No items yet</p>
+            <p className="text-xs mt-1 opacity-70">Create a task or note to get started</p>
+          </div>
+        </div>
+      )};
     }
     if (isNotesView) {
-      const allNotes = sortItems(organizedItems.all || []);
-      if (allNotes.length > VIRTUALIZATION_THRESHOLD) return { items: allNotes, hideListPill: isNoteListView };
+      return { items: sortItems(organizedItems.all || []), hideListPill: isNoteListView, emptyState: (
+        <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <FileText className="w-12 h-12 opacity-30" />
+          <div className="text-center">
+            <p className="text-sm font-medium">No notes yet</p>
+            <p className="text-xs mt-1 opacity-70">Create a note to get started</p>
+          </div>
+        </div>
+      )};
+    }
+    if (isCompletedView) {
+      return { items: sortItems(filtered), hideListPill: false, emptyState: (
+        <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <CheckCircle2 className="w-12 h-12 opacity-30" />
+          <div className="text-center">
+            <p className="text-sm font-medium">No completed items yet</p>
+            <p className="text-xs mt-1 opacity-70">Complete a task to see it here</p>
+          </div>
+        </div>
+      )};
+    }
+    if (isPinnedView) {
+      return { items: sortItems(filtered), hideListPill: false, emptyState: (
+        <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <Pin className="w-12 h-12 opacity-30" />
+          <div className="text-center">
+            <p className="text-sm font-medium">No pinned items yet</p>
+            <p className="text-xs mt-1 opacity-70">Pin important items for quick access</p>
+          </div>
+        </div>
+      )};
+    }
+    if (isTodoView) {
+      return { items: sortItems(organizedItems.all || []), hideListPill: false, emptyState: (
+        <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <CheckSquare className="w-12 h-12 opacity-30" />
+          <div className="text-center">
+            <p className="text-sm font-medium">All done!</p>
+            <p className="text-xs mt-1 opacity-70">No items with uncompleted checklists</p>
+          </div>
+        </div>
+      )};
     }
     if (isTagView) {
-      const allTagItems = sortItems(filtered);
-      if (allTagItems.length > VIRTUALIZATION_THRESHOLD) return { items: allTagItems, hideListPill: false };
+      return { items: sortItems(filtered), hideListPill: false, emptyState: (
+        <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <Tag className="w-12 h-12 opacity-30" />
+          <div className="text-center">
+            <p className="text-sm font-medium">No items with this tag</p>
+            <p className="text-xs mt-1 opacity-70">Tag items to see them here</p>
+          </div>
+        </div>
+      )};
+    }
+    if (isNoteListView) {
+      return { items: sortItems(filtered), hideListPill: true, emptyState: (
+        <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <FileText className="w-12 h-12 opacity-30" />
+          <div className="text-center">
+            <p className="text-sm font-medium">No notes in this list</p>
+            <p className="text-xs mt-1 opacity-70">Create a note to get started</p>
+          </div>
+        </div>
+      )};
     }
     if (isListView && currentList) {
-      const allListItems = sortItems(filtered);
-      if (allListItems.length > VIRTUALIZATION_THRESHOLD) return { items: allListItems, hideListPill: true };
+      // Task-type list views use sections, not virtualization
+      if (currentList.type === 'task') return null;
+      return { items: sortItems(filtered), hideListPill: true };
     }
     return null;
   };
@@ -2282,7 +1312,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
         className="flex-1 overflow-hidden relative"
       >
         {virtualizedProps ? (
-          /* Virtualized path: render directly (not inside ScrollArea)
+          /* Virtualized path for flat views: render directly (not inside ScrollArea)
              so AutoSizer can measure the parent's height correctly */
           <VirtualizedItemList
             items={virtualizedProps.items}
@@ -2293,7 +1323,9 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
             onSelect={handleItemSelect}
             onComplete={(id) => {
               const item = state.items.find(i => i.id === id);
-              if (item && item.type === 'task') completeTask(id);
+              if (item && item.type === 'task') {
+                (item as Task).isCompleted ? uncompleteTask(id) : completeTask(id);
+              }
             }}
             onUncomplete={(id) => {
               const item = state.items.find(i => i.id === id);
@@ -2322,40 +1354,29 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                 updateItem({ ...item, dueDate: date } as Item);
               }
             }}
+            onTagClick={(id) => {
+              handleItemSelect(id);
+              dispatch({ type: 'OPEN_TAG_POPOVER' });
+            }}
             hideListPill={virtualizedProps.hideListPill}
+            emptyState={virtualizedProps.emptyState}
+            isMultiSelectMode={state.isMultiSelectMode}
+            selectedItemIds={state.selectedItemIds}
+            onToggleMultiSelect={(id) => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: id })}
             className="h-full"
           />
         ) : (
-          /* Non-virtualized path: use ScrollArea with DndContext for drag-and-drop */
+          /* Sectioned views (Tasks, TaskList, Miscellaneous): use ScrollArea */
           <ScrollArea 
             className="h-full custom-scrollbar" 
             ref={scrollViewportRef}
           >
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-            >
-              <div className="p-3 space-y-4">
-                {renderSections()}
-                {/* Bottom spacer for mobile tab bar + safe area */}
-                <div className="shrink-0 md:hidden" style={{ height: 'calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)))' }} />
-              </div>
-
-            <DragOverlay>
-              {activeItem && (
-                <ItemCard
-                  item={activeItem}
-                  isSelected={false}
-                  isDragging
-                  tags={state.tags}
-                />
-              )}
-            </DragOverlay>
-          </DndContext>
-        </ScrollArea>
+            <div className="p-3 space-y-4">
+              {renderSections()}
+              {/* Bottom spacer for mobile tab bar + safe area */}
+              <div className="shrink-0 md:hidden" style={{ height: 'calc(3.5rem + max(0.5rem, env(safe-area-inset-bottom)))' }} />
+            </div>
+          </ScrollArea>
         )}
       </div>
     </div>

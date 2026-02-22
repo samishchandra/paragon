@@ -145,17 +145,60 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
     try {
       const data = e.dataTransfer.getData('application/json');
       if (data) {
-        const { itemId } = JSON.parse(data);
-        const item = state.items.find(i => i.id === itemId);
-        if (item) {
-          // Add tag to item if not already present
-          if (!item.tags.includes(tagId)) {
+        const parsed = JSON.parse(data);
+        // Support both new { itemIds: [...] } and legacy { itemId: '...' } formats
+        const itemIds: string[] = parsed.itemIds || (parsed.itemId ? [parsed.itemId] : []);
+        const items = itemIds.map(id => state.items.find(i => i.id === id)).filter(Boolean) as typeof state.items;
+        if (items.length === 0) return;
+
+        const tag = state.tags.find(t => t.id === tagId);
+        const tagName = tag?.name || 'tag';
+
+        // Separate items that already have the tag vs those that need it
+        const alreadyTagged = items.filter(item => item.tags.includes(tagId));
+        const toTag = items.filter(item => !item.tags.includes(tagId));
+
+        if (toTag.length === 0) {
+          // All items already have this tag
+          toast.info(items.length === 1
+            ? `Already tagged with "${tagName}"`
+            : `All ${items.length} items already tagged with "${tagName}"`);
+        } else {
+          // Save previous state for undo
+          const previousStates = toTag.map(item => ({ id: item.id, tags: [...item.tags] }));
+
+          // Apply tag to all items that need it
+          toTag.forEach(item => {
             updateItem({
               ...item,
               tags: [...item.tags, tagId],
               updatedAt: new Date().toISOString(),
             });
-          }
+          });
+
+          const skippedMsg = alreadyTagged.length > 0 ? ` (${alreadyTagged.length} already tagged)` : '';
+          const msg = toTag.length === 1
+            ? `Tagged with "${tagName}"${skippedMsg}`
+            : `Tagged ${toTag.length} items with "${tagName}"${skippedMsg}`;
+
+          toast.success(msg, {
+            action: {
+              label: 'Undo',
+              onClick: () => {
+                previousStates.forEach(prev => {
+                  const currentItem = state.items.find(i => i.id === prev.id);
+                  if (currentItem) {
+                    updateItem({
+                      ...currentItem,
+                      tags: prev.tags,
+                      updatedAt: new Date().toISOString(),
+                    });
+                  }
+                });
+                toast.success(toTag.length === 1 ? 'Tag removed' : `Tag removed from ${toTag.length} items`);
+              },
+            },
+          });
         }
       }
     } catch (err) {
@@ -186,31 +229,57 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
     try {
       const data = e.dataTransfer.getData('application/json');
       if (data) {
-        const { itemId } = JSON.parse(data);
-        const item = state.items.find(i => i.id === itemId);
-        if (item) {
-          const targetList = state.lists.find(l => l.id === listId);
-          const previousListId = item.listId;
-          // Skip if already in this list
-          if (previousListId === listId) return;
-          const previousList = previousListId ? state.lists.find(l => l.id === previousListId) : null;
-          updateItem({
-            ...item,
-            listId: listId,
-            updatedAt: new Date().toISOString(),
+        const parsed = JSON.parse(data);
+        // Support both new { itemIds: [...] } and legacy { itemId: '...' } formats
+        const itemIds: string[] = parsed.itemIds || (parsed.itemId ? [parsed.itemId] : []);
+        const items = itemIds.map(id => state.items.find(i => i.id === id)).filter(Boolean) as typeof state.items;
+        if (items.length === 0) return;
+
+        const targetList = state.lists.find(l => l.id === listId);
+        const listName = targetList?.name || 'list';
+
+        // Separate items already in this list vs those that need moving
+        const alreadyInList = items.filter(item => item.listId === listId);
+        const toMove = items.filter(item => item.listId !== listId);
+
+        if (toMove.length === 0) {
+          // All items already in this list
+          toast.info(items.length === 1
+            ? `Already in "${listName}"`
+            : `All ${items.length} items already in "${listName}"`);
+        } else {
+          // Save previous state for undo
+          const previousStates = toMove.map(item => ({ id: item.id, listId: item.listId }));
+
+          // Move all items to the target list
+          toMove.forEach(item => {
+            updateItem({
+              ...item,
+              listId: listId,
+              updatedAt: new Date().toISOString(),
+            });
           });
-          const fromLabel = previousList ? `"${previousList.name}"` : 'no list';
-          toast.success(`Moved to "${targetList?.name || 'list'}"`, {
-            description: `From ${fromLabel}`,
+
+          const skippedMsg = alreadyInList.length > 0 ? ` (${alreadyInList.length} already in list)` : '';
+          const msg = toMove.length === 1
+            ? `Moved to "${listName}"${skippedMsg}`
+            : `Moved ${toMove.length} items to "${listName}"${skippedMsg}`;
+
+          toast.success(msg, {
             action: {
               label: 'Undo',
               onClick: () => {
-                updateItem({
-                  ...item,
-                  listId: previousListId || undefined,
-                  updatedAt: new Date().toISOString(),
+                previousStates.forEach(prev => {
+                  const currentItem = state.items.find(i => i.id === prev.id);
+                  if (currentItem) {
+                    updateItem({
+                      ...currentItem,
+                      listId: prev.listId || undefined,
+                      updatedAt: new Date().toISOString(),
+                    });
+                  }
                 });
-                toast.success('Move undone');
+                toast.success(toMove.length === 1 ? 'Move undone' : `Moved ${toMove.length} items back`);
               },
             },
           });
@@ -395,7 +464,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                   count={sidebarCounts?.tasks ?? todoCounts.total}
                   isActive={isActiveFilter({ type: 'tasks' })}
                   onClick={() => setFilter({ type: 'tasks' })}
-                  accentColor="text-primary"
+                  accentColor="text-blue-500"
                 />
               )}
               {tasksEnabled && (
@@ -411,7 +480,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
               {(sidebarCounts?.todo ?? 0) > 0 && (
                 <SidebarItem
                   icon={<CheckSquare className="w-4 h-4" />}
-                  label="Todo"
+                  label="Todo Notes"
                   count={sidebarCounts?.todo ?? 0}
                   isActive={isActiveFilter({ type: 'todo' })}
                   onClick={() => setFilter({ type: 'todo' })}
@@ -767,8 +836,8 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                 className={cn(
                   "h-8 w-8",
                   isActiveFilter({ type: 'tasks' })
-                    ? "text-primary bg-primary/10"
-                    : "text-primary/60 hover:text-primary"
+                    ? "text-blue-500 bg-blue-500/10"
+                    : "text-blue-500/60 hover:text-blue-500"
                 )}
                 onClick={() => setFilter({ type: 'tasks' })}
                 title="Tasks"
@@ -803,7 +872,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
                     : "text-amber-400/60 hover:text-amber-400"
                 )}
                 onClick={() => setFilter({ type: 'todo' })}
-                title="Todo"
+                title="Todo Notes"
               >
                 <CheckSquare className="h-4 w-4" />
               </Button>

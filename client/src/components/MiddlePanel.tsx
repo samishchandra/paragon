@@ -760,6 +760,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                       hideListPill={isListView}
                       isMultiSelectMode={state.isMultiSelectMode}
                       isMultiSelected={state.selectedItemIds.includes(item.id)}
+                      selectedItemIds={state.selectedItemIds}
                       onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
                     />
                   );
@@ -865,6 +866,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                       hideListPill={false}
                       isMultiSelectMode={state.isMultiSelectMode}
                       isMultiSelected={state.selectedItemIds.includes(item.id)}
+                      selectedItemIds={state.selectedItemIds}
                       onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
                     />
                   );
@@ -1018,6 +1020,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                     hideListPill={isListView}
                     isMultiSelectMode={state.isMultiSelectMode}
                     isMultiSelected={state.selectedItemIds.includes(item.id)}
+                    selectedItemIds={state.selectedItemIds}
                     onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
                   />
                 );
