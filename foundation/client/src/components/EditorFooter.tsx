@@ -12,7 +12,6 @@
 import { useMemo, useEffect, useState, useRef, memo, useCallback } from 'react';
 import { format } from 'date-fns';
 import { 
-  Clock,
   Loader2,
   CheckCircle2,
   Cloud,
@@ -209,7 +208,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
     switch (saveStatus) {
       case 'saving':
         return (
-          <span className="flex items-center gap-1.5 text-primary animate-in fade-in duration-200">
+          <span className="flex items-center gap-1.5 text-blue-500 animate-in fade-in duration-200">
             <Loader2 className="w-3 h-3 animate-spin" />
             <span>Saving...</span>
           </span>
@@ -301,7 +300,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="text-primary/80 cursor-default animate-in fade-in duration-200">
+                <span className="text-blue-500/80 cursor-default animate-in fade-in duration-200">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 </span>
               </TooltipTrigger>
@@ -401,7 +400,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="text-primary/80 cursor-default animate-in fade-in duration-200">
+                <span className="text-blue-500/80 cursor-default animate-in fade-in duration-200">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 </span>
               </TooltipTrigger>
@@ -450,8 +449,7 @@ export const EditorFooter = memo(function EditorFooter({ content, updatedAt, cla
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="flex items-center gap-1 cursor-default">
-                  <Clock className="w-3 h-3" />
+                <span className="flex items-center cursor-default">
                   {lastUpdatedRelative}
                 </span>
               </TooltipTrigger>
