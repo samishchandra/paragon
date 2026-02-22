@@ -7,8 +7,10 @@
  * The hook owns the state and the refreshCounts function. The provider calls
  * refreshCounts after every mutation and during catch-up sync.
  *
- * On mount, sidebar counts are computed locally from IndexedDB first (instant),
- * then refined with server data in the background.
+ * Offline-first optimized:
+ * 1. On mount: compute counts locally from IndexedDB items (instant)
+ * 2. Then load cached sidebar counts from IndexedDB meta (fast fallback)
+ * 3. Then fetch from server in background (source of truth)
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Item } from '@/types';
@@ -54,6 +56,19 @@ export function useSidebarData(userId: string): UseSidebarDataReturn {
   const localCountsLoadedRef = useRef(false);
 
   const refreshCounts = useCallback(async () => {
+    // If offline, compute counts locally from IndexedDB items
+    if (!navigator.onLine) {
+      try {
+        const localCounts = await computeSidebarCountsLocally(userId);
+        setSidebarCounts(localCounts.counts as unknown as SidebarCounts);
+        setSidebarTagCounts(localCounts.tagCounts);
+        setSidebarListCounts(localCounts.listCounts);
+      } catch (err) {
+        console.warn('[OfflineFirst] Failed to compute local sidebar counts:', formatError(err));
+      }
+      return;
+    }
+
     try {
       const [sidebarData, pinned] = await Promise.all([
         fetchAllSidebarData(userId),
@@ -65,35 +80,37 @@ export function useSidebarData(userId: string): UseSidebarDataReturn {
       setPinnedItems(pinned);
     } catch (error) {
       console.error('Failed to refresh counts:', formatError(error));
+      // On network error, fall back to local computation
+      try {
+        const localCounts = await computeSidebarCountsLocally(userId);
+        setSidebarCounts(localCounts.counts as unknown as SidebarCounts);
+        setSidebarTagCounts(localCounts.tagCounts);
+        setSidebarListCounts(localCounts.listCounts);
+      } catch (err) {
+        console.warn('[OfflineFirst] Local count fallback also failed:', formatError(err));
+      }
     }
   }, [userId]);
 
-  // Load local counts from IndexedDB immediately on mount (instant, no server needed)
+  // Load counts on mount: local-first strategy
   useEffect(() => {
-    if (localCountsLoadedRef.current) return;
-    localCountsLoadedRef.current = true;
-
-    computeSidebarCountsLocally(userId).then(({ counts, tagCounts, listCounts }) => {
-      // Only set if we don't already have server data
-      setSidebarCounts(prev => {
-        if (prev !== null) return prev; // Server already responded
-        return counts as SidebarCounts;
-      });
-      setSidebarTagCounts(prev => {
-        if (prev !== null) return prev;
-        return tagCounts;
-      });
-      setSidebarListCounts(prev => {
-        if (prev !== null) return prev;
-        return listCounts;
-      });
+    // Step 1: Compute counts locally from IndexedDB items (instant, no server needed)
+    computeSidebarCountsLocally(userId).then(localCounts => {
+      if (!localCountsLoadedRef.current) {
+        const hasData = localCounts.counts.all > 0 || localCounts.counts.trash > 0;
+        if (hasData) {
+          setSidebarCounts(localCounts.counts as unknown as SidebarCounts);
+          setSidebarTagCounts(localCounts.tagCounts);
+          setSidebarListCounts(localCounts.listCounts);
+          localCountsLoadedRef.current = true;
+          console.log('[OfflineFirst] Computed sidebar counts locally from IndexedDB items');
+        }
+      }
     }).catch(() => {
       // IndexedDB not available, will wait for server
     });
-  }, [userId]);
 
-  // Deferred initial load — sidebar counts are visible but not blocking main content
-  useEffect(() => {
+    // Step 2: Deferred server fetch (background update — source of truth)
     const id = typeof requestIdleCallback !== 'undefined'
       ? requestIdleCallback(() => refreshCounts(), { timeout: 2000 })
       : setTimeout(() => refreshCounts(), 100) as unknown as number;

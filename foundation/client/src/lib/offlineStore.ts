@@ -379,10 +379,7 @@ export async function searchItemsLocally(
 ): Promise<any[]> {
   try {
     const allItems = await getCachedItems();
-    // Split query into tokens for multi-word substring matching (AND logic)
-    // e.g., "tiptap 49" matches "TipTap Editor Extension Guide (v49)"
-    const searchTokens = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
-    if (searchTokens.length === 0) return [];
+    const lowerQuery = query.toLowerCase();
     const results: any[] = [];
 
     for (const item of allItems) {
@@ -391,9 +388,10 @@ export async function searchItemsLocally(
       // Skip deleted items
       if (item.deleted_at) continue;
 
-      const combined = ((item.title || '') + ' ' + (item.content || '')).toLowerCase();
-      // Every token must appear somewhere in title or content
-      if (searchTokens.every(token => combined.includes(token))) {
+      const titleMatch = (item.title || '').toLowerCase().includes(lowerQuery);
+      const contentMatch = (item.content || '').toLowerCase().includes(lowerQuery);
+
+      if (titleMatch || contentMatch) {
         results.push(item);
         if (results.length >= maxResults) break;
       }
@@ -512,4 +510,40 @@ export async function clearAllCachedData(): Promise<void> {
   } catch (e) {
     console.warn('[OfflineStore] Failed to clear all cached data:', e);
   }
+}
+
+// ---- User-filtered convenience methods ----
+// These methods filter cached data by user_id and return domain-ready rows.
+// They allow hooks to work with user-scoped data without needing a separate adapter layer.
+
+/**
+ * Get all cached items for a specific user.
+ */
+export async function getItemsForUser(userId: string): Promise<any[]> {
+  const allItems = await getCachedItems();
+  return allItems.filter((item: any) => String(item.user_id) === String(userId));
+}
+
+/**
+ * Get all cached tags for a specific user.
+ */
+export async function getTagsForUser(userId: string): Promise<any[]> {
+  const allTags = await getCachedTags();
+  return allTags.filter((tag: any) => String(tag.user_id) === String(userId));
+}
+
+/**
+ * Get all cached lists for a specific user.
+ */
+export async function getListsForUser(userId: string): Promise<any[]> {
+  const allLists = await getCachedLists();
+  return allLists.filter((list: any) => String(list.user_id) === String(userId));
+}
+
+/**
+ * Check if there is any cached data for a specific user.
+ */
+export async function hasCachedDataForUser(userId: string): Promise<boolean> {
+  const allItems = await getCachedItems();
+  return allItems.some((item: any) => String(item.user_id) === String(userId));
 }
