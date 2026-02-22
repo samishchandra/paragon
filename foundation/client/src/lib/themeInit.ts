@@ -5,9 +5,7 @@
  * This allows each embedding repo to define its own accent color, chart colors, etc.
  * without modifying the shared index.css.
  *
- * Supports two modes:
- *  1. Full palette (lightPalette / darkPalette) — replaces ALL CSS variables
- *  2. Partial overrides (lightCssVariables / darkCssVariables) — deprecated, accent-only
+ * Applies the full palette (lightPalette / darkPalette) which replaces ALL CSS variables.
  */
 import { getThemeConfig } from '@/adapters/registry';
 
@@ -19,9 +17,8 @@ export function applyTheme(): void {
   const theme = getThemeConfig();
   const root = document.documentElement;
 
-  // Prefer full palette; fall back to deprecated partial overrides
-  const lightVars = theme.lightPalette ?? theme.lightCssVariables;
-  const darkVars = theme.darkPalette ?? theme.darkCssVariables;
+  const lightVars = theme.lightPalette;
+  const darkVars = theme.darkPalette;
 
   // Apply light theme variables to :root
   if (lightVars) {

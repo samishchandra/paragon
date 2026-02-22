@@ -305,16 +305,6 @@ export interface ThemeConfig {
    * <style>.dark { ... }</style> block that replaces the CSS defaults.
    */
   darkPalette?: ThemePalette;
-  /**
-   * @deprecated Use lightPalette / darkPalette instead.
-   * Partial CSS variable overrides for light theme (accent-only).
-   */
-  lightCssVariables?: Record<string, string>;
-  /**
-   * @deprecated Use lightPalette / darkPalette instead.
-   * Partial CSS variable overrides for dark theme (accent-only).
-   */
-  darkCssVariables?: Record<string, string>;
 }
 
 // ─── Search Adapter ─────────────────────────────────────────────────────────
