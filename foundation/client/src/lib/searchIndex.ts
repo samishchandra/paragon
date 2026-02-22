@@ -165,6 +165,38 @@ export class SearchIndex {
           }
         }
       }
+
+      // Substring/contains matches in title (e.g., "49" matches token "v49")
+      for (const [indexToken, ids] of Array.from(this.titleIndex.entries())) {
+        if (indexToken.includes(token) && indexToken !== token && !indexToken.startsWith(token)) {
+          for (const id of Array.from(ids)) {
+            if (!results.has(id)) {
+              results.set(id, {
+                item: this.items.get(id)!,
+                score: 0,
+                matches: []
+              });
+            }
+            results.get(id)!.score += 2;
+          }
+        }
+      }
+
+      // Substring/contains matches in content
+      for (const [indexToken, ids] of Array.from(this.contentIndex.entries())) {
+        if (indexToken.includes(token) && indexToken !== token && !indexToken.startsWith(token)) {
+          for (const id of Array.from(ids)) {
+            if (!results.has(id)) {
+              results.set(id, {
+                item: this.items.get(id)!,
+                score: 0,
+                matches: []
+              });
+            }
+            results.get(id)!.score += 1;
+          }
+        }
+      }
     }
 
     // Calculate match indices for highlighting

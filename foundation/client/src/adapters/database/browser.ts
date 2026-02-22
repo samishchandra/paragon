@@ -645,13 +645,17 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
     if (!search_text) return { data: [], error: null };
 
     const items = await this.getAllFromStore('items');
-    const searchLower = search_text.toLowerCase();
+    // Split query into tokens for multi-word substring matching (AND logic)
+    // e.g., "tiptap 49" matches "TipTap Editor Extension Guide (v49)"
+    const searchTokens = search_text.toLowerCase().split(/\s+/).filter((t: string) => t.length > 0);
 
     let results = items.filter((item: any) => {
       if (item.deleted_at) return false;
-      const titleMatch = (item.title || '').toLowerCase().includes(searchLower);
-      const contentMatch = (item.content || '').toLowerCase().includes(searchLower);
-      return titleMatch || contentMatch;
+      const titleLower = (item.title || '').toLowerCase();
+      const contentLower = (item.content || '').toLowerCase();
+      const combined = titleLower + ' ' + contentLower;
+      // Every token must appear somewhere in title or content
+      return searchTokens.every((token: string) => combined.includes(token));
     });
 
     if (filter_list_id) {
@@ -666,11 +670,14 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
       results = results.filter((i: any) => itemIdsWithTag.has(i.id));
     }
 
-    // Sort by relevance (title matches first, then by updated_at)
+    // Sort by relevance (title matches rank higher, then by updated_at)
     results.sort((a: any, b: any) => {
-      const aTitle = (a.title || '').toLowerCase().includes(searchLower) ? 1 : 0;
-      const bTitle = (b.title || '').toLowerCase().includes(searchLower) ? 1 : 0;
-      if (aTitle !== bTitle) return bTitle - aTitle;
+      const aTitleLower = (a.title || '').toLowerCase();
+      const bTitleLower = (b.title || '').toLowerCase();
+      // Count how many tokens match in the title
+      const aTitleScore = searchTokens.filter((t: string) => aTitleLower.includes(t)).length;
+      const bTitleScore = searchTokens.filter((t: string) => bTitleLower.includes(t)).length;
+      if (aTitleScore !== bTitleScore) return bTitleScore - aTitleScore;
       return new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
     });
 

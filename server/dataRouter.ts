@@ -417,20 +417,28 @@ router.post('/rpc', async (req: Request, res: Response) => {
 
     if (funcName === 'search_items' || funcName === 'search_items_fuzzy') {
       const searchText = params?.search_text || params?.search_query || '';
-      const searchTerm = `%${searchText}%`;
       const maxResults = params?.max_results || 50;
       const filterListId = params?.filter_list_id;
       const filterTagId = params?.filter_tag_id;
 
-      // Build conditions
+      // Split query into tokens for multi-word substring matching (AND logic)
+      // e.g., "tiptap 49" matches "TipTap Editor Extension Guide (v49)"
+      const searchTokens = searchText.toLowerCase().split(/\s+/).filter((t: string) => t.length > 0);
+
+      // Build conditions: each token must appear in title, content, or searchContent
+      const tokenConditions = searchTokens.map((token: string) => {
+        const term = `%${token}%`;
+        return or(
+          like(items.title, term),
+          like(items.content, term),
+          like(items.searchContent, term)
+        );
+      });
+
       const searchConditions: any[] = [
         eq(items.userId, user.id),
         isNull(items.deletedAt),
-        or(
-          like(items.title, searchTerm),
-          like(items.content, searchTerm),
-          like(items.searchContent, searchTerm)
-        ),
+        ...tokenConditions,
       ];
 
       // Apply optional filters
@@ -464,31 +472,37 @@ router.post('/rpc', async (req: Request, res: Response) => {
         }
       }
 
-      // Generate highlight snippets
-      const lowerSearch = searchText.toLowerCase();
+      // Generate highlight snippets — highlight each matched token
       const unmapped = rows.map(r => {
         const base = unmapColumns('items', r);
-        // Generate title highlight
+        // Generate title highlight: bold each token occurrence
         let titleHighlight = r.title || '';
-        const titleIdx = titleHighlight.toLowerCase().indexOf(lowerSearch);
-        if (titleIdx >= 0) {
-          titleHighlight = titleHighlight.substring(0, titleIdx) +
-            '<b>' + titleHighlight.substring(titleIdx, titleIdx + searchText.length) + '</b>' +
-            titleHighlight.substring(titleIdx + searchText.length);
+        for (const token of searchTokens) {
+          const titleLower = titleHighlight.toLowerCase();
+          const idx = titleLower.indexOf(token);
+          if (idx >= 0) {
+            titleHighlight = titleHighlight.substring(0, idx) +
+              '<b>' + titleHighlight.substring(idx, idx + token.length) + '</b>' +
+              titleHighlight.substring(idx + token.length);
+          }
         }
-        // Generate content highlight
+        // Generate content highlight: find the first matching token and show a snippet around it
         let contentHighlight = '';
         const content = r.content || r.searchContent || '';
-        const contentIdx = content.toLowerCase().indexOf(lowerSearch);
-        if (contentIdx >= 0) {
-          const start = Math.max(0, contentIdx - 40);
-          const end = Math.min(content.length, contentIdx + searchText.length + 40);
-          const snippet = (start > 0 ? '...' : '') +
-            content.substring(start, contentIdx) +
-            '<b>' + content.substring(contentIdx, contentIdx + searchText.length) + '</b>' +
-            content.substring(contentIdx + searchText.length, end) +
-            (end < content.length ? '...' : '');
-          contentHighlight = snippet;
+        const contentLower = content.toLowerCase();
+        for (const token of searchTokens) {
+          const contentIdx = contentLower.indexOf(token);
+          if (contentIdx >= 0) {
+            const start = Math.max(0, contentIdx - 40);
+            const end = Math.min(content.length, contentIdx + token.length + 40);
+            const snippet = (start > 0 ? '...' : '') +
+              content.substring(start, contentIdx) +
+              '<b>' + content.substring(contentIdx, contentIdx + token.length) + '</b>' +
+              content.substring(contentIdx + token.length, end) +
+              (end < content.length ? '...' : '');
+            contentHighlight = snippet;
+            break;
+          }
         }
         return {
           ...base,

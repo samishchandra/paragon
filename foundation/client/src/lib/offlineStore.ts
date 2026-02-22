@@ -379,7 +379,10 @@ export async function searchItemsLocally(
 ): Promise<any[]> {
   try {
     const allItems = await getCachedItems();
-    const lowerQuery = query.toLowerCase();
+    // Split query into tokens for multi-word substring matching (AND logic)
+    // e.g., "tiptap 49" matches "TipTap Editor Extension Guide (v49)"
+    const searchTokens = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+    if (searchTokens.length === 0) return [];
     const results: any[] = [];
 
     for (const item of allItems) {
@@ -388,10 +391,9 @@ export async function searchItemsLocally(
       // Skip deleted items
       if (item.deleted_at) continue;
 
-      const titleMatch = (item.title || '').toLowerCase().includes(lowerQuery);
-      const contentMatch = (item.content || '').toLowerCase().includes(lowerQuery);
-
-      if (titleMatch || contentMatch) {
+      const combined = ((item.title || '') + ' ' + (item.content || '')).toLowerCase();
+      // Every token must appear somewhere in title or content
+      if (searchTokens.every(token => combined.includes(token))) {
         results.push(item);
         if (results.length >= maxResults) break;
       }
@@ -451,27 +453,29 @@ export async function computeSidebarCountsLocally(userId: string): Promise<{
       continue;
     }
 
-    const isTask = item.type === 'task';
-    const isCompleted = isTask && item.is_completed;
-
-    if (isCompleted) {
+    // Active (non-deleted) item
+    // Completed items only count toward the 'completed' counter;
+    // all other counters (all, tasks, notes, pinned, misc, todo, tags, lists) exclude them.
+    if (item.is_completed) {
       completed++;
-    } else {
-      all++;
-      if (isTask) tasks++;
-      if (item.type === 'note') notes++;
-      if (item.is_pinned) pinned++;
-      if (!item.list_id) miscellaneous++;
+      continue;
     }
 
-    // Count tags
+    all++;
+    if (item.type === 'task') tasks++;
+    if (item.type === 'note') notes++;
+    if (item.is_pinned) pinned++;
+    if (!item.list_id) miscellaneous++;
+    if (item.has_uncompleted_todos) todo++;
+
+    // Count tags (excluding completed items)
     const itemTags = itemTagMap[item.id] || [];
     for (const tagId of itemTags) {
       tagCounts[tagId] = (tagCounts[tagId] || 0) + 1;
     }
 
-    // Count lists
-    if (item.list_id && !isCompleted) {
+    // Count lists (excluding completed items)
+    if (item.list_id) {
       listCounts[item.list_id] = (listCounts[item.list_id] || 0) + 1;
     }
   }
