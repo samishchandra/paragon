@@ -589,24 +589,30 @@ export class BrowserDatabaseAdapter implements DatabaseAdapter {
         continue;
       }
 
-      // Active item
+      // Completed items only count toward the 'completed' counter;
+      // all other counters exclude them.
+      if (item.is_completed) {
+        completed++;
+        continue;
+      }
+
+      // Non-completed active item
       all++;
       activeItemIds.add(item.id);
 
       if (item.type === 'task') tasks++;
       if (item.type === 'note') notes++;
       if (item.is_pinned) pinned++;
-      if (item.is_completed) completed++;
       if (!item.list_id) miscellaneous++;
-      if (item.type === 'task' && !item.is_completed && item.section !== 'completed') todo++;
+      if (item.type === 'task' && item.section !== 'completed') todo++;
 
-      // List counts
+      // List counts (excluding completed)
       if (item.list_id) {
         listCounts[item.list_id] = (listCounts[item.list_id] || 0) + 1;
       }
     }
 
-    // Tag counts — single pass over item_tags
+    // Tag counts — only for non-completed active items
     for (const it of itemTags) {
       if (activeItemIds.has(it.item_id)) {
         tagCounts[it.tag_id] = (tagCounts[it.tag_id] || 0) + 1;

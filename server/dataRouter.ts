@@ -378,33 +378,36 @@ router.post('/rpc', async (req: Request, res: Response) => {
       const allItems = await db.select().from(items).where(eq(items.userId, user.id));
       const active = allItems.filter(i => !i.deletedAt);
       const deleted = allItems.filter(i => i.deletedAt);
+      // Completed items only count toward the 'completed' counter;
+      // all other counters (all, tasks, notes, pinned, misc, todo, tags, lists) exclude them.
+      const nonCompleted = active.filter(i => !i.isCompleted);
 
-      // Tag counts
-      const allItemIds = active.map(i => i.id);
+      // Tag counts (excluding completed items)
+      const nonCompletedIds = nonCompleted.map(i => i.id);
       let tagCountsMap: Record<string, number> = {};
       let listCountsMap: Record<string, number> = {};
-      if (allItemIds.length > 0) {
-        const tagRows = await db.select().from(itemTags).where(inArray(itemTags.itemId, allItemIds));
+      if (nonCompletedIds.length > 0) {
+        const tagRows = await db.select().from(itemTags).where(inArray(itemTags.itemId, nonCompletedIds));
         for (const tr of tagRows) {
           tagCountsMap[tr.tagId] = (tagCountsMap[tr.tagId] || 0) + 1;
         }
       }
-      // List counts
-      for (const item of active) {
+      // List counts (excluding completed items)
+      for (const item of nonCompleted) {
         if (item.listId) {
           listCountsMap[item.listId] = (listCountsMap[item.listId] || 0) + 1;
         }
       }
 
       const result = {
-        all: active.length,
-        tasks: active.filter(i => i.type === 'task').length,
-        notes: active.filter(i => i.type === 'note').length,
-        pinned: active.filter(i => i.isPinned).length,
+        all: nonCompleted.length,
+        tasks: nonCompleted.filter(i => i.type === 'task').length,
+        notes: nonCompleted.filter(i => i.type === 'note').length,
+        pinned: nonCompleted.filter(i => i.isPinned).length,
         completed: active.filter(i => i.isCompleted).length,
         trash: deleted.length,
-        miscellaneous: active.filter(i => !i.listId).length,
-        todo: active.filter(i => i.type === 'task' && !i.isCompleted && i.section !== 'completed').length,
+        miscellaneous: nonCompleted.filter(i => !i.listId).length,
+        todo: nonCompleted.filter(i => i.type === 'task' && i.section !== 'completed').length,
         tag_counts: tagCountsMap,
         list_counts: listCountsMap,
       };

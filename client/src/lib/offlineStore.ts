@@ -451,22 +451,28 @@ export async function computeSidebarCountsLocally(userId: string): Promise<{
       continue;
     }
 
-    // Active (non-deleted) item — matches server-side logic in dataRouter.ts
+    // Active (non-deleted) item
+    // Completed items only count toward the 'completed' counter;
+    // all other counters (all, tasks, notes, pinned, misc, todo, tags, lists) exclude them.
+    if (item.is_completed) {
+      completed++;
+      continue;
+    }
+
     all++;
     if (item.type === 'task') tasks++;
     if (item.type === 'note') notes++;
     if (item.is_pinned) pinned++;
-    if (item.is_completed) completed++;
     if (!item.list_id) miscellaneous++;
-    if (item.type === 'task' && !item.is_completed && item.section !== 'completed') todo++;
+    if (item.type === 'task' && item.section !== 'completed') todo++;
 
-    // Count tags (for all active items, including completed)
+    // Count tags (excluding completed items)
     const itemTags = itemTagMap[item.id] || [];
     for (const tagId of itemTags) {
       tagCounts[tagId] = (tagCounts[tagId] || 0) + 1;
     }
 
-    // Count lists (for all active items, including completed)
+    // Count lists (excluding completed items)
     if (item.list_id) {
       listCounts[item.list_id] = (listCounts[item.list_id] || 0) + 1;
     }
