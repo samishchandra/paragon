@@ -760,7 +760,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                       hideListPill={isListView}
                       isMultiSelectMode={state.isMultiSelectMode}
                       isMultiSelected={state.selectedItemIds.includes(item.id)}
-                      selectedItemIds={state.selectedItemIds}
                       onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
                     />
                   );
@@ -866,7 +865,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                       hideListPill={false}
                       isMultiSelectMode={state.isMultiSelectMode}
                       isMultiSelected={state.selectedItemIds.includes(item.id)}
-                      selectedItemIds={state.selectedItemIds}
                       onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
                     />
                   );
@@ -1020,7 +1018,6 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
                     hideListPill={isListView}
                     isMultiSelectMode={state.isMultiSelectMode}
                     isMultiSelected={state.selectedItemIds.includes(item.id)}
-                    selectedItemIds={state.selectedItemIds}
                     onToggleMultiSelect={() => dispatch({ type: 'TOGGLE_ITEM_SELECTION', payload: item.id })}
                   />
                 );
@@ -1189,7 +1186,7 @@ export function MiddlePanel({ onItemSelect }: MiddlePanelProps) {
         </div>
       )}
       {/* Header Section */}
-      <div className="hidden md:block p-3 border-b border-border/50 space-y-2">
+      <div className="hidden md:block p-3 border-b border-border/50 space-y-2" style={{paddingTop: '8px', paddingBottom: '8px'}}>
         {/* Actions Bar - Title on left, buttons on right */}
         <div className="flex items-center h-8">
           {/* View Title with Icon */}

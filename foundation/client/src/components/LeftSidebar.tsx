@@ -145,60 +145,34 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
     try {
       const data = e.dataTransfer.getData('application/json');
       if (data) {
-        const parsed = JSON.parse(data);
-        // Support both new { itemIds: [...] } and legacy { itemId: '...' } formats
-        const itemIds: string[] = parsed.itemIds || (parsed.itemId ? [parsed.itemId] : []);
-        const items = itemIds.map(id => state.items.find(i => i.id === id)).filter(Boolean) as typeof state.items;
-        if (items.length === 0) return;
-
-        const tag = state.tags.find(t => t.id === tagId);
-        const tagName = tag?.name || 'tag';
-
-        // Separate items that already have the tag vs those that need it
-        const alreadyTagged = items.filter(item => item.tags.includes(tagId));
-        const toTag = items.filter(item => !item.tags.includes(tagId));
-
-        if (toTag.length === 0) {
-          // All items already have this tag
-          toast.info(items.length === 1
-            ? `Already tagged with "${tagName}"`
-            : `All ${items.length} items already tagged with "${tagName}"`);
-        } else {
-          // Save previous state for undo
-          const previousStates = toTag.map(item => ({ id: item.id, tags: [...item.tags] }));
-
-          // Apply tag to all items that need it
-          toTag.forEach(item => {
+        const { itemId } = JSON.parse(data);
+        const item = state.items.find(i => i.id === itemId);
+        if (item) {
+          // Add tag to item if not already present
+          const tag = state.tags.find(t => t.id === tagId);
+          if (item.tags.includes(tagId)) {
+            toast.info(`Already tagged with "${tag?.name || 'tag'}"`);
+          } else {
+            const previousTags = [...item.tags];
             updateItem({
               ...item,
               tags: [...item.tags, tagId],
               updatedAt: new Date().toISOString(),
             });
-          });
-
-          const skippedMsg = alreadyTagged.length > 0 ? ` (${alreadyTagged.length} already tagged)` : '';
-          const msg = toTag.length === 1
-            ? `Tagged with "${tagName}"${skippedMsg}`
-            : `Tagged ${toTag.length} items with "${tagName}"${skippedMsg}`;
-
-          toast.success(msg, {
-            action: {
-              label: 'Undo',
-              onClick: () => {
-                previousStates.forEach(prev => {
-                  const currentItem = state.items.find(i => i.id === prev.id);
-                  if (currentItem) {
-                    updateItem({
-                      ...currentItem,
-                      tags: prev.tags,
-                      updatedAt: new Date().toISOString(),
-                    });
-                  }
-                });
-                toast.success(toTag.length === 1 ? 'Tag removed' : `Tag removed from ${toTag.length} items`);
+            toast.success(`Tagged with "${tag?.name || 'tag'}"`, {
+              action: {
+                label: 'Undo',
+                onClick: () => {
+                  updateItem({
+                    ...item,
+                    tags: previousTags,
+                    updatedAt: new Date().toISOString(),
+                  });
+                  toast.success('Tag removed');
+                },
               },
-            },
-          });
+            });
+          }
         }
       }
     } catch (err) {
@@ -229,57 +203,34 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
     try {
       const data = e.dataTransfer.getData('application/json');
       if (data) {
-        const parsed = JSON.parse(data);
-        // Support both new { itemIds: [...] } and legacy { itemId: '...' } formats
-        const itemIds: string[] = parsed.itemIds || (parsed.itemId ? [parsed.itemId] : []);
-        const items = itemIds.map(id => state.items.find(i => i.id === id)).filter(Boolean) as typeof state.items;
-        if (items.length === 0) return;
-
-        const targetList = state.lists.find(l => l.id === listId);
-        const listName = targetList?.name || 'list';
-
-        // Separate items already in this list vs those that need moving
-        const alreadyInList = items.filter(item => item.listId === listId);
-        const toMove = items.filter(item => item.listId !== listId);
-
-        if (toMove.length === 0) {
-          // All items already in this list
-          toast.info(items.length === 1
-            ? `Already in "${listName}"`
-            : `All ${items.length} items already in "${listName}"`);
-        } else {
-          // Save previous state for undo
-          const previousStates = toMove.map(item => ({ id: item.id, listId: item.listId }));
-
-          // Move all items to the target list
-          toMove.forEach(item => {
-            updateItem({
-              ...item,
-              listId: listId,
-              updatedAt: new Date().toISOString(),
-            });
+        const { itemId } = JSON.parse(data);
+        const item = state.items.find(i => i.id === itemId);
+        if (item) {
+          const targetList = state.lists.find(l => l.id === listId);
+          const previousListId = item.listId;
+          // Skip if already in this list
+          if (previousListId === listId) {
+            toast.info(`Already in "${targetList?.name || 'list'}"`);
+            return;
+          }
+          const previousList = previousListId ? state.lists.find(l => l.id === previousListId) : null;
+          updateItem({
+            ...item,
+            listId: listId,
+            updatedAt: new Date().toISOString(),
           });
-
-          const skippedMsg = alreadyInList.length > 0 ? ` (${alreadyInList.length} already in list)` : '';
-          const msg = toMove.length === 1
-            ? `Moved to "${listName}"${skippedMsg}`
-            : `Moved ${toMove.length} items to "${listName}"${skippedMsg}`;
-
-          toast.success(msg, {
+          const fromLabel = previousList ? `"${previousList.name}"` : 'no list';
+          toast.success(`Moved to "${targetList?.name || 'list'}"`, {
+            description: `From ${fromLabel}`,
             action: {
               label: 'Undo',
               onClick: () => {
-                previousStates.forEach(prev => {
-                  const currentItem = state.items.find(i => i.id === prev.id);
-                  if (currentItem) {
-                    updateItem({
-                      ...currentItem,
-                      listId: prev.listId || undefined,
-                      updatedAt: new Date().toISOString(),
-                    });
-                  }
+                updateItem({
+                  ...item,
+                  listId: previousListId || undefined,
+                  updatedAt: new Date().toISOString(),
                 });
-                toast.success(toMove.length === 1 ? 'Move undone' : `Moved ${toMove.length} items back`);
+                toast.success('Move undone');
               },
             },
           });
@@ -414,7 +365,7 @@ export function LeftSidebar({ onNavigate, onOpenSettings, onToggleCommandPalette
   const sidebarContent = (
     <div className="h-full bg-sidebar flex flex-col overflow-hidden">
       {/* Header - hidden on mobile as we have the mobile header */}
-      <div className="p-4 border-b border-sidebar-border/50 items-center justify-between hidden md:flex">
+      <div className="p-4 border-b border-sidebar-border/50 items-center justify-between hidden md:flex" style={{paddingTop: '8px', paddingBottom: '8px'}}>
         <button
           className="flex items-center gap-2 h-8 hover:opacity-80 transition-opacity cursor-pointer"
           onClick={() => setFilter({ type: 'all' })}
