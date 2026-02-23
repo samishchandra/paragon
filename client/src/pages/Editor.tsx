@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FilePlus, Download, Sun, Moon } from 'lucide-react';
+import { parseBool, parseIntSafe } from './utils/queryParams';
 
 /*
  * Standalone editor page — just the editor, nothing else.
@@ -36,18 +37,6 @@ import { FilePlus, Download, Sun, Moon } from 'lucide-react';
 const STORAGE_KEY_CONTENT = 'paragon-editor-content';
 const STORAGE_KEY_THEME = 'paragon-editor-theme';
 const SAVE_DEBOUNCE_MS = 500;
-
-function parseBool(value: string | null, defaultValue: boolean): boolean {
-  if (value === null) return defaultValue;
-  return value !== 'false' && value !== '0';
-}
-
-function parseIntSafe(value: string | null, defaultValue: number, min: number, max: number): number {
-  if (value === null) return defaultValue;
-  const n = Number(value);
-  if (isNaN(n)) return defaultValue;
-  return Math.max(min, Math.min(max, Math.floor(n)));
-}
 
 const DEFAULT_CONTENT = `
 <h1>Welcome to Paragon Editor</h1>
