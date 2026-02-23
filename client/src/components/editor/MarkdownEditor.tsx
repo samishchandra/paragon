@@ -1,12 +1,9 @@
 import { EditorContent } from '@tiptap/react';
 
 import { useCallback, useMemo, useState, useRef, forwardRef } from 'react';
-import { LinkPopover } from './LinkPopover';
-import { LinkHoverTooltip } from './LinkHoverTooltip';
-import { FloatingToolbar } from './FloatingToolbar';
+// LinkPopover, LinkHoverTooltip, FloatingToolbar are now used inside WYSIWYGOverlays
 // parseDateFromMarkdown, getDateVariant, isValidTag, normalizeTag are now used inside useHandleModeSwitch
-import { SlashCommands } from './SlashCommands';
-import { WikiLinkAutocomplete } from './WikiLinkAutocomplete';
+// SlashCommands, WikiLinkAutocomplete are now used inside WYSIWYGOverlays
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace, type SearchMatch } from './FindReplace';
 import { SelectAllActionBar } from './SelectAllActionBar';
@@ -19,18 +16,20 @@ import { RecoveryBanner } from './RecoveryBanner';
 // DragHandleOverlay removed - drag and reorder functionality disabled
 // markdownToHtml and PreprocessOptions are now used inside useHandleModeSwitch
 
-import { ImageDropZone } from './ImageDropZone';
-import { ImageEditPopover } from './ImageEditPopover';
+// ImageDropZone, ImageEditPopover are now used inside WYSIWYGOverlays
 import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
 import { PerformanceProfiler } from './PerformanceProfiler';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
+import { EditorLoadingSkeleton } from './EditorLoadingSkeleton';
+import { EditorModeToggle } from './EditorModeToggle';
+import { WYSIWYGOverlays } from './WYSIWYGOverlays';
 import CustomScrollbar from './CustomScrollbar';
 import './PerformanceProfiler.css';
-import { FileText, Eye, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
+// FileText, Eye are now used inside EditorModeToggle
 import type { AIActionDefinition, AIActionHandler, AIState } from './ai/types';
 import { useAIState } from './ai/useAIState';
-import { AIDropdownMenu } from './ai/AIDropdownMenu';
-import { AIResultPopover } from './ai/AIResultPopover';
+// AIDropdownMenu, AIResultPopover are now used inside WYSIWYGOverlays
 import { TableOfContents } from './TableOfContents';
 import { useEditorInstance } from './hooks/useEditorInstance';
 import { useEditorKeyboardShortcuts } from './hooks/useEditorKeyboardShortcuts';
@@ -806,18 +805,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   }, [aiState, resetAI, executeAIAction]);
 
   if (!editor) {
-    return (
-      <div className={`markdown-editor-container ${className}`} data-theme={theme}>
-        <div className="editor-loading" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div style={{ height: '1rem', width: '100%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-          <div style={{ height: '1rem', width: '83%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-          <div style={{ height: '1rem', width: '66%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-          <div style={{ height: '0.75rem' }} />
-          <div style={{ height: '1rem', width: '100%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-          <div style={{ height: '1rem', width: '75%', borderRadius: '0.25rem', background: 'var(--color-muted, #e5e7eb)', opacity: 0.5, animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-        </div>
-      </div>
-    );
+    return <EditorLoadingSkeleton className={className} theme={theme} />;
   }
 
   // Default toolbar component
@@ -875,22 +863,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         <div className="flex items-center bg-card/50 editor-toolbar-wrapper">
           {renderToolbar ? renderToolbar(editor, defaultToolbar) : defaultToolbar}
           {showModeToggle && (
-            <div className="editor-mode-toggle mr-2 sm:mr-3">
-              <button
-                onClick={() => handleModeSwitch('wysiwyg')}
-                className={`editor-mode-toggle-btn ${editorMode === 'wysiwyg' ? 'active' : ''}`}
-                title="Visual Editor"
-              >
-                <Eye />
-              </button>
-              <button
-                onClick={() => handleModeSwitch('markdown')}
-                className={`editor-mode-toggle-btn ${editorMode === 'markdown' ? 'active' : ''}`}
-                title="Raw Markdown"
-              >
-                <FileText />
-              </button>
-            </div>
+            <EditorModeToggle editorMode={editorMode} onModeSwitch={handleModeSwitch} />
           )}
         </div>
       )}
@@ -955,88 +928,44 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         {editorMode === 'wysiwyg' ? (
           <>
             <EditorContent editor={editor} className="editor-content" />
-            
-            {/* Image drop zone overlay */}
-            {!disabledFeatures.images && !disabledFeatures.dragAndDrop && (
-              <ImageDropZone containerRef={editorContentRef} enabled={editable} />
-            )}
-            
-            {/* Drag handle overlay removed - drag and reorder functionality disabled */}
-            
-            {/* Floating toolbar on text selection (desktop only) */}
-            {!isMobile && showFloatingToolbar && <FloatingToolbar editor={editor} suppressWhenLinkPopoverOpen={isLinkPopoverOpen} aiEnabled={aiEnabled || !!onAISetupRequired} onAISparklesClick={(anchorEl) => handleAISparklesClick('selection', anchorEl)} />}
-            
-            {/* AI dropdown menu */}
-            {aiDropdown && aiActions && (
-              <AIDropdownMenu
-                actions={aiActions}
-                scope={aiDropdown.scope}
-                position={aiDropdown.position}
-                onAction={handleAIActionSelect}
-                onClose={() => setAIDropdown(null)}
-              />
-            )}
-            
-            {/* AI result popover */}
-            {aiState.status !== 'idle' && (
-              <AIResultPopover
-                state={aiState}
-                position={aiPopoverPosition}
-                onReplace={handleAIReplace}
-                onInsert={handleAIInsert}
-                onRetry={handleAIRetry}
-                onDiscard={() => { abortAI(); resetAI(); }}
-              />
-            )}
-            
-            {/* Slash commands */}
-            {!disabledFeatures.slashCommands && <SlashCommands editor={editor} disabledFeatures={disabledFeatures} />}
-            
-            {/* Wiki link autocomplete */}
-            {!disabledFeatures.wikiLinks && onWikiLinkSearchRef.current && (
-              <WikiLinkAutocomplete
-                editor={editor}
-                onSearch={onWikiLinkSearchRef.current}
-              />
-            )}
-            
-            {/* Link popover */}
-            <LinkPopover
+            <WYSIWYGOverlays
               editor={editor}
-              isOpen={isLinkPopoverOpen}
-              onClose={() => setIsLinkPopoverOpen(false)}
+              isMobile={isMobile}
+              disabledFeatures={disabledFeatures}
+              containerRef={editorContentRef as React.RefObject<HTMLElement>}
+              editable={editable}
+              showFloatingToolbar={showFloatingToolbar}
+              isLinkPopoverOpen={isLinkPopoverOpen}
+              aiEnabled={aiEnabled}
+              onAISetupRequired={onAISetupRequired}
+              onAISparklesClick={(anchorEl) => handleAISparklesClick('selection', anchorEl)}
+              aiDropdown={aiDropdown}
+              aiActions={aiActions}
+              onAIActionSelect={handleAIActionSelect}
+              onAIDropdownClose={() => setAIDropdown(null)}
+              aiState={aiState}
+              aiPopoverPosition={aiPopoverPosition}
+              onAIReplace={handleAIReplace}
+              onAIInsert={handleAIInsert}
+              onAIRetry={handleAIRetry}
+              onAIDiscard={() => { abortAI(); resetAI(); }}
+              onLinkPopoverClose={() => setIsLinkPopoverOpen(false)}
+              onEditLink={() => setIsLinkPopoverOpen(true)}
+              onWikiLinkSearch={onWikiLinkSearchRef.current}
+              imageEditState={imageEditState}
+              onImageSave={(newSrc, newAlt) => {
+                editor.chain().focus().setNodeSelection(imageEditState!.pos).updateAttributes('resizableImage', {
+                  src: newSrc,
+                  alt: newAlt,
+                }).run();
+                setImageEditState(null);
+              }}
+              onImageDelete={() => {
+                editor.chain().focus().setNodeSelection(imageEditState!.pos).deleteSelection().run();
+                setImageEditState(null);
+              }}
+              onImageEditClose={() => setImageEditState(null)}
             />
-            
-            {/* Link hover tooltip (desktop only) */}
-            {!isMobile && (
-              <LinkHoverTooltip 
-                editor={editor} 
-                onEditLink={() => setIsLinkPopoverOpen(true)}
-              />
-            )}
-            
-            {/* Image edit popover */}
-            {!disabledFeatures.images && imageEditState?.isOpen && (
-              <ImageEditPopover
-                src={imageEditState.src}
-                alt={imageEditState.alt}
-                position={imageEditState.position}
-                onSave={(newSrc, newAlt) => {
-                  // Update the image at the stored position
-                  editor.chain().focus().setNodeSelection(imageEditState.pos).updateAttributes('resizableImage', {
-                    src: newSrc,
-                    alt: newAlt,
-                  }).run();
-                  setImageEditState(null);
-                }}
-                onDelete={() => {
-                  // Delete the image at the stored position
-                  editor.chain().focus().setNodeSelection(imageEditState.pos).deleteSelection().run();
-                  setImageEditState(null);
-                }}
-                onClose={() => setImageEditState(null)}
-              />
-            )}
           </>
         ) : (
           <SyntaxHighlightedMarkdown
