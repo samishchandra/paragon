@@ -6,7 +6,7 @@
  * utils/structureImagesInListItems.test.ts (co-located with source).
  */
 import { describe, it, expect } from 'vitest';
-import { convertCheckboxListsToTaskLists } from './utils/convertCheckboxLists';
+import { convertCheckboxListsToTaskLists } from './utils';
 
 describe('convertCheckboxListsToTaskLists with images', () => {
   it('should treat IMG as block content in task items', () => {
