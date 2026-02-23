@@ -1,6 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 
-import { useCallback, useEffect, useMemo, useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef, forwardRef } from 'react';
 import { LinkPopover } from './LinkPopover';
 import { LinkHoverTooltip } from './LinkHoverTooltip';
 import { FloatingToolbar } from './FloatingToolbar';
@@ -13,11 +13,11 @@ import { FindReplace, type SearchMatch } from './FindReplace';
 import { SelectAllActionBar } from './SelectAllActionBar';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useWordCount } from './hooks/useWordCount';
+import { useEditorAPI } from './hooks/useEditorAPI';
 import { AutoSaveIndicator } from './AutoSaveIndicator';
 import { RecoveryBanner } from './RecoveryBanner';
 // DragHandleOverlay removed - drag and reorder functionality disabled
 import {
-  insertHorizontalRuleClean,
   markdownToHtml,
 } from './utils';
 import type { PreprocessOptions } from './utils';
@@ -857,137 +857,16 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   });
 
   // Expose imperative handle for ref
-  useImperativeHandle(ref, () => ({
-    getEditor: () => editor,
-    getHTML: () => editor?.getHTML() || '',
-    getMarkdown: () => {
-      if (!editor) return '';
-      return turndownService.turndown(editor.getHTML());
-    },
-    getText: () => editor?.getText() || '',
-    setContent: (content: string) => {
-      if (editor && !editor.isDestroyed) {
-        queueMicrotask(() => {
-          editor.commands.setContent(content);
-        });
-      }
-    },
-    clearContent: () => {
-      if (editor && !editor.isDestroyed) {
-        editor.commands.clearContent();
-      }
-    },
-    focus: (position) => {
-      if (editor && !editor.isDestroyed) {
-        editor.commands.focus(position);
-      }
-    },
-    blur: () => {
-      if (editor && !editor.isDestroyed) {
-        editor.commands.blur();
-      }
-    },
-    isEmpty: () => editor?.isEmpty || true,
-    isFocused: () => editor?.isFocused || false,
-    getMode: () => editorModeRef.current,
-    setMode: (mode) => handleModeSwitch(mode),
-    toggleMode: () => {
-      const newMode = editorModeRef.current === 'wysiwyg' ? 'markdown' : 'wysiwyg';
-      handleModeSwitch(newMode);
-      return newMode;
-    },
-    getWordCount: () => ({
-      words: wordCount.words,
-      characters: wordCount.characters,
-      charactersWithSpaces: wordCount.charactersWithSpaces,
-    }),
-    undo: () => editor?.commands.undo(),
-    redo: () => editor?.commands.redo(),
-    canUndo: () => editor?.can().undo() || false,
-    canRedo: () => editor?.can().redo() || false,
-    insertContent: (content) => editor?.commands.insertContent(content),
-    insertImage: (src, alt = '') => editor?.commands.setImage({ src, alt }),
-    insertTable: (rows = 3, cols = 3) => editor?.commands.insertTable({ rows, cols, withHeaderRow: true }),
-    insertCodeBlock: (language) => {
-      if (language) {
-        editor?.commands.setCodeBlock({ language });
-      } else {
-        editor?.commands.setCodeBlock();
-      }
-    },
-    insertCallout: (type = 'info') => editor?.commands.insertCallout?.({ type: type as 'info' | 'note' | 'prompt' | 'resources' | 'todo' }),
-    insertHorizontalRule: () => {
-      if (editor) insertHorizontalRuleClean(editor, editor.state.selection.from, editor.state.selection.from);
-    },
-    toggleBold: () => editor?.commands.toggleBold(),
-    toggleItalic: () => editor?.commands.toggleItalic(),
-    toggleUnderline: () => editor?.commands.toggleUnderline(),
-    toggleStrike: () => editor?.commands.toggleStrike(),
-    toggleCode: () => editor?.commands.toggleCode(),
-    toggleHighlight: () => editor?.commands.toggleHighlight(),
-    setHeading: (level) => {
-      if (level === 0) {
-        editor?.commands.setParagraph();
-      } else {
-        editor?.commands.setHeading({ level });
-      }
-    },
-    toggleBulletList: () => editor?.commands.toggleBulletList(),
-    toggleOrderedList: () => editor?.commands.toggleOrderedList(),
-    toggleTaskList: () => editor?.commands.toggleTaskList(),
-    toggleBlockquote: () => editor?.commands.toggleBlockquote(),
-    setLink: (url) => editor?.commands.setLink({ href: url }),
-    unsetLink: () => editor?.commands.unsetLink(),
-    openFindReplace: () => {
-      setIsFindReplaceOpen(true);
-      setFindReplaceFocusTrigger(prev => prev + 1);
-    },
-    closeFindReplace: () => setIsFindReplaceOpen(false),
-    save: () => autoSaveState.save(),
-    clearSavedContent: () => autoSaveState.clear(),
-    getSelectedText: () => {
-      if (!editor) return '';
-      const { from, to } = editor.state.selection;
-      return editor.state.doc.textBetween(from, to, ' ');
-    },
-    isEditable: () => editor?.isEditable || false,
-    setEditable: (editable) => editor?.setEditable(editable),
-    /** Get the table of contents headings */
-    getTableOfContents: () => {
-      if (!editor) return [];
-      const headings: { id: string; text: string; level: number; pos: number }[] = [];
-      editor.state.doc.descendants((node, pos) => {
-        if (node.type.name === 'heading') {
-          const level = node.attrs.level as number;
-          const text = node.textContent.trim();
-          if (text) {
-            headings.push({ id: `toc-heading-${pos}`, text, level, pos });
-          }
-        }
-      });
-      return headings;
-    },
-    /** Scroll to a heading by position */
-    scrollToHeading: (pos: number) => {
-      if (!editor || editor.isDestroyed) return;
-      try {
-        const resolvedPos = editor.state.doc.resolve(pos);
-        const dom = editor.view.nodeDOM(resolvedPos.before(resolvedPos.depth + 1));
-        if (dom instanceof HTMLElement) {
-          const scrollContainer = editor.view.dom.closest('.editor-content-wrapper') as HTMLElement;
-          if (scrollContainer) {
-            const containerRect = scrollContainer.getBoundingClientRect();
-            const elementRect = dom.getBoundingClientRect();
-            const relativeTop = elementRect.top - containerRect.top + scrollContainer.scrollTop;
-            scrollContainer.scrollTo({ top: relativeTop - 20, behavior: 'smooth' });
-          } else {
-            dom.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }
-        editor.commands.setTextSelection(pos + 1);
-      } catch { /* position might be invalid */ }
-    },
-  }), [editor, turndownService, handleModeSwitch, wordCount, autoSaveState, setIsFindReplaceOpen]);
+  useEditorAPI(ref, {
+    editor,
+    turndownService,
+    editorModeRef,
+    handleModeSwitch,
+    wordCount,
+    autoSaveState,
+    setIsFindReplaceOpen,
+    setFindReplaceFocusTrigger,
+  });
 
   // Expose Editor Mode API globally for external applications
   // Using refs to avoid closure issues - the API always reads the latest values
