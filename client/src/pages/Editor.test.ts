@@ -10,6 +10,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { restoreHeaderColumn } from '../components/editor/utils/restoreHeaderColumn';
 
 // Re-implement the pure functions from Editor.tsx for testing
 // (They are not exported, so we test the logic directly)
@@ -100,20 +101,9 @@ describe('parseIntSafe', () => {
  * the first <td> in each body row is restored to <th>.
  * 
  * These tests verify the markdown → HTML restoration side of the round-trip.
+ * The restoreHeaderColumn function is imported from the shared utility module.
  */
 describe('Header Column Restoration (markdown → HTML)', () => {
-  // Re-implement the restoration logic from MarkdownEditor.tsx for testing
-  function restoreHeaderColumn(html: string): string {
-    return html.replace(/(<table>[\s\S]*<\/table>)\s*<!--\s*header-column\s*-->/gi, (_fullMatch: string, tableHtml: string) => {
-      return tableHtml.replace(/(<tbody>[\s\S]*?<\/tbody>)/gi, (tbody) => {
-        return tbody.replace(/<tr>([\s\S]*?)<\/tr>/gi, (_trMatch: string, trContent: string) => {
-          const replaced = trContent.replace(/^([\s\S]*?)<td>([\s\S]*?)<\/td>/i, '$1<th>$2</th>');
-          return `<tr>${replaced}</tr>`;
-        });
-      });
-    });
-  }
-
   it('should convert first <td> to <th> in body rows when marker is present', () => {
     const html = '<table>\n<thead>\n<tr>\n<th>H1</th>\n<th>H2</th>\n</tr>\n</thead>\n' +
       '<tbody><tr>\n<td>R1C1</td>\n<td>R1C2</td>\n</tr>\n<tr>\n<td>R2C1</td>\n<td>R2C2</td>\n</tr>\n</tbody></table>\n' +
