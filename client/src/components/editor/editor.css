@@ -805,8 +805,8 @@
     background: var(--table-header-bg, oklch(0.18 0.02 220));
     font-weight: 600;
     color: var(--table-header-text, oklch(0.9 0.01 220));
-    border-top: 2px solid var(--muted-foreground);
-    border-bottom: 2px solid var(--muted-foreground);
+    border-top: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
   }
   
   /* First column as header */
@@ -3689,8 +3689,8 @@ pre.with-line-numbers code .line::before {
 [data-theme="light"] .tiptap-editor tr:first-child th {
   background: var(--table-header-bg) !important;
   color: var(--table-header-text) !important;
-  border-top: 2px solid var(--muted-foreground);
-  border-bottom: 2px solid var(--muted-foreground);
+  border-top: 2px solid var(--border);
+  border-bottom: 2px solid var(--border);
 }
 
 [data-theme="light"] .tiptap-editor td {
@@ -4149,8 +4149,8 @@ pre.with-line-numbers code .line::before {
 [data-theme="dark"] .tiptap-editor tr:first-child th {
   background: var(--table-header-bg) !important;
   color: var(--table-header-text) !important;
-  border-top: 2px solid var(--muted-foreground);
-  border-bottom: 2px solid var(--muted-foreground);
+  border-top: 2px solid var(--border);
+  border-bottom: 2px solid var(--border);
 }
 
 [data-theme="dark"] .tiptap-editor td {
