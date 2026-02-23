@@ -5881,7 +5881,7 @@ pre.with-line-numbers code .line::before {
 
 .toc-toggle-button.toc-toggle-right {
   top: 6px;
-  right: 6px;
+  right: 18px;
 }
 
 .toc-toggle-button.toc-toggle-left {
