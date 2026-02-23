@@ -15996,10 +15996,49 @@ function Wk(e) {
   };
   return Array.from(r.querySelectorAll(":scope > ul")).forEach(o), r.innerHTML;
 }
-function zk() {
+function zk(e) {
+  const t = e.split(`
+`), n = [], r = (a) => {
+    const c = a.trimStart();
+    return /^[-*+]\s+\[[ xX]\]\s/.test(c) ? "task" : /^[-*+]\s+/.test(c) ? "bullet" : /^\d+\.\s+/.test(c) ? "ordered" : null;
+  }, o = (a) => /^\s{2,}\S/.test(a), s = (a) => a.trim() === "" || a.trim() === "​";
+  let i = !1;
+  for (let a = 0; a < t.length; a++) {
+    const c = t[a];
+    if (/^```/.test(c.trim())) {
+      i = !i, n.push(c);
+      continue;
+    }
+    if (i) {
+      n.push(c);
+      continue;
+    }
+    if (n.push(c), r(c) !== null || o(c)) {
+      let l = a + 1;
+      for (; l < t.length && o(t[l]); )
+        l++;
+      let d = 0;
+      const u = l;
+      for (; l < t.length && s(t[l]); )
+        d++, l++;
+      if (d > 0 && l < t.length) {
+        const m = r(c), p = r(t[l]);
+        if (m !== null && p !== null) {
+          for (let h = u; h < l; h++)
+            n.push(t[h]);
+          n.push("<!-- list-break -->"), a = l - 1;
+          continue;
+        }
+      }
+    }
+  }
+  return n.join(`
+`);
+}
+function Bk() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
-function Bk(e) {
+function Fk(e) {
   return new Promise((t, n) => {
     const r = new FileReader();
     r.onload = () => {
@@ -16007,16 +16046,16 @@ function Bk(e) {
     }, r.onerror = () => n(new Error("Failed to read file")), r.readAsDataURL(e);
   });
 }
-function Fk(e, t) {
+function Uk(e, t) {
   const [n, r] = e.split(","), o = n.match(/:(.*?);/), s = o ? o[1] : "image/jpeg", i = atob(r), a = new Uint8Array(i.length);
   for (let c = 0; c < i.length; c++)
     a[c] = i.charCodeAt(c);
   return new File([a], t, { type: s });
 }
-function Uk(e, t) {
+function Yk(e, t) {
   return t.includes(e.type);
 }
-function Yk(e) {
+function jk(e) {
   return new Promise((t) => {
     const n = new window.Image();
     n.onload = () => {
@@ -16026,7 +16065,7 @@ function Yk(e) {
     }, n.src = e;
   });
 }
-async function jk(e, t, n) {
+async function Kk(e, t, n) {
   return new Promise((r, o) => {
     const s = new window.Image(), i = new FileReader();
     i.onload = (a) => {
@@ -16045,12 +16084,12 @@ async function jk(e, t, n) {
         return;
       }
       d.imageSmoothingEnabled = !0, d.imageSmoothingQuality = "high", d.drawImage(s, 0, 0, a, c);
-      const u = e.type === "image/png" || e.type === "image/gif", m = u ? "image/png" : "image/jpeg", p = u ? void 0 : n, h = l.toDataURL(m, p), g = Fk(h, e.name);
+      const u = e.type === "image/png" || e.type === "image/gif", m = u ? "image/png" : "image/jpeg", p = u ? void 0 : n, h = l.toDataURL(m, p), g = Uk(h, e.name);
       r({ dataUrl: h, file: g, width: a, height: c });
     }, s.onerror = () => o(new Error("Failed to load image")), i.readAsDataURL(e);
   });
 }
-function Kk(e, t, n) {
+function Vk(e, t, n) {
   e.view.state.doc.descendants((r, o) => {
     if (r.type.name === "resizableImage" && r.attrs.src === t && r.attrs.alt === n) {
       try {
@@ -16066,27 +16105,27 @@ function Kk(e, t, n) {
 async function gc(e, t, n) {
   if (!n.onImageUpload)
     return n.onUploadError?.("Image upload not available. Please connect Dropbox in Settings."), !1;
-  if (!Uk(e, n.allowedMimeTypes))
+  if (!Yk(e, n.allowedMimeTypes))
     return n.onUploadError?.(`Invalid file type: ${e.type}. Allowed types: ${n.allowedMimeTypes.join(", ")}`), !1;
   if (e.size > n.maxFileSize) {
     const o = (n.maxFileSize / 1048576).toFixed(1), s = (e.size / (1024 * 1024)).toFixed(1);
     return n.onUploadError?.(`File too large: ${s}MB. Maximum size: ${o}MB`), !1;
   }
-  const r = zk();
+  const r = Bk();
   try {
     n.onUploadStart?.();
     let o, s, i;
     const a = ["image/jpeg", "image/png", "image/webp"].includes(e.type);
     if (n.enableCompression && a) {
-      const u = await jk(
+      const u = await Kk(
         e,
         n.maxCompressedWidth,
         n.compressionQuality
       );
       o = u.dataUrl, i = u.file, s = Math.min(u.width, 600);
     } else {
-      o = await Bk(e), i = e;
-      const u = await Yk(o);
+      o = await Fk(e), i = e;
+      const u = await jk(o);
       s = Math.min(u.width, 600);
     }
     t.chain().focus().setImage({
@@ -16140,7 +16179,7 @@ async function gc(e, t, n) {
         return !0;
       }), n.onUploadComplete?.(), !0;
     } catch (u) {
-      return console.warn("Image upload failed, removing placeholder:", u), Kk(t, o, e.name), n.onUploadError?.(`Upload failed: ${u instanceof Error ? u.message : "Unknown error"}`), n.onUploadComplete?.(), !1;
+      return console.warn("Image upload failed, removing placeholder:", u), Vk(t, o, e.name), n.onUploadError?.(`Upload failed: ${u instanceof Error ? u.message : "Unknown error"}`), n.onUploadComplete?.(), !1;
     }
   } catch (o) {
     return n.onUploadError?.(`Failed to process image: ${o instanceof Error ? o.message : "Unknown error"}`), !1;
@@ -16163,7 +16202,7 @@ function yc(e) {
     }
   return t;
 }
-const Vk = ft.create({
+const Gk = ft.create({
   name: "imageUpload",
   addOptions() {
     return {
@@ -16228,7 +16267,7 @@ const Vk = ft.create({
     ];
   }
 });
-function Gk({ containerRef: e, enabled: t = !0 }) {
+function qk({ containerRef: e, enabled: t = !0 }) {
   const [n, r] = K(!1), [o, s] = K(0), i = Y((d) => {
     d.preventDefault(), d.stopPropagation(), d.dataTransfer?.types.includes("Files") && (s((u) => u + 1), r(!0));
   }, []), a = Y((d) => {
@@ -16255,7 +16294,7 @@ function Gk({ containerRef: e, enabled: t = !0 }) {
     ] })
   ] }) }) : null;
 }
-function qk({
+function Xk({
   src: e,
   alt: t,
   position: n,
@@ -16635,7 +16674,7 @@ function _s(e, t, n, r, o) {
   }
   return s;
 }
-function Xk({
+function Zk({
   content: e,
   onChange: t,
   placeholder: n = "Write your markdown here...",
@@ -16863,10 +16902,10 @@ function Xk({
   ] });
 }
 let bc = 0, sa = 0, hu = 0;
-function Zk(e) {
+function Qk(e) {
   sa++, hu = e;
 }
-const Qk = Vn(function({
+const Jk = Vn(function({
   visible: t,
   onClose: n,
   editor: r
@@ -16889,7 +16928,7 @@ const Qk = Vn(function({
       const C = performance.now();
       queueMicrotask(() => {
         const S = performance.now() - C;
-        Zk(S);
+        Qk(S);
       });
     };
     return r.on("transaction", D), () => {
@@ -17026,7 +17065,7 @@ const Qk = Vn(function({
     ] })
   ] });
 });
-class Jk extends gf {
+class e1 extends gf {
   constructor(t) {
     super(t), this.handleRetry = () => {
       this.setState((n) => ({
@@ -17173,13 +17212,13 @@ class Jk extends gf {
     return this.props.children;
   }
 }
-function e1({
+function t1({
   scrollContainerRef: e,
   hideDelay: t = 1200
 }) {
   return null;
 }
-function t1(e, t) {
+function n1(e, t) {
   switch (t.type) {
     case "start-streaming":
       return {
@@ -17202,8 +17241,8 @@ function t1(e, t) {
       return e;
   }
 }
-function n1(e) {
-  const [t, n] = yf(t1, { status: "idle" }), r = V(null), o = Y(async (a, c, l, d, u) => {
+function r1(e) {
+  const [t, n] = yf(n1, { status: "idle" }), r = V(null), o = Y(async (a, c, l, d, u) => {
     if (e) {
       n({
         type: "start-streaming",
@@ -17238,7 +17277,7 @@ function n1(e) {
   }, []);
   return { state: t, executeAction: o, abort: s, reset: i };
 }
-const r1 = {
+const o1 = {
   SpellCheck: em,
   RefreshCw: Jf,
   Minimize2: Hc,
@@ -17247,7 +17286,7 @@ const r1 = {
   MessageSquare: Wc,
   Sparkles: Lo
 };
-function o1({ actions: e, scope: t, onAction: n, onClose: r, position: o }) {
+function s1({ actions: e, scope: t, onAction: n, onClose: r, position: o }) {
   const [s, i] = K(""), [a, c] = K(!1), l = V(null), d = V(null), u = e.filter((y) => y.scope === t || y.scope === "both");
   Q(() => {
     const y = (v) => {
@@ -17316,7 +17355,7 @@ function o1({ actions: e, scope: t, onAction: n, onClose: r, position: o }) {
             ] }) }),
             /* @__PURE__ */ f("div", { className: "h-px bg-border mx-2 my-0.5" }),
             u.filter((y) => !y.showCustomPrompt).map((y) => {
-              const b = y.icon ? r1[y.icon] : Lo;
+              const b = y.icon ? o1[y.icon] : Lo;
               return /* @__PURE__ */ R(
                 "button",
                 {
@@ -17343,7 +17382,7 @@ function o1({ actions: e, scope: t, onAction: n, onClose: r, position: o }) {
   );
   return /* @__PURE__ */ f(Bt, { onMouseDown: (y) => y.preventDefault(), children: g });
 }
-function s1({
+function a1({
   state: e,
   position: t,
   onReplace: n,
@@ -17518,7 +17557,7 @@ function Rn({
     }
   );
 }
-const gu = "paragon-editor-toc-width", a1 = 280, yu = 200, vu = 500;
+const gu = "paragon-editor-toc-width", i1 = 280, yu = 200, vu = 500;
 function wc() {
   try {
     const e = localStorage.getItem(gu);
@@ -17529,15 +17568,15 @@ function wc() {
     }
   } catch {
   }
-  return a1;
+  return i1;
 }
-function i1(e) {
+function c1(e) {
   try {
     localStorage.setItem(gu, String(e));
   } catch {
   }
 }
-function c1(e, t, n) {
+function l1(e, t, n) {
   const r = [];
   return e.state.doc.descendants((s, i) => {
     if (s.type.name === "heading") {
@@ -17549,7 +17588,7 @@ function c1(e, t, n) {
     }
   }), r;
 }
-function l1(e) {
+function d1(e) {
   if (e.length === 0) return [];
   const t = [], n = [];
   for (const r of e) {
@@ -17614,7 +17653,7 @@ const kc = Vn(function({
       const ye = m === "right" ? H.current - ee.clientX : ee.clientX - H.current, ve = Math.min(vu, Math.max(yu, F.current + ye));
       N(ve);
     }, j = () => {
-      O.current && (O.current = !1, document.body.style.cursor = "", document.body.style.userSelect = "", N((ee) => (i1(ee), ee)));
+      O.current && (O.current = !1, document.body.style.cursor = "", document.body.style.userSelect = "", N((ee) => (c1(ee), ee)));
     };
     return document.addEventListener("mousemove", z), document.addEventListener("mouseup", j), () => {
       document.removeEventListener("mousemove", z), document.removeEventListener("mouseup", j);
@@ -17622,7 +17661,7 @@ const kc = Vn(function({
   }, [m]);
   const I = Y(() => {
     if (!t || t.isDestroyed) return;
-    const z = c1(t, s, i);
+    const z = l1(t, s, i);
     x(z), E && !z.find((j) => j.id === E) && w(null);
   }, [t, s, i, E]);
   Q(() => {
@@ -17729,7 +17768,7 @@ const kc = Vn(function({
     return G(z, j);
   }), [v, E, G]);
   if (!t) return null;
-  const $ = l ? l1(v) : [];
+  const $ = l ? d1(v) : [];
   return /* @__PURE__ */ R(He, { children: [
     y && /* @__PURE__ */ f(
       "button",
@@ -17990,11 +18029,11 @@ ${u}
     }
   }), _t = n, n;
 }
-function d1() {
+function u1() {
   !Do && !_t && (Do = bu().then((e) => (_t = e, e)));
 }
-function u1() {
-  return d1(), {
+function f1() {
+  return u1(), {
     turndown(e) {
       return _t ? _t.turndown(e) : (console.warn("[Paragon] TurndownService not yet loaded, returning empty markdown"), "");
     },
@@ -18006,48 +18045,9 @@ function u1() {
     }
   };
 }
-function f1() {
+function m1() {
   const e = V(null);
-  return e.current || (e.current = u1()), e.current;
-}
-function m1(e) {
-  const t = e.split(`
-`), n = [], r = (a) => {
-    const c = a.trimStart();
-    return /^[-*+]\s+\[[ xX]\]\s/.test(c) ? "task" : /^[-*+]\s+/.test(c) ? "bullet" : /^\d+\.\s+/.test(c) ? "ordered" : null;
-  }, o = (a) => /^\s{2,}\S/.test(a), s = (a) => a.trim() === "" || a.trim() === "​";
-  let i = !1;
-  for (let a = 0; a < t.length; a++) {
-    const c = t[a];
-    if (/^```/.test(c.trim())) {
-      i = !i, n.push(c);
-      continue;
-    }
-    if (i) {
-      n.push(c);
-      continue;
-    }
-    if (n.push(c), r(c) !== null || o(c)) {
-      let l = a + 1;
-      for (; l < t.length && o(t[l]); )
-        l++;
-      let d = 0;
-      const u = l;
-      for (; l < t.length && s(t[l]); )
-        d++, l++;
-      if (d > 0 && l < t.length) {
-        const m = r(c), p = r(t[l]);
-        if (m !== null && p !== null) {
-          for (let h = u; h < l; h++)
-            n.push(t[h]);
-          n.push("<!-- list-break -->"), a = l - 1;
-          continue;
-        }
-      }
-    }
-  }
-  return n.join(`
-`);
+  return e.current || (e.current = f1()), e.current;
 }
 function p1(e) {
   const n = new DOMParser().parseFromString(`<div>${e}</div>`, "text/html"), r = n.body.firstElementChild;
@@ -18200,7 +18200,7 @@ const h1 = () => {
   onAIAction: kn,
   onAISetupRequired: de
 }, Ee) {
-  const [ie] = K(() => h1()), [we, Ve] = K(C), [be, ar] = K(""), qe = V(C), Mt = V(""), St = V(null), [ir, Qa] = K(0), Yr = !!(mt && mt.length > 0 && kn), { state: Qe, executeAction: jr, abort: ku, reset: Ut } = n1(kn), [ts, ns] = K(null), [Cu, Mu] = K({ selectionTop: 0, selectionBottom: 0, selectionCenterX: 0 }), Su = V(kn);
+  const [ie] = K(() => h1()), [we, Ve] = K(C), [be, ar] = K(""), qe = V(C), Mt = V(""), St = V(null), [ir, Qa] = K(0), Yr = !!(mt && mt.length > 0 && kn), { state: Qe, executeAction: jr, abort: ku, reset: Ut } = r1(kn), [ts, ns] = K(null), [Cu, Mu] = K({ selectionTop: 0, selectionBottom: 0, selectionCenterX: 0 }), Su = V(kn);
   Su.current = kn;
   const Ja = V(de);
   Ja.current = de;
@@ -18358,7 +18358,7 @@ const h1 = () => {
         },
         resolveImageSrc: is.current ? ((...B) => is.current(...B)) : void 0
       }),
-      Vk.configure({
+      Gk.configure({
         maxFileSize: b,
         onUploadStart: rs.current ? ((...B) => rs.current(...B)) : void 0,
         onUploadComplete: os.current ? ((...B) => os.current(...B)) : void 0,
@@ -18484,7 +18484,7 @@ const h1 = () => {
     onRecover: (W) => {
       F?.(W);
     }
-  }), jt = f1();
+  }), jt = m1();
   cr.current = jt;
   const oi = V(!1);
   Q(() => {
@@ -18501,7 +18501,7 @@ const h1 = () => {
       } else if (W === "wysiwyg" && qe.current === "markdown") {
         const { marked: B } = await import("./marked.esm-Tjr8Gfse.js"), me = ["info", "note", "prompt", "resources", "todo"];
         let le = Mt.current;
-        le = m1(le), me.forEach((ae) => {
+        le = zk(le), me.forEach((ae) => {
           const oe = new RegExp(`\`\`\`ad-${ae}\\s*\\n([\\s\\S]*?)\`\`\``, "g");
           le = le.replace(oe, (ke, fe) => {
             const Te = B.parse(fe.trim(), { async: !1, breaks: !0 });
@@ -19055,7 +19055,7 @@ const h1 = () => {
         }
       ),
       /* @__PURE__ */ R(
-        Jk,
+        e1,
         {
           resetKey: `${t}-${ir}`,
           onRetry: () => Qa((W) => W + 1),
@@ -19066,10 +19066,10 @@ const h1 = () => {
           children: [
             /* @__PURE__ */ f("div", { className: "editor-content-wrapper", ref: St, style: Uu, children: we === "wysiwyg" ? /* @__PURE__ */ R(He, { children: [
               /* @__PURE__ */ f(Ku, { editor: _, className: "editor-content" }),
-              !$.images && !$.dragAndDrop && /* @__PURE__ */ f(Gk, { containerRef: St, enabled: i }),
+              !$.images && !$.dragAndDrop && /* @__PURE__ */ f(qk, { containerRef: St, enabled: i }),
               !ie && y && /* @__PURE__ */ f(Fm, { editor: _, suppressWhenLinkPopoverOpen: ri, aiEnabled: Yr || !!de, onAISparklesClick: (W) => ai("selection", W) }),
               ts && mt && /* @__PURE__ */ f(
-                o1,
+                s1,
                 {
                   actions: mt,
                   scope: ts.scope,
@@ -19079,7 +19079,7 @@ const h1 = () => {
                 }
               ),
               Qe.status !== "idle" && /* @__PURE__ */ f(
-                s1,
+                a1,
                 {
                   state: Qe,
                   position: Cu,
@@ -19115,7 +19115,7 @@ const h1 = () => {
                 }
               ),
               !$.images && Cn?.isOpen && /* @__PURE__ */ f(
-                qk,
+                Xk,
                 {
                   src: Cn.src,
                   alt: Cn.alt,
@@ -19133,7 +19133,7 @@ const h1 = () => {
                 }
               )
             ] }) : /* @__PURE__ */ f(
-              Xk,
+              Zk,
               {
                 content: be,
                 onChange: si,
@@ -19145,7 +19145,7 @@ const h1 = () => {
                 autoClosePairs: qo
               }
             ) }),
-            /* @__PURE__ */ f(e1, { scrollContainerRef: St })
+            /* @__PURE__ */ f(t1, { scrollContainerRef: St })
           ]
         }
       ),
@@ -19176,7 +19176,7 @@ const h1 = () => {
       Dt.status,
       ci
     ) : ci),
-    /* @__PURE__ */ f(Qk, { visible: Xo, onClose: Zo, editor: _ })
+    /* @__PURE__ */ f(Jk, { visible: Xo, onClose: Zo, editor: _ })
   ] });
 }), dC = Ao.create({
   name: "callout",
@@ -19510,8 +19510,8 @@ export {
   Wx as EditorToolbar,
   zx as FindReplace,
   Fm as FloatingToolbar,
-  Gk as ImageDropZone,
-  Vk as ImageUpload,
+  qk as ImageDropZone,
+  Gk as ImageUpload,
   lC as MarkdownEditor,
   dk as MarkdownLinkInputRule,
   ok as MarkdownPasteSafe,
