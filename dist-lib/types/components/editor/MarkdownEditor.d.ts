@@ -130,6 +130,8 @@ export interface MarkdownEditorProps {
     showWordCount?: boolean;
     /** Theme mode - controls dark/light styling of the editor */
     theme?: 'dark' | 'light';
+    /** Color theme for headings and table accents (default: 'colorful') */
+    colorTheme?: 'colorful' | 'neutral';
     /** Enable auto-save to localStorage (default: true) */
     autoSave?: boolean;
     /** Storage key for auto-save (default: 'paragon-editor-content') */

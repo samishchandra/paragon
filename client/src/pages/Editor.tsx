@@ -30,8 +30,9 @@ import { parseBool, parseIntSafe } from './utils/queryParams';
  *   ?reorder=true|false        — Auto-reorder completed checklist items (default: true)
  *   ?editable=true|false       — Allow editing (default: true)
  *   ?placeholder=...           — Custom placeholder text
+ *   ?colorTheme=colorful|neutral — Color theme for headings and tables (default: colorful)
  *
- * Example: /editor?theme=dark&toc=false&toolbar=true
+ * Example: /editor?theme=dark&toc=false&toolbar=true&colorTheme=neutral
  */
 
 const STORAGE_KEY_CONTENT = 'paragon-editor-content';
@@ -232,6 +233,7 @@ export default function EditorPage() {
       autoReorderChecklist: parseBool(params.get('reorder'), true),
       editable: parseBool(params.get('editable'), true),
       placeholder: params.get('placeholder') || "Start writing... Use '/' for commands",
+      colorTheme: (params.get('colorTheme') === 'neutral' ? 'neutral' : 'colorful') as 'colorful' | 'neutral',
     };
   }, []);
 
@@ -389,6 +391,7 @@ export default function EditorPage() {
           autoReorderChecklist={config.autoReorderChecklist}
           editable={config.editable}
           progressiveSelectAll={true}
+          colorTheme={config.colorTheme}
         />
       </div>
 

@@ -7,12 +7,12 @@
 
 /* Data-theme attribute overrides for embedded editor theming */
 [data-theme="dark"] {
-  /* Heading colors - Dark mode (neutral: same as body text) */
-  --h1-color: var(--foreground);
-  --h2-color: var(--foreground);
-  --h3-color: var(--foreground);
-  --h4-color: var(--foreground);
-  --h5-color: var(--foreground);
+  /* Heading colors - Dark mode */
+  --h1-color: var(--things-blue);
+  --h2-color: var(--things-blue);
+  --h3-color: var(--things-purple);
+  --h4-color: var(--things-blue);
+  --h5-color: var(--things-yellow);
   --h6-color: var(--muted-foreground);
   
   /* Base layers - Things dark mode */
@@ -64,8 +64,8 @@
   --checkbox-checked-foreground: #ffffff;
   
   /* Table colors - Dark mode */
-  --table-header-bg: #2a2d32;
-  --table-header-text: #dadada;
+  --table-header-bg: #2d323c;
+  --table-header-text: #e2e8f0;
   --table-cell-bg: #282c34;
   --table-cell-text: #dadada;
   --table-row-odd: #282c34;
@@ -103,13 +103,13 @@
 }
 
 [data-theme="light"] {
-  /* Heading colors - Light mode (neutral: same as body text) */
-  --h1-color: var(--foreground);
-  --h2-color: var(--foreground);
-  --h3-color: var(--foreground);
-  --h4-color: var(--foreground);
-  --h5-color: var(--foreground);
-  --h6-color: var(--muted-foreground);
+  /* Heading colors - Light mode */
+  --h1-color: #2e80f2;
+  --h2-color: #2e80f2;
+  --h3-color: #4eb57c;
+  --h4-color: #3eb4bf;
+  --h5-color: #e87d3e;
+  --h6-color: #9a9a9a;
   
   /* Base layers - Things light mode */
   --background: #ffffff;
@@ -160,13 +160,13 @@
   --checkbox-checked-foreground: var(--primary-foreground);
   
   /* Table colors - Light mode */
-  --table-header-bg: #f5f5f5;
-  --table-header-text: #333333;
+  --table-header-bg: #F1F5F9;
+  --table-header-text: #334155;
   --table-cell-bg: #ffffff;
   --table-cell-text: #333333;
   --table-row-odd: #FFFFFF;
-  --table-row-even: #fafafa;
-  --table-row-hover: #f0f0f0;
+  --table-row-even: #F9FAFC;
+  --table-row-hover: #f1f5f9;
   
   /* Callout colors - light mode */
   --callout-info: #3b82f6;
@@ -769,7 +769,7 @@
     overflow: hidden;
     border-radius: 4px;
     border: 1px solid var(--border);
-    border-top: 2px solid var(--border);
+    border-top: 2px solid var(--primary);
     font-size: 0.875rem;
   }
   
@@ -805,8 +805,8 @@
     background: var(--table-header-bg, oklch(0.18 0.02 220));
     font-weight: 600;
     color: var(--table-header-text, oklch(0.9 0.01 220));
-    border-top: 2px solid var(--border);
-    border-bottom: 2px solid var(--border);
+    border-top: 2px solid var(--primary);
+    border-bottom: 2px solid var(--primary);
   }
   
   /* First column as header */
@@ -1113,7 +1113,7 @@
   th.sorted-asc::after,
   th[data-sort-direction="asc"]::after {
     opacity: 1 !important;
-    border-bottom: 5px solid var(--foreground) !important;
+    border-bottom: 5px solid var(--primary) !important;
     border-top: none !important;
   }
   
@@ -1121,7 +1121,7 @@
   th.sorted-desc::after,
   th[data-sort-direction="desc"]::after {
     opacity: 1 !important;
-    border-top: 5px solid var(--foreground) !important;
+    border-top: 5px solid var(--primary) !important;
     border-bottom: none !important;
   }
   
@@ -3673,28 +3673,25 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme table */
 [data-theme="light"] .tiptap-editor table {
-  border-color: var(--border);
+  border-color: #e2e8f0;
 }
-
 [data-theme="light"] .tiptap-editor th,
 [data-theme="light"] .tiptap-editor td[data-header="true"],
 [data-theme="light"] .tiptap-editor .table-header-cell {
   background: var(--table-header-bg) !important;
-  border-color: var(--border);
+  border-color: #e2e8f0;
   color: var(--table-header-text) !important;
   font-weight: 600;
 }
-
 [data-theme="light"] .tiptap-editor thead th,
 [data-theme="light"] .tiptap-editor tr:first-child th {
   background: var(--table-header-bg) !important;
   color: var(--table-header-text) !important;
-  border-top: 2px solid var(--border);
-  border-bottom: 2px solid var(--border);
+  border-top: 2px solid var(--primary);
+  border-bottom: 2px solid var(--primary);
 }
-
 [data-theme="light"] .tiptap-editor td {
-  border-color: var(--border);
+  border-color: #e2e8f0;
   background: var(--table-cell-bg) !important;
   color: var(--table-cell-text) !important;
 }
@@ -3714,7 +3711,7 @@ pre.with-line-numbers code .line::before {
 
 [data-theme="light"] .tiptap-editor th.sortable-header:hover,
 [data-theme="light"] .tiptap-editor th[data-sortable="true"]:hover {
-  background: #ebebeb !important;
+  background: #e2e8f0 !important;
 }
 
 /* Light theme callouts */
@@ -4149,8 +4146,8 @@ pre.with-line-numbers code .line::before {
 [data-theme="dark"] .tiptap-editor tr:first-child th {
   background: var(--table-header-bg) !important;
   color: var(--table-header-text) !important;
-  border-top: 2px solid var(--border);
-  border-bottom: 2px solid var(--border);
+  border-top: 2px solid var(--primary);
+  border-bottom: 2px solid var(--primary);
 }
 
 [data-theme="dark"] .tiptap-editor td {
@@ -5399,27 +5396,27 @@ pre.with-line-numbers code .line::before {
 }
 
 .syntax-highlight-overlay .md-h1 {
-  color: var(--foreground);
+  color: #e06c75;
 }
 
 .syntax-highlight-overlay .md-h2 {
-  color: var(--foreground);
+  color: #e5c07b;
 }
 
 .syntax-highlight-overlay .md-h3 {
-  color: var(--foreground);
+  color: #98c379;
 }
 
 .syntax-highlight-overlay .md-h4 {
-  color: var(--foreground);
+  color: #56b6c2;
 }
 
 .syntax-highlight-overlay .md-h5 {
-  color: var(--foreground);
+  color: #61afef;
 }
 
 .syntax-highlight-overlay .md-h6 {
-  color: var(--muted-foreground);
+  color: #c678dd;
 }
 
 .syntax-highlight-overlay .md-bold {
@@ -5497,27 +5494,27 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme overrides */
 :root:not(.dark) .syntax-highlight-overlay .md-h1 {
-  color: var(--foreground);
+  color: #c41a16;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-h2 {
-  color: var(--foreground);
+  color: #c46210;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-h3 {
-  color: var(--foreground);
+  color: #2e7d32;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-h4 {
-  color: var(--foreground);
+  color: #0277bd;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-h5 {
-  color: var(--foreground);
+  color: #1565c0;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-h6 {
-  color: var(--muted-foreground);
+  color: #7b1fa2;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-bold {
@@ -6410,4 +6407,104 @@ pre.with-line-numbers code .line::before {
 [data-theme="dark"] .image-resizer.image-uploading::before {
   border-color: oklch(0.4 0 0);
   border-top-color: oklch(0.7 0.15 250);
+}
+
+/* ============================================================
+   NEUTRAL COLOR THEME OVERRIDES
+   Applied when colorTheme="neutral" prop is set.
+   Overrides heading colors to match body text and table accents
+   to neutral grays instead of the default colorful palette.
+   ============================================================ */
+
+/* --- Neutral heading colors (dark mode) --- */
+.color-theme-neutral[data-theme="dark"] {
+  --h1-color: var(--foreground);
+  --h2-color: var(--foreground);
+  --h3-color: var(--foreground);
+  --h4-color: var(--foreground);
+  --h5-color: var(--foreground);
+  --h6-color: var(--muted-foreground);
+  --table-header-bg: #2a2d32;
+  --table-header-text: #dadada;
+}
+
+/* --- Neutral heading colors (light mode) --- */
+.color-theme-neutral[data-theme="light"] {
+  --h1-color: var(--foreground);
+  --h2-color: var(--foreground);
+  --h3-color: var(--foreground);
+  --h4-color: var(--foreground);
+  --h5-color: var(--foreground);
+  --h6-color: var(--muted-foreground);
+  --table-header-bg: #f5f5f5;
+  --table-header-text: #333333;
+  --table-row-even: #fafafa;
+  --table-row-hover: #f0f0f0;
+}
+
+/* --- Neutral table borders (replaces blue primary with subtle gray) --- */
+.color-theme-neutral .tiptap-editor table {
+  border-top: 2px solid var(--border);
+}
+
+.color-theme-neutral .tiptap-editor thead th,
+.color-theme-neutral .tiptap-editor tr:first-child th {
+  border-top: 2px solid var(--border) !important;
+  border-bottom: 2px solid var(--border) !important;
+}
+
+.color-theme-neutral[data-theme="light"] .tiptap-editor table {
+  border-color: var(--border);
+}
+
+.color-theme-neutral[data-theme="light"] .tiptap-editor th,
+.color-theme-neutral[data-theme="light"] .tiptap-editor td[data-header="true"],
+.color-theme-neutral[data-theme="light"] .tiptap-editor .table-header-cell {
+  border-color: var(--border);
+}
+
+.color-theme-neutral[data-theme="light"] .tiptap-editor td {
+  border-color: var(--border);
+}
+
+.color-theme-neutral[data-theme="light"] .tiptap-editor th.sortable-header:hover,
+.color-theme-neutral[data-theme="light"] .tiptap-editor th[data-sortable="true"]:hover {
+  background: #ebebeb !important;
+}
+
+/* --- Neutral sort indicator arrows --- */
+.color-theme-neutral .tiptap-editor th.sorted-asc::after,
+.color-theme-neutral .tiptap-editor th[data-sort-direction="asc"]::after {
+  border-bottom-color: var(--foreground) !important;
+}
+
+.color-theme-neutral .tiptap-editor th.sorted-desc::after,
+.color-theme-neutral .tiptap-editor th[data-sort-direction="desc"]::after {
+  border-top-color: var(--foreground) !important;
+}
+
+/* --- Neutral syntax-highlighted heading colors (dark mode) --- */
+.color-theme-neutral .syntax-highlight-overlay .md-h1,
+.color-theme-neutral .syntax-highlight-overlay .md-h2,
+.color-theme-neutral .syntax-highlight-overlay .md-h3,
+.color-theme-neutral .syntax-highlight-overlay .md-h4,
+.color-theme-neutral .syntax-highlight-overlay .md-h5 {
+  color: var(--foreground);
+}
+
+.color-theme-neutral .syntax-highlight-overlay .md-h6 {
+  color: var(--muted-foreground);
+}
+
+/* --- Neutral syntax-highlighted heading colors (light mode) --- */
+.color-theme-neutral:not(.dark) .syntax-highlight-overlay .md-h1,
+.color-theme-neutral:not(.dark) .syntax-highlight-overlay .md-h2,
+.color-theme-neutral:not(.dark) .syntax-highlight-overlay .md-h3,
+.color-theme-neutral:not(.dark) .syntax-highlight-overlay .md-h4,
+.color-theme-neutral:not(.dark) .syntax-highlight-overlay .md-h5 {
+  color: var(--foreground);
+}
+
+.color-theme-neutral:not(.dark) .syntax-highlight-overlay .md-h6 {
+  color: var(--muted-foreground);
 }

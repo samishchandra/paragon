@@ -207,6 +207,8 @@ export interface MarkdownEditorProps {
   showWordCount?: boolean;
   /** Theme mode - controls dark/light styling of the editor */
   theme?: 'dark' | 'light';
+  /** Color theme for headings and table accents (default: 'colorful') */
+  colorTheme?: 'colorful' | 'neutral';
   /** Enable auto-save to localStorage (default: true) */
   autoSave?: boolean;
   /** Storage key for auto-save (default: 'paragon-editor-content') */
@@ -425,6 +427,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   showToolbar = true,
   showWordCount = true,
   theme,
+  colorTheme = 'colorful',
   autoSave = true,
   autoSaveKey = 'paragon-editor-content',
   autoSaveDelay = 1000,
@@ -868,7 +871,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   };
 
   return (
-    <div className={`markdown-editor-container ${className}`} data-theme={theme}>
+    <div className={`markdown-editor-container ${colorTheme === 'neutral' ? 'color-theme-neutral' : ''} ${className}`} data-theme={theme}>
       {/* Recovery banner for auto-saved content */}
       {autoSave && showRecoveryBanner && autoSaveState.hasRecoverableContent && (
         <RecoveryBanner
