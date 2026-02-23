@@ -1,9 +1,36 @@
 import { EditorContent } from '@tiptap/react';
-
+/**
+ * MarkdownEditor — main orchestrator component.
+ *
+ * Architecture overview:
+ *
+ *   Hooks (./hooks/)
+ *     useEditorExtensions   – builds the TipTap extension array
+ *     useEditorInstance     – creates the TipTap editor, debounced onUpdate, lightweight mode
+ *     useEditorAPI          – exposes imperative methods via forwardRef
+ *     useEditorKeyboardShortcuts – space-triggered markdown shortcuts (headings, lists, etc.)
+ *     useHandleModeSwitch   – WYSIWYG ↔ markdown mode conversion pipeline
+ *     useGlobalEditorAPI    – attaches window.__paragonEditorModeAPI for external control
+ *     useTurndownService    – lazy-loaded HTML → markdown (turndown) service
+ *     useAutoSave           – debounced auto-save with dirty tracking
+ *     useWordCount          – live word/character count
+ *
+ *   Sub-components
+ *     EditorLoadingSkeleton – placeholder shown while the editor initialises
+ *     EditorModeToggle      – WYSIWYG / Markdown toggle buttons
+ *     WYSIWYGOverlays       – floating toolbar, AI dropdown, slash commands,
+ *                             link popover, wiki-link autocomplete, image edit popover
+ *     EditorToolbar         – static formatting toolbar
+ *     FindReplace           – Cmd+H find-and-replace panel
+ *
+ *   Utilities (./utils/)
+ *     markdownPipeline      – markdown → HTML conversion (preprocessMarkdown, postprocessHtml)
+ *     convertCheckboxLists  – transforms <input type="checkbox"> into TipTap task items
+ *     splitSeparatedLists   – splits mixed OL/UL/task lists separated by blank lines
+ *     structureImagesInListItems – restructures images inside list items for TipTap
+ *     restoreHeaderColumn   – restores header-column markers in table HTML
+ */
 import { useCallback, useMemo, useState, useRef, forwardRef } from 'react';
-// LinkPopover, LinkHoverTooltip, FloatingToolbar are now used inside WYSIWYGOverlays
-// parseDateFromMarkdown, getDateVariant, isValidTag, normalizeTag are now used inside useHandleModeSwitch
-// SlashCommands, WikiLinkAutocomplete are now used inside WYSIWYGOverlays
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace, type SearchMatch } from './FindReplace';
 import { SelectAllActionBar } from './SelectAllActionBar';
@@ -13,10 +40,6 @@ import { useEditorAPI } from './hooks/useEditorAPI';
 import { useGlobalEditorAPI } from './hooks/useGlobalEditorAPI';
 import { AutoSaveIndicator } from './AutoSaveIndicator';
 import { RecoveryBanner } from './RecoveryBanner';
-// DragHandleOverlay removed - drag and reorder functionality disabled
-// markdownToHtml and PreprocessOptions are now used inside useHandleModeSwitch
-
-// ImageDropZone, ImageEditPopover are now used inside WYSIWYGOverlays
 import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
 import { PerformanceProfiler } from './PerformanceProfiler';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
@@ -26,18 +49,13 @@ import { WYSIWYGOverlays } from './WYSIWYGOverlays';
 import CustomScrollbar from './CustomScrollbar';
 import './PerformanceProfiler.css';
 import { Sparkles } from 'lucide-react';
-// FileText, Eye are now used inside EditorModeToggle
 import type { AIActionDefinition, AIActionHandler, AIState } from './ai/types';
 import { useAIState } from './ai/useAIState';
-// AIDropdownMenu, AIResultPopover are now used inside WYSIWYGOverlays
 import { TableOfContents } from './TableOfContents';
 import { useEditorInstance } from './hooks/useEditorInstance';
 import { useEditorKeyboardShortcuts } from './hooks/useEditorKeyboardShortcuts';
 import { useEditorExtensions } from './hooks/useEditorExtensions';
 import { useHandleModeSwitch } from './hooks/useHandleModeSwitch';
-// marked and turndown are lazy-loaded for performance
-// marked: dynamically imported in handleModeSwitch (only needed for markdown→WYSIWYG)
-// turndown: lazy-initialized via useTurndownService hook
 import type { Editor } from '@tiptap/react';
 
 /*
