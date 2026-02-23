@@ -4,8 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useRef, forwardRef } from 'r
 import { LinkPopover } from './LinkPopover';
 import { LinkHoverTooltip } from './LinkHoverTooltip';
 import { FloatingToolbar } from './FloatingToolbar';
-import { parseDateFromMarkdown, getDateVariant } from './extensions/DatePill';
-import { isValidTag, normalizeTag } from './extensions/TagPill';
+// parseDateFromMarkdown, getDateVariant, isValidTag, normalizeTag are now used inside useHandleModeSwitch
 import { SlashCommands } from './SlashCommands';
 import { WikiLinkAutocomplete } from './WikiLinkAutocomplete';
 import { EditorToolbar } from './EditorToolbar';
@@ -18,10 +17,7 @@ import { useGlobalEditorAPI } from './hooks/useGlobalEditorAPI';
 import { AutoSaveIndicator } from './AutoSaveIndicator';
 import { RecoveryBanner } from './RecoveryBanner';
 // DragHandleOverlay removed - drag and reorder functionality disabled
-import {
-  markdownToHtml,
-} from './utils';
-import type { PreprocessOptions } from './utils';
+// markdownToHtml and PreprocessOptions are now used inside useHandleModeSwitch
 
 import { ImageDropZone } from './ImageDropZone';
 import { ImageEditPopover } from './ImageEditPopover';
@@ -39,6 +35,7 @@ import { TableOfContents } from './TableOfContents';
 import { useTurndownService } from './hooks/useTurndownService';
 import { useEditorKeyboardShortcuts } from './hooks/useEditorKeyboardShortcuts';
 import { useEditorExtensions } from './hooks/useEditorExtensions';
+import { useHandleModeSwitch } from './hooks/useHandleModeSwitch';
 // marked and turndown are lazy-loaded for performance
 // marked: dynamically imported in handleModeSwitch (only needed for markdown→WYSIWYG)
 // turndown: lazy-initialized via useTurndownService hook
@@ -801,47 +798,18 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }
   }, [editor, turndownService, initialMode]);
   
-  // Handle mode switching
-  const handleModeSwitch = useCallback(async (newMode: 'wysiwyg' | 'markdown') => {
-    if (!editor) return;
-    
-    if (newMode === 'markdown' && editorModeRef.current === 'wysiwyg') {
-      // Convert HTML to Markdown
-      const html = editor.getHTML();
-      const markdown = turndownService.turndown(html);
-      setRawMarkdown(markdown);
-      rawMarkdownRef.current = markdown;
-    } else if (newMode === 'wysiwyg' && editorModeRef.current === 'markdown') {
-      // Convert Markdown back to HTML and set in editor using marked
-      // Use queueMicrotask to avoid flushSync error when ReactNodeViewRenderer is used
-      // This defers the setContent call to after React's render cycle completes
-      
-      // Lazy-load marked (only needed for markdown→WYSIWYG conversion)
-      const { marked } = await import('marked');
-      const markedParse = (src: string) => marked.parse(src, { async: false, breaks: true }) as string;
-      
-      const pipelineOptions: PreprocessOptions = {
-        enableTagAutoDetect,
-        disableTagPills: !!disabledFeatures.tagPills,
-        isValidTag,
-        normalizeTag,
-        parseDateFromMarkdown,
-        getDateVariant,
-      };
-      
-      const html = markdownToHtml(rawMarkdownRef.current, markedParse, pipelineOptions);
-      
-      queueMicrotask(() => {
-        if (!editor.isDestroyed) {
-          editor.commands.setContent(html);
-        }
-      });
-    }
-    
-    setEditorMode(newMode);
-    editorModeRef.current = newMode;
-    onModeChange?.(newMode);
-  }, [editor, turndownService, onModeChange]);
+  // Handle mode switching (extracted to hook)
+  const handleModeSwitch = useHandleModeSwitch({
+    editor,
+    turndownService,
+    editorModeRef,
+    rawMarkdownRef,
+    setEditorMode,
+    setRawMarkdown,
+    onModeChange,
+    enableTagAutoDetect,
+    disabledFeatures,
+  });
 
   // Handle raw markdown changes
   const handleRawMarkdownChange = useCallback((markdown: string) => {
