@@ -9,6 +9,7 @@ A professional, feature-rich markdown editor component designed as a drop-in for
 - **30+ Features**: Tables, code blocks, date pills, callouts, Find & Replace, TOC, and more
 - **Zero Lock-in**: Opt-in AI, modular extensions, CSS-variable theming
 - **Production Ready**: Error boundary, auto-save/recovery, performance profiler
+- **Fully Tested**: 847 unit tests + 40 Playwright E2E browser tests
 
 ---
 
@@ -37,7 +38,7 @@ A professional, feature-rich markdown editor component designed as a drop-in for
 - **Wiki Links** — `[[Page Name]]` syntax with click handler callback
 - **Collapsible Lists** — nested list items with expand/collapse chevron toggles
 - **Collapsible Headings** — click heading to collapse content underneath
-- **Floating Toolbar** on text selection (glassmorphic design with backdrop blur)
+- **Floating Toolbar** on text selection (glassmorphic design with backdrop blur, auto-dismisses on scroll)
 - **Slash Commands** (`/` to open command palette) with search filtering
 - **Find & Replace** (`Ctrl+H`) — works in both WYSIWYG and raw markdown mode with visual highlights
 - **Table of Contents** — auto-generated sidebar with scroll sync, configurable heading levels, and tree view
@@ -45,6 +46,7 @@ A professional, feature-rich markdown editor component designed as a drop-in for
 - **Copy as Markdown** — export content as markdown
 - **Word and Character Count** in the footer
 - **Select All Action Bar** — bulk actions when all content is selected
+- **Bottom Buffer** — generous padding at the end of content so the cursor never sits at the screen edge
 
 ### AI Writing Assistant (opt-in)
 
@@ -74,6 +76,7 @@ Paragon includes a **provider-agnostic AI integration** that is completely opt-i
 
 - **CSS Variables** for easy theming (OKLCH color format)
 - **Dark and Light Modes** with per-instance `theme` prop
+- **Color Themes**: `colorful` (default, colored headings and blue table accents) or `neutral` (headings match body text, gray table borders) via `colorTheme` prop
 - **Theme Provider** for React context-based theming
 - **Customizable Toolbar** — show/hide, or replace with `renderToolbar`
 - **Customizable Footer** — replace with `renderFooter`
@@ -122,6 +125,16 @@ function MyApp() {
     />
   );
 }
+```
+
+### With Color Theme
+
+```tsx
+// Colorful theme (default) — colored headings and blue table accents
+<MarkdownEditor content={content} onChange={setContent} colorTheme="colorful" />
+
+// Neutral theme — headings match body text, gray table borders
+<MarkdownEditor content={content} onChange={setContent} colorTheme="neutral" />
 ```
 
 ### With AI Integration
@@ -220,6 +233,7 @@ function MyApp() {
 | `autofocus` | `boolean` | `false` | Auto-focus on mount |
 | `className` | `string` | `''` | Additional CSS classes |
 | `theme` | `'dark' \| 'light'` | `'dark'` | Theme preset |
+| `colorTheme` | `'colorful' \| 'neutral'` | `'colorful'` | Color theme for headings and table accents |
 | `minHeight` | `string` | `'200px'` | Minimum editor height |
 | `maxHeight` | `string` | - | Maximum editor height |
 | `spellCheck` | `boolean` | `true` | Enable browser spellcheck |
@@ -374,6 +388,25 @@ Type these shortcuts followed by a space to auto-convert:
 
 ## Theming
 
+### Color Themes
+
+Paragon supports two color themes via the `colorTheme` prop:
+
+| Theme | Headings | Table Accents | Best For |
+|-------|----------|---------------|----------|
+| `colorful` (default) | Colored per level (blue, purple, teal, etc.) | Blue header borders | Visual distinction between heading levels |
+| `neutral` | Same color as body text | Gray borders | Clean, minimal aesthetic |
+
+```tsx
+// Colorful (default)
+<MarkdownEditor colorTheme="colorful" />
+
+// Neutral
+<MarkdownEditor colorTheme="neutral" />
+```
+
+The `colorTheme` prop is also available as a query parameter on the demo editor page: `?colorTheme=neutral`.
+
 ### Available Themes
 
 - **Dark** (default): GitHub Dark inspired
@@ -390,6 +423,14 @@ Type these shortcuts followed by a space to auto-convert:
 /* Primary accent */
 --editor-primary: oklch(0.7 0.15 220);
 --editor-primary-fg: oklch(0.13 0.01 250);
+
+/* Heading colors (colorful theme) */
+--h1-color: #4a9eff;
+--h2-color: #c084fc;
+--h3-color: #34d399;
+--h4-color: #fbbf24;
+--h5-color: #f87171;
+--h6-color: #9ca3af;
 
 /* Callouts */
 --editor-callout-info: oklch(0.5 0.12 220);
@@ -408,13 +449,46 @@ Type these shortcuts followed by a space to auto-convert:
 
 ---
 
+## Testing
+
+Paragon has comprehensive test coverage across two layers:
+
+### Unit Tests (Vitest)
+
+847 unit tests covering all hooks, utilities, extensions, and components:
+
+```bash
+pnpm test        # Run all unit tests
+pnpm test:watch  # Watch mode
+```
+
+### E2E Tests (Playwright)
+
+40 real-browser tests that exercise the actual editor canvas in Chromium, catching rendering issues that mocked tests miss:
+
+```bash
+pnpm test:e2e    # Run Playwright E2E tests
+```
+
+E2E tests cover:
+- Page loading, layout, and demo content rendering
+- WYSIWYG typing, formatting shortcuts (bold, italic, headings, lists, code blocks)
+- Mode switching (WYSIWYG ↔ raw markdown) and content round-tripping
+- Find & Replace functionality
+- Query parameters (theme, toolbar, ToC, word count, colorTheme)
+- Slash commands, Table of Contents, task list checkbox interactivity
+- localStorage persistence, undo/redo, rapid typing, and edge cases
+
+---
+
 ## Architecture
 
 ```
 components/editor/
 ├── MarkdownEditor.tsx          # Main editor component (1,500+ lines)
 ├── EditorToolbar.tsx           # Top toolbar with formatting buttons
-├── FloatingToolbar.tsx         # Selection-based floating toolbar
+├── EditorModeToggle.tsx        # WYSIWYG/raw mode toggle
+├── FloatingToolbar.tsx         # Selection-based floating toolbar (scroll-dismiss)
 ├── SlashCommands.tsx           # Slash command palette
 ├── FindReplace.tsx             # Find & Replace panel
 ├── CodeBlockComponent.tsx      # Code block with language selector + copy
@@ -433,7 +507,8 @@ components/editor/
 ├── ThemeProvider.tsx           # React context for theming
 ├── PerformanceProfiler.tsx     # Built-in performance monitor
 ├── index.ts                    # Public exports
-├── editor.css                  # Main stylesheet (5,700+ lines)
+├── editor.css                  # Main stylesheet (6,500+ lines, colorful default + neutral overrides)
+├── editor-colorful.css         # Backup of original colorful theme
 ├── ai/
 │   ├── AIDropdownMenu.tsx      # AI action dropdown
 │   ├── AIResultPopover.tsx     # AI result display with accept/reject
@@ -462,15 +537,32 @@ components/editor/
 │   ├── TableCellWithMenu.tsx   # Table cell with context menu
 │   ├── TableRowDrag.ts         # Table row drag-and-drop
 │   ├── TableSorting.tsx        # Table column sorting
+│   ├── TagPill.ts              # Tag pill inline node
 │   └── WikiLink.ts             # Wiki link extension
 ├── hooks/
+│   ├── index.ts                # Barrel file — consolidated hook exports
 │   ├── useAutoSave.ts          # Auto-save hook
-│   ├── useTurndownService.ts   # HTML→Markdown conversion
+│   ├── useEditorAPI.ts         # Editor API (copy, export, etc.)
+│   ├── useEditorExtensions.ts  # Extension configuration
+│   ├── useEditorInstance.ts    # TipTap editor instance
+│   ├── useEditorKeyboardShortcuts.ts # Keyboard shortcut bindings
+│   ├── useGlobalEditorAPI.ts   # Global editor API via ref
+│   ├── useHandleModeSwitch.ts  # WYSIWYG ↔ markdown mode switching
+│   ├── useTurndownService.ts   # HTML→Markdown conversion (lazy-loaded)
 │   └── useWordCount.ts         # Word/character counting
+├── utils/
+│   ├── index.ts                # Barrel file — consolidated utility exports
+│   ├── convertCheckboxLists.ts # Checkbox list conversion
+│   ├── insertHorizontalRule.ts # Horizontal rule insertion
+│   ├── markdownPipeline.ts     # Markdown processing pipeline
+│   ├── performance.ts          # Performance measurement utilities
+│   ├── restoreHeaderColumn.ts  # Table header column restoration
+│   ├── splitSeparatedLists.ts  # List splitting logic
+│   └── structureImagesInListItems.ts # Image-in-list structuring
 ├── themes/
 │   └── index.ts                # Theme definitions and utilities
-└── utils/
-    └── performance.ts          # Performance measurement utilities
+└── e2e/                        # (project root)
+    └── editor.spec.ts          # Playwright E2E tests (40 tests)
 ```
 
 ---
@@ -497,17 +589,39 @@ export { ResizableImage } from './extensions/ResizableImage';
 export { ImageUpload, type ImageUploadOptions } from './extensions/ImageUpload';
 export { MixedBulletList, MixedOrderedList, MixedTaskList, MixedTaskItem, MixedListItem } from './extensions/MixedLists';
 export { CollapsibleList } from './extensions/CollapsibleList';
+export { TagPill, type TagPillOptions, isValidTag, normalizeTag } from './extensions/TagPill';
 
 // Theming
 export { EditorThemeProvider, useEditorTheme } from './ThemeProvider';
-export { createCustomTheme, applyTheme, builtInThemes } from './themes';
+export { themes, applyTheme, createCustomTheme, darkTheme, lightTheme, sepiaTheme, nordTheme, type EditorTheme } from './themes';
 
 // Hooks
-export { useAutoSave, type AutoSaveOptions, type AutoSaveState } from './hooks/useAutoSave';
+export { useAutoSave, type AutoSaveOptions, type AutoSaveState, type AutoSaveReturn } from './hooks';
 
 // AI Types
 export type { AIActionDefinition, AIActionHandler, AIState } from './ai/types';
 ```
+
+---
+
+## Query Parameters (Demo Page)
+
+The demo editor page at `/editor` supports the following query parameters:
+
+| Parameter | Values | Default | Description |
+|-----------|--------|---------|-------------|
+| `theme` | `dark`, `light` | `light` | Editor theme |
+| `colorTheme` | `colorful`, `neutral` | `colorful` | Color theme for headings and tables |
+| `toc` | `true`, `false` | `true` | Show table of contents |
+| `tocMaxLevel` | `1`–`6` | `4` | Max heading level in ToC |
+| `toolbar` | `true`, `false` | `true` | Show editor toolbar |
+| `wordcount` | `true`, `false` | `true` | Show word count in footer |
+| `autofocus` | `true`, `false` | `true` | Auto-focus editor on load |
+| `reorder` | `true`, `false` | `true` | Auto-reorder completed checklist items |
+| `editable` | `true`, `false` | `true` | Allow editing |
+| `placeholder` | any string | `Start writing...` | Custom placeholder text |
+
+Example: `/editor?theme=dark&toc=false&toolbar=true&colorTheme=neutral`
 
 ---
 
@@ -532,4 +646,5 @@ Built with:
 - [Turndown](https://github.com/mixmark-io/turndown) — HTML to Markdown
 - [Marked](https://github.com/markedjs/marked) — Markdown to HTML
 - [Lucide](https://lucide.dev/) — Icons
-
+- [Playwright](https://playwright.dev/) — E2E browser testing
+- [Vitest](https://vitest.dev/) — Unit testing framework
