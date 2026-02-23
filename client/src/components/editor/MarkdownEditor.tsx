@@ -1,29 +1,11 @@
 import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import TextAlign from '@tiptap/extension-text-align';
-import Highlight from '@tiptap/extension-highlight';
-import Link from '@tiptap/extension-link';
-import { Table } from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import { TableCellWithMenu, TableHeaderWithMenu } from './extensions/TableCellWithMenu';
-import { TableSorting } from './extensions/TableSorting';
-import { MixedBulletList, MixedOrderedList, MixedTaskList, MixedTaskItem, MixedListItem } from './extensions/MixedLists';
-import { CollapsibleList } from './extensions/CollapsibleList';
-// Using custom CodeBlockWithFeatures instead of CodeBlockLowlight
-import Underline from '@tiptap/extension-underline';
-import Subscript from '@tiptap/extension-subscript';
-import Superscript from '@tiptap/extension-superscript';
-import Typography from '@tiptap/extension-typography';
-import { CodeBlockWithFeatures } from './extensions/CodeBlockWithFeatures';
+
 import { useCallback, useEffect, useMemo, useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { LinkPopover } from './LinkPopover';
 import { LinkHoverTooltip } from './LinkHoverTooltip';
 import { FloatingToolbar } from './FloatingToolbar';
-import { CalloutWithMenu } from './extensions/CalloutWithMenu';
-import { ResizableImage } from './extensions/ResizableImage';
-import { DatePill, parseDateFromMarkdown, getDateVariant } from './extensions/DatePill';
-import { TagPill, isValidTag, normalizeTag } from './extensions/TagPill';
+import { parseDateFromMarkdown, getDateVariant } from './extensions/DatePill';
+import { isValidTag, normalizeTag } from './extensions/TagPill';
 import { SlashCommands } from './SlashCommands';
 import { WikiLinkAutocomplete } from './WikiLinkAutocomplete';
 import { EditorToolbar } from './EditorToolbar';
@@ -33,26 +15,13 @@ import { useAutoSave } from './hooks/useAutoSave';
 import { useWordCount } from './hooks/useWordCount';
 import { AutoSaveIndicator } from './AutoSaveIndicator';
 import { RecoveryBanner } from './RecoveryBanner';
-import { WikiLinkSafe } from './extensions/WikiLinkSafe';
-import { MarkdownPasteSafe } from './extensions/MarkdownPasteSafe';
 // DragHandleOverlay removed - drag and reorder functionality disabled
-import { CollapsibleHeading } from './extensions/CollapsibleHeading';
-import { MarkdownLinkInputRule } from './extensions/MarkdownLinkInputRule';
-import { CalloutInputRule } from './extensions/CalloutInputRule';
-import { SearchHighlight } from './extensions/SearchHighlight';
-import { TabIndent } from './extensions/TabIndent';
-import { ExpandSelection } from './extensions/ExpandSelection';
-import { HexColorMark } from './extensions/HexColorMark';
-import { SelectAllOccurrences } from './extensions/SelectAllOccurrences';
 import {
   insertHorizontalRuleClean,
   markdownToHtml,
 } from './utils';
 import type { PreprocessOptions } from './utils';
-import HorizontalRule from '@tiptap/extension-horizontal-rule';
-import { InputRule } from '@tiptap/core';
-import { TextSelection } from '@tiptap/pm/state';
-import { ImageUpload } from './extensions/ImageUpload';
+
 import { ImageDropZone } from './ImageDropZone';
 import { ImageEditPopover } from './ImageEditPopover';
 import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
@@ -68,6 +37,7 @@ import { AIResultPopover } from './ai/AIResultPopover';
 import { TableOfContents } from './TableOfContents';
 import { useTurndownService } from './hooks/useTurndownService';
 import { useEditorKeyboardShortcuts } from './hooks/useEditorKeyboardShortcuts';
+import { useEditorExtensions } from './hooks/useEditorExtensions';
 // marked and turndown are lazy-loaded for performance
 // marked: dynamically imported in handleModeSwitch (only needed for markdown→WYSIWYG)
 // turndown: lazy-initialized via useTurndownService hook
@@ -591,278 +561,39 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   const isLightweightRef = useRef(isLightweight);
   isLightweightRef.current = isLightweight;
 
-  // Build extensions array - conditionally include problematic extensions on mobile
-  const extensions = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const baseExtensions: any[] = [
-      StarterKit.configure({
-        heading: {
-          levels: headingLevels,
-        },
-        codeBlock: false, // We use CodeBlockLowlight instead
-        dropcursor: {
-          color: 'var(--primary)',
-          width: 2,
-        },
-        // Disable default list extensions - we use MixedLists instead
-        bulletList: false,
-        orderedList: false,
-        listItem: false,
-        // Disable extensions that we configure separately to avoid duplicates
-        link: false, // We configure Link separately with custom options
-        underline: false, // We add Underline separately
-        // Disable built-in HorizontalRule input rules - we handle HR creation
-        // via our custom space shortcut handler (insertHorizontalRuleClean)
-        // to avoid the extra empty paragraph that the default command creates
-        horizontalRule: false,
-        bold: {
-          HTMLAttributes: {
-            class: 'font-bold',
-          },
-        },
-        italic: {
-          HTMLAttributes: {
-            class: 'italic',
-          },
-        },
-      }),
-      // Mixed list extensions - allow inter-mixing of bullet, ordered, and task list items
-      MixedBulletList,
-      MixedOrderedList,
-      MixedListItem,
-      Placeholder.configure({
-        placeholder,
-        emptyEditorClass: 'is-editor-empty',
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Highlight.configure({
-        multicolor: true,
-      }),
-      Link.configure({
-        openOnClick: false,
-        autolink: true,
-        linkOnPaste: true,
-        HTMLAttributes: {
-          rel: 'noopener noreferrer',
-          target: '_blank',
-        },
-      }),
-      Underline,
-      Subscript,
-      Superscript,
-      // Typography adds ~5 plugins for auto-character conversion (e.g., -- → em dash)
-      // Skip in lightweight mode to reduce per-transaction overhead
-      ...(!isLightweight ? [Typography] : []),
-      MarkdownLinkInputRule,
-      SearchHighlight,
-      // SelectAllOccurrences adds decoration plugins; skip in lightweight mode
-      ...(!isLightweight ? [SelectAllOccurrences] : []),
-      TabIndent,
-      // Add HorizontalRule with custom input rules that use insertHorizontalRuleClean
-      // to avoid the extra empty paragraph that the default command creates.
-      // Triggers on: ---, —-, ___, ***  (at start of line)
-      HorizontalRule.extend({
-        addInputRules() {
-          const type = this.type;
-          return [
-            new InputRule({
-              find: /^(?:---|—-|___\s|\*\*\*\s)$/,
-              handler: ({ state, range }) => {
-                const { tr } = state;
-                const start = range.from;
-                const end = range.to;
-                // Delete the trigger text
-                tr.delete(start, end);
-                // Resolve position after deletion
-                const $pos = tr.doc.resolve(start);
-                const hrNode = type.create();
-                // Replace the current paragraph block with the HR
-                const blockStart = $pos.before($pos.depth);
-                const blockEnd = $pos.after($pos.depth);
-                tr.replaceWith(blockStart, blockEnd, hrNode);
-                // Position right after the HR node
-                const posAfterHR = blockStart + hrNode.nodeSize;
-                // Check if there's already content after the HR
-                if (posAfterHR < tr.doc.content.size) {
-                  const $afterHR = tr.doc.resolve(posAfterHR);
-                  if ($afterHR.nodeAfter && $afterHR.nodeAfter.isTextblock) {
-                    tr.setSelection(TextSelection.create(tr.doc, posAfterHR + 1));
-                  } else if ($afterHR.nodeAfter) {
-                    tr.setSelection(TextSelection.near(tr.doc.resolve(posAfterHR)));
-                  }
-                } else {
-                  // At end of document - add a paragraph and place cursor in it
-                  const paragraphType = state.schema.nodes.paragraph;
-                  const newParagraph = paragraphType.create();
-                  tr.insert(posAfterHR, newParagraph);
-                  tr.setSelection(TextSelection.create(tr.doc, posAfterHR + 1));
-                }
-                tr.scrollIntoView();
-              },
-            }),
-          ];
-        },
-      }),
-    ];
+  // State for image edit popover (declared here so it's available to useEditorExtensions)
+  const [imageEditState, setImageEditState] = useState<{
+    isOpen: boolean;
+    src: string;
+    alt: string;
+    pos: number;
+    position: { x: number; y: number };
+  } | null>(null);
 
-    // Conditionally add tables
-    if (!disabledFeatures.tables) {
-      baseExtensions.push(
-        Table.configure({
-          resizable: !isMobile, // Disable resize on mobile
-          HTMLAttributes: {
-            class: 'editor-table',
-          },
-        }),
-        TableRow,
-        TableCellWithMenu,
-        TableHeaderWithMenu,
-        // TableSorting adds decoration plugins for sort indicators; skip in lightweight mode
-        ...(!isLightweight ? [TableSorting] : [])
-      );
-    }
-
-    // Conditionally add task lists (using mixed variants)
-    if (!disabledFeatures.taskLists) {
-      baseExtensions.push(
-        MixedTaskList.configure({
-          HTMLAttributes: {
-            class: 'task-list',
-          },
-        }),
-        MixedTaskItem.configure({
-          nested: true,
-          HTMLAttributes: {
-            class: 'task-item',
-          },
-        })
-      );
-    }
-
-    // Collapsible list items (desktop only, skip in lightweight mode)
-    if (!isMobile && !isLightweight) {
-      baseExtensions.push(
-        CollapsibleList.configure({
-          listItemTypes: ['listItem', 'taskItem'],
-        })
-      );
-    }
-
-    // Conditionally add code blocks
-    if (!disabledFeatures.codeBlocks) {
-      baseExtensions.push(CodeBlockWithFeatures);
-    }
-
-    // Conditionally add callouts
-    if (!disabledFeatures.callouts) {
-      baseExtensions.push(CalloutWithMenu, CalloutInputRule);
-    }
-
-    // Conditionally add collapsible headings (requires enableCollapsibleHeadings prop)
-    // Skip in lightweight mode — heading decorations are expensive on large docs
-    if (enableCollapsibleHeadings && !disabledFeatures.collapsibleHeadings && !isLightweight) {
-      baseExtensions.push(
-        CollapsibleHeading.configure({
-          levels: collapsibleHeadingLevels,
-        })
-      );
-    }
-
-    // Conditionally add images
-    if (!disabledFeatures.images) {
-      baseExtensions.push(
-        ResizableImage.configure({
-          allowBase64: true,
-          HTMLAttributes: {
-            class: 'editor-image',
-          },
-          onImageClick: (attrs) => {
-            setImageEditState({
-              isOpen: true,
-              src: attrs.src,
-              alt: attrs.alt,
-              pos: attrs.pos,
-              position: { x: attrs.rect.left + attrs.rect.width / 2, y: attrs.rect.bottom },
-            });
-          },
-          resolveImageSrc: resolveImageSrcRef.current ? ((...args: any[]) => (resolveImageSrcRef.current as any)(...args)) : undefined,
-        }),
-        ImageUpload.configure({
-          maxFileSize: maxImageSize,
-          onUploadStart: onImageUploadStartRef.current ? ((...args: any[]) => (onImageUploadStartRef.current as any)(...args)) : undefined,
-          onUploadComplete: onImageUploadCompleteRef.current ? ((...args: any[]) => (onImageUploadCompleteRef.current as any)(...args)) : undefined,
-          onUploadError: onImageUploadErrorRef.current ? ((...args: any[]) => (onImageUploadErrorRef.current as any)(...args)) : undefined,
-          onImageUpload: onImageUploadRef.current ? ((file: File, options: any) => (onImageUploadRef.current as any)(file, options)) : undefined,
-        })
-      );
-    }
-
-    // Add DatePill if not disabled (works on both desktop and mobile)
-    if (!disabledFeatures.datePills) {
-      baseExtensions.push(
-        DatePill.configure({
-          HTMLAttributes: {
-            class: 'date-pill',
-          },
-        })
-      );
-    }
-
-    // Add TagPill if not disabled
-    // When enableTagAutoDetect is false, the extension is still added (for rendering existing pills)
-    // but input rules and paste handling are disabled
-    if (!disabledFeatures.tagPills) {
-      baseExtensions.push(
-        TagPill.configure({
-          HTMLAttributes: {
-            class: 'tag-pill',
-          },
-          enableAutoDetect: enableTagAutoDetect,
-        })
-      );
-    }
-
-    // Conditionally add wiki links
-    if (!disabledFeatures.wikiLinks) {
-      baseExtensions.push(
-        WikiLinkSafe.configure({
-          onWikiLinkClick: (pageName: string) => {
-            console.log('WikiLink clicked:', pageName);
-            onWikiLinkClickRef.current?.(pageName);
-          },
-          validateLink: (pageName: string) => {
-            return validateWikiLinkRef.current ? validateWikiLinkRef.current(pageName) : true;
-          },
-        })
-      );
-    }
-
-    // Conditionally add progressive Cmd+A expand selection
-    if (progressiveSelectAll) {
-      baseExtensions.push(ExpandSelection);
-    }
-
-    // Add HexColorMark for auto-detecting hex color values and rendering with background color
-    // Skip in lightweight mode — decoration scanning is expensive on large docs
-    if (enableHexColorHighlight && !isLightweight) {
-      baseExtensions.push(HexColorMark);
-    }
-
-    // Conditionally add markdown paste
-    if (!disabledFeatures.markdownPaste) {
-      baseExtensions.push(
-        MarkdownPasteSafe.configure({
-          enableMarkdownPaste: true,
-        })
-      );
-    }
-
-    return baseExtensions;
-  // Dependencies: only stable values (primitives, objects compared by reference that don't change).
-  // Callback props are accessed via refs, so they don't need to be in the deps array.
-  }, [placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures, progressiveSelectAll, enableCollapsibleHeadings, isLightweight]);
+  // Build extensions array (extracted to hook for readability)
+  const extensions = useEditorExtensions({
+    placeholder,
+    isMobile,
+    maxImageSize,
+    headingLevels,
+    collapsibleHeadingLevels,
+    disabledFeatures,
+    progressiveSelectAll,
+    enableCollapsibleHeadings,
+    enableTagAutoDetect,
+    enableHexColorHighlight,
+    isLightweight,
+    setImageEditState,
+    callbackRefs: {
+      onImageUploadStart: onImageUploadStartRef,
+      onImageUploadComplete: onImageUploadCompleteRef,
+      onImageUploadError: onImageUploadErrorRef,
+      onImageUpload: onImageUploadRef,
+      resolveImageSrc: resolveImageSrcRef,
+      onWikiLinkClick: onWikiLinkClickRef,
+      validateWikiLink: validateWikiLinkRef,
+    },
+  });
 
   // Debounced onUpdate ref for HTML serialization performance
   const onUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1017,15 +748,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
 
   // State for link popover
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
-  
-  // State for image edit popover
-  const [imageEditState, setImageEditState] = useState<{
-    isOpen: boolean;
-    src: string;
-    alt: string;
-    pos: number;
-    position: { x: number; y: number };
-  } | null>(null);
   
   // State for find/replace panel - support both controlled and uncontrolled modes
   const [internalFindReplaceOpen, setInternalFindReplaceOpen] = useState(false);
