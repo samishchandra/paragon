@@ -467,7 +467,7 @@ function ensureLoading(): void {
  * fallback (returns empty string) and logs a warning. In practice, the
  * background preload ensures the service is ready before any user action.
  */
-interface LazyTurndownService {
+export interface LazyTurndownService {
   turndown(html: string): string;
   /** Check if the underlying service is ready */
   isReady(): boolean;
