@@ -294,10 +294,24 @@ function convertCheckboxListsToTaskLists(html: string): string {
           }
         });
         
+        // Filter out empty <p> tags from blockContent.
+        // When marked wraps a checkbox inside a <p>, removing the checkbox can leave
+        // an empty <p> (or one with only whitespace/newlines). These create blank
+        // lines in the rendered output between the checkbox and the text content.
+        const filteredBlockContent = blockContent.filter(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const el = node as HTMLElement;
+            if (el.tagName === 'P' && !el.textContent?.trim() && !el.querySelector('img, figure, code, br')) {
+              return false; // Skip empty <p> tags
+            }
+          }
+          return true;
+        });
+        
         // Clear the <li> and rebuild with proper structure
         li.innerHTML = '';
         
-        // Wrap inline content in <p> if there is any
+        // Wrap inline content in <p> if there is any meaningful content
         if (inlineContent.length > 0) {
           const p = doc.createElement('p');
           inlineContent.forEach(node => p.appendChild(node));
@@ -305,12 +319,15 @@ function convertCheckboxListsToTaskLists(html: string): string {
           if (p.firstChild && p.firstChild.nodeType === Node.TEXT_NODE) {
             p.firstChild.textContent = (p.firstChild.textContent || '').replace(/^\s+/, '');
           }
-          li.appendChild(p);
+          // Only append the <p> if it has meaningful content (not just whitespace)
+          if (p.textContent?.trim() || p.querySelector('img, figure, code, br')) {
+            li.appendChild(p);
+          }
         }
         
         // Re-append block content (nested lists, etc.)
         // If a <p> that contained the checkbox is now in blockContent, it already has the text
-        blockContent.forEach(node => li.appendChild(node));
+        filteredBlockContent.forEach(node => li.appendChild(node));
       }
     });
 
