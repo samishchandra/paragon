@@ -25,7 +25,7 @@ export interface EditorErrorBoundaryProps {
     /** Custom class name for the error fallback container */
     className?: string;
 }
-interface EditorErrorBoundaryState {
+export interface EditorErrorBoundaryState {
     hasError: boolean;
     error: Error | null;
     errorInfo: React.ErrorInfo | null;
@@ -44,4 +44,3 @@ export declare class EditorErrorBoundary extends Component<EditorErrorBoundaryPr
     toggleDetails: () => void;
     render(): string | number | bigint | boolean | import("react").JSX.Element | Iterable<ReactNode> | Promise<string | number | bigint | boolean | import("react").ReactPortal | import("react").ReactElement<unknown, string | import("react").JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined;
 }
-export {};

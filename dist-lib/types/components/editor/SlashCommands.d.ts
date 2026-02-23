@@ -1,5 +1,5 @@
 import { Editor } from '@tiptap/react';
-interface SlashCommandsProps {
+export interface SlashCommandsProps {
     editor: Editor;
     disabledFeatures?: {
         tables?: boolean;

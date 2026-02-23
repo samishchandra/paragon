@@ -11,7 +11,7 @@ import { FileText, Plus } from 'lucide-react';
  * Follows the same portal + fixed positioning pattern as SlashCommands.
  */
 
-interface WikiLinkAutocompleteProps {
+export interface WikiLinkAutocompleteProps {
   editor: Editor;
   onSearch: (query: string) => Promise<Array<{ id: string; title: string; type: string }>>;
   onCreateItem?: (title: string) => void;

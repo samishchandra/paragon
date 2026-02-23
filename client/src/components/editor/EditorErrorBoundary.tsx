@@ -31,7 +31,7 @@ export interface EditorErrorBoundaryProps {
   className?: string;
 }
 
-interface EditorErrorBoundaryState {
+export interface EditorErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
   errorInfo: React.ErrorInfo | null;

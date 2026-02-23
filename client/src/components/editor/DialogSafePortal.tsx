@@ -29,7 +29,7 @@ import { useCallback, type ReactNode, type MouseEvent, type PointerEvent } from 
  * use the `onMouseDown` prop — it runs before stopPropagation.
  */
 
-interface DialogSafePortalProps {
+export interface DialogSafePortalProps {
   children: ReactNode;
   /** Additional class name for the portal container */
   className?: string;

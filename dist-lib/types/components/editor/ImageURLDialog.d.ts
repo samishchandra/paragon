@@ -1,4 +1,4 @@
-interface ImageURLDialogProps {
+export interface ImageURLDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onInsert: (url: string, alt: string) => void;

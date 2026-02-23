@@ -7,7 +7,7 @@ import { themes, EditorTheme, applyTheme } from './themes';
  * Supports multiple themes and custom theme creation
  */
 
-interface ThemeContextValue {
+export interface ThemeContextValue {
   theme: EditorTheme;
   themeName: string;
   setTheme: (name: string) => void;
@@ -16,7 +16,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-interface EditorThemeProviderProps {
+export interface EditorThemeProviderProps {
   children: ReactNode;
   defaultTheme?: string;
   containerRef?: React.RefObject<HTMLElement>;

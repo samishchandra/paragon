@@ -26,7 +26,7 @@ import { type ReactNode, type MouseEvent } from 'react';
  * For components that need additional mouseDown handling (e.g., preventing blur),
  * use the `onMouseDown` prop — it runs before stopPropagation.
  */
-interface DialogSafePortalProps {
+export interface DialogSafePortalProps {
     children: ReactNode;
     /** Additional class name for the portal container */
     className?: string;

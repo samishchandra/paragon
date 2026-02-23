@@ -7,11 +7,9 @@
  */
 import { useImperativeHandle, type Ref } from 'react';
 import type { Editor } from '@tiptap/core';
-// Accept any object with a turndown() method — this matches both
-// TurndownService and the LazyTurndownService wrapper from useTurndownService.
-interface TurndownLike {
-  turndown(html: string): string;
-}
+// Re-use the shared TurndownLike interface (accepts both TurndownService
+// and the LazyTurndownService wrapper from useTurndownService).
+import type { TurndownLike } from './useHandleModeSwitch';
 import type { MarkdownEditorRef } from '../MarkdownEditor';
 import { insertHorizontalRuleClean } from '../utils/insertHorizontalRule';
 

@@ -32,7 +32,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Sparkles,
 };
 
-interface AIDropdownMenuProps {
+export interface AIDropdownMenuProps {
   actions: AIActionDefinition[];
   scope: 'selection' | 'document';
   onAction: (actionId: string, customPrompt?: string) => void;

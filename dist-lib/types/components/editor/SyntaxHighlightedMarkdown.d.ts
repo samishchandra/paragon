@@ -1,8 +1,8 @@
-interface SearchMatch {
+export interface SearchMatch {
     from: number;
     to: number;
 }
-interface SyntaxHighlightedMarkdownProps {
+export interface SyntaxHighlightedMarkdownProps {
     content: string;
     onChange: (content: string) => void;
     placeholder?: string;

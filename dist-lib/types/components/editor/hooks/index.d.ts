@@ -12,6 +12,6 @@ export { useEditorExtensions, type DisabledFeatures, type ImageEditState, type E
 export { useEditorInstance, type UseEditorInstanceOptions } from './useEditorInstance';
 export { useEditorKeyboardShortcuts, type KeyboardShortcutCallbacks } from './useEditorKeyboardShortcuts';
 export { useGlobalEditorAPI, type UseGlobalEditorAPIDeps } from './useGlobalEditorAPI';
-export { useHandleModeSwitch, type UseHandleModeSwitchDeps } from './useHandleModeSwitch';
+export { useHandleModeSwitch, type UseHandleModeSwitchDeps, type TurndownLike } from './useHandleModeSwitch';
 export { useTurndownService, type LazyTurndownService } from './useTurndownService';
 export { useWordCount, type WordCountResult, type UseWordCountOptions } from './useWordCount';

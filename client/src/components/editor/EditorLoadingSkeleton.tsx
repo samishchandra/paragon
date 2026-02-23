@@ -4,7 +4,7 @@
  * Renders animated pulse bars that mimic document content.
  */
 
-interface EditorLoadingSkeletonProps {
+export interface EditorLoadingSkeletonProps {
   className?: string;
   theme?: string;
 }

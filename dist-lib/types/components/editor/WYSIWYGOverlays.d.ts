@@ -28,7 +28,7 @@ export interface ImageEditState {
     };
     pos: number;
 }
-interface WYSIWYGOverlaysProps {
+export interface WYSIWYGOverlaysProps {
     editor: Editor;
     isMobile: boolean;
     disabledFeatures: Record<string, boolean | undefined>;
@@ -65,4 +65,3 @@ interface WYSIWYGOverlaysProps {
     onImageEditClose: () => void;
 }
 export declare function WYSIWYGOverlays({ editor, isMobile, disabledFeatures, containerRef, editable, showFloatingToolbar, isLinkPopoverOpen, aiEnabled, onAISetupRequired, onAISparklesClick, aiDropdown, aiActions, onAIActionSelect, onAIDropdownClose, aiState, aiPopoverPosition, onAIReplace, onAIInsert, onAIRetry, onAIDiscard, onLinkPopoverClose, onEditLink, onWikiLinkSearch, imageEditState, onImageSave, onImageDelete, onImageEditClose, }: WYSIWYGOverlaysProps): import("react").JSX.Element;
-export {};

@@ -13,7 +13,7 @@
  * This component is lazy-loaded — only imported when AI features are enabled.
  */
 import type { AIState } from './types';
-interface AIResultPopoverProps {
+export interface AIResultPopoverProps {
     state: AIState;
     /** Anchor position in viewport coordinates — selection bounds */
     position: {
@@ -31,4 +31,3 @@ interface AIResultPopoverProps {
     onDiscard: () => void;
 }
 export declare function AIResultPopover({ state, position, onReplace, onInsert, onRetry, onDiscard, }: AIResultPopoverProps): import("react").JSX.Element | null;
-export {};

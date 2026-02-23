@@ -1,5 +1,5 @@
 import { Editor } from '@tiptap/react';
-interface LinkPopoverProps {
+export interface LinkPopoverProps {
     editor: Editor;
     isOpen: boolean;
     onClose: () => void;

@@ -1,4 +1,4 @@
-interface ImageEditPopoverProps {
+export interface ImageEditPopoverProps {
     /**
      * Current image source URL
      */
@@ -28,4 +28,3 @@ interface ImageEditPopoverProps {
     onClose: () => void;
 }
 export declare function ImageEditPopover({ src, alt, position, onSave, onDelete, onClose, }: ImageEditPopoverProps): import("react").JSX.Element;
-export {};

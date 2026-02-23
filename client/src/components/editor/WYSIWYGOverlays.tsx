@@ -36,7 +36,7 @@ export interface ImageEditState {
   pos: number;
 }
 
-interface WYSIWYGOverlaysProps {
+export interface WYSIWYGOverlaysProps {
   editor: Editor;
   isMobile: boolean;
   disabledFeatures: Record<string, boolean | undefined>;

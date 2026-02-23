@@ -32,7 +32,7 @@ export { useEditorKeyboardShortcuts, type KeyboardShortcutCallbacks } from './us
 export { useGlobalEditorAPI, type UseGlobalEditorAPIDeps } from './useGlobalEditorAPI';
 
 // WYSIWYG ↔ Markdown mode switching with turndown/marked conversion
-export { useHandleModeSwitch, type UseHandleModeSwitchDeps } from './useHandleModeSwitch';
+export { useHandleModeSwitch, type UseHandleModeSwitchDeps, type TurndownLike } from './useHandleModeSwitch';
 
 // Lazy-loaded TurndownService for HTML→Markdown conversion
 export { useTurndownService, type LazyTurndownService } from './useTurndownService';

@@ -1,5 +1,5 @@
 import { Editor } from '@tiptap/react';
-interface WikiLinkAutocompleteProps {
+export interface WikiLinkAutocompleteProps {
     editor: Editor;
     onSearch: (query: string) => Promise<Array<{
         id: string;

@@ -5,13 +5,13 @@ import { EditorTheme } from './themes';
  * Theme provider for the markdown editor
  * Supports multiple themes and custom theme creation
  */
-interface ThemeContextValue {
+export interface ThemeContextValue {
     theme: EditorTheme;
     themeName: string;
     setTheme: (name: string) => void;
     availableThemes: string[];
 }
-interface EditorThemeProviderProps {
+export interface EditorThemeProviderProps {
     children: ReactNode;
     defaultTheme?: string;
     containerRef?: React.RefObject<HTMLElement>;

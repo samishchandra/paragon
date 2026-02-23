@@ -1,6 +1,6 @@
 import type { Editor } from '@tiptap/core';
 /** Accepts any object with a turndown() method (TurndownService or LazyTurndownService). */
-interface TurndownLike {
+export interface TurndownLike {
     turndown(html: string): string;
 }
 export interface UseHandleModeSwitchDeps {
@@ -15,4 +15,3 @@ export interface UseHandleModeSwitchDeps {
     disabledFeatures: Record<string, boolean | undefined>;
 }
 export declare function useHandleModeSwitch({ editor, turndownService, editorModeRef, rawMarkdownRef, setEditorMode, setRawMarkdown, onModeChange, enableTagAutoDetect, disabledFeatures, }: UseHandleModeSwitchDeps): (newMode: "wysiwyg" | "markdown") => Promise<void>;
-export {};

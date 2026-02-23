@@ -9,12 +9,12 @@ import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
  * Never apply font-size changes to overlay tokens — this causes cursor/text misalignment.
  */
 
-interface SearchMatch {
+export interface SearchMatch {
   from: number;
   to: number;
 }
 
-interface SyntaxHighlightedMarkdownProps {
+export interface SyntaxHighlightedMarkdownProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;

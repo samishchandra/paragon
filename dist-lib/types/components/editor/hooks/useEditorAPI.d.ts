@@ -7,9 +7,7 @@
  */
 import { type Ref } from 'react';
 import type { Editor } from '@tiptap/core';
-interface TurndownLike {
-    turndown(html: string): string;
-}
+import type { TurndownLike } from './useHandleModeSwitch';
 import type { MarkdownEditorRef } from '../MarkdownEditor';
 export interface UseEditorAPIDeps {
     editor: Editor | null;
@@ -29,4 +27,3 @@ export interface UseEditorAPIDeps {
     setFindReplaceFocusTrigger: React.Dispatch<React.SetStateAction<number>>;
 }
 export declare function useEditorAPI(ref: Ref<MarkdownEditorRef>, { editor, turndownService, editorModeRef, handleModeSwitch, wordCount, autoSaveState, setIsFindReplaceOpen, setFindReplaceFocusTrigger, }: UseEditorAPIDeps): void;
-export {};

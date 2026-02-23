@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import type { AIState } from './types';
 
-interface AIResultPopoverProps {
+export interface AIResultPopoverProps {
   state: AIState;
   /** Anchor position in viewport coordinates — selection bounds */
   position: { selectionTop: number; selectionBottom: number; selectionCenterX: number };

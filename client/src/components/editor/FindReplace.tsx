@@ -19,7 +19,7 @@ import {
  * Glassmorphic styling with keyboard navigation
  */
 
-interface FindReplaceProps {
+export interface FindReplaceProps {
   editor: Editor;
   isOpen: boolean;
   onClose: () => void;

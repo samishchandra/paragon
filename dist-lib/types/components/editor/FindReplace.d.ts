@@ -1,5 +1,5 @@
 import { Editor } from '@tiptap/react';
-interface FindReplaceProps {
+export interface FindReplaceProps {
     editor: Editor;
     isOpen: boolean;
     onClose: () => void;

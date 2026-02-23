@@ -7,7 +7,7 @@ import { X, Image, Link2, Type } from 'lucide-react';
  * Clean, elegant design matching the editor theme
  */
 
-interface ImageURLDialogProps {
+export interface ImageURLDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onInsert: (url: string, alt: string) => void;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ImagePlus } from 'lucide-react';
 
-interface ImageDropZoneProps {
+export interface ImageDropZoneProps {
   /**
    * Reference to the container element to attach drag events to
    */

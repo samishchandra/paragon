@@ -1,4 +1,4 @@
-interface ImageDropZoneProps {
+export interface ImageDropZoneProps {
     /**
      * Reference to the container element to attach drag events to
      */

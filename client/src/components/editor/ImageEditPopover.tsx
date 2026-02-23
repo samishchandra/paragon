@@ -9,7 +9,7 @@ import { X, Check, Link, Type, Trash2 } from 'lucide-react';
  * Uses createPortal to document.body to avoid Radix Dialog transform issues
  */
 
-interface ImageEditPopoverProps {
+export interface ImageEditPopoverProps {
   /**
    * Current image source URL
    */

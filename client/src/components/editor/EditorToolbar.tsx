@@ -61,7 +61,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
  * Touch-friendly buttons with proper sizing
  */
 
-interface EditorToolbarProps {
+export interface EditorToolbarProps {
   editor: Editor;
   onCopyMarkdown?: () => void;
   onOpenLinkPopover?: () => void;

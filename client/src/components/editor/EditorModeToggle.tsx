@@ -3,7 +3,7 @@
  */
 import { Eye, FileText } from 'lucide-react';
 
-interface EditorModeToggleProps {
+export interface EditorModeToggleProps {
   editorMode: 'wysiwyg' | 'markdown';
   onModeSwitch: (mode: 'wysiwyg' | 'markdown') => void;
 }

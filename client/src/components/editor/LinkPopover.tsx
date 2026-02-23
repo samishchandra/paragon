@@ -11,7 +11,7 @@ import { Link2 } from 'lucide-react';
  * - Uses React portal to avoid overflow clipping
  */
 
-interface LinkPopoverProps {
+export interface LinkPopoverProps {
   editor: Editor;
   isOpen: boolean;
   onClose: () => void;

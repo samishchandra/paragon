@@ -1,4 +1,4 @@
-interface RawMarkdownEditorProps {
+export interface RawMarkdownEditorProps {
     content: string;
     onChange: (content: string) => void;
     placeholder?: string;

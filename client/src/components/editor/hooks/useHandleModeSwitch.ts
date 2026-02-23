@@ -16,7 +16,7 @@ import { isValidTag, normalizeTag } from '../extensions/TagPill';
 // ---------------------------------------------------------------------------
 
 /** Accepts any object with a turndown() method (TurndownService or LazyTurndownService). */
-interface TurndownLike {
+export interface TurndownLike {
   turndown(html: string): string;
 }
 

@@ -19,7 +19,7 @@ import {
  * Uses React portal to escape overflow containers.
  */
 
-interface TableCellMenuProps {
+export interface TableCellMenuProps {
   editor: Editor;
 }
 

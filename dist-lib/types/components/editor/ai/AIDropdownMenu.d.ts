@@ -7,7 +7,7 @@
  * This component is lazy-loaded — only imported when AI features are enabled.
  */
 import type { AIActionDefinition } from './types';
-interface AIDropdownMenuProps {
+export interface AIDropdownMenuProps {
     actions: AIActionDefinition[];
     scope: 'selection' | 'document';
     onAction: (actionId: string, customPrompt?: string) => void;
@@ -19,4 +19,3 @@ interface AIDropdownMenuProps {
     };
 }
 export declare function AIDropdownMenu({ actions, scope, onAction, onClose, position }: AIDropdownMenuProps): import("react").JSX.Element;
-export {};

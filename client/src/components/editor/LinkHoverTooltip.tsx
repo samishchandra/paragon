@@ -15,12 +15,12 @@ import { Pencil, Copy, Unlink, Check, ExternalLink } from 'lucide-react';
  * Theme-aware via data-theme attribute
  */
 
-interface LinkHoverTooltipProps {
+export interface LinkHoverTooltipProps {
   editor: Editor;
   onEditLink: () => void;
 }
 
-interface TooltipState {
+export interface TooltipState {
   isVisible: boolean;
   url: string;
   position: { top: number; left: number };

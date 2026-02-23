@@ -1,5 +1,5 @@
 import { Editor } from '@tiptap/react';
-interface EditorToolbarProps {
+export interface EditorToolbarProps {
     editor: Editor;
     onCopyMarkdown?: () => void;
     onOpenLinkPopover?: () => void;

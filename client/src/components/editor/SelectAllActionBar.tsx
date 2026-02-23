@@ -23,7 +23,7 @@ import type { SelectAllOccurrencesStorage } from './extensions/SelectAllOccurren
  * In incremental (Cmd+D) mode, shows "N of M" count and a "Select Next" button.
  */
 
-interface SelectAllActionBarProps {
+export interface SelectAllActionBarProps {
   editor: Editor;
 }
 

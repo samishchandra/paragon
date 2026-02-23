@@ -33,7 +33,7 @@ import {
  * Rendered via portal to document.body for correct fixed positioning
  */
 
-interface SlashCommandsProps {
+export interface SlashCommandsProps {
   editor: Editor;
   disabledFeatures?: {
     tables?: boolean;
