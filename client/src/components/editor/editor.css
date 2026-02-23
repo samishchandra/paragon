@@ -272,10 +272,15 @@
     margin-bottom: 0.4rem;
     color: var(--h6-color);
   }
+
+  /* Remove top margin on the very first heading so it sits flush at the top */
+  > :first-child:is(h1, h2, h3, h4, h5, h6) {
+    margin-top: 0;
+  }
   
   /* Paragraphs */
   p {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
     line-height: 1.5;
   }
   
