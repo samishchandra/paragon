@@ -2322,18 +2322,13 @@ pre.with-line-numbers code .line::before {
   color: var(--foreground);
   white-space: nowrap;
   vertical-align: middle;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease;
   cursor: default;
   user-select: none;
 }
 
 .tag-pill:hover {
   background: oklch(0.96 0.01 250);
-  transform: translateY(-1px);
-}
-
-.tag-pill:active {
-  transform: translateY(0);
 }
 
 .tag-pill .tag-icon {
