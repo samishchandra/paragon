@@ -355,6 +355,28 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
     };
   }, [editor, isVisible]);
 
+  // Dismiss toolbar on scroll — it becomes visually detached from the selection
+  useEffect(() => {
+    if (!isVisible || !editor || editor.isDestroyed) return;
+
+    const scrollContainer = editor.view.dom.closest('.editor-content') || editor.view.dom.parentElement;
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      setIsVisible(false);
+      setShowLinkInput(false);
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    // Also listen on window for outer scroll contexts
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      scrollContainer.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isVisible, editor]);
+
   // Keep toolbar visible when interacting with it
   const handleToolbarMouseDown = (e: React.MouseEvent) => {
     if (hideTimeoutRef.current) {
