@@ -45,6 +45,66 @@ beforeAll(() => {
 
   td.use(gfm);
 
+  // Resizable image rule — preserves width and alignment using ![alt|alignment|width](url)
+  td.addRule('resizableImage', {
+    filter: 'img',
+    replacement: (content, node) => {
+      const img = node as HTMLImageElement;
+      const src = img.getAttribute('src') || '';
+      const rawAlt = img.getAttribute('alt') || '';
+      const alt = rawAlt.replace(/\s*\|\s*(?:left|center|right)?\s*(?:\|\s*\d+)?\s*$/, '').trim();
+      const widthAttr = img.getAttribute('width');
+      const width = widthAttr ? parseInt(widthAttr, 10) : null;
+      const align = img.getAttribute('data-align') || 'left';
+
+      const parts: string[] = [alt];
+      const hasNonDefaultAlign = align && align !== 'left';
+      const hasWidth = width && width > 0;
+
+      if (hasNonDefaultAlign || hasWidth) {
+        parts.push(hasNonDefaultAlign ? align : 'left');
+      }
+      if (hasWidth) {
+        parts.push(String(width));
+      }
+
+      return `![${parts.join(' | ')}](${src})`;
+    },
+  });
+
+  // Figure wrapper rule — handles TipTap's resizableImage figure wrapper
+  td.addRule('imageResizer', {
+    filter: (node) => {
+      return node.nodeName === 'FIGURE' &&
+             (node as HTMLElement).classList.contains('image-resizer');
+    },
+    replacement: (content, node) => {
+      const img = (node as HTMLElement).querySelector('img');
+      if (!img) return content;
+      const src = img.getAttribute('src') || '';
+      const rawAlt = img.getAttribute('alt') || '';
+      const alt = rawAlt.replace(/\s*\|\s*(?:left|center|right)?\s*(?:\|\s*\d+)?\s*$/, '').trim();
+      const widthAttr = img.getAttribute('width');
+      const width = widthAttr ? parseInt(widthAttr, 10) : null;
+      const align = img.getAttribute('data-align') || 'left';
+      const parts: string[] = [alt];
+      const hasNonDefaultAlign = align && align !== 'left';
+      const hasWidth = width && width > 0;
+      if (hasNonDefaultAlign || hasWidth) {
+        parts.push(hasNonDefaultAlign ? align : 'left');
+      }
+      if (hasWidth) {
+        parts.push(String(width));
+      }
+      const md = `![${parts.join(' | ')}](${src})`;
+      const parent = node.parentNode as HTMLElement | null;
+      if (parent && parent.nodeName === 'LI') {
+        return '\n' + md + '\n';
+      }
+      return '\n\n' + md + '\n\n';
+    },
+  });
+
   // Highlight rule
   td.addRule('highlight', {
     filter: (node) => node.nodeName === 'MARK',
@@ -463,12 +523,35 @@ describe('Round-trip: Markdown → HTML → Markdown', () => {
     it('should preserve images with alignment and width', () => {
       const md = '![photo | center | 300](https://example.com/img.jpg)';
       const result = normalise(roundTrip(md));
-      // The round-trip preserves the image URL and alt text.
-      // Note: alignment/width metadata requires the resizableImage turndown
-      // rule (which reads DOM attributes), so in this JSDOM-based test the
-      // basic turndown img rule fires instead. We verify the core content.
+      // The resizableImage turndown rule reads data-align and width attributes
+      // from the <img> element. markdownToHtml sets these via imgToFigure.
       expect(result).toContain('![');
       expect(result).toContain('https://example.com/img.jpg');
+      expect(result).toContain('center');
+      expect(result).toContain('300');
+    });
+
+    it('should preserve images with only alignment (no width)', () => {
+      const md = '![banner | center](https://example.com/banner.jpg)';
+      const result = normalise(roundTrip(md));
+      expect(result).toContain('![');
+      expect(result).toContain('https://example.com/banner.jpg');
+      expect(result).toContain('center');
+    });
+
+    it('should preserve images with default alignment (left)', () => {
+      const md = '![simple](https://example.com/simple.jpg)';
+      const result = normalise(roundTrip(md));
+      // Default left alignment should not add metadata
+      expect(result).toContain('![simple]');
+      expect(result).toContain('https://example.com/simple.jpg');
+    });
+
+    it('should preserve figure-wrapped images', () => {
+      // Directly test the figure wrapper turndown rule
+      const html = '<figure class="image-resizer"><img src="https://example.com/fig.jpg" alt="fig" data-align="right" width="400" /></figure>';
+      const result = td.turndown(html);
+      expect(result).toContain('![fig | right | 400](https://example.com/fig.jpg)');
     });
   });
 });
