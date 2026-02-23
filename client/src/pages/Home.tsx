@@ -375,7 +375,7 @@ const features = [
   {
     icon: <Palette className="w-5 h-5" />,
     title: 'Customizable Theme',
-    description: 'CSS variables with dark and light modes',
+    description: 'Colorful & neutral themes with dark/light modes',
   },
   {
     icon: <Shield className="w-5 h-5" />,
@@ -482,7 +482,7 @@ export default function Home() {
             </h2>
             <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-8">
               A professional, feature-rich markdown editor component with AI writing assistant, 
-              dual WYSIWYG/raw mode, date pills, Find &amp; Replace, and 30+ features &mdash; 
+              dual WYSIWYG/raw mode, colorful and neutral themes, date pills, Find &amp; Replace, and 35+ features &mdash; 
               designed as a drop-in for Taskmate, Momentum, and more.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
@@ -588,6 +588,7 @@ function MyApp() {
       showWordCount={true}
       showTableOfContents={true}
       autoReorderChecklist={true}
+      colorTheme="colorful"
     />
   );
 }`}</code>
@@ -662,10 +663,34 @@ function MyApp() {
                       <td className="px-4 py-2 text-muted-foreground">Theme mode</td>
                     </tr>
                     <tr>
+                      <td className="px-4 py-2 font-mono text-primary">colorTheme</td>
+                      <td className="px-4 py-2 text-muted-foreground">'colorful' | 'neutral'</td>
+                      <td className="px-4 py-2 text-muted-foreground">'colorful'</td>
+                      <td className="px-4 py-2 text-muted-foreground">Color theme for headings and table accents</td>
+                    </tr>
+                    <tr>
                       <td className="px-4 py-2 font-mono text-primary">showToolbar</td>
                       <td className="px-4 py-2 text-muted-foreground">boolean</td>
                       <td className="px-4 py-2 text-muted-foreground">true</td>
                       <td className="px-4 py-2 text-muted-foreground">Show top toolbar</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">showWordCount</td>
+                      <td className="px-4 py-2 text-muted-foreground">boolean</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Show word count in footer</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">showFloatingToolbar</td>
+                      <td className="px-4 py-2 text-muted-foreground">boolean</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Show floating toolbar on text selection</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">showModeToggle</td>
+                      <td className="px-4 py-2 text-muted-foreground">boolean</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Show WYSIWYG/raw mode toggle</td>
                     </tr>
                     <tr>
                       <td className="px-4 py-2 font-mono text-primary">showTableOfContents</td>
@@ -678,6 +703,24 @@ function MyApp() {
                       <td className="px-4 py-2 text-muted-foreground">boolean</td>
                       <td className="px-4 py-2 text-muted-foreground">false</td>
                       <td className="px-4 py-2 text-muted-foreground">Auto-sort completed tasks to bottom</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">initialMode</td>
+                      <td className="px-4 py-2 text-muted-foreground">'wysiwyg' | 'markdown'</td>
+                      <td className="px-4 py-2 text-muted-foreground">'wysiwyg'</td>
+                      <td className="px-4 py-2 text-muted-foreground">Initial editor mode</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">autoSave</td>
+                      <td className="px-4 py-2 text-muted-foreground">boolean</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Enable auto-save to localStorage</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">spellCheck</td>
+                      <td className="px-4 py-2 text-muted-foreground">boolean</td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">Enable browser spellcheck</td>
                     </tr>
                     <tr>
                       <td className="px-4 py-2 font-mono text-primary">aiActions</td>
@@ -702,6 +745,18 @@ function MyApp() {
                       <td className="px-4 py-2 text-muted-foreground">function</td>
                       <td className="px-4 py-2 text-muted-foreground">-</td>
                       <td className="px-4 py-2 text-muted-foreground">Error boundary crash callback</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">renderToolbar</td>
+                      <td className="px-4 py-2 text-muted-foreground">function</td>
+                      <td className="px-4 py-2 text-muted-foreground">-</td>
+                      <td className="px-4 py-2 text-muted-foreground">Custom toolbar render function</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">renderFooter</td>
+                      <td className="px-4 py-2 text-muted-foreground">function</td>
+                      <td className="px-4 py-2 text-muted-foreground">-</td>
+                      <td className="px-4 py-2 text-muted-foreground">Custom footer render function</td>
                     </tr>
                     <tr>
                       <td className="px-4 py-2 font-mono text-primary">disabledFeatures</td>
@@ -735,6 +790,12 @@ function MyApp() {
                       <td className="px-4 py-2 text-muted-foreground">dark | light</td>
                       <td className="px-4 py-2 text-muted-foreground">light</td>
                       <td className="px-4 py-2 text-muted-foreground">Editor color theme</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-primary">colorTheme</td>
+                      <td className="px-4 py-2 text-muted-foreground">colorful | neutral</td>
+                      <td className="px-4 py-2 text-muted-foreground">colorful</td>
+                      <td className="px-4 py-2 text-muted-foreground">Color theme for headings and tables</td>
                     </tr>
                     <tr>
                       <td className="px-4 py-2 font-mono text-primary">toc</td>
@@ -789,7 +850,7 @@ function MyApp() {
               </div>
               <div className="mt-3">
                 <p className="text-xs text-muted-foreground mb-2">Example:</p>
-                <code className="block px-3 py-2 rounded bg-secondary text-primary font-mono text-xs">/editor?theme=dark&amp;toc=false&amp;toolbar=true</code>
+                <code className="block px-3 py-2 rounded bg-secondary text-primary font-mono text-xs">/editor?theme=dark&amp;colorTheme=neutral&amp;toc=true&amp;toolbar=true</code>
               </div>
             </div>
           </div>
