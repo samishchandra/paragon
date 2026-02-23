@@ -1,6 +1,6 @@
-import { useEditor, EditorContent } from '@tiptap/react';
+import { EditorContent } from '@tiptap/react';
 
-import { useCallback, useEffect, useMemo, useState, useRef, forwardRef } from 'react';
+import { useCallback, useMemo, useState, useRef, forwardRef } from 'react';
 import { LinkPopover } from './LinkPopover';
 import { LinkHoverTooltip } from './LinkHoverTooltip';
 import { FloatingToolbar } from './FloatingToolbar';
@@ -32,7 +32,7 @@ import { useAIState } from './ai/useAIState';
 import { AIDropdownMenu } from './ai/AIDropdownMenu';
 import { AIResultPopover } from './ai/AIResultPopover';
 import { TableOfContents } from './TableOfContents';
-import { useTurndownService } from './hooks/useTurndownService';
+import { useEditorInstance } from './hooks/useEditorInstance';
 import { useEditorKeyboardShortcuts } from './hooks/useEditorKeyboardShortcuts';
 import { useEditorExtensions } from './hooks/useEditorExtensions';
 import { useHandleModeSwitch } from './hooks/useHandleModeSwitch';
@@ -593,156 +593,32 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     },
   });
 
-  // Debounced onUpdate ref for HTML serialization performance
-  const onUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const onChangeRef = useRef(onChange);
-  const onHTMLChangeRef = useRef(onHTMLChange);
-  const onMarkdownChangeRef = useRef(onMarkdownChange);
-  // Ref for turndownService so onUpdate callback can access it (turndownService is created after useEditor)
-  const turndownServiceRef = useRef<ReturnType<typeof useTurndownService> | null>(null);
-  onChangeRef.current = onChange;
-  onHTMLChangeRef.current = onHTMLChange;
-  onMarkdownChangeRef.current = onMarkdownChange;
-
-  const editor = useEditor({
-    /**
-     * Performance: Render immediately without waiting for next tick
-     */
-    immediatelyRender: false,
-    /**
-     * Performance: Prevent React re-renders on every ProseMirror transaction.
-     * The editor DOM updates are handled by ProseMirror directly.
-     * Only toolbar state and other React UI need selective re-renders via useEditorState.
-     */
-    shouldRerenderOnTransaction: false,
-    // @ts-ignore - Expose editor globally for debugging
-    onCreate: ({ editor }) => {
-      (window as any).__tiptapEditor = editor;
-      onReady?.(editor);
-    },
-    onDestroy: () => {
-      onDestroy?.();
-    },
+  // Editor instance with debounced updates, unmount cleanup, and rawMarkdown initialization
+  const { editor, turndownService } = useEditorInstance({
     extensions,
     content,
     editable,
     autofocus,
-    editorProps: {
-      attributes: {
-        class: 'tiptap-editor outline-none min-h-full',
-        spellcheck: spellCheck ? 'true' : 'false',
-      },
-      handleClick: (view, pos, event) => {
-        // Handle link clicks
-        if (onLinkClick) {
-          const target = event.target as HTMLElement;
-          const link = target.closest('a');
-          if (link) {
-            const url = link.getAttribute('href');
-            if (url) {
-              const result = onLinkClick(url, event);
-              if (result === false) {
-                event.preventDefault();
-                return true;
-              }
-            }
-          }
-        }
-        return false;
-      },
-    },
-    onUpdate: ({ editor }) => {
-      // === Auto lightweight mode detection ===
-      // In 'auto' mode, check document size every 50 transactions to avoid overhead.
-      // If the document grows beyond the threshold, switch to lightweight mode.
-      // If it shrinks back, switch to full mode (re-creates editor with all extensions).
-      if (performanceMode === 'auto') {
-        lightweightCheckCounterRef.current++;
-        if (lightweightCheckCounterRef.current >= 50) {
-          lightweightCheckCounterRef.current = 0;
-          const nodeCount = editor.state.doc.content.childCount;
-          const shouldBeLightweight = nodeCount > LIGHTWEIGHT_THRESHOLD;
-          if (shouldBeLightweight !== isLightweightRef.current) {
-            setIsLightweight(shouldBeLightweight);
-          }
-        }
-      }
-
-      // Performance: Debounce HTML serialization to avoid calling getHTML() on every keystroke
-      // getHTML() serializes the entire document - expensive for large docs
-      if (onUpdateTimeoutRef.current) {
-        clearTimeout(onUpdateTimeoutRef.current);
-      }
-      onUpdateTimeoutRef.current = setTimeout(() => {
-        if (editor.isDestroyed) return;
-        const html = editor.getHTML();
-        if (onChangeRef.current || onHTMLChangeRef.current) {
-          onChangeRef.current?.(html);
-          onHTMLChangeRef.current?.(html);
-        }
-        // NOTE: Turndown conversion is intentionally NOT done here for performance.
-        // Converting HTML→Markdown on every keystroke (even debounced at 150ms) is expensive
-        // for large documents (two full document serializations per keystroke).
-        // Instead, rawMarkdown is synced lazily: on blur, on mode-switch, and on unmount.
-      }, 150);
-    },
-    onFocus: () => {
-      onFocus?.();
-    },
-    onBlur: () => {
-      // Flush any pending debounced onChange immediately on blur
-      // This prevents data loss when user switches apps (especially on mobile)
-      if (onUpdateTimeoutRef.current) {
-        clearTimeout(onUpdateTimeoutRef.current);
-        onUpdateTimeoutRef.current = null;
-        if (editor && !editor.isDestroyed) {
-          const html = editor.getHTML();
-          if (onChangeRef.current || onHTMLChangeRef.current) {
-            onChangeRef.current?.(html);
-            onHTMLChangeRef.current?.(html);
-          }
-          // Flush rawMarkdown sync on blur too
-          if (editorModeRef.current === 'wysiwyg' && turndownServiceRef.current) {
-            const markdown = turndownServiceRef.current.turndown(html);
-            rawMarkdownRef.current = markdown;
-            onMarkdownChangeRef.current?.(markdown);
-          }
-        }
-      }
-      onBlur?.();
-    },
-    onSelectionUpdate: ({ editor }) => {
-      if (onSelectionChange) {
-        const { from, to, empty } = editor.state.selection;
-        onSelectionChange({ from, to, empty });
-      }
-    },
+    spellCheck,
+    initialMode,
+    performanceMode,
+    lightweightThreshold: LIGHTWEIGHT_THRESHOLD,
+    onChange,
+    onHTMLChange,
+    onMarkdownChange,
+    onReady,
+    onDestroy,
+    onFocus,
+    onBlur,
+    onSelectionChange,
+    onLinkClick,
+    editorModeRef,
+    rawMarkdownRef,
+    setRawMarkdown,
+    setIsLightweight,
+    lightweightCheckCounterRef,
+    isLightweightRef,
   });
-
-  // Cleanup debounced onUpdate timeout - flush pending changes on unmount
-  // This ensures image resize and other pending changes are saved when navigating away
-  useEffect(() => {
-    return () => {
-      if (onUpdateTimeoutRef.current) {
-        clearTimeout(onUpdateTimeoutRef.current);
-        onUpdateTimeoutRef.current = null;
-        // Flush the pending onChange before unmount
-        if (editor && !editor.isDestroyed) {
-          const html = editor.getHTML();
-          if (onChangeRef.current || onHTMLChangeRef.current) {
-            onChangeRef.current?.(html);
-            onHTMLChangeRef.current?.(html);
-          }
-          // Flush rawMarkdown sync on unmount too
-          if (editorModeRef.current === 'wysiwyg' && turndownServiceRef.current) {
-            const markdown = turndownServiceRef.current.turndown(html);
-            rawMarkdownRef.current = markdown;
-            onMarkdownChangeRef.current?.(markdown);
-          }
-        }
-      }
-    };
-  }, []);
 
   // State for link popover
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
@@ -770,33 +646,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       onRecover?.(content);
     },
   });
-
-   // Create TurndownService for HTML to Markdown conversion (extracted to hook)
-  const turndownService = useTurndownService();
-  // Keep turndownServiceRef in sync so the onUpdate callback can access it
-  turndownServiceRef.current = turndownService;
-  
-  // Initialize rawMarkdown from editor content when mounting in markdown mode.
-  // Without this, rawMarkdown starts as '' (empty string) and the raw markdown
-  // editor shows empty content when initialMode='markdown'. This effect runs
-  // once after the editor and turndownService are both available, converting
-  // the HTML content to markdown for the raw editor display.
-  const rawMarkdownInitializedRef = useRef(false);
-  useEffect(() => {
-    if (
-      !rawMarkdownInitializedRef.current &&
-      initialMode === 'markdown' &&
-      editor &&
-      !editor.isDestroyed &&
-      turndownService
-    ) {
-      const html = editor.getHTML();
-      const markdown = turndownService.turndown(html);
-      setRawMarkdown(markdown);
-      rawMarkdownRef.current = markdown;
-      rawMarkdownInitializedRef.current = true;
-    }
-  }, [editor, turndownService, initialMode]);
   
   // Handle mode switching (extracted to hook)
   const handleModeSwitch = useHandleModeSwitch({

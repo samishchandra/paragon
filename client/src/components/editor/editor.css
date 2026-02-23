@@ -2200,7 +2200,7 @@ pre.with-line-numbers code .line::before {
   color: var(--foreground);
   white-space: nowrap;
   vertical-align: middle;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease;
   cursor: default;
   user-select: none;
 }
@@ -2298,11 +2298,6 @@ pre.with-line-numbers code .line::before {
 
 .date-pill:hover {
   background: var(--accent);
-  transform: translateY(-1px);
-}
-
-.date-pill:active {
-  transform: translateY(0);
 }
 
 
