@@ -3363,6 +3363,7 @@ pre.with-line-numbers code .line::before {
 .editor-content .ProseMirror {
   min-height: 100%;
   padding: 1.5rem; /* 24px */
+  padding-bottom: 40vh; /* Extra bottom buffer so the cursor isn't pinned to the screen bottom */
 }
 
 .editor-footer {
@@ -5332,6 +5333,7 @@ pre.with-line-numbers code .line::before {
   left: 0;
   right: 0;
   padding: 1.5rem; /* 24px - matches WYSIWYG editor */
+  padding-bottom: 40vh; /* Extra bottom buffer matching WYSIWYG mode */
   pointer-events: none;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -5351,6 +5353,7 @@ pre.with-line-numbers code .line::before {
   width: 100%;
   min-height: 200px;
   padding: 1.5rem; /* 24px - matches WYSIWYG editor */
+  padding-bottom: 40vh; /* Extra bottom buffer matching WYSIWYG mode */
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
