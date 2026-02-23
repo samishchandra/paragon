@@ -1,18 +1,17 @@
 /*
- * editor.css — Neutral heading theme (DEFAULT)
- * All headings (H1–H5) render in the same color as body text.
- * Dark mode: #dadada (--foreground), Light mode: #333333 (--foreground)
- * The original colorful theme is preserved in editor-colorful.css
+ * editor-colorful.css — Original "Things" colorful heading theme
+ * Each heading level (H1–H5) uses a distinct accent color.
+ * To restore: change the @import in index.css from editor.css to editor-colorful.css
  */
 
 /* Data-theme attribute overrides for embedded editor theming */
 [data-theme="dark"] {
-  /* Heading colors - Dark mode (neutral: same as body text) */
-  --h1-color: var(--foreground);
-  --h2-color: var(--foreground);
-  --h3-color: var(--foreground);
-  --h4-color: var(--foreground);
-  --h5-color: var(--foreground);
+  /* Heading colors - Dark mode */
+  --h1-color: var(--things-blue);
+  --h2-color: var(--things-blue);
+  --h3-color: var(--things-purple);
+  --h4-color: var(--things-blue);
+  --h5-color: var(--things-yellow);
   --h6-color: var(--muted-foreground);
   
   /* Base layers - Things dark mode */
@@ -103,13 +102,13 @@
 }
 
 [data-theme="light"] {
-  /* Heading colors - Light mode (neutral: same as body text) */
-  --h1-color: var(--foreground);
-  --h2-color: var(--foreground);
-  --h3-color: var(--foreground);
-  --h4-color: var(--foreground);
-  --h5-color: var(--foreground);
-  --h6-color: var(--muted-foreground);
+  /* Heading colors - Light mode */
+  --h1-color: #2e80f2;
+  --h2-color: #2e80f2;
+  --h3-color: #4eb57c;
+  --h4-color: #3eb4bf;
+  --h5-color: #e87d3e;
+  --h6-color: #9a9a9a;
   
   /* Base layers - Things light mode */
   --background: #ffffff;
@@ -5399,27 +5398,27 @@ pre.with-line-numbers code .line::before {
 }
 
 .syntax-highlight-overlay .md-h1 {
-  color: var(--foreground);
+  color: #e06c75;
 }
 
 .syntax-highlight-overlay .md-h2 {
-  color: var(--foreground);
+  color: #e5c07b;
 }
 
 .syntax-highlight-overlay .md-h3 {
-  color: var(--foreground);
+  color: #98c379;
 }
 
 .syntax-highlight-overlay .md-h4 {
-  color: var(--foreground);
+  color: #56b6c2;
 }
 
 .syntax-highlight-overlay .md-h5 {
-  color: var(--foreground);
+  color: #61afef;
 }
 
 .syntax-highlight-overlay .md-h6 {
-  color: var(--muted-foreground);
+  color: #c678dd;
 }
 
 .syntax-highlight-overlay .md-bold {
@@ -5497,27 +5496,27 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme overrides */
 :root:not(.dark) .syntax-highlight-overlay .md-h1 {
-  color: var(--foreground);
+  color: #c41a16;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-h2 {
-  color: var(--foreground);
+  color: #c46210;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-h3 {
-  color: var(--foreground);
+  color: #2e7d32;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-h4 {
-  color: var(--foreground);
+  color: #0277bd;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-h5 {
-  color: var(--foreground);
+  color: #1565c0;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-h6 {
-  color: var(--muted-foreground);
+  color: #7b1fa2;
 }
 
 :root:not(.dark) .syntax-highlight-overlay .md-bold {

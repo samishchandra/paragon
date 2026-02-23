@@ -69,12 +69,12 @@
   --things-purple: #9e86c8;
   --things-gray: #72777d;
   
-  /* Heading colors - Light mode */
-  --h1-color: #2e80f2;
-  --h2-color: #2e80f2;
-  --h3-color: #4eb57c;
-  --h4-color: #3eb4bf;
-  --h5-color: #e87d3e;
+  /* Heading colors - Light mode (neutral: same as body text) */
+  --h1-color: #333333;
+  --h2-color: #333333;
+  --h3-color: #333333;
+  --h4-color: #333333;
+  --h5-color: #333333;
   --h6-color: #9a9a9a;
   
   /* Base layers - Things light mode */
@@ -181,12 +181,12 @@
 
 /* Things Theme - Dark Mode */
 .dark {
-  /* Heading colors - Dark mode */
-  --h1-color: var(--things-blue);
-  --h2-color: var(--things-blue);
-  --h3-color: var(--things-purple);
-  --h4-color: var(--things-blue);
-  --h5-color: var(--things-yellow);
+  /* Heading colors - Dark mode (neutral: same as body text) */
+  --h1-color: #dadada;
+  --h2-color: #dadada;
+  --h3-color: #dadada;
+  --h4-color: #dadada;
+  --h5-color: #dadada;
   --h6-color: var(--muted-foreground);
   
   /* Base layers - Things dark mode */
@@ -404,6 +404,7 @@
   }
 }
 
-/* Editor styles — extracted into editor/ for modular consumption */
+/* Editor styles — neutral heading theme (default)
+ * To switch to colorful headings: change to editor-colorful.css */
 @import "./components/editor/editor.css";
 
