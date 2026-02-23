@@ -7,6 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { convertCheckboxListsToTaskLists } from '../components/editor/utils/convertCheckboxLists';
 
 // Re-implement the pure functions from Editor.tsx for testing
 // (They are not exported, so we test the logic directly)
@@ -92,119 +93,9 @@ describe('parseIntSafe', () => {
  * Tests for convertCheckboxListsToTaskLists
  * 
  * This function converts standard HTML checkbox lists to TipTap's taskList format.
+ * Imported directly from the shared utility module.
  */
 describe('convertCheckboxListsToTaskLists', () => {
-  // Re-implement the fixed function for testing (it's not exported)
-  // This must stay in sync with the actual implementation in MarkdownEditor.tsx
-  function convertCheckboxListsToTaskLists(html: string): string {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
-    const container = doc.body.firstElementChild as HTMLElement;
-    if (!container) return html;
-
-    const processUl = (ul: HTMLUListElement) => {
-      const nestedUls = Array.from(ul.querySelectorAll('ul')) as HTMLUListElement[];
-      nestedUls.forEach(processUl);
-
-      const items = Array.from(ul.children).filter(el => el.tagName === 'LI') as HTMLLIElement[];
-      let hasCheckbox = false;
-      let hasRegular = false;
-
-      // Helper to find checkbox in an <li> — checks both direct children and inside <p> wrappers
-      const findCheckbox = (li: HTMLLIElement): HTMLInputElement | null => {
-        const directInput = li.querySelector(':scope > input[type="checkbox"]');
-        if (directInput) return directInput as HTMLInputElement;
-        const firstP = li.querySelector(':scope > p');
-        if (firstP) {
-          const pInput = firstP.querySelector(':scope > input[type="checkbox"]');
-          if (pInput) return pInput as HTMLInputElement;
-        }
-        return null;
-      };
-
-      items.forEach(li => {
-        if (findCheckbox(li)) {
-          hasCheckbox = true;
-        } else {
-          hasRegular = true;
-        }
-      });
-
-      if (!hasCheckbox) return;
-
-      items.forEach(li => {
-        const checkbox = findCheckbox(li);
-        if (checkbox) {
-          const isChecked = checkbox.hasAttribute('checked');
-          li.setAttribute('data-type', 'taskItem');
-          li.setAttribute('data-checked', String(isChecked));
-
-          const checkboxParent = checkbox.parentElement;
-          const wasInsideP = checkboxParent && checkboxParent.tagName === 'P' && checkboxParent.parentElement === li;
-
-          checkbox.remove();
-
-          if (wasInsideP && checkboxParent.firstChild && checkboxParent.firstChild.nodeType === Node.TEXT_NODE) {
-            checkboxParent.firstChild.textContent = (checkboxParent.firstChild.textContent || '').replace(/^\s+/, '');
-          }
-
-          const childNodes = Array.from(li.childNodes);
-          const inlineContent: Node[] = [];
-          const blockContent: Node[] = [];
-
-          childNodes.forEach(node => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const el = node as HTMLElement;
-              if (el.tagName === 'UL' || el.tagName === 'OL' || el.tagName === 'P') {
-                blockContent.push(node);
-              } else {
-                inlineContent.push(node);
-              }
-            } else {
-              inlineContent.push(node);
-            }
-          });
-
-          // Filter out empty <p> tags from blockContent.
-          const filteredBlockContent = blockContent.filter(node => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const el = node as HTMLElement;
-              if (el.tagName === 'P' && !el.textContent?.trim() && !el.querySelector('img, figure, code, br')) {
-                return false;
-              }
-            }
-            return true;
-          });
-
-          li.innerHTML = '';
-
-          if (inlineContent.length > 0) {
-            const p = doc.createElement('p');
-            inlineContent.forEach(node => p.appendChild(node));
-            if (p.firstChild && p.firstChild.nodeType === Node.TEXT_NODE) {
-              p.firstChild.textContent = (p.firstChild.textContent || '').replace(/^\s+/, '');
-            }
-            // Only append the <p> if it has meaningful content
-            if (p.textContent?.trim() || p.querySelector('img, figure, code, br')) {
-              li.appendChild(p);
-            }
-          }
-
-          filteredBlockContent.forEach(node => li.appendChild(node));
-        }
-      });
-
-      if (hasCheckbox && !hasRegular) {
-        ul.setAttribute('data-type', 'taskList');
-      }
-    };
-
-    const topUls = Array.from(container.querySelectorAll(':scope > ul')) as HTMLUListElement[];
-    topUls.forEach(processUl);
-
-    return container.innerHTML;
-  }
-
   it('should convert unchecked checkbox list items to task items', () => {
     const html = '<ul><li><input type="checkbox"> Task 1</li></ul>';
     const result = convertCheckboxListsToTaskLists(html);
