@@ -46,6 +46,8 @@ import { HexColorMark } from './extensions/HexColorMark';
 import { SelectAllOccurrences } from './extensions/SelectAllOccurrences';
 import { insertHorizontalRuleClean } from './utils/insertHorizontalRule';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
+import { InputRule } from '@tiptap/core';
+import { TextSelection } from '@tiptap/pm/state';
 import { ImageUpload } from './extensions/ImageUpload';
 import { ImageDropZone } from './ImageDropZone';
 import { ImageEditPopover } from './ImageEditPopover';
@@ -1043,11 +1045,49 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       // SelectAllOccurrences adds decoration plugins; skip in lightweight mode
       ...(!isLightweight ? [SelectAllOccurrences] : []),
       TabIndent,
-      // Add HorizontalRule back without its built-in input rules
-      // We handle HR creation via our custom space shortcut handler
+      // Add HorizontalRule with custom input rules that use insertHorizontalRuleClean
+      // to avoid the extra empty paragraph that the default command creates.
+      // Triggers on: ---, —-, ___, ***  (at start of line)
       HorizontalRule.extend({
         addInputRules() {
-          return []; // Disable built-in input rules
+          const type = this.type;
+          return [
+            new InputRule({
+              find: /^(?:---|—-|___\s|\*\*\*\s)$/,
+              handler: ({ state, range }) => {
+                const { tr } = state;
+                const start = range.from;
+                const end = range.to;
+                // Delete the trigger text
+                tr.delete(start, end);
+                // Resolve position after deletion
+                const $pos = tr.doc.resolve(start);
+                const hrNode = type.create();
+                // Replace the current paragraph block with the HR
+                const blockStart = $pos.before($pos.depth);
+                const blockEnd = $pos.after($pos.depth);
+                tr.replaceWith(blockStart, blockEnd, hrNode);
+                // Position right after the HR node
+                const posAfterHR = blockStart + hrNode.nodeSize;
+                // Check if there's already content after the HR
+                if (posAfterHR < tr.doc.content.size) {
+                  const $afterHR = tr.doc.resolve(posAfterHR);
+                  if ($afterHR.nodeAfter && $afterHR.nodeAfter.isTextblock) {
+                    tr.setSelection(TextSelection.create(tr.doc, posAfterHR + 1));
+                  } else if ($afterHR.nodeAfter) {
+                    tr.setSelection(TextSelection.near(tr.doc.resolve(posAfterHR)));
+                  }
+                } else {
+                  // At end of document - add a paragraph and place cursor in it
+                  const paragraphType = state.schema.nodes.paragraph;
+                  const newParagraph = paragraphType.create();
+                  tr.insert(posAfterHR, newParagraph);
+                  tr.setSelection(TextSelection.create(tr.doc, posAfterHR + 1));
+                }
+                tr.scrollIntoView();
+              },
+            }),
+          ];
         },
       }),
     ];
