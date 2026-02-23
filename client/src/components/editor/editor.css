@@ -769,7 +769,7 @@
     overflow: hidden;
     border-radius: 4px;
     border: 1px solid var(--border);
-    border-top: 2px solid var(--primary);
+    border-top: 2px solid #93bbf5;
     font-size: 0.875rem;
   }
   
@@ -805,8 +805,8 @@
     background: var(--table-header-bg, oklch(0.18 0.02 220));
     font-weight: 600;
     color: var(--table-header-text, oklch(0.9 0.01 220));
-    border-top: 2px solid var(--primary);
-    border-bottom: 2px solid var(--primary);
+    border-top: 2px solid #93bbf5;
+    border-bottom: 2px solid #93bbf5;
   }
   
   /* First column as header */
@@ -3687,11 +3687,11 @@ pre.with-line-numbers code .line::before {
 [data-theme="light"] .tiptap-editor tr:first-child th {
   background: var(--table-header-bg) !important;
   color: var(--table-header-text) !important;
-  border-top: 2px solid var(--primary);
-  border-bottom: 2px solid var(--primary);
+  border-top: 2px solid #93bbf5;
+  border-bottom: 2px solid #93bbf5;
 }
-[data-theme="light"] .tiptap-editor td {
-  border-color: #e2e8f0;
+
+[data-theme="light"] .tiptap-editor td {  border-color: #e2e8f0;
   background: var(--table-cell-bg) !important;
   color: var(--table-cell-text) !important;
 }
@@ -4146,8 +4146,8 @@ pre.with-line-numbers code .line::before {
 [data-theme="dark"] .tiptap-editor tr:first-child th {
   background: var(--table-header-bg) !important;
   color: var(--table-header-text) !important;
-  border-top: 2px solid var(--primary);
-  border-bottom: 2px solid var(--primary);
+  border-top: 2px solid #5a9cf5;
+  border-bottom: 2px solid #5a9cf5;
 }
 
 [data-theme="dark"] .tiptap-editor td {
