@@ -34,10 +34,16 @@ import { useCallback, useMemo, useState, useRef, forwardRef } from 'react';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace, type SearchMatch } from './FindReplace';
 import { SelectAllActionBar } from './SelectAllActionBar';
-import { useAutoSave } from './hooks/useAutoSave';
-import { useWordCount } from './hooks/useWordCount';
-import { useEditorAPI } from './hooks/useEditorAPI';
-import { useGlobalEditorAPI } from './hooks/useGlobalEditorAPI';
+import {
+  useAutoSave,
+  useWordCount,
+  useEditorAPI,
+  useGlobalEditorAPI,
+  useEditorInstance,
+  useEditorKeyboardShortcuts,
+  useEditorExtensions,
+  useHandleModeSwitch,
+} from './hooks';
 import { AutoSaveIndicator } from './AutoSaveIndicator';
 import { RecoveryBanner } from './RecoveryBanner';
 import { SyntaxHighlightedMarkdown } from './SyntaxHighlightedMarkdown';
@@ -52,10 +58,7 @@ import { Sparkles } from 'lucide-react';
 import type { AIActionDefinition, AIActionHandler, AIState } from './ai/types';
 import { useAIState } from './ai/useAIState';
 import { TableOfContents } from './TableOfContents';
-import { useEditorInstance } from './hooks/useEditorInstance';
-import { useEditorKeyboardShortcuts } from './hooks/useEditorKeyboardShortcuts';
-import { useEditorExtensions } from './hooks/useEditorExtensions';
-import { useHandleModeSwitch } from './hooks/useHandleModeSwitch';
+
 import type { Editor } from '@tiptap/react';
 
 /*

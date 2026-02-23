@@ -17,7 +17,7 @@ export {
   nordTheme,
   type EditorTheme 
 } from './themes';
-export { useAutoSave, type AutoSaveOptions, type AutoSaveState, type AutoSaveReturn } from './hooks/useAutoSave';
+export { useAutoSave, type AutoSaveOptions, type AutoSaveState, type AutoSaveReturn } from './hooks';
 export { AutoSaveIndicator, type AutoSaveIndicatorProps } from './AutoSaveIndicator';
 export { RecoveryBanner, type RecoveryBannerProps } from './RecoveryBanner';
 export { ImageUpload, type ImageUploadOptions } from './extensions/ImageUpload';
