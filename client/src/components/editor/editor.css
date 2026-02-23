@@ -64,8 +64,8 @@
   --checkbox-checked-foreground: #ffffff;
   
   /* Table colors - Dark mode */
-  --table-header-bg: #2d323c;
-  --table-header-text: #e2e8f0;
+  --table-header-bg: #2a2d32;
+  --table-header-text: #dadada;
   --table-cell-bg: #282c34;
   --table-cell-text: #dadada;
   --table-row-odd: #282c34;
@@ -160,13 +160,13 @@
   --checkbox-checked-foreground: var(--primary-foreground);
   
   /* Table colors - Light mode */
-  --table-header-bg: #F1F5F9;
-  --table-header-text: #334155;
+  --table-header-bg: #f5f5f5;
+  --table-header-text: #333333;
   --table-cell-bg: #ffffff;
   --table-cell-text: #333333;
   --table-row-odd: #FFFFFF;
-  --table-row-even: #F9FAFC;
-  --table-row-hover: #f1f5f9;
+  --table-row-even: #fafafa;
+  --table-row-hover: #f0f0f0;
   
   /* Callout colors - light mode */
   --callout-info: #3b82f6;
@@ -769,7 +769,7 @@
     overflow: hidden;
     border-radius: 4px;
     border: 1px solid var(--border);
-    border-top: 2px solid var(--primary);
+    border-top: 2px solid var(--border);
     font-size: 0.875rem;
   }
   
@@ -805,8 +805,8 @@
     background: var(--table-header-bg, oklch(0.18 0.02 220));
     font-weight: 600;
     color: var(--table-header-text, oklch(0.9 0.01 220));
-    border-top: 2px solid var(--primary);
-    border-bottom: 2px solid var(--primary);
+    border-top: 2px solid var(--foreground);
+    border-bottom: 2px solid var(--foreground);
   }
   
   /* First column as header */
@@ -1113,7 +1113,7 @@
   th.sorted-asc::after,
   th[data-sort-direction="asc"]::after {
     opacity: 1 !important;
-    border-bottom: 5px solid var(--primary) !important;
+    border-bottom: 5px solid var(--foreground) !important;
     border-top: none !important;
   }
   
@@ -1121,7 +1121,7 @@
   th.sorted-desc::after,
   th[data-sort-direction="desc"]::after {
     opacity: 1 !important;
-    border-top: 5px solid var(--primary) !important;
+    border-top: 5px solid var(--foreground) !important;
     border-bottom: none !important;
   }
   
@@ -3673,14 +3673,14 @@ pre.with-line-numbers code .line::before {
 
 /* Light theme table */
 [data-theme="light"] .tiptap-editor table {
-  border-color: #e2e8f0;
+  border-color: var(--border);
 }
 
 [data-theme="light"] .tiptap-editor th,
 [data-theme="light"] .tiptap-editor td[data-header="true"],
 [data-theme="light"] .tiptap-editor .table-header-cell {
   background: var(--table-header-bg) !important;
-  border-color: #e2e8f0;
+  border-color: var(--border);
   color: var(--table-header-text) !important;
   font-weight: 600;
 }
@@ -3689,12 +3689,12 @@ pre.with-line-numbers code .line::before {
 [data-theme="light"] .tiptap-editor tr:first-child th {
   background: var(--table-header-bg) !important;
   color: var(--table-header-text) !important;
-  border-top: 2px solid var(--primary);
-  border-bottom: 2px solid var(--primary);
+  border-top: 2px solid var(--foreground);
+  border-bottom: 2px solid var(--foreground);
 }
 
 [data-theme="light"] .tiptap-editor td {
-  border-color: #e2e8f0;
+  border-color: var(--border);
   background: var(--table-cell-bg) !important;
   color: var(--table-cell-text) !important;
 }
@@ -3714,7 +3714,7 @@ pre.with-line-numbers code .line::before {
 
 [data-theme="light"] .tiptap-editor th.sortable-header:hover,
 [data-theme="light"] .tiptap-editor th[data-sortable="true"]:hover {
-  background: #e2e8f0 !important;
+  background: #ebebeb !important;
 }
 
 /* Light theme callouts */
@@ -4149,8 +4149,8 @@ pre.with-line-numbers code .line::before {
 [data-theme="dark"] .tiptap-editor tr:first-child th {
   background: var(--table-header-bg) !important;
   color: var(--table-header-text) !important;
-  border-top: 2px solid var(--primary);
-  border-bottom: 2px solid var(--primary);
+  border-top: 2px solid var(--foreground);
+  border-bottom: 2px solid var(--foreground);
 }
 
 [data-theme="dark"] .tiptap-editor td {
@@ -5315,7 +5315,7 @@ pre.with-line-numbers code .line::before {
 
 [data-theme="light"] .editor-mode-toggle {
   background: #f1f5f9;
-  border-color: #e2e8f0;
+  border-color: var(--border);
 }
 
 [data-theme="light"] .editor-mode-toggle-btn.active {
