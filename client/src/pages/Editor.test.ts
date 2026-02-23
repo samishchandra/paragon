@@ -165,6 +165,17 @@ describe('convertCheckboxListsToTaskLists', () => {
             }
           });
 
+          // Filter out empty <p> tags from blockContent.
+          const filteredBlockContent = blockContent.filter(node => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const el = node as HTMLElement;
+              if (el.tagName === 'P' && !el.textContent?.trim() && !el.querySelector('img, figure, code, br')) {
+                return false;
+              }
+            }
+            return true;
+          });
+
           li.innerHTML = '';
 
           if (inlineContent.length > 0) {
@@ -173,10 +184,13 @@ describe('convertCheckboxListsToTaskLists', () => {
             if (p.firstChild && p.firstChild.nodeType === Node.TEXT_NODE) {
               p.firstChild.textContent = (p.firstChild.textContent || '').replace(/^\s+/, '');
             }
-            li.appendChild(p);
+            // Only append the <p> if it has meaningful content
+            if (p.textContent?.trim() || p.querySelector('img, figure, code, br')) {
+              li.appendChild(p);
+            }
           }
 
-          blockContent.forEach(node => li.appendChild(node));
+          filteredBlockContent.forEach(node => li.appendChild(node));
         }
       });
 
@@ -359,6 +373,107 @@ describe('convertCheckboxListsToTaskLists', () => {
     expect(result).toContain('data-type="taskList"');
     const matches = result.match(/data-type="taskItem"/g);
     expect(matches?.length).toBe(3);
+  });
+
+  // ============================================================
+  // REGRESSION: Empty first line in task list items
+  // When marked outputs task list items where the checkbox is a
+  // direct child of <li> followed by <p>-wrapped content, or the
+  // checkbox is inside a <p> wrapper, removing the checkbox left
+  // behind an empty <p> (or whitespace-only text node wrapped in
+  // a new <p>), rendering as a blank line between the checkbox
+  // and the text content.
+  // ============================================================
+
+  it('REGRESSION: should not produce empty <p> as first child when checkbox is direct child with <p>-wrapped content', () => {
+    // This is the exact HTML structure marked produces for:
+    // - [ ] What are changes...\n    Momentum key changes...\n\n    Are there any other things...
+    // The checkbox is a direct child of <li>, followed by a space text node,
+    // then <p>-wrapped content blocks.
+    const html = '<ul>' +
+      '<li><input type="checkbox"> ' +
+      '<p>What are changes / overrides we made to local foundation files compared to <code>momentum-foundation</code>. How can we make the changes minimal and make merging easier without conflicts.<br>  Momentum key changes should be in: Hosting, Auth, Database, AI Provider, Cloud backup</p>' +
+      '<p>  Are there any other things that Momentum does on top of <code>momentum-foundation</code></p>' +
+      '</li></ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(result, 'text/html');
+    const li = doc.querySelector('[data-type="taskItem"]');
+    expect(li).not.toBeNull();
+    // The first child <p> should NOT be empty
+    const firstP = li!.querySelector('p');
+    expect(firstP).not.toBeNull();
+    expect(firstP!.textContent?.trim()).not.toBe('');
+  });
+
+  it('REGRESSION: should not produce empty <p> when checkbox is inside <p> wrapper (checked items)', () => {
+    // This is the exact HTML structure marked produces for:
+    // - [x] Remove the localAutoBackupModule adapter slot...
+    // The checkbox is inside a <p> wrapper.
+    const html = '<ul>' +
+      '<li><p><input checked="" disabled="" type="checkbox"> Remove the localAutoBackupModule adapter slot — since autoBackup.ts is now generic via setBackupStorageEngine, the localAutoBackupModule indirection in useLocalBackup.ts could be simplified to always use @/lib/autoBackup directly.</p></li>' +
+      '</ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(result, 'text/html');
+    const li = doc.querySelector('[data-type="taskItem"]');
+    expect(li).not.toBeNull();
+    // Should have exactly one <p> child with the text content, no empty <p>
+    const paragraphs = li!.querySelectorAll('p');
+    paragraphs.forEach(p => {
+      expect(p.textContent?.trim()).not.toBe('');
+    });
+    expect(li!.getAttribute('data-checked')).toBe('true');
+  });
+
+  it('REGRESSION: full task list with mixed unchecked/checked items and multi-paragraph content should have no empty <p> tags', () => {
+    // This is the exact HTML that marked produces for the user's sample markdown:
+    // - [ ] What are changes...\n    Momentum key changes...\n\n    Are there any other things...
+    // - [x] Remove the localAutoBackupModule...
+    // - [x] For item cards...
+    const html = '<ul>' +
+      '<li><input disabled="" type="checkbox"> ' +
+      '<p>What are changes / overrides we made to local foundation files compared to <code>momentum-foundation</code>. How can we make the changes minimal and make merging easier without conflicts.<br>  Momentum key changes should be in: Hosting, Auth, Database, AI Provider, Cloud backup</p>' +
+      '<p>  Are there any other things that Momentum does on top of <code>momentum-foundation</code></p>' +
+      '</li>' +
+      '<li><p><input checked="" disabled="" type="checkbox"> Remove the localAutoBackupModule adapter slot \u2014 since autoBackup.ts is now generic via setBackupStorageEngine, the localAutoBackupModule indirection in useLocalBackup.ts could be simplified to always use @/lib/autoBackup directly.</p></li>' +
+      '<li><p><input checked="" disabled="" type="checkbox"> For item cards, in middle-panel the pin icon and 3-dot menu icon are shown with animation on hover. Reserve the space for icons rendering on hover so that title doesn\u2019t wrap on hover.</p></li>' +
+      '</ul>';
+    const result = convertCheckboxListsToTaskLists(html);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(result, 'text/html');
+
+    // Should have 3 task items
+    const taskItems = doc.querySelectorAll('[data-type="taskItem"]');
+    expect(taskItems.length).toBe(3);
+
+    // First item: unchecked, should have 2 non-empty <p> tags
+    expect(taskItems[0].getAttribute('data-checked')).toBe('false');
+    const item1Paragraphs = taskItems[0].querySelectorAll('p');
+    item1Paragraphs.forEach(p => {
+      expect(p.textContent?.trim()).not.toBe('');
+    });
+    expect(item1Paragraphs.length).toBe(2);
+
+    // Second item: checked
+    expect(taskItems[1].getAttribute('data-checked')).toBe('true');
+    const item2Paragraphs = taskItems[1].querySelectorAll('p');
+    item2Paragraphs.forEach(p => {
+      expect(p.textContent?.trim()).not.toBe('');
+    });
+    expect(item2Paragraphs.length).toBe(1);
+
+    // Third item: checked
+    expect(taskItems[2].getAttribute('data-checked')).toBe('true');
+    const item3Paragraphs = taskItems[2].querySelectorAll('p');
+    item3Paragraphs.forEach(p => {
+      expect(p.textContent?.trim()).not.toBe('');
+    });
+    expect(item3Paragraphs.length).toBe(1);
+
+    // The entire ul should be a taskList
+    const ul = doc.querySelector('ul');
+    expect(ul?.getAttribute('data-type')).toBe('taskList');
   });
 });
 
