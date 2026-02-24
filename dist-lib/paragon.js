@@ -14857,69 +14857,77 @@ async function Fi(e, t, n) {
     let o, s, i;
     const a = ["image/jpeg", "image/png", "image/webp"].includes(e.type);
     if (n.enableCompression && a) {
-      const d = await ck(
+      const p = await ck(
         e,
         n.maxCompressedWidth,
         n.compressionQuality
       );
-      o = d.dataUrl, i = d.file, s = Math.min(d.width, 600);
+      o = p.dataUrl, i = p.file, s = Math.min(p.width, 600);
     } else {
       o = await ok(e), i = e;
-      const d = await ik(o);
-      s = Math.min(d.width, 600);
+      const p = await ik(o);
+      s = Math.min(p.width, 600);
     }
-    t.chain().focus().setImage({
+    const { doc: c } = t.view.state;
+    c.content.size === 0 || c.childCount === 1 && c.firstChild?.isTextblock && c.firstChild.content.size === 0 ? t.chain().focus().insertContent({
+      type: "resizableImage",
+      attrs: {
+        src: o,
+        alt: e.name,
+        width: s
+      }
+    }).run() : t.chain().focus().setImage({
       src: o,
       alt: e.name,
       width: s
     }).run();
-    const { state: c } = t.view, l = c.selection.from - 1, u = c.doc.nodeAt(l);
-    if (u && u.type.name === "resizableImage") {
-      const d = t.view.nodeDOM(l);
-      if (d) {
-        const f = d instanceof HTMLElement ? d : d.dom;
-        f && f.classList.add("image-uploading");
+    const { state: u } = t.view, d = u.selection.from - 1, f = u.doc.nodeAt(d);
+    if (f && f.type.name === "resizableImage") {
+      const p = t.view.nodeDOM(d);
+      if (p) {
+        const h = p instanceof HTMLElement ? p : p.dom;
+        h && h.classList.add("image-uploading");
       }
     }
     try {
-      const d = await n.onImageUpload(i, {
+      const p = await n.onImageUpload(i, {
         fileName: e.name,
         mimeType: i.type,
         fileSize: i.size,
         uploadId: r
       });
-      let f = !1;
-      return t.view.state.doc.descendants((p, h) => {
-        if (f) return !1;
-        if (p.type.name === "resizableImage" && p.attrs.src === o && p.attrs.alt === e.name) {
+      let h = !1;
+      return t.view.state.doc.descendants((g, y) => {
+        if (h) return !1;
+        if (g.type.name === "resizableImage" && g.attrs.src === o && g.attrs.alt === e.name) {
           try {
-            const { state: g, dispatch: y } = t.view, v = g.doc.nodeAt(h);
-            if (v) {
-              const b = g.tr.setNodeMarkup(h, void 0, {
-                ...v.attrs,
-                src: d
+            const { state: v, dispatch: b } = t.view, w = v.doc.nodeAt(y);
+            if (w) {
+              const S = v.tr.setNodeMarkup(y, void 0, {
+                ...w.attrs,
+                src: p
               });
-              y(b);
+              b(S);
             }
-          } catch (g) {
-            console.warn("Failed to replace placeholder with uploaded reference:", g);
+          } catch (v) {
+            console.warn("Failed to replace placeholder with uploaded reference:", v);
           }
-          return f = !0, !1;
+          return h = !0, !1;
         }
         return !0;
-      }), t.view.state.doc.descendants((p, h) => {
-        if (p.type.name === "resizableImage" && p.attrs.src === d) {
-          const g = t.view.nodeDOM(h);
-          if (g) {
-            const y = g instanceof HTMLElement ? g : g.dom;
-            y && y.classList.remove("image-uploading");
+      }), t.view.state.doc.descendants((g, y) => {
+        if (g.type.name === "resizableImage" && g.attrs.src === p) {
+          const v = t.view.nodeDOM(y);
+          if (v) {
+            const b = v instanceof HTMLElement ? v : v.dom;
+            b && b.classList.remove("image-uploading");
           }
           return !1;
         }
         return !0;
       }), n.onUploadComplete?.(), !0;
-    } catch (d) {
-      return console.warn("Image upload failed, removing placeholder:", d), lk(t, o, e.name), n.onUploadError?.(`Upload failed: ${d instanceof Error ? d.message : "Unknown error"}`), n.onUploadComplete?.(), !1;
+    } catch (p) {
+      return console.warn("Image upload failed, removing placeholder:", p), lk(t, o, e.name), n.onUploadError?.(`Upload failed: ${p instanceof Error ? p.message : "Unknown error"}`), n.onUploadComplete?.(), !1;
     }
   } catch (o) {
     return n.onUploadError?.(`Failed to process image: ${o instanceof Error ? o.message : "Unknown error"}`), !1;
