@@ -260,11 +260,30 @@ async function processAndInsertImage(
     }
 
     // Step 2: Insert a temporary placeholder image while uploading
-    editor.chain().focus().setImage({
-      src: placeholderDataUrl,
-      alt: file.name,
-      width: displayWidth,
-    }).run();
+    // Ensure the document has at least one valid paragraph node.
+    // When a note is brand new with no content, the ProseMirror document
+    // might just have a minimal structure (or even an empty fragment),
+    // and setImage tries to insert at a position that doesn't exist yet.
+    const { doc } = editor.view.state;
+    const isEmpty = doc.content.size === 0 || (doc.childCount === 1 && doc.firstChild?.isTextblock && doc.firstChild.content.size === 0);
+    if (isEmpty) {
+      // Use insertContent which handles empty documents more gracefully
+      // by creating the necessary structure around the image node
+      editor.chain().focus().insertContent({
+        type: 'resizableImage',
+        attrs: {
+          src: placeholderDataUrl,
+          alt: file.name,
+          width: displayWidth,
+        },
+      }).run();
+    } else {
+      editor.chain().focus().setImage({
+        src: placeholderDataUrl,
+        alt: file.name,
+        width: displayWidth,
+      }).run();
+    }
 
     // Mark the just-inserted image node as uploading
     const { state } = editor.view;
