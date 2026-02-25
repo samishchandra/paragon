@@ -242,7 +242,7 @@ function isMarkdownTable(text: string): boolean {
 
 // Simple markdown to HTML converter
 // Standard callout types
-const MP_CALLOUT_TYPES = ['info', 'note', 'prompt', 'resources', 'todo'];
+const MP_CALLOUT_TYPES = ['info', 'note', 'prompt', 'resources', 'todo', 'summary'];
 
 function markdownToHtml(markdown: string): string {
   let html = markdown;
@@ -251,7 +251,8 @@ function markdownToHtml(markdown: string): string {
   const codeBlockPlaceholders: string[] = [];
   
   // Extract Obsidian ad-* callout blocks first
-  html = html.replace(/```(ad-\w+)\s*\n([\s\S]*?)```/g, (_, _adType, content) => {
+  html = html.replace(/```(ad-\w+)\s*\n([\s\S]*?)```/g, (_, adType, content) => {
+    const calloutType = adType.replace('ad-', '');
     let innerHtml = content.trim();
     innerHtml = innerHtml.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     innerHtml = innerHtml.replace(/__([^_]+)__/g, '<strong>$1</strong>');
@@ -262,7 +263,7 @@ function markdownToHtml(markdown: string): string {
       innerHtml = `<p>${innerHtml}</p>`;
     }
     const placeholder = `MANUSCODEPLACEHOLDER${codeBlockPlaceholders.length}END`;
-    codeBlockPlaceholders.push(`<div data-callout="" data-type="info" class="callout callout-info">${innerHtml}</div>`);
+    codeBlockPlaceholders.push(`<div data-callout="" data-type="${calloutType}" class="callout callout-${calloutType}">${innerHtml}</div>`);
     return placeholder;
   });
   

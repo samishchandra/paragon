@@ -3,9 +3,9 @@ import type { CommandProps } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper, NodeViewContent, NodeViewProps } from '@tiptap/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DialogSafePortal } from '../DialogSafePortal';
-import { Info, StickyNote, MessageSquareText, BookOpen, ListTodo, ChevronDown, ChevronRight } from 'lucide-react';
+import { Info, StickyNote, MessageSquareText, BookOpen, ListTodo, ClipboardList, ChevronDown, ChevronRight } from 'lucide-react';
 
-export type CalloutType = 'info' | 'note' | 'prompt' | 'resources' | 'todo';
+export type CalloutType = 'info' | 'note' | 'prompt' | 'resources' | 'todo' | 'summary';
 
 export interface CalloutOptions {
   HTMLAttributes: Record<string, unknown>;
@@ -32,6 +32,7 @@ const calloutConfig: Record<CalloutType, { icon: typeof Info; label: string; col
   prompt: { icon: MessageSquareText, label: 'Prompt', color: 'var(--callout-prompt)', borderColor: 'var(--callout-prompt-border)' },
   resources: { icon: BookOpen, label: 'Resources', color: 'var(--callout-resources)', borderColor: 'var(--callout-resources-border)' },
   todo: { icon: ListTodo, label: 'Todo', color: 'var(--callout-todo)', borderColor: 'var(--callout-todo-border)' },
+  summary: { icon: ClipboardList, label: 'Summary', color: 'var(--callout-summary)', borderColor: 'var(--callout-summary-border)' },
 };
 
 function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
@@ -187,7 +188,7 @@ export const CalloutWithMenu = Node.create<CalloutOptions>({
   addOptions() {
     return {
       HTMLAttributes: {},
-      types: ['info', 'note', 'prompt', 'resources', 'todo'],
+      types: ['info', 'note', 'prompt', 'resources', 'todo', 'summary'],
     };
   },
 

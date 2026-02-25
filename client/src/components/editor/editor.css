@@ -88,6 +88,9 @@
   --callout-todo: #22d3ee;
   --callout-todo-bg: oklch(0.22 0.04 200);
   --callout-todo-border: #22d3ee;
+  --callout-summary: #f472b6;
+  --callout-summary-bg: oklch(0.22 0.04 340);
+  --callout-summary-border: #f472b6;
   
   /* Syntax highlighting - Atom One Dark */
   --syntax-keyword: #c678dd;
@@ -184,6 +187,9 @@
   --callout-todo: #06b6d4;
   --callout-todo-bg: oklch(0.96 0.02 200);
   --callout-todo-border: #06b6d4;
+  --callout-summary: #ec4899;
+  --callout-summary-bg: oklch(0.96 0.02 340);
+  --callout-summary-border: #ec4899;
   
   /* Syntax highlighting - Light */
   --syntax-keyword: #9e86c8;
@@ -1443,6 +1449,11 @@
 .callout-todo {
   background: var(--callout-todo-bg);
   border-left-color: var(--callout-todo-border);
+}
+
+.callout-summary {
+  background: var(--callout-summary-bg);
+  border-left-color: var(--callout-summary-border);
 }
 
 /* ===== Callout header: icon + label row ===== */
@@ -3736,6 +3747,9 @@ pre.with-line-numbers code .line::before {
 [data-theme="light"] .callout-todo {
   background: #F7FBFF;
 }
+[data-theme="light"] .callout-summary {
+  background: #FDF2F8;
+}
 
 /* Light theme editor toolbar */
 [data-theme="light"] .editor-toolbar {
@@ -4257,6 +4271,9 @@ pre.with-line-numbers code .line::before {
 
 [data-theme="dark"] .callout-todo {
   background: var(--callout-todo-bg);
+}
+[data-theme="dark"] .callout-summary {
+  background: var(--callout-summary-bg);
 }
 
 [data-theme="dark"] .callout-header:hover {

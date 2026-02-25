@@ -17,12 +17,12 @@ const MARKDOWN_PATTERNS = {
   // Table pattern: header row with pipes, separator row with dashes, optional data rows
   // Allow headers and separators with or without trailing pipes
   table: /^\|[^\n]+\n\|[-:\s|]+/m,
-  // Callout pattern: ```info, ```note, ```prompt, ```resources, ```todo, ```ad-*
-  callout: /```(?:info|note|prompt|resources|todo|ad-\w+)\s*\n[\s\S]*?```/,
+  // Callout pattern: ```info, ```note, ```prompt, ```resources, ```todo, ```summary, ```ad-*
+  callout: /```(?:info|note|prompt|resources|todo|summary|ad-\w+)\s*\n[\s\S]*?```/,
 };
 
 // Callout types for parsing (exact match types)
-const CALLOUT_TYPES = ['info', 'note', 'prompt', 'resources', 'todo'];
+const CALLOUT_TYPES = ['info', 'note', 'prompt', 'resources', 'todo', 'summary'];
 // Obsidian ad-* callout prefix
 const AD_CALLOUT_PREFIX = 'ad-';
 
@@ -334,19 +334,19 @@ export function markdownToHtml(markdown: string): string {
   const codeBlockPlaceholders: string[] = [];
   
   // Obsidian ad-* callout blocks first
-  html = html.replace(/```(ad-\w+)\s*\n([\s\S]*?)```/g, (_, _adType, content) => {
+  html = html.replace(/```(ad-\w+)\s*\n([\s\S]*?)```/g, (_, adType, content) => {
+    const calloutType = adType.replace('ad-', '');
     let innerHtml = content.trim();
     innerHtml = innerHtml.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     innerHtml = innerHtml.replace(/__([^_]+)__/g, '<strong>$1</strong>');
     innerHtml = innerHtml.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
     innerHtml = innerHtml.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
     innerHtml = innerHtml.replace(/`([^`]+)`/g, '<code>$1</code>');
-    const baseType = 'info';
     if (!innerHtml.startsWith('<')) {
       innerHtml = `<p>${innerHtml}</p>`;
     }
     const placeholder = `MANUSCODEPLACEHOLDER${codeBlockPlaceholders.length}END`;
-    codeBlockPlaceholders.push(`<div data-callout="" data-type="${baseType}" class="callout callout-${baseType}">${innerHtml}</div>`);
+    codeBlockPlaceholders.push(`<div data-callout="" data-type="${calloutType}" class="callout callout-${calloutType}">${innerHtml}</div>`);
     return placeholder;
   });
   
