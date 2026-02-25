@@ -125,11 +125,11 @@ export function parseListLine(rawLine: string): ListLineInfo | null {
   const depth = Math.floor(spaces / 2);
   const trimmed = rawLine.trimStart();
   
-  const taskMatch = trimmed.match(/^-\s*\[(x| )\]\s*(.*)$/);
+  const taskMatch = trimmed.match(/^[-*]\s*\[(x| )\]\s*(.*)$/);
   if (taskMatch) {
     return { type: 'task', depth, text: taskMatch[2].trim(), checked: taskMatch[1] === 'x' };
   }
-  const ulMatch = trimmed.match(/^-\s+(.+)$/);
+  const ulMatch = trimmed.match(/^[-*]\s+(.+)$/);
   if (ulMatch) {
     return { type: 'ul', depth, text: ulMatch[1].trim() };
   }
