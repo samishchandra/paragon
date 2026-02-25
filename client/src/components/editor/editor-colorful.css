@@ -7,11 +7,11 @@
 /* Data-theme attribute overrides for embedded editor theming */
 [data-theme="dark"] {
   /* Heading colors - Dark mode */
-  --h1-color: var(--things-blue);
-  --h2-color: var(--things-blue);
-  --h3-color: var(--things-purple);
-  --h4-color: var(--things-blue);
-  --h5-color: var(--things-yellow);
+  --h1-color: #2e80f2;
+  --h2-color: #2e80f2;
+  --h3-color: #2e80f2;
+  --h4-color: #2e80f2;
+  --h5-color: #2e80f2;
   --h6-color: var(--muted-foreground);
   
   /* Base layers - Things dark mode */
@@ -105,9 +105,9 @@
   /* Heading colors - Light mode */
   --h1-color: #2e80f2;
   --h2-color: #2e80f2;
-  --h3-color: #4eb57c;
-  --h4-color: #3eb4bf;
-  --h5-color: #e87d3e;
+  --h3-color: #2e80f2;
+  --h4-color: #2e80f2;
+  --h5-color: #2e80f2;
   --h6-color: #9a9a9a;
   
   /* Base layers - Things light mode */
