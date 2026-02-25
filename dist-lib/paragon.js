@@ -13520,8 +13520,8 @@ const fx = new Ie("tagPillPaste"), mx = io.create({
   bold: /\*\*[^*]+\*\*/,
   highlight: /==[^=]+==/,
   codeBlock: /```[\s\S]*?```/,
-  list: /^\s*[-*]\s+/m,
-  taskList: /^\s*[-*]\s*\[[ x]\]/im,
+  list: /^\s*[-*+]\s+/m,
+  taskList: /^\s*[-*+]\s*\[[ x]\]/im,
   link: /\[.+\]\(.+\)/,
   // Table pattern: header row with pipes, separator row with dashes, optional data rows
   // Allow headers and separators with or without trailing pipes
@@ -13559,10 +13559,10 @@ function Hi(e) {
   return o.join("");
 }
 function Uu(e) {
-  const t = e.match(/^( *)/), n = t ? t[1].length : 0, r = Math.floor(n / 2), o = e.trimStart(), s = o.match(/^[-*]\s*\[(x| )\]\s*(.*)$/);
+  const t = e.match(/^( *)/), n = t ? t[1].length : 0, r = Math.floor(n / 2), o = e.trimStart(), s = o.match(/^[-*+]\s*\[(x| )\]\s*(.*)$/);
   if (s)
     return { type: "task", depth: r, text: s[2].trim(), checked: s[1] === "x" };
-  const i = o.match(/^[-*]\s+(.+)$/);
+  const i = o.match(/^[-*+]\s+(.+)$/);
   if (i)
     return { type: "ul", depth: r, text: i[1].trim() };
   const a = o.match(/^\d+\.\s+(.+)$/);
@@ -13591,7 +13591,7 @@ function Yu(e) {
 }
 function Wi(e) {
   if (!e.trim()) return "<p></p>";
-  const t = /<br\s*\/?>/i.test(e), n = /(?:^|<br\s*\/?>)\s*(?:- |\d+\. )/i.test(e);
+  const t = /<br\s*\/?>/i.test(e), n = /(?:^|<br\s*\/?>)\s*(?:[-*+] |\d+\. )/i.test(e);
   if (!t && !n)
     return Hi(e);
   const r = e.split(/<br\s*\/?>/i).filter((a) => a.trim()), o = [];
