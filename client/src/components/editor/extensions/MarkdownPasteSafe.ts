@@ -11,8 +11,8 @@ const MARKDOWN_PATTERNS = {
   bold: /\*\*[^*]+\*\*/,
   highlight: /==[^=]+==/,
   codeBlock: /```[\s\S]*?```/,
-  list: /^\s*[-*]\s+/m,
-  taskList: /^\s*[-*]\s*\[[ x]\]/im,
+  list: /^\s*[-*+]\s+/m,
+  taskList: /^\s*[-*+]\s*\[[ x]\]/im,
   link: /\[.+\]\(.+\)/,
   // Table pattern: header row with pipes, separator row with dashes, optional data rows
   // Allow headers and separators with or without trailing pipes
@@ -125,11 +125,11 @@ export function parseListLine(rawLine: string): ListLineInfo | null {
   const depth = Math.floor(spaces / 2);
   const trimmed = rawLine.trimStart();
   
-  const taskMatch = trimmed.match(/^[-*]\s*\[(x| )\]\s*(.*)$/);
+  const taskMatch = trimmed.match(/^[-*+]\s*\[(x| )\]\s*(.*)$/);
   if (taskMatch) {
     return { type: 'task', depth, text: taskMatch[2].trim(), checked: taskMatch[1] === 'x' };
   }
-  const ulMatch = trimmed.match(/^[-*]\s+(.+)$/);
+  const ulMatch = trimmed.match(/^[-*+]\s+(.+)$/);
   if (ulMatch) {
     return { type: 'ul', depth, text: ulMatch[1].trim() };
   }
@@ -200,7 +200,7 @@ function convertCellContent(cellText: string): string {
   
   // Check if cell has <br> separators (multi-line content)
   const hasBr = /<br\s*\/?>/i.test(cellText);
-  const hasListMarker = /(?:^|<br\s*\/?>)\s*(?:- |\d+\. )/i.test(cellText);
+  const hasListMarker = /(?:^|<br\s*\/?>)\s*(?:[-*+] |\d+\. )/i.test(cellText);
   
   if (!hasBr && !hasListMarker) {
     return convertLineToBlocks(cellText);

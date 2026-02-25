@@ -529,3 +529,362 @@ describe('looksLikeMarkdown — List Detection', () => {
     expect(looksLikeMarkdown('- Parent\n  - Child')).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// parseListLine — All Bullet Marker Variants (-, *, +)
+// ---------------------------------------------------------------------------
+describe('parseListLine — Asterisk (*) bullet marker', () => {
+  it('should parse a top-level asterisk bullet item', () => {
+    const result = parseListLine('* Item A');
+    expect(result).toEqual({ type: 'ul', depth: 0, text: 'Item A' });
+  });
+
+  it('should parse an indented asterisk bullet item', () => {
+    const result = parseListLine('  * Child item');
+    expect(result).toEqual({ type: 'ul', depth: 1, text: 'Child item' });
+  });
+
+  it('should parse a deeply indented asterisk bullet item', () => {
+    const result = parseListLine('    * Grandchild');
+    expect(result).toEqual({ type: 'ul', depth: 2, text: 'Grandchild' });
+  });
+
+  it('should NOT parse asterisk without space as a list item', () => {
+    expect(parseListLine('*italic text*')).toBeNull();
+    expect(parseListLine('*no space')).toBeNull();
+  });
+
+  it('should parse asterisk task list items', () => {
+    expect(parseListLine('* [ ] Todo')).toEqual({ type: 'task', depth: 0, text: 'Todo', checked: false });
+    expect(parseListLine('* [x] Done')).toEqual({ type: 'task', depth: 0, text: 'Done', checked: true });
+  });
+
+  it('should parse indented asterisk task list items', () => {
+    expect(parseListLine('  * [ ] Sub-task')).toEqual({ type: 'task', depth: 1, text: 'Sub-task', checked: false });
+    expect(parseListLine('    * [x] Deep task')).toEqual({ type: 'task', depth: 2, text: 'Deep task', checked: true });
+  });
+});
+
+describe('parseListLine — Plus (+) bullet marker', () => {
+  it('should parse a top-level plus bullet item', () => {
+    const result = parseListLine('+ Item A');
+    expect(result).toEqual({ type: 'ul', depth: 0, text: 'Item A' });
+  });
+
+  it('should parse an indented plus bullet item', () => {
+    const result = parseListLine('  + Child item');
+    expect(result).toEqual({ type: 'ul', depth: 1, text: 'Child item' });
+  });
+
+  it('should parse a deeply indented plus bullet item', () => {
+    const result = parseListLine('    + Grandchild');
+    expect(result).toEqual({ type: 'ul', depth: 2, text: 'Grandchild' });
+  });
+
+  it('should NOT parse plus without space as a list item', () => {
+    expect(parseListLine('+no space')).toBeNull();
+    expect(parseListLine('+123')).toBeNull();
+  });
+
+  it('should parse plus task list items', () => {
+    expect(parseListLine('+ [ ] Todo')).toEqual({ type: 'task', depth: 0, text: 'Todo', checked: false });
+    expect(parseListLine('+ [x] Done')).toEqual({ type: 'task', depth: 0, text: 'Done', checked: true });
+  });
+
+  it('should parse indented plus task list items', () => {
+    expect(parseListLine('  + [ ] Sub-task')).toEqual({ type: 'task', depth: 1, text: 'Sub-task', checked: false });
+    expect(parseListLine('    + [x] Deep task')).toEqual({ type: 'task', depth: 2, text: 'Deep task', checked: true });
+  });
+});
+
+describe('parseListLine — Mixed bullet markers', () => {
+  it('should parse all three markers at the same depth', () => {
+    expect(parseListLine('- Dash item')?.type).toBe('ul');
+    expect(parseListLine('* Asterisk item')?.type).toBe('ul');
+    expect(parseListLine('+ Plus item')?.type).toBe('ul');
+  });
+
+  it('should preserve text content regardless of marker', () => {
+    expect(parseListLine('- Same text')?.text).toBe('Same text');
+    expect(parseListLine('* Same text')?.text).toBe('Same text');
+    expect(parseListLine('+ Same text')?.text).toBe('Same text');
+  });
+
+  it('should handle all markers with inline formatting', () => {
+    expect(parseListLine('* **bold item**')?.text).toBe('**bold item**');
+    expect(parseListLine('+ *italic item*')?.text).toBe('*italic item*');
+    expect(parseListLine('- `code item`')?.text).toBe('`code item`');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// looksLikeMarkdown — All Bullet Marker Detection
+// ---------------------------------------------------------------------------
+describe('looksLikeMarkdown — All bullet markers', () => {
+  it('should detect dash bullet lists', () => {
+    expect(looksLikeMarkdown('- Item 1')).toBe(true);
+  });
+
+  it('should detect asterisk bullet lists', () => {
+    expect(looksLikeMarkdown('* Item 1')).toBe(true);
+  });
+
+  it('should detect plus bullet lists', () => {
+    expect(looksLikeMarkdown('+ Item 1')).toBe(true);
+  });
+
+  it('should detect indented plus bullet lists', () => {
+    expect(looksLikeMarkdown('  + Nested item')).toBe(true);
+  });
+
+  it('should detect asterisk task lists', () => {
+    expect(looksLikeMarkdown('* [ ] Todo')).toBe(true);
+    expect(looksLikeMarkdown('* [x] Done')).toBe(true);
+  });
+
+  it('should detect plus task lists', () => {
+    expect(looksLikeMarkdown('+ [ ] Todo')).toBe(true);
+    expect(looksLikeMarkdown('+ [x] Done')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// markdownToHtml — Asterisk and Plus Bullet Lists
+// ---------------------------------------------------------------------------
+describe('markdownToHtml — Asterisk (*) bullet lists', () => {
+  it('should convert asterisk bullets to unordered list HTML', () => {
+    const md = `* First item
+* Second item
+* Third item`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('<ul>');
+    expect(html).toContain('<li><p>First item</p></li>');
+    expect(html).toContain('<li><p>Second item</p></li>');
+    expect(html).toContain('<li><p>Third item</p></li>');
+  });
+
+  it('should convert nested asterisk bullets', () => {
+    const md = `* Parent
+  * Child 1
+  * Child 2`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('<ul>');
+    expect(html).toContain('Parent');
+    expect(html).toContain('Child 1');
+    expect(html).toContain('Child 2');
+    const ulCount = (html.match(/<ul>/g) || []).length;
+    expect(ulCount).toBe(2);
+  });
+
+  it('should convert 3-level nested asterisk bullets', () => {
+    const md = `* Level 0
+  * Level 1
+    * Level 2`;
+    const html = markdownToHtml(md);
+    const ulCount = (html.match(/<ul>/g) || []).length;
+    expect(ulCount).toBe(3);
+  });
+
+  it('should convert asterisk task lists', () => {
+    const md = `* [ ] Buy groceries
+* [x] Walk the dog
+* [ ] Read a book`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('data-type="taskList"');
+    expect(html).toContain('Buy groceries');
+    expect(html).toContain('Walk the dog');
+    expect(html).toContain('Read a book');
+    expect(html).toContain('data-checked="false"');
+    expect(html).toContain('data-checked="true"');
+  });
+});
+
+describe('markdownToHtml — Plus (+) bullet lists', () => {
+  it('should convert plus bullets to unordered list HTML', () => {
+    const md = `+ First item
++ Second item
++ Third item`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('<ul>');
+    expect(html).toContain('<li><p>First item</p></li>');
+    expect(html).toContain('<li><p>Second item</p></li>');
+    expect(html).toContain('<li><p>Third item</p></li>');
+  });
+
+  it('should convert nested plus bullets', () => {
+    const md = `+ Parent
+  + Child 1
+  + Child 2`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('<ul>');
+    expect(html).toContain('Parent');
+    expect(html).toContain('Child 1');
+    const ulCount = (html.match(/<ul>/g) || []).length;
+    expect(ulCount).toBe(2);
+  });
+
+  it('should convert plus task lists', () => {
+    const md = `+ [ ] Todo item
++ [x] Done item`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('data-type="taskList"');
+    expect(html).toContain('Todo item');
+    expect(html).toContain('Done item');
+  });
+});
+
+describe('markdownToHtml — Mixed bullet markers', () => {
+  it('should handle mixed -, *, + markers in the same list block', () => {
+    const md = `- Dash item
+* Asterisk item
++ Plus item`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('Dash item');
+    expect(html).toContain('Asterisk item');
+    expect(html).toContain('Plus item');
+    expect(html).toContain('<ul>');
+  });
+
+  it('should handle mixed markers with nesting', () => {
+    const md = `* Parent asterisk
+  - Child dash
+    + Grandchild plus`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('Parent asterisk');
+    expect(html).toContain('Child dash');
+    expect(html).toContain('Grandchild plus');
+    const ulCount = (html.match(/<ul>/g) || []).length;
+    expect(ulCount).toBe(3);
+  });
+
+  it('should handle mixed markers with task items', () => {
+    const md = `- [ ] Dash task
+* [ ] Asterisk task
++ [x] Plus task done`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('data-type="taskList"');
+    expect(html).toContain('Dash task');
+    expect(html).toContain('Asterisk task');
+    expect(html).toContain('Plus task done');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Italic vs Bullet Disambiguation
+// ---------------------------------------------------------------------------
+describe('markdownToHtml — Italic vs bullet disambiguation', () => {
+  it('should parse "* text" at line start as bullet, NOT italic', () => {
+    const md = `* Write downward feedback for the engineer appreciating the following project impact
+* Write downward feedback for the engineer appreciating the Engineering excellence skills`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('<ul>');
+    expect(html).toContain('<li>');
+    expect(html).not.toContain('<em>');
+    expect(html).toContain('Write downward feedback for the engineer appreciating the following project impact');
+    expect(html).toContain('Write downward feedback for the engineer appreciating the Engineering excellence skills');
+  });
+
+  it('should still render inline italic within bullet text', () => {
+    const md = `* This has *italic* inside`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('<ul>');
+    expect(html).toContain('<li>');
+    expect(html).toContain('<em>italic</em>');
+  });
+
+  it('should still render standalone italic text (not at line start with space)', () => {
+    const md = `This is *italic* text`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('<em>italic</em>');
+    expect(html).not.toContain('<ul>');
+  });
+
+  it('should not treat *word* in middle of sentence as a bullet', () => {
+    const md = `The *quick* brown fox`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('<em>quick</em>');
+    expect(html).not.toContain('<ul>');
+  });
+
+  it('should handle the exact user-reported paste scenario', () => {
+    const md = `* Write downward feedback for the engineer appreciating the following project impact in couple of bullet points
+* Write downward feedback for the engineer appreciating the Engineering excellence skills in couple of bullet points`;
+    const html = markdownToHtml(md);
+    // Should be a bullet list, not italic
+    expect(html).toContain('<ul>');
+    expect(html).toContain('<li>');
+    // Should NOT have italic tags wrapping the entire text
+    expect(html).not.toContain('<em>Write downward feedback');
+  });
+
+  it('should handle asterisk bullets mixed with paragraphs', () => {
+    const md = `Here is some intro text
+
+* First bullet point
+* Second bullet point
+
+And some conclusion`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('Here is some intro text');
+    expect(html).toContain('<ul>');
+    expect(html).toContain('First bullet point');
+    expect(html).toContain('Second bullet point');
+    expect(html).toContain('And some conclusion');
+    expect(html).not.toContain('<em>First bullet point');
+  });
+
+  it('should handle single asterisk bullet (edge case)', () => {
+    const md = `* Single item`;
+    const html = markdownToHtml(md);
+    expect(html).toContain('<ul>');
+    expect(html).toContain('Single item');
+    expect(html).not.toContain('<em>');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Edge Cases — Whitespace and Special Characters
+// ---------------------------------------------------------------------------
+describe('parseListLine — Whitespace edge cases', () => {
+  it('should handle tab-indented items (treated as spaces)', () => {
+    // Tabs are typically 2 or 4 spaces; trimStart handles them
+    const result = parseListLine('  * Tab-indented');
+    expect(result).toEqual({ type: 'ul', depth: 1, text: 'Tab-indented' });
+  });
+
+  it('should handle items with extra whitespace in text', () => {
+    const result = parseListLine('*   Extra spaces');
+    expect(result).toEqual({ type: 'ul', depth: 0, text: 'Extra spaces' });
+  });
+
+  it('should handle items with trailing whitespace', () => {
+    const result = parseListLine('* Trailing space   ');
+    expect(result).toEqual({ type: 'ul', depth: 0, text: 'Trailing space' });
+  });
+
+  it('should return null for just a bullet marker with no text', () => {
+    // "* " with nothing after — the regex requires (.+) so at least one char
+    expect(parseListLine('* ')).toBeNull();
+    expect(parseListLine('- ')).toBeNull();
+    expect(parseListLine('+ ')).toBeNull();
+  });
+
+  it('should handle items with special characters', () => {
+    expect(parseListLine('* Item with (parens) and [brackets]')).toEqual({
+      type: 'ul', depth: 0, text: 'Item with (parens) and [brackets]',
+    });
+    expect(parseListLine('+ Item with "quotes" and \'apostrophes\'')).toEqual({
+      type: 'ul', depth: 0, text: 'Item with "quotes" and \'apostrophes\'',
+    });
+  });
+
+  it('should handle items with URLs', () => {
+    const result = parseListLine('* Check https://example.com for details');
+    expect(result).toEqual({ type: 'ul', depth: 0, text: 'Check https://example.com for details' });
+  });
+
+  it('should handle items with markdown links', () => {
+    const result = parseListLine('* Visit [Google](https://google.com)');
+    expect(result).toEqual({ type: 'ul', depth: 0, text: 'Visit [Google](https://google.com)' });
+  });
+});
