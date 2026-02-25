@@ -78,9 +78,9 @@
   --callout-note: #a78bfa;
   --callout-note-bg: oklch(0.22 0.04 280);
   --callout-note-border: #a78bfa;
-  --callout-prompt: #fbbf24;
-  --callout-prompt-bg: oklch(0.22 0.04 85);
-  --callout-prompt-border: #fbbf24;
+  --callout-prompt: #facc15;
+  --callout-prompt-bg: oklch(0.22 0.04 95);
+  --callout-prompt-border: #facc15;
   --callout-resources: #34d399;
   --callout-resources-bg: oklch(0.22 0.04 160);
   --callout-resources-border: #34d399;
@@ -174,9 +174,9 @@
   --callout-note: #8b5cf6;
   --callout-note-bg: oklch(0.96 0.02 280);
   --callout-note-border: #8b5cf6;
-  --callout-prompt: #f59e0b;
-  --callout-prompt-bg: oklch(0.96 0.03 85);
-  --callout-prompt-border: #f59e0b;
+  --callout-prompt: #eab308;
+  --callout-prompt-bg: oklch(0.96 0.03 95);
+  --callout-prompt-border: #eab308;
   --callout-resources: #10b981;
   --callout-resources-bg: oklch(0.96 0.02 160);
   --callout-resources-border: #10b981;
@@ -3727,7 +3727,7 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-theme="light"] .callout-prompt {
-  background: #FFFBEB; /* Light amber to match #f59e0b border */
+  background: #FEFCE8; /* Light yellow to match #eab308 border */
 }
 
 [data-theme="light"] .callout-resources {
