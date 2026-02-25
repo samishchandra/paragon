@@ -15,7 +15,7 @@ describe('Callout Extension', () => {
   it('should have default options with all callout types', () => {
     const extension = Callout.configure({});
     const options = extension.options;
-    expect(options.types).toEqual(['info', 'note', 'prompt', 'resources', 'todo']);
+    expect(options.types).toEqual(['info', 'note', 'prompt', 'resources', 'todo', 'summary']);
   });
 
   it('should have default type attribute of "info"', () => {

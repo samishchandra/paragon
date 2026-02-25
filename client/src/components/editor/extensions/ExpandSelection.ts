@@ -1,5 +1,5 @@
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey, AllSelection } from '@tiptap/pm/state';
+import { Plugin, PluginKey, AllSelection, TextSelection } from '@tiptap/pm/state';
 import { Node as PMNode } from '@tiptap/pm/model';
 
 /*
@@ -277,6 +277,24 @@ function isInsideTable(doc: PMNode, from: number): boolean {
 }
 
 /**
+ * Check if a range crosses a complex block boundary (callout, blockquote, etc.).
+ * This happens when the selection would need to span from outside a complex block
+ * to inside it (or vice versa), which ProseMirror's TextSelection cannot handle
+ * properly for nodes with `defining: true`.
+ */
+function rangeContainsComplexBlock(doc: PMNode, from: number, to: number): boolean {
+  let found = false;
+  doc.nodesBetween(from, to, (node) => {
+    if (COMPLEX_BLOCK_TYPES.has(node.type.name)) {
+      found = true;
+      return false; // Stop descending
+    }
+    return true;
+  });
+  return found;
+}
+
+/**
  * Build the ordered list of expansion steps from the current selection.
  * 
  * Steps (contextual):
@@ -293,13 +311,13 @@ function buildExpansionSteps(
   doc: PMNode,
   initialFrom: number,
   initialTo: number
-): Array<{ from: number; to: number }> {
-  const steps: Array<{ from: number; to: number }> = [];
+): Array<{ from: number; to: number; useSelectAll?: boolean }> {
+  const steps: Array<{ from: number; to: number; useSelectAll?: boolean }> = [];
   let currentFrom = initialFrom;
   let currentTo = initialTo;
 
   // Helper to add a step if it expands the selection
-  const addStep = (range: { from: number; to: number } | null): boolean => {
+  const addStep = (range: { from: number; to: number; useSelectAll?: boolean } | null): boolean => {
     if (range && (range.from < currentFrom || range.to > currentTo)) {
       steps.push(range);
       currentFrom = range.from;
@@ -330,13 +348,31 @@ function buildExpansionSteps(
   if (sections.length > 0) {
     const containingSections = findContainingHeadingSections(sections, currentFrom, currentTo);
     for (const section of containingSections) {
-      addStep({ from: section.from, to: section.to });
+      // Check if this heading section range would cross a complex block boundary.
+      // If so, we need to use selectAll instead of setTextSelection, because
+      // ProseMirror's TextSelection cannot span across defining node boundaries
+      // (like callouts). In this case, mark the step to use selectAll if it
+      // covers the entire document, or skip to the next larger section.
+      const crossesComplexBlock = rangeContainsComplexBlock(doc, section.from, section.to);
+      if (crossesComplexBlock) {
+        // If this section spans the whole doc, use selectAll
+        if (section.from === 0 && section.to === doc.content.size) {
+          addStep({ from: 0, to: doc.content.size, useSelectAll: true });
+        } else {
+          // The heading section contains a complex block but doesn't cover the
+          // whole document. We still add it but mark it to use selectAll-style
+          // selection (which uses AllSelection or a workaround).
+          addStep({ from: section.from, to: section.to, useSelectAll: true });
+        }
+      } else {
+        addStep({ from: section.from, to: section.to });
+      }
     }
   }
 
   // Step 4: Entire document
   if (currentFrom > 0 || currentTo < doc.content.size) {
-    steps.push({ from: 0, to: doc.content.size });
+    steps.push({ from: 0, to: doc.content.size, useSelectAll: true });
   }
 
   return steps;
@@ -405,7 +441,7 @@ export const ExpandSelection = Extension.create<{}, ExpandSelectionStorage>({
         const steps = buildExpansionSteps(doc, from, to);
 
         // Find the next step that actually expands beyond current selection
-        let nextStep: { from: number; to: number } | null = null;
+        let nextStep: { from: number; to: number; useSelectAll?: boolean } | null = null;
         for (const step of steps) {
           if (step.from < from || step.to > to) {
             nextStep = step;
@@ -414,20 +450,53 @@ export const ExpandSelection = Extension.create<{}, ExpandSelectionStorage>({
         }
 
         if (nextStep) {
-          storage.lastExpandedFrom = nextStep.from;
-          storage.lastExpandedTo = nextStep.to;
-          storage.expansionDepth++;
           storage.isExpanding = true;
 
           if (nextStep.from === 0 && nextStep.to === doc.content.size) {
+            // Full document — use selectAll for reliable cross-boundary selection
             editor.commands.selectAll();
+            storage.lastExpandedFrom = 0;
+            storage.lastExpandedTo = doc.content.size;
+          } else if (nextStep.useSelectAll) {
+            // Range crosses complex block boundaries — use TextSelection.create
+            // directly on the transaction to avoid the clamping that
+            // editor.commands.setTextSelection does internally.
+            try {
+              const $from = doc.resolve(nextStep.from);
+              const $to = doc.resolve(nextStep.to);
+              const tr = editor.state.tr;
+              const sel = TextSelection.between($from, $to);
+              editor.view.dispatch(tr.setSelection(sel).scrollIntoView());
+              // Store the actual resulting selection (may differ from requested)
+              const resultSel = editor.state.selection;
+              storage.lastExpandedFrom = resultSel.from;
+              storage.lastExpandedTo = resultSel.to;
+            } catch {
+              // If TextSelection.between fails, fall back to selectAll
+              editor.commands.selectAll();
+              storage.lastExpandedFrom = 0;
+              storage.lastExpandedTo = doc.content.size;
+            }
           } else {
             editor.commands.setTextSelection({
               from: nextStep.from,
               to: nextStep.to,
             });
+            // Verify the selection was actually set correctly
+            const resultSel = editor.state.selection;
+            if (resultSel.from !== nextStep.from || resultSel.to !== nextStep.to) {
+              // Selection was clamped by ProseMirror — the range crosses a
+              // defining node boundary. Fall back to selectAll.
+              editor.commands.selectAll();
+              storage.lastExpandedFrom = 0;
+              storage.lastExpandedTo = doc.content.size;
+            } else {
+              storage.lastExpandedFrom = nextStep.from;
+              storage.lastExpandedTo = nextStep.to;
+            }
           }
 
+          storage.expansionDepth++;
           storage.isExpanding = false;
           return true;
         }
