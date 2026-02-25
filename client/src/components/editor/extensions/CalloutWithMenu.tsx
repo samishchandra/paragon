@@ -105,11 +105,15 @@ function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
   return (
     <NodeViewWrapper className={`callout callout-${type}${collapsed ? ' callout-collapsed' : ''}`} data-callout="" data-type={type}>
       {/* Header row: clicking empty area toggles collapse, dropdown button changes type */}
+      {/* IMPORTANT: Do NOT use contentEditable={false} here — on iOS Safari, contentEditable
+         boundaries inside a contentEditable editor corrupt Safari's touch-to-click synthesis,
+         causing the entire page to become unresponsive to taps (TipTap issue #7514).
+         Instead, use CSS user-select: none to prevent text selection without creating
+         a contentEditable boundary. */}
       <div
         className="callout-header"
-        contentEditable={false}
         onClick={handleToggleCollapse}
-        style={{ cursor: 'pointer' }}
+        style={{ cursor: 'pointer', userSelect: 'none', WebkitUserSelect: 'none' }}
         title={collapsed ? 'Click to expand' : 'Click to collapse'}
       >
         <button
@@ -120,8 +124,7 @@ function CalloutComponent({ node, updateAttributes, editor }: NodeViewProps) {
             handleToggleDropdown();
           }}
           title={editor.isEditable ? "Click to change callout type" : config.label}
-          style={{ color: config.borderColor }}
-          contentEditable={false}
+          style={{ color: config.borderColor, userSelect: 'none', WebkitUserSelect: 'none' }}
         >
           <Icon size={18} />
           <span className="callout-label">{config.label}</span>

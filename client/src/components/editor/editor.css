@@ -1450,6 +1450,7 @@
   display: flex;
   align-items: center;
   margin-bottom: 8px;
+  -webkit-user-select: none;
   user-select: none;
   gap: 2px;
   border-radius: 6px;
