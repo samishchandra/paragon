@@ -5,14 +5,26 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
-import EditorPage from "./pages/Editor";
+import { lazy, Suspense } from "react";
 
+// Lazy-load the editor page for code splitting.
+// The editor bundle is heavy (~29 extensions, lowlight grammars, etc.)
+// and should only be loaded when the user navigates to /editor.
+const EditorPage = lazy(() => import("./pages/Editor"));
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
-      <Route path={"/editor"} component={EditorPage} />
+      <Route path={"/editor"}>
+        <Suspense fallback={
+          <div className="h-screen w-screen flex items-center justify-center bg-background">
+            <div className="text-muted-foreground text-sm">Loading editor...</div>
+          </div>
+        }>
+          <EditorPage />
+        </Suspense>
+      </Route>
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

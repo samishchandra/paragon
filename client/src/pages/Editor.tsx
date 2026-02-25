@@ -20,13 +20,18 @@ import { parseBool, parseIntSafe } from './utils/queryParams';
  *
  * Content is automatically saved to localStorage and restored on return.
  *
+ * Mobile optimizations:
+ *   - Simplified default content (no tables, code blocks, or nested lists)
+ *   - Table of contents disabled by default
+ *   - Autofocus disabled to prevent virtual keyboard on load
+ *
  * Supported query parameters:
  *   ?theme=dark|light          — Editor theme (default: light)
- *   ?toc=true|false            — Show table of contents (default: true)
+ *   ?toc=true|false            — Show table of contents (default: true on desktop, false on mobile)
  *   ?tocMaxLevel=1-6           — Max heading level in ToC (default: 4)
  *   ?toolbar=true|false        — Show editor toolbar (default: true)
  *   ?wordcount=true|false      — Show word count in footer (default: true)
- *   ?autofocus=true|false      — Auto-focus editor on load (default: true)
+ *   ?autofocus=true|false      — Auto-focus editor on load (default: true on desktop, false on mobile)
  *   ?reorder=true|false        — Auto-reorder completed checklist items (default: true)
  *   ?editable=true|false       — Allow editing (default: true)
  *   ?placeholder=...           — Custom placeholder text
@@ -38,6 +43,37 @@ import { parseBool, parseIntSafe } from './utils/queryParams';
 const STORAGE_KEY_CONTENT = 'paragon-editor-content';
 const STORAGE_KEY_THEME = 'paragon-editor-theme';
 const SAVE_DEBOUNCE_MS = 500;
+
+/**
+ * Detect if the current device is mobile.
+ * Uses a combination of touch events, user agent, and screen width.
+ */
+const isMobileDevice = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const hasTouchEvents = 'ontouchstart' in window;
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isSmallScreen = window.innerWidth < 768;
+  return (hasTouchEvents && (isMobileUA || isSmallScreen)) || (isMobileUA && isSmallScreen);
+};
+
+/**
+ * Lightweight default content for mobile devices.
+ * Avoids tables, code blocks, and deeply nested lists that are expensive to parse.
+ */
+const DEFAULT_CONTENT_MOBILE = `
+<h1>Welcome to Paragon Editor</h1>
+<p>A <strong>professional</strong> markdown editor. Tap anywhere to start writing.</p>
+
+<h2>Quick Tips</h2>
+<ul>
+  <li>Type <code>/</code> to open the <strong>command palette</strong></li>
+  <li>Use the toolbar above for formatting</li>
+  <li>Type <code>@today</code> to insert a <strong>date pill</strong></li>
+</ul>
+
+<h2>Try It Out</h2>
+<p>Start typing below, or clear this content using the <strong>New</strong> button in the header.</p>
+`;
 
 const DEFAULT_CONTENT = `
 <h1>Welcome to Paragon Editor</h1>
@@ -200,14 +236,14 @@ function App() {
 <p>Try typing <code>/</code> to open the command palette, or switch to raw markdown mode using the toolbar toggle!</p>
 `;
 
-function loadSavedContent(): string {
+function loadSavedContent(isMobile: boolean): string {
   try {
     const saved = localStorage.getItem(STORAGE_KEY_CONTENT);
     if (saved && saved.trim().length > 0) return saved;
   } catch {
     // localStorage may be unavailable
   }
-  return DEFAULT_CONTENT;
+  return isMobile ? DEFAULT_CONTENT_MOBILE : DEFAULT_CONTENT;
 }
 
 function loadSavedTheme(queryTheme: 'dark' | 'light'): 'dark' | 'light' {
@@ -221,23 +257,28 @@ function loadSavedTheme(queryTheme: 'dark' | 'light'): 'dark' | 'light' {
 }
 
 export default function EditorPage() {
+  // Detect mobile once on mount — stable for the lifetime of the component
+  const [isMobile] = useState(() => isMobileDevice());
+
   const config = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     return {
       theme: (params.get('theme') === 'dark' ? 'dark' : 'light') as 'dark' | 'light',
-      showTableOfContents: parseBool(params.get('toc'), true),
+      // On mobile: default ToC off (saves screen space + reduces init overhead)
+      showTableOfContents: parseBool(params.get('toc'), !isMobile),
       tocMaxLevel: parseIntSafe(params.get('tocMaxLevel'), 4, 1, 6),
       showToolbar: parseBool(params.get('toolbar'), true),
       showWordCount: parseBool(params.get('wordcount'), true),
-      autofocus: parseBool(params.get('autofocus'), true),
+      // On mobile: default autofocus off (prevents virtual keyboard on load)
+      autofocus: parseBool(params.get('autofocus'), !isMobile),
       autoReorderChecklist: parseBool(params.get('reorder'), true),
       editable: parseBool(params.get('editable'), true),
       placeholder: params.get('placeholder') || "Start writing... Use '/' for commands",
       colorTheme: (params.get('colorTheme') === 'neutral' ? 'neutral' : 'colorful') as 'colorful' | 'neutral',
     };
-  }, []);
+  }, [isMobile]);
 
-  const [content, setContent] = useState(() => loadSavedContent());
+  const [content, setContent] = useState(() => loadSavedContent(isMobile));
   const [theme, setTheme] = useState(() => loadSavedTheme(config.theme));
   const [showNewConfirm, setShowNewConfirm] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -290,11 +331,12 @@ export default function EditorPage() {
     } catch {
       // Silently fail
     }
-    setContent(DEFAULT_CONTENT);
+    const templateContent = isMobile ? DEFAULT_CONTENT_MOBILE : DEFAULT_CONTENT;
+    setContent(templateContent);
     // Directly update the TipTap editor since useEditor only uses content as initial value
-    editorRef.current?.setContent?.(DEFAULT_CONTENT);
+    editorRef.current?.setContent?.(templateContent);
     setShowNewConfirm(false);
-  }, []);
+  }, [isMobile]);
 
   // Export content as .md file
   const handleExport = useCallback(() => {
