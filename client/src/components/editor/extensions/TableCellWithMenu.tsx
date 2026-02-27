@@ -17,8 +17,7 @@ function setupEventDelegation() {
     const target = e.target as HTMLElement;
     const cell = target.closest('td, th');
     if (cell && cell.closest('.ProseMirror')) {
-      const btn = cell.querySelector('.table-cell-menu-btn') as HTMLElement;
-      if (btn) btn.style.opacity = '1';
+      cell.classList.add('cell-hovered');
     }
   }, true);
   
@@ -30,8 +29,7 @@ function setupEventDelegation() {
       if (relatedTarget && cell.contains(relatedTarget)) return;
       const dropdown = document.querySelector('.table-cell-menu-dropdown');
       if (dropdown) return;
-      const btn = cell.querySelector('.table-cell-menu-btn') as HTMLElement;
-      if (btn) btn.style.opacity = '0';
+      cell.classList.remove('cell-hovered');
     }
   }, true);
 }
@@ -88,10 +86,9 @@ function buildMenuDecorations(doc: any, editor: any): DecorationSet {
         const textColor = isDark ? '#999' : '#666';
         const hoverBgColor = isDark ? '#2a2a2a' : '#f5f5f5';
         
-        button.style.cssText = 'width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:4px;cursor:pointer;opacity:0;transition:opacity 0.15s ease,background-color 0.15s ease,transform 0.1s ease;color:' + textColor + ';pointer-events:auto;padding:0;';
+        button.style.cssText = 'width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:4px;cursor:pointer;transition:opacity 0.15s ease,background-color 0.15s ease,transform 0.1s ease;color:' + textColor + ';pointer-events:auto;padding:0;';
         
         button.addEventListener('mouseenter', () => {
-          button.style.opacity = '1';
           button.style.background = hoverBgColor;
           button.style.transform = 'scale(1.05)';
         });

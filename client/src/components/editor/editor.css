@@ -934,18 +934,18 @@
     border: 1px solid hsl(var(--border) / 0.5);
     border-radius: 4px;
     cursor: pointer;
-    opacity: 0.15;
+    opacity: 0;
     transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
     color: hsl(var(--muted-foreground));
     pointer-events: auto;
     padding: 0;
   }
   
-  /* Show button on cell hover - using multiple selectors for reliability */
-  .ProseMirror td:hover > .table-cell-menu-wrapper .table-cell-menu-btn,
-  .ProseMirror th:hover > .table-cell-menu-wrapper .table-cell-menu-btn,
+  /* Show button on cell hover - using .cell-hovered class + CSS :hover for reliability */
   .ProseMirror td:hover .table-cell-menu-btn,
   .ProseMirror th:hover .table-cell-menu-btn,
+  .ProseMirror td.cell-hovered .table-cell-menu-btn,
+  .ProseMirror th.cell-hovered .table-cell-menu-btn,
   .table-cell-menu-wrapper:hover .table-cell-menu-btn,
   .table-cell-menu-btn:hover,
   .table-cell-menu-btn:focus {
