@@ -202,7 +202,7 @@
 .tiptap-editor {
   font-family: var(--editor-font-family, var(--font-sans));
   font-size: var(--editor-font-size, 1rem);
-  font-weight: 450;
+  font-weight: 400;
   color: var(--foreground);
   line-height: var(--editor-line-height, 1.5);
   min-height: 100%;
