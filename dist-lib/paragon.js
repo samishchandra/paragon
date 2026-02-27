@@ -8306,16 +8306,12 @@ let Ci = !1, Lr = null;
 function Dv() {
   Ci || (Ci = !0, document.addEventListener("mouseover", (e) => {
     const n = e.target.closest("td, th");
-    if (n && n.closest(".ProseMirror")) {
-      const r = n.querySelector(".table-cell-menu-btn");
-      r && (r.style.opacity = "1");
-    }
+    n && n.closest(".ProseMirror") && n.classList.add("cell-hovered");
   }, !0), document.addEventListener("mouseout", (e) => {
     const t = e.target, n = e.relatedTarget, r = t.closest("td, th");
     if (r && r.closest(".ProseMirror")) {
       if (n && r.contains(n) || document.querySelector(".table-cell-menu-dropdown")) return;
-      const s = r.querySelector(".table-cell-menu-btn");
-      s && (s.style.opacity = "0");
+      r.classList.remove("cell-hovered");
     }
   }, !0));
 }
@@ -8347,8 +8343,8 @@ function Av(e, t) {
         const c = document.createElement("button");
         c.className = "table-cell-menu-btn", c.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>', c.title = "Table options", c.type = "button";
         const l = document.documentElement.classList.contains("dark"), u = l ? "rgba(30,30,30,0.95)" : "rgba(255,255,255,0.95)", d = l ? "rgba(60,60,60,0.5)" : "rgba(200,200,200,0.5)", f = l ? "#999" : "#666", p = l ? "#2a2a2a" : "#f5f5f5";
-        return c.style.cssText = "width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:" + u + ";border:1px solid " + d + ";border-radius:4px;cursor:pointer;opacity:0;transition:opacity 0.15s ease,background-color 0.15s ease,transform 0.1s ease;color:" + f + ";pointer-events:auto;padding:0;", c.addEventListener("mouseenter", () => {
-          c.style.opacity = "1", c.style.background = p, c.style.transform = "scale(1.05)";
+        return c.style.cssText = "width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:" + u + ";border:1px solid " + d + ";border-radius:4px;cursor:pointer;transition:opacity 0.15s ease,background-color 0.15s ease,transform 0.1s ease;color:" + f + ";pointer-events:auto;padding:0;", c.addEventListener("mouseenter", () => {
+          c.style.background = p, c.style.transform = "scale(1.05)";
         }), c.addEventListener("mouseleave", () => {
           document.querySelector(".table-cell-menu-dropdown"), c.style.background = u, c.style.transform = "scale(1)";
         }), c.addEventListener("click", (g) => {
