@@ -573,7 +573,7 @@ export default function Home() {
               <div className="px-4 py-2 bg-secondary/50 border-b border-border">
                 <span className="text-xs font-mono text-muted-foreground">Basic Usage</span>
               </div>
-              <pre className="p-4 overflow-x-auto">
+              <pre className="p-4 overflow-x-auto whitespace-pre-wrap break-words">
                 <code className="text-sm font-mono text-foreground">{`import { MarkdownEditor } from '@/components/editor';
 
 function MyApp() {
@@ -599,7 +599,7 @@ function MyApp() {
               <div className="px-4 py-2 bg-secondary/50 border-b border-border">
                 <span className="text-xs font-mono text-muted-foreground">With AI Integration</span>
               </div>
-              <pre className="p-4 overflow-x-auto">
+              <pre className="p-4 overflow-x-auto whitespace-pre-wrap break-words">
                 <code className="text-sm font-mono text-foreground">{`import { MarkdownEditor, type AIActionDefinition } from '@/components/editor';
 
 const aiActions: AIActionDefinition[] = [
@@ -627,8 +627,8 @@ function MyApp() {
 
             <div className="mt-8">
               <h4 className="text-lg font-medium text-foreground mb-3">Key Props</h4>
-              <div className="bg-card border border-border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
+              <div className="bg-card border border-border rounded-lg overflow-x-auto">
+                <table className="w-full text-sm min-w-[500px]">
                   <thead>
                     <tr className="bg-secondary/50">
                       <th className="px-4 py-2 text-left font-medium text-foreground">Prop</th>
@@ -774,8 +774,8 @@ function MyApp() {
               <p className="text-sm text-muted-foreground mb-3">
                 Access a full-page, distraction-free editor at <code className="px-1.5 py-0.5 rounded bg-secondary text-primary font-mono text-xs">/editor</code>. Configure it via URL query parameters:
               </p>
-              <div className="bg-card border border-border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
+              <div className="bg-card border border-border rounded-lg overflow-x-auto">
+                <table className="w-full text-sm min-w-[500px]">
                   <thead>
                     <tr className="bg-secondary/50">
                       <th className="px-4 py-2 text-left font-medium text-foreground">Parameter</th>

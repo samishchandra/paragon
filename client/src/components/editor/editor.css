@@ -213,10 +213,13 @@
   color: var(--foreground);
   line-height: var(--editor-line-height, 1.5);
   min-height: 100%;
+  max-width: 100%;
   padding: 2rem;
   padding-bottom: 40vh;
   outline: none;
   caret-color: var(--editor-cursor);
+  overflow-wrap: break-word;
+  word-break: break-word;
   
   /* Selection styling */
   ::selection {
@@ -342,6 +345,8 @@
     padding: 1rem;
     margin: 0;
     overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
     position: relative;
   }
   
@@ -3331,7 +3336,7 @@ pre.with-line-numbers code .line::before {
 .editor-content-wrapper {
   flex: 1;
   overflow-y: auto;
-  overflow-x: visible;
+  overflow-x: hidden;
   position: relative;
   min-height: 0;
   
