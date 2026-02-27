@@ -787,7 +787,7 @@
   th {
     padding: calc(0.25rem + 4px) 0.5rem;
     min-width: 50px;
-    vertical-align: middle;
+    vertical-align: top;
     line-height: 1.3;
     position: relative;
   }
@@ -893,16 +893,14 @@
   text-overflow: ellipsis;
   box-sizing: border-box;
   position: relative;
-  vertical-align: middle; /* Vertically center text in cells */
+  vertical-align: top; /* Top-align text in cells */
   padding: 4px;
 }
 
-/* Ensure paragraph inside table cells is also centered */
+/* Ensure paragraph inside table cells has proper spacing */
   th > p,
   td > p {
     margin: 0 !important;
-    display: flex !important;
-    align-items: center !important;
     min-height: 1.5em;
     line-height: 1.3;
   }

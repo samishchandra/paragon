@@ -1,120 +1,129 @@
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 const tableCellMenuPluginKey = new PluginKey('tableCellMenu');
-let eventDelegationSetup = false;
 
-// Cache for decorations to avoid unnecessary rebuilds
-let cachedMenuDecorations: DecorationSet | null = null;
+// Track which cell currently has the menu button
+let currentMenuCell: HTMLElement | null = null;
+let currentMenuWrapper: HTMLElement | null = null;
 
-function setupEventDelegation() {
-  if (eventDelegationSetup) return;
-  eventDelegationSetup = true;
+function getThemeColors() {
+  const isDark = document.documentElement.classList.contains('dark');
+  return {
+    isDark,
+    bgColor: isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)',
+    borderColor: isDark ? 'rgba(60,60,60,0.5)' : 'rgba(200,200,200,0.5)',
+    textColor: isDark ? '#999' : '#666',
+    hoverBgColor: isDark ? '#2a2a2a' : '#f5f5f5',
+  };
+}
+
+function createMenuButton(editor: any, cell: HTMLElement): HTMLDivElement {
+  const colors = getThemeColors();
   
-  document.addEventListener('mouseover', (e) => {
-    const target = e.target as HTMLElement;
-    const cell = target.closest('td, th');
-    if (cell && cell.closest('.ProseMirror')) {
-      cell.classList.add('cell-hovered');
-    }
-  }, true);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'table-cell-menu-wrapper';
+  wrapper.setAttribute('contenteditable', 'false');
   
-  document.addEventListener('mouseout', (e) => {
-    const target = e.target as HTMLElement;
-    const relatedTarget = (e as MouseEvent).relatedTarget as HTMLElement;
-    const cell = target.closest('td, th');
-    if (cell && cell.closest('.ProseMirror')) {
-      if (relatedTarget && cell.contains(relatedTarget)) return;
-      const dropdown = document.querySelector('.table-cell-menu-dropdown');
-      if (dropdown) return;
-      cell.classList.remove('cell-hovered');
-    }
-  }, true);
+  const button = document.createElement('button');
+  button.className = 'table-cell-menu-btn';
+  button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>';
+  button.title = 'Table options';
+  button.type = 'button';
+  
+  button.addEventListener('mouseenter', () => {
+    button.style.background = colors.hoverBgColor;
+    button.style.transform = 'scale(1.05)';
+  });
+  button.addEventListener('mouseleave', () => {
+    button.style.background = colors.bgColor;
+    button.style.transform = 'scale(1)';
+  });
+  
+  button.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Find the ProseMirror position for this cell
+    const view = editor.view;
+    const pos = view.posAtDOM(cell, 0);
+    
+    const buttonRect = button.getBoundingClientRect();
+    editor.chain().focus().setTextSelection(pos).run();
+    showTableMenu(e, editor, pos, buttonRect);
+  });
+  
+  wrapper.appendChild(button);
+  return wrapper;
+}
+
+function removeCurrentMenu() {
+  if (currentMenuWrapper && currentMenuWrapper.parentNode) {
+    currentMenuWrapper.parentNode.removeChild(currentMenuWrapper);
+  }
+  if (currentMenuCell) {
+    currentMenuCell.classList.remove('cell-hovered');
+  }
+  currentMenuCell = null;
+  currentMenuWrapper = null;
+}
+
+function showMenuForCell(editor: any, cell: HTMLElement) {
+  // Don't recreate if already showing for this cell
+  if (currentMenuCell === cell) return;
+  
+  // Remove previous menu
+  removeCurrentMenu();
+  
+  // Add hover class and create menu button
+  cell.classList.add('cell-hovered');
+  const wrapper = createMenuButton(editor, cell);
+  cell.appendChild(wrapper);
+  
+  currentMenuCell = cell;
+  currentMenuWrapper = wrapper;
 }
 
 function createTableCellMenuPlugin(editor: any) {
-  setupEventDelegation();
-  
   return new Plugin({
     key: tableCellMenuPluginKey,
-    state: {
-      init() {
-        return DecorationSet.empty;
-      },
-      apply(tr, oldState, _oldEditorState, newEditorState) {
-        // Only rebuild decorations if document structure changed
-        if (!tr.docChanged && cachedMenuDecorations) {
-          // Map existing decorations to new positions
-          return cachedMenuDecorations.map(tr.mapping, tr.doc);
-        }
-        
-        // Rebuild decorations
-        cachedMenuDecorations = buildMenuDecorations(newEditorState.doc, editor);
-        return cachedMenuDecorations;
-      },
-    },
     props: {
-      decorations(state) {
-        return this.getState(state);
+      handleDOMEvents: {
+        mouseover(view, event) {
+          const target = event.target as HTMLElement;
+          const cell = target.closest('td, th') as HTMLElement;
+          
+          if (cell && cell.closest('.ProseMirror')) {
+            showMenuForCell(editor, cell);
+          }
+          
+          return false;
+        },
+        mouseout(view, event) {
+          const target = event.target as HTMLElement;
+          const relatedTarget = (event as MouseEvent).relatedTarget as HTMLElement;
+          const cell = target.closest('td, th') as HTMLElement;
+          
+          if (cell && cell.closest('.ProseMirror')) {
+            // Don't remove if moving within the same cell
+            if (relatedTarget && cell.contains(relatedTarget)) return false;
+            
+            // Don't remove if a dropdown menu is open
+            const dropdown = document.querySelector('.table-cell-menu-dropdown');
+            if (dropdown) return false;
+            
+            // Don't remove if moving to the menu button itself
+            if (relatedTarget && relatedTarget.closest('.table-cell-menu-wrapper')) return false;
+            
+            removeCurrentMenu();
+          }
+          
+          return false;
+        },
       },
     },
   });
-}
-
-function buildMenuDecorations(doc: any, editor: any): DecorationSet {
-  const decorations: Decoration[] = [];
-  
-  doc.descendants((node: any, pos: number) => {
-    if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
-      const widget = Decoration.widget(pos + 1, (view) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'table-cell-menu-wrapper ProseMirror-widget';
-        wrapper.setAttribute('contenteditable', 'false');
-        wrapper.style.cssText = 'position:absolute;top:2px;right:2px;z-index:50;pointer-events:auto;';
-        
-        const button = document.createElement('button');
-        button.className = 'table-cell-menu-btn';
-        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>';
-        button.title = 'Table options';
-        button.type = 'button';
-        
-        const isDark = document.documentElement.classList.contains('dark');
-        const bgColor = isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)';
-        const borderColor = isDark ? 'rgba(60,60,60,0.5)' : 'rgba(200,200,200,0.5)';
-        const textColor = isDark ? '#999' : '#666';
-        const hoverBgColor = isDark ? '#2a2a2a' : '#f5f5f5';
-        
-        button.style.cssText = 'width:18px;height:18px;display:flex;align-items:center;justify-content:center;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:4px;cursor:pointer;transition:opacity 0.15s ease,background-color 0.15s ease,transform 0.1s ease;color:' + textColor + ';pointer-events:auto;padding:0;';
-        
-        button.addEventListener('mouseenter', () => {
-          button.style.background = hoverBgColor;
-          button.style.transform = 'scale(1.05)';
-        });
-        button.addEventListener('mouseleave', () => {
-          const dropdown = document.querySelector('.table-cell-menu-dropdown');
-          button.style.background = bgColor;
-          button.style.transform = 'scale(1)';
-        });
-        
-        button.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const buttonRect = button.getBoundingClientRect();
-          editor.chain().focus().setTextSelection(pos + 1).run();
-          showTableMenu(e, editor, pos, buttonRect);
-        });
-        
-        wrapper.appendChild(button);
-        return wrapper;
-      }, { side: -1, key: 'menu-' + pos });
-      
-      decorations.push(widget);
-    }
-  });
-  
-  return DecorationSet.create(doc, decorations);
 }
 
 function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: DOMRect) {
@@ -128,7 +137,6 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   const dropdownHeight = 280;
   
   // Get the button's position relative to the viewport
-  // If button is outside viewport (in scrolled container), clamp to viewport
   let btnTop = Math.max(0, Math.min(buttonRect.top, window.innerHeight));
   let btnBottom = Math.max(0, Math.min(buttonRect.bottom, window.innerHeight));
   let btnLeft = Math.max(0, Math.min(buttonRect.left, window.innerWidth));
@@ -141,11 +149,10 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   if (viewportLeft + dropdownWidth > window.innerWidth - 12) viewportLeft = window.innerWidth - dropdownWidth - 12;
   if (viewportLeft < 12) viewportLeft = 12;
   
-  // Adjust vertical position - if dropdown would go below viewport, show above button
+  // Adjust vertical position
   if (viewportTop + dropdownHeight > window.innerHeight - 12) {
     viewportTop = btnTop - dropdownHeight - 4;
   }
-  // If still outside viewport, clamp to visible area
   if (viewportTop < 12) viewportTop = 12;
   if (viewportTop + dropdownHeight > window.innerHeight - 12) {
     viewportTop = window.innerHeight - dropdownHeight - 12;
@@ -172,16 +179,16 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   }
 
   const menuItems = [
-    { label: 'Insert Column Left', icon: 'col-left', action: () => editor.chain().focus().setTextSelection(pos + 1).addColumnBefore().run() },
-    { label: 'Insert Column Right', icon: 'col-right', action: () => editor.chain().focus().setTextSelection(pos + 1).addColumnAfter().run() },
-    { label: 'Insert Row Above', icon: 'row-up', action: () => editor.chain().focus().setTextSelection(pos + 1).addRowBefore().run() },
-    { label: 'Insert Row Below', icon: 'row-down', action: () => editor.chain().focus().setTextSelection(pos + 1).addRowAfter().run() },
+    { label: 'Insert Column Left', icon: 'col-left', action: () => editor.chain().focus().setTextSelection(pos).addColumnBefore().run() },
+    { label: 'Insert Column Right', icon: 'col-right', action: () => editor.chain().focus().setTextSelection(pos).addColumnAfter().run() },
+    { label: 'Insert Row Above', icon: 'row-up', action: () => editor.chain().focus().setTextSelection(pos).addRowBefore().run() },
+    { label: 'Insert Row Below', icon: 'row-down', action: () => editor.chain().focus().setTextSelection(pos).addRowAfter().run() },
     { label: 'divider' },
-    { label: hasHeaderRow ? '✓ Header Row' : '  Header Row', icon: 'toggle-header', action: () => editor.chain().focus().setTextSelection(pos + 1).toggleHeaderRow().run() },
+    { label: hasHeaderRow ? '✓ Header Row' : '  Header Row', icon: 'toggle-header', action: () => editor.chain().focus().setTextSelection(pos).toggleHeaderRow().run() },
     { label: 'divider' },
-    { label: 'Delete Column', icon: 'delete', action: () => editor.chain().focus().setTextSelection(pos + 1).deleteColumn().run(), destructive: true },
-    { label: 'Delete Row', icon: 'delete', action: () => editor.chain().focus().setTextSelection(pos + 1).deleteRow().run(), destructive: true },
-    { label: 'Delete Table', icon: 'table-delete', action: () => editor.chain().focus().setTextSelection(pos + 1).deleteTable().run(), destructive: true },
+    { label: 'Delete Column', icon: 'delete', action: () => editor.chain().focus().setTextSelection(pos).deleteColumn().run(), destructive: true },
+    { label: 'Delete Row', icon: 'delete', action: () => editor.chain().focus().setTextSelection(pos).deleteRow().run(), destructive: true },
+    { label: 'Delete Table', icon: 'table-delete', action: () => editor.chain().focus().setTextSelection(pos).deleteTable().run(), destructive: true },
     { label: 'divider' },
     { label: 'Copy Table', icon: 'copy', action: () => copyTable(editor) },
   ];
@@ -237,11 +244,9 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   
   const closeMenu = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    // Don't close if clicking inside the dropdown or on the menu button
     if (dropdown.contains(target) || target.classList.contains('table-cell-menu-btn')) {
       return;
     }
-    // Don't close if clicking inside a dialog/modal overlay
     const dialog = target.closest('[role="dialog"]');
     if (dialog && dialog.contains(dropdown)) {
       return;
