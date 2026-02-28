@@ -4,119 +4,25 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 
 const tableCellMenuPluginKey = new PluginKey('tableCellMenu');
 
-// Track which cell currently has the menu button
-let currentMenuCell: HTMLElement | null = null;
-let currentMenuWrapper: HTMLElement | null = null;
-
-function getThemeColors() {
-  const isDark = document.documentElement.classList.contains('dark');
-  return {
-    isDark,
-    bgColor: isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)',
-    borderColor: isDark ? 'rgba(60,60,60,0.5)' : 'rgba(200,200,200,0.5)',
-    textColor: isDark ? '#999' : '#666',
-    hoverBgColor: isDark ? '#2a2a2a' : '#f5f5f5',
-  };
-}
-
-function createMenuButton(editor: any, cell: HTMLElement): HTMLDivElement {
-  const colors = getThemeColors();
-  
-  const wrapper = document.createElement('div');
-  wrapper.className = 'table-cell-menu-wrapper';
-  wrapper.setAttribute('contenteditable', 'false');
-  
-  const button = document.createElement('button');
-  button.className = 'table-cell-menu-btn';
-  button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>';
-  button.title = 'Table options';
-  button.type = 'button';
-  
-  button.addEventListener('mouseenter', () => {
-    button.style.background = colors.hoverBgColor;
-    button.style.transform = 'scale(1.05)';
-  });
-  button.addEventListener('mouseleave', () => {
-    button.style.background = colors.bgColor;
-    button.style.transform = 'scale(1)';
-  });
-  
-  button.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Find the ProseMirror position for this cell
-    const view = editor.view;
-    const pos = view.posAtDOM(cell, 0);
-    
-    const buttonRect = button.getBoundingClientRect();
-    editor.chain().focus().setTextSelection(pos).run();
-    showTableMenu(e, editor, pos, buttonRect);
-  });
-  
-  wrapper.appendChild(button);
-  return wrapper;
-}
-
-function removeCurrentMenu() {
-  if (currentMenuWrapper && currentMenuWrapper.parentNode) {
-    currentMenuWrapper.parentNode.removeChild(currentMenuWrapper);
-  }
-  if (currentMenuCell) {
-    currentMenuCell.classList.remove('cell-hovered');
-  }
-  currentMenuCell = null;
-  currentMenuWrapper = null;
-}
-
-function showMenuForCell(editor: any, cell: HTMLElement) {
-  // Don't recreate if already showing for this cell
-  if (currentMenuCell === cell) return;
-  
-  // Remove previous menu
-  removeCurrentMenu();
-  
-  // Add hover class and create menu button
-  cell.classList.add('cell-hovered');
-  const wrapper = createMenuButton(editor, cell);
-  cell.appendChild(wrapper);
-  
-  currentMenuCell = cell;
-  currentMenuWrapper = wrapper;
-}
-
 function createTableCellMenuPlugin(editor: any) {
   return new Plugin({
     key: tableCellMenuPluginKey,
     props: {
       handleDOMEvents: {
-        mouseover(view, event) {
+        contextmenu(view, event) {
           const target = event.target as HTMLElement;
           const cell = target.closest('td, th') as HTMLElement;
           
           if (cell && cell.closest('.ProseMirror')) {
-            showMenuForCell(editor, cell);
-          }
-          
-          return false;
-        },
-        mouseout(view, event) {
-          const target = event.target as HTMLElement;
-          const relatedTarget = (event as MouseEvent).relatedTarget as HTMLElement;
-          const cell = target.closest('td, th') as HTMLElement;
-          
-          if (cell && cell.closest('.ProseMirror')) {
-            // Don't remove if moving within the same cell
-            if (relatedTarget && cell.contains(relatedTarget)) return false;
+            event.preventDefault();
             
-            // Don't remove if a dropdown menu is open
-            const dropdown = document.querySelector('.table-cell-menu-dropdown');
-            if (dropdown) return false;
+            // Get the ProseMirror position for this cell
+            const pos = view.posAtDOM(cell, 0);
+            editor.chain().focus().setTextSelection(pos).run();
             
-            // Don't remove if moving to the menu button itself
-            if (relatedTarget && relatedTarget.closest('.table-cell-menu-wrapper')) return false;
-            
-            removeCurrentMenu();
+            // Show context menu at cursor position
+            showTableContextMenu(event, editor, pos);
+            return true;
           }
           
           return false;
@@ -126,7 +32,8 @@ function createTableCellMenuPlugin(editor: any) {
   });
 }
 
-function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: DOMRect) {
+function showTableContextMenu(event: MouseEvent, editor: any, pos: number) {
+  // Remove any existing menu
   const existingMenu = document.querySelector('.table-cell-menu-dropdown');
   if (existingMenu) existingMenu.remove();
   
@@ -136,27 +43,21 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   const dropdownWidth = 170;
   const dropdownHeight = 280;
   
-  // Get the button's position relative to the viewport
-  let btnTop = Math.max(0, Math.min(buttonRect.top, window.innerHeight));
-  let btnBottom = Math.max(0, Math.min(buttonRect.bottom, window.innerHeight));
-  let btnLeft = Math.max(0, Math.min(buttonRect.left, window.innerWidth));
+  // Position at cursor
+  let viewportTop = event.clientY;
+  let viewportLeft = event.clientX;
   
-  // Position dropdown below button, or above if not enough space
-  let viewportTop = btnBottom + 4;
-  let viewportLeft = btnLeft - dropdownWidth + buttonRect.width + 8;
-  
-  // Adjust horizontal position
-  if (viewportLeft + dropdownWidth > window.innerWidth - 12) viewportLeft = window.innerWidth - dropdownWidth - 12;
+  // Adjust horizontal position if it would overflow
+  if (viewportLeft + dropdownWidth > window.innerWidth - 12) {
+    viewportLeft = window.innerWidth - dropdownWidth - 12;
+  }
   if (viewportLeft < 12) viewportLeft = 12;
   
-  // Adjust vertical position
+  // Adjust vertical position if it would overflow
   if (viewportTop + dropdownHeight > window.innerHeight - 12) {
-    viewportTop = btnTop - dropdownHeight - 4;
+    viewportTop = event.clientY - dropdownHeight;
   }
   if (viewportTop < 12) viewportTop = 12;
-  if (viewportTop + dropdownHeight > window.innerHeight - 12) {
-    viewportTop = window.innerHeight - dropdownHeight - 12;
-  }
   
   const isDark = document.documentElement.classList.contains('dark');
   const bgColor = isDark ? '#1f1f1f' : '#ffffff';
@@ -244,13 +145,7 @@ function showTableMenu(event: MouseEvent, editor: any, pos: number, buttonRect: 
   
   const closeMenu = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (dropdown.contains(target) || target.classList.contains('table-cell-menu-btn')) {
-      return;
-    }
-    const dialog = target.closest('[role="dialog"]');
-    if (dialog && dialog.contains(dropdown)) {
-      return;
-    }
+    if (dropdown.contains(target)) return;
     dropdown.remove();
     document.removeEventListener('mousedown', closeMenu);
     document.removeEventListener('keydown', closeOnEscape);
