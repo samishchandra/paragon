@@ -791,6 +791,10 @@
     text-align: left;
   }
 
+  td {
+    vertical-align: top;
+  }
+
   th {
     padding: calc(0.25rem + 4px) 0.5rem;
     min-width: 50px;
@@ -894,13 +898,21 @@
     overflow: hidden;
   }
   
-.ProseMirror th,
 .ProseMirror td {
-  overflow: visible !important; /* Allow menu button to be visible */
+  overflow: visible !important;
   text-overflow: ellipsis;
   box-sizing: border-box;
   position: relative;
-  vertical-align: top; /* Top-align text in cells */
+  vertical-align: top; /* Top-align text in body cells */
+  padding: 4px;
+}
+
+.ProseMirror th {
+  overflow: visible !important;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  position: relative;
+  vertical-align: middle; /* Center-align text in header cells */
   padding: 4px;
 }
 
