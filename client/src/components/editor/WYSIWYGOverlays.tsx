@@ -162,10 +162,8 @@ export function WYSIWYGOverlays({
         onClose={onLinkPopoverClose}
       />
 
-      {/* Link hover tooltip (desktop only) */}
-      {!isMobile && (
-        <LinkHoverTooltip editor={editor} onEditLink={onEditLink} />
-      )}
+      {/* Link hover/tap tooltip (desktop hover + mobile tap) */}
+      <LinkHoverTooltip editor={editor} onEditLink={onEditLink} />
 
       {/* Image edit popover */}
       {!disabledFeatures.images && imageEditState?.isOpen && (
