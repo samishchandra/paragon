@@ -282,22 +282,48 @@ export function preprocessMarkdown(
   // 1. Split separated lists (before marked merges them)
   md = splitSeparatedLists(md);
 
-  // 2. Callout code blocks → callout HTML (ad- prefix and legacy)
-  const calloutTypes = ['info', 'note', 'prompt', 'resources', 'todo'];
-  calloutTypes.forEach(type => {
-    const regex = new RegExp(`\`\`\`ad-${type}\\s*\\n([\\s\\S]*?)\`\`\``, 'g');
-    md = md.replace(regex, (_match, content) => {
-      const innerHtml = markedParse(content.trim());
-      return `<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`;
-    });
-  });
-  calloutTypes.forEach(type => {
-    const regex = new RegExp(`\`\`\`${type}\\s*\\n([\\s\\S]*?)\`\`\``, 'g');
-    md = md.replace(regex, (_match, content) => {
-      const innerHtml = markedParse(content.trim());
-      return `<div data-callout="" data-type="${type}" class="callout callout-${type}">${innerHtml}</div>`;
-    });
-  });
+  // 2. Callout code blocks → callout HTML (single-pass, line-by-line)
+  //    Handles both ```ad-{type} and legacy ```{type} formats.
+  //    Avoids multiple regex passes and catastrophic backtracking.
+  const calloutTypeSet = new Set(['info', 'note', 'prompt', 'resources', 'todo', 'summary']);
+  const lines = md.split('\n');
+  const outputLines: string[] = [];
+  let calloutType: string | null = null;
+  let calloutContent: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (calloutType !== null) {
+      // Inside a callout — look for closing fence
+      if (line.trimEnd() === '```') {
+        const content = calloutContent.join('\n').trim();
+        const innerHtml = content ? markedParse(content) : '';
+        outputLines.push(`<div data-callout="" data-type="${calloutType}" class="callout callout-${calloutType}">${innerHtml}</div>`);
+        calloutType = null;
+        calloutContent = [];
+      } else {
+        calloutContent.push(line);
+      }
+    } else {
+      // Outside a callout — check for opening fence
+      const fenceMatch = line.match(/^```(?:ad-)?(\w+)\s*$/);
+      if (fenceMatch && calloutTypeSet.has(fenceMatch[1])) {
+        calloutType = fenceMatch[1];
+        calloutContent = [];
+      } else {
+        outputLines.push(line);
+      }
+    }
+  }
+
+  // Handle unclosed callout (treat as regular code fence)
+  if (calloutType !== null) {
+    outputLines.push(`\`\`\`ad-${calloutType}`);
+    outputLines.push(...calloutContent);
+  }
+
+  md = outputLines.join('\n');
 
   // 3. Image metadata: ![alt|alignment|width](url) → <img> tags
   md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, metadata, src) => {
