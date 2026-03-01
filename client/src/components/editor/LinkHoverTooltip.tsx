@@ -4,10 +4,11 @@ import { Editor } from '@tiptap/react';
 import { Pencil, Copy, Unlink, Check, ExternalLink } from 'lucide-react';
 
 /*
- * Link Hover Tooltip
- * Shows when hovering over a link in the editor.
+ * Link Hover/Tap Tooltip
+ * Desktop: Shows when hovering over a link in the editor.
+ * Mobile: Shows when tapping on a link in the editor.
  * Layout: [clickable link URL] [edit] [copy] [unlink]
- * - Clicking the link opens it in a new tab
+ * - Clicking/tapping the link URL opens it in a new tab
  * - Pencil icon opens the link editor (selects link text in LinkPopover)
  * - Copy icon copies the URL to clipboard
  * - Unlink icon removes the link formatting
@@ -27,6 +28,10 @@ export interface TooltipState {
   linkElement: HTMLElement | null;
 }
 
+function isTouchDevice(): boolean {
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
 export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) {
   const [tooltip, setTooltip] = useState<TooltipState>({
     isVisible: false,
@@ -36,6 +41,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
   });
   const tooltipRef = useRef<HTMLDivElement>(null);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const activeLinkRef = useRef<HTMLElement | null>(null);
 
   const showTooltip = useCallback((linkElement: HTMLElement) => {
     if (!editor || editor.isDestroyed) return;
@@ -52,6 +58,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
       const top = rect.bottom + 8;
       const left = Math.max(16, Math.min(rect.left, window.innerWidth - 340));
 
+      activeLinkRef.current = linkElement;
       setTooltip({
         isVisible: true,
         url: href,
@@ -65,8 +72,18 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
 
   const hideTooltip = useCallback(() => {
     hideTimeoutRef.current = setTimeout(() => {
+      activeLinkRef.current = null;
       setTooltip(prev => ({ ...prev, isVisible: false, linkElement: null }));
     }, 150);
+  }, []);
+
+  const hideTooltipImmediate = useCallback(() => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+    activeLinkRef.current = null;
+    setTooltip(prev => ({ ...prev, isVisible: false, linkElement: null }));
   }, []);
 
   const keepTooltipVisible = useCallback(() => {
@@ -76,7 +93,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     }
   }, []);
 
-  // Handle mouse events on the editor
+  // Handle mouse events on the editor (desktop)
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
     
@@ -118,12 +135,79 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     };
   }, [editor, showTooltip, hideTooltip]);
 
+  // Handle touch events on the editor (mobile)
+  useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    
+    const editorElement = editor.view.dom;
+    if (!editorElement) return;
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      const linkElement = target.closest('a') as HTMLElement | null;
+
+      if (linkElement && editorElement.contains(linkElement)) {
+        // If tooltip is already showing for this link, let the user interact normally
+        if (activeLinkRef.current === linkElement && tooltip.isVisible) {
+          return;
+        }
+
+        // Prevent the default behavior (which would place cursor)
+        // and prevent the editor from handling this as a regular tap
+        e.preventDefault();
+        e.stopPropagation();
+
+        showTooltip(linkElement);
+      }
+    };
+
+    // Use touchend with capture to intercept before TipTap handles it
+    editorElement.addEventListener('touchend', handleTouchEnd, { capture: true });
+
+    return () => {
+      editorElement.removeEventListener('touchend', handleTouchEnd, { capture: true });
+    };
+  }, [editor, showTooltip, tooltip.isVisible]);
+
+  // Handle tap outside tooltip to dismiss (mobile)
+  useEffect(() => {
+    if (!tooltip.isVisible) return;
+    if (!isTouchDevice()) return;
+
+    const handleTouchOutside = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Don't dismiss if tapping the tooltip itself
+      if (tooltipRef.current?.contains(target)) {
+        return;
+      }
+
+      // Don't dismiss if tapping the same link
+      if (activeLinkRef.current && activeLinkRef.current.contains(target)) {
+        return;
+      }
+
+      // Dismiss the tooltip
+      hideTooltipImmediate();
+    };
+
+    // Small delay to avoid the same touch event that opened the tooltip
+    const timer = setTimeout(() => {
+      document.addEventListener('touchstart', handleTouchOutside, { passive: true });
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('touchstart', handleTouchOutside);
+    };
+  }, [tooltip.isVisible, hideTooltipImmediate]);
+
   // Hide tooltip on scroll to prevent stale positioning
   useEffect(() => {
     if (!tooltip.isVisible) return;
 
     const handleScroll = () => {
-      setTooltip(prev => ({ ...prev, isVisible: false, linkElement: null }));
+      hideTooltipImmediate();
     };
 
     const wrapper = editor.view.dom.closest('.editor-content-wrapper');
@@ -134,7 +218,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
       wrapper?.removeEventListener('scroll', handleScroll);
       window.removeEventListener('scroll', handleScroll, true);
     };
-  }, [tooltip.isVisible, editor]);
+  }, [tooltip.isVisible, editor, hideTooltipImmediate]);
 
   const [copied, setCopied] = useState(false);
 
