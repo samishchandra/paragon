@@ -18755,7 +18755,7 @@ function a1({
         onClose: S
       }
     ),
-    !t && /* @__PURE__ */ m(Uk, { editor: e, onEditLink: w }),
+    /* @__PURE__ */ m(Uk, { editor: e, onEditLink: w }),
     !n.images && E?.isOpen && /* @__PURE__ */ m(
       t1,
       {
