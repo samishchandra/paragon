@@ -38,6 +38,19 @@ export interface UseEditorInstanceOptions {
   isLightweightRef: React.MutableRefObject<boolean>;
 }
 
+/**
+ * Threshold (in characters) above which content loading is deferred.
+ * On iOS Safari PWA cold starts, the JS engine is cold and TipTap's
+ * HTML→ProseMirror DOM parsing blocks the main thread for complex documents
+ * (callouts with nested task lists, headings, etc.). Deferring content
+ * loading lets the editor mount empty first (showing the skeleton), then
+ * sets the content after a browser paint frame, preventing the app from
+ * appearing frozen.
+ *
+ * Below this threshold, content is loaded synchronously (no visual delay).
+ */
+const DEFERRED_CONTENT_THRESHOLD = 2000;
+
 export function useEditorInstance(options: UseEditorInstanceOptions) {
   const {
     extensions,
@@ -64,6 +77,15 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
     lightweightCheckCounterRef,
     isLightweightRef,
   } = options;
+
+  // === Deferred Content Loading for iOS PWA Cold Start ===
+  // For large/complex content, we defer loading to prevent the main thread
+  // from blocking during TipTap's HTML→ProseMirror parsing. The editor
+  // mounts empty (showing the skeleton), then content is set after a
+  // browser paint frame via requestAnimationFrame + setTimeout.
+  const shouldDefer = content && content.length > DEFERRED_CONTENT_THRESHOLD;
+  const deferredContentRef = useRef<string | null>(shouldDefer ? content : null);
+  const initialContent = shouldDefer ? '' : content;
 
   // Debounced onUpdate ref for HTML serialization performance
   const onUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -96,7 +118,7 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
       onDestroyProp?.();
     },
     extensions,
-    content,
+    content: initialContent,
     editable,
     autofocus,
     editorProps: {
@@ -186,6 +208,35 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
       }
     },
   });
+
+  // === Deferred Content Injection ===
+  // When content was deferred, inject it after the editor mounts and the
+  // browser has had a chance to paint the skeleton. We use
+  // requestAnimationFrame → setTimeout(0) to ensure we yield to the
+  // browser's paint cycle before running the heavy ProseMirror parsing.
+  useEffect(() => {
+    if (!deferredContentRef.current || !editor || editor.isDestroyed) return;
+    const contentToSet = deferredContentRef.current;
+    deferredContentRef.current = null; // Only inject once
+
+    const rafId = requestAnimationFrame(() => {
+      // setTimeout(0) after rAF ensures the browser has painted the skeleton
+      // before we block the main thread with ProseMirror DOM parsing
+      const timerId = setTimeout(() => {
+        if (!editor.isDestroyed) {
+          editor.commands.setContent(contentToSet);
+        }
+      }, 0);
+      // Store timerId for cleanup
+      (editor as any).__deferredTimerId = timerId;
+    });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      const timerId = (editor as any).__deferredTimerId;
+      if (timerId) clearTimeout(timerId);
+    };
+  }, [editor]);
 
   // Cleanup debounced onUpdate timeout - flush pending changes on unmount
   // This ensures image resize and other pending changes are saved when navigating away
