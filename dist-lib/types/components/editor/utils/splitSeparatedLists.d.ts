@@ -13,5 +13,11 @@
  *
  * Handles both different-type transitions (bullet → task) and same-type lists
  * separated by blank lines — both should remain separate.
+ *
+ * IMPORTANT: Does NOT insert a list-break when the next list item is indented
+ * deeper than the previous one, because that indicates a nested sub-list, not
+ * a separate list. Turndown can produce blank lines between a parent item and
+ * its nested children (e.g. "- parent\n    \n    - child"), and those must be
+ * preserved as nested structure.
  */
 export declare function splitSeparatedLists(markdown: string): string;

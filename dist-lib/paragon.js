@@ -15631,35 +15631,45 @@ function hk(e) {
 }
 function gk(e) {
   const t = e.split(`
-`), n = [], r = (a) => {
-    const c = a.trimStart();
-    return /^[-*+]\s+\[[ xX]\]\s/.test(c) ? "task" : /^[-*+]\s+/.test(c) ? "bullet" : /^\d+\.\s+/.test(c) ? "ordered" : null;
-  }, o = (a) => /^\s{2,}\S/.test(a), s = (a) => a.trim() === "" || a.trim() === "​";
-  let i = !1;
-  for (let a = 0; a < t.length; a++) {
-    const c = t[a];
-    if (/^```/.test(c.trim())) {
-      i = !i, n.push(c);
+`), n = [], r = (c) => {
+    const l = c.trimStart();
+    return /^[-*+]\s+\[[ xX]\]\s/.test(l) ? "task" : /^[-*+]\s+/.test(l) ? "bullet" : /^\d+\.\s+/.test(l) ? "ordered" : null;
+  }, o = (c) => {
+    const l = c.match(/^( *)/);
+    return l ? l[1].length : 0;
+  }, s = (c) => /^\s{2,}\S/.test(c), i = (c) => c.trim() === "" || c.trim() === "​";
+  let a = !1;
+  for (let c = 0; c < t.length; c++) {
+    const l = t[c];
+    if (/^```/.test(l.trim())) {
+      a = !a, n.push(l);
       continue;
     }
-    if (i) {
-      n.push(c);
+    if (a) {
+      n.push(l);
       continue;
     }
-    if (n.push(c), r(c) !== null || o(c)) {
-      let l = a + 1;
-      for (; l < t.length && o(t[l]); )
-        l++;
-      let u = 0;
-      const d = l;
-      for (; l < t.length && s(t[l]); )
-        u++, l++;
-      if (u > 0 && l < t.length) {
-        const f = r(c), p = r(t[l]);
-        if (f !== null && p !== null) {
-          for (let h = d; h < l; h++)
-            n.push(t[h]);
-          n.push("<!-- list-break -->"), a = l - 1;
+    if (n.push(l), r(l) !== null || s(l)) {
+      let u = c + 1;
+      for (; u < t.length && s(t[u]); )
+        u++;
+      let d = 0;
+      const f = u;
+      for (; u < t.length && i(t[u]); )
+        d++, u++;
+      if (d > 0 && u < t.length) {
+        const p = r(l), h = r(t[u]);
+        if (p !== null && h !== null) {
+          const g = o(l);
+          if (o(t[u]) > g) {
+            for (let v = f; v < u; v++)
+              n.push(t[v]);
+            c = u - 1;
+            continue;
+          }
+          for (let v = f; v < u; v++)
+            n.push(t[v]);
+          n.push("<!-- list-break -->"), c = u - 1;
           continue;
         }
       }
