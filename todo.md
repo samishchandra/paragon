@@ -4,3 +4,4 @@
   - Nested bullet `  -   [www.greatgoing.com](http://www.greatgoing.com)` is extracted from list and rendered as code block
   - Need to investigate markdown→HTML and HTML→markdown conversion pipeline
 - [x] Add round-trip tests for nested lists with links to prevent regressions
+- [x] Fix: unnecessary blank lines between list items with nested sub-lists after mode switch

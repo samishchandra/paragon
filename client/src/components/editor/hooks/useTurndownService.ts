@@ -157,6 +157,40 @@ async function createTurndownService(): Promise<TurndownServiceType> {
     },
   });
 
+  // Regular (non-task) list items: strip extra blank lines between text and
+  // nested sub-lists so round-tripping doesn't accumulate loose-list spacing.
+  td.addRule('listItem', {
+    filter: (node) => {
+      return node.nodeName === 'LI' &&
+             node.getAttribute('data-type') !== 'taskItem';
+    },
+    replacement: (content, node) => {
+      content = content
+        .replace(/^\n+/, '')
+        .replace(/\n+$/, '');
+      // Collapse blank lines between text and nested list markers
+      content = content.replace(/\n\n+(- |\d+\. )/g, '\n$1');
+      content = content.replace(/\u200B/g, '').trim();
+      const text = content || '\u200B';
+
+      // Determine the correct prefix based on parent list type
+      const parent = node.parentNode as HTMLElement | null;
+      let prefix: string;
+      if (parent && parent.nodeName === 'OL') {
+        const siblings = Array.from(parent.children).filter(c => c.nodeName === 'LI');
+        const index = siblings.indexOf(node as HTMLElement);
+        const start = parseInt(parent.getAttribute('start') || '1', 10);
+        prefix = `${start + index}. `;
+      } else {
+        prefix = '-   ';
+      }
+
+      // Use consistent 4-space indentation for continuation lines
+      const indent = ' '.repeat(prefix.length);
+      return prefix + text.replace(/\n/gm, '\n' + indent) + '\n';
+    },
+  });
+
   // Tight lists: strip extra blank lines from <p> wrappers inside <li>
   td.addRule('tightListParagraph', {
     filter: (node) => {
@@ -430,12 +464,25 @@ async function createTurndownService(): Promise<TurndownServiceType> {
   // Without this, turndown merges consecutive <ul>/<ol> elements into a single
   // block of list items with no blank line separator, which causes them to be
   // parsed as a single list on round-trip.
+  //
+  // IMPORTANT: Nested sub-lists (inside <li>) must NOT get extra blank lines,
+  // because that produces loose-list spacing that grows on every round-trip.
+  // Only top-level lists (parent is NOT <li>) get the \n\n wrapper.
   td.addRule('listSeparation', {
     filter: (node) => {
       return (node.nodeName === 'UL' || node.nodeName === 'OL');
     },
     replacement: (content, node) => {
-      // Check if the previous sibling is also a list element
+      const parent = node.parentNode as HTMLElement | null;
+      const isNestedInListItem = parent && parent.nodeName === 'LI';
+
+      if (isNestedInListItem) {
+        // Nested sub-list: use a single newline so the child items are
+        // indented directly under their parent without blank-line gaps.
+        return '\n' + content.trimEnd() + '\n';
+      }
+
+      // Top-level list: wrap with blank lines for proper block separation.
       const prev = node.previousElementSibling;
       const needsExtraSeparation = prev && (prev.nodeName === 'UL' || prev.nodeName === 'OL');
       const prefix = needsExtraSeparation ? '\n\n' : '\n\n';

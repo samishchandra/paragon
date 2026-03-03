@@ -136,6 +136,37 @@ beforeAll(() => {
   });
 
   // Tight list paragraph rule
+  // Regular (non-task) list items: strip extra blank lines between text and
+  // nested sub-lists so round-tripping doesn't accumulate loose-list spacing.
+  td.addRule('listItem', {
+    filter: (node) => {
+      return node.nodeName === 'LI' &&
+             node.getAttribute('data-type') !== 'taskItem';
+    },
+    replacement: (content, node) => {
+      content = content
+        .replace(/^\n+/, '')
+        .replace(/\n+$/, '');
+      content = content.replace(/\n\n+(- |\d+\. )/g, '\n$1');
+      content = content.replace(/\u200B/g, '').trim();
+      const text = content || '\u200B';
+
+      const parent = node.parentNode as HTMLElement | null;
+      let prefix: string;
+      if (parent && parent.nodeName === 'OL') {
+        const siblings = Array.from(parent.children).filter(c => c.nodeName === 'LI');
+        const index = siblings.indexOf(node as HTMLElement);
+        const start = parseInt(parent.getAttribute('start') || '1', 10);
+        prefix = `${start + index}. `;
+      } else {
+        prefix = '-   ';
+      }
+
+      const indent = ' '.repeat(prefix.length);
+      return prefix + text.replace(/\n/gm, '\n' + indent) + '\n';
+    },
+  });
+
   td.addRule('tightListParagraph', {
     filter: (node) => {
       return node.nodeName === 'P' &&
@@ -259,6 +290,13 @@ beforeAll(() => {
       return (node.nodeName === 'UL' || node.nodeName === 'OL');
     },
     replacement: (content, node) => {
+      const parent = node.parentNode as HTMLElement | null;
+      const isNestedInListItem = parent && parent.nodeName === 'LI';
+
+      if (isNestedInListItem) {
+        return '\n' + content.trimEnd() + '\n';
+      }
+
       const prev = node.previousElementSibling;
       const needsExtraSeparation = prev && (prev.nodeName === 'UL' || prev.nodeName === 'OL');
       const prefix = needsExtraSeparation ? '\n\n' : '\n\n';
