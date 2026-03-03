@@ -135,6 +135,70 @@ describe('splitSeparatedLists', () => {
   });
 
   // ============================================================
+  // Nested lists — should NOT be split
+  // ============================================================
+
+  it('should not insert list-break for nested bullet list with blank line (turndown output)', () => {
+    // Turndown produces blank lines between parent and indented child items
+    const md = '-   something\n    \n    -   [www.greatgoing.com](http://www.greatgoing.com)';
+    const result = splitSeparatedLists(md);
+    expect(result).not.toContain('<!-- list-break -->');
+    expect(result).toBe(md);
+  });
+
+  it('should not insert list-break for nested list with link (4-space indent)', () => {
+    const md = '-   parent item\n    \n    -   [link text](http://example.com)';
+    const result = splitSeparatedLists(md);
+    expect(result).not.toContain('<!-- list-break -->');
+  });
+
+  it('should not insert list-break for nested list without blank line', () => {
+    const md = '-   parent\n    -   child';
+    const result = splitSeparatedLists(md);
+    expect(result).not.toContain('<!-- list-break -->');
+    expect(result).toBe(md);
+  });
+
+  it('should not insert list-break for deeply nested list items with blank lines', () => {
+    // 3-level nesting with blank lines between levels
+    const md = '-   level 1\n    \n    -   level 2\n        \n        -   level 3';
+    const result = splitSeparatedLists(md);
+    expect(result).not.toContain('<!-- list-break -->');
+  });
+
+  it('should not insert list-break for nested ordered list inside bullet list', () => {
+    const md = '-   parent bullet\n    \n    1.  nested ordered item';
+    const result = splitSeparatedLists(md);
+    expect(result).not.toContain('<!-- list-break -->');
+  });
+
+  it('should not insert list-break for nested task list inside bullet list', () => {
+    const md = '-   parent bullet\n    \n    - [ ] nested task';
+    const result = splitSeparatedLists(md);
+    expect(result).not.toContain('<!-- list-break -->');
+  });
+
+  it('should still insert list-break for same-indent lists separated by blank line', () => {
+    // Two top-level lists separated by a blank line should still be split
+    const md = '-   list A item\n\n-   list B item';
+    const result = splitSeparatedLists(md);
+    expect(result).toContain('<!-- list-break -->');
+  });
+
+  it('should handle mixed: nested child preserved but sibling lists split', () => {
+    // Parent with nested child, then blank line, then a new top-level list
+    const md = '-   parent\n    -   child\n\n-   separate list';
+    const result = splitSeparatedLists(md);
+    // Should split between the nested list block and the separate list
+    expect(result).toContain('<!-- list-break -->');
+    // The break should appear before "- separate list", not before "- child"
+    const lines = result.split('\n');
+    const breakIndex = lines.findIndex(l => l.includes('<!-- list-break -->'));
+    const separateIndex = lines.findIndex(l => l.trim() === '-   separate list');
+    expect(breakIndex).toBeLessThan(separateIndex);
+  });
+
+  // ============================================================
   // Code fences — should not be modified
   // ============================================================
 

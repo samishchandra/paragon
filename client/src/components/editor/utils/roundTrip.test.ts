@@ -381,6 +381,58 @@ describe('Round-trip: Markdown → HTML → Markdown', () => {
     });
   });
 
+  describe('Nested lists with links', () => {
+    it('should preserve nested bullet item with link after round-trip', () => {
+      // This is the exact pattern from the reported bug:
+      // Turndown produces 4-space indented nested items with a blank line.
+      // splitSeparatedLists must NOT insert a list-break for indented children.
+      const md = '-   something\n    -   [www.greatgoing.com](http://www.greatgoing.com)';
+      const result = normalise(roundTrip(md));
+      expect(result).toContain('something');
+      expect(result).toContain('www.greatgoing.com');
+      expect(result).toContain('http://www.greatgoing.com');
+      // Must NOT contain a code block — the original bug rendered the nested
+      // item as a <pre><code> block instead of a nested list.
+      expect(result).not.toContain('```');
+    });
+
+    it('should preserve nested list structure through multiple round-trips', () => {
+      // Simulate switching WYSIWYG → raw → WYSIWYG → raw (double round-trip)
+      const md = '-   parent\n    -   [link](http://example.com)';
+      const firstTrip = normalise(roundTrip(md));
+      const secondTrip = normalise(roundTrip(firstTrip));
+      // Both trips should preserve the link and nesting
+      expect(secondTrip).toContain('parent');
+      expect(secondTrip).toContain('[link](http://example.com)');
+      expect(secondTrip).not.toContain('```');
+    });
+
+    it('should preserve nested bullet with bold link text', () => {
+      const md = '-   item\n    -   [**bold link**](http://example.com)';
+      const result = normalise(roundTrip(md));
+      expect(result).toContain('bold link');
+      expect(result).toContain('http://example.com');
+      expect(result).not.toContain('```');
+    });
+
+    it('should preserve nested ordered list inside bullet list', () => {
+      const md = '-   bullet parent\n    1.  ordered child';
+      const result = normalise(roundTrip(md));
+      expect(result).toContain('bullet parent');
+      expect(result).toContain('ordered child');
+      expect(result).not.toContain('```');
+    });
+
+    it('should preserve deeply nested list items (3 levels)', () => {
+      const md = '-   level 1\n    -   level 2\n        -   level 3';
+      const result = normalise(roundTrip(md));
+      expect(result).toContain('level 1');
+      expect(result).toContain('level 2');
+      expect(result).toContain('level 3');
+      expect(result).not.toContain('```');
+    });
+  });
+
   describe('Code blocks', () => {
     it('should preserve fenced code block', () => {
       const md = '```\nconst x = 1;\n```';
