@@ -259,6 +259,9 @@
 `),l=l.replace(/\n\n(- |\d+\. )/g,`
 $1`),l=l.replace(/\u200B/g,"").trim(),`- [${p?"x":" "}] `+(l||"​").replace(/\n/gm,`
     `)+`
+`}}),n.addRule("listItem",{filter:l=>l.nodeName==="LI"&&l.getAttribute("data-type")!=="taskItem",replacement:(l,c)=>{l=l.replace(/^\n+/,"").replace(/\n+$/,""),l=l.replace(/\n\n+(- |\d+\. )/g,`
+$1`),l=l.replace(/\u200B/g,"").trim();const u=l||"​",f=c.parentNode;let p;if(f&&f.nodeName==="OL"){const m=Array.from(f.children).filter(w=>w.nodeName==="LI").indexOf(c);p=`${parseInt(f.getAttribute("start")||"1",10)+m}. `}else p="-   ";const h=" ".repeat(p.length);return p+u.replace(/\n/gm,`
+`+h)+`
 `}}),n.addRule("tightListParagraph",{filter:l=>l.nodeName==="P"&&l.parentNode!==null&&l.parentNode.nodeName==="LI",replacement:l=>l}),n.addRule("blankLinePreservation",{filter:l=>l.nodeName==="P"&&(l.textContent===""||l.textContent==="​")&&l.parentNode!==null&&l.parentNode.nodeName!=="LI",replacement:()=>`
 
 ​
@@ -277,7 +280,9 @@ $1`),l=l.replace(/\u200B/g,"").trim(),`- [${p?"x":" "}] `+(l||"​").replace(/\n
 ${f}
 \`\`\`
 
-`}}),n.addRule("listSeparation",{filter:l=>l.nodeName==="UL"||l.nodeName==="OL",replacement:(l,c)=>{const u=c.previousElementSibling,f=u&&(u.nodeName==="UL"||u.nodeName==="OL");return`
+`}}),n.addRule("listSeparation",{filter:l=>l.nodeName==="UL"||l.nodeName==="OL",replacement:(l,c)=>{const u=c.parentNode;if(u&&u.nodeName==="LI")return`
+`+l.trimEnd()+`
+`;const p=c.previousElementSibling,h=p&&(p.nodeName==="UL"||p.nodeName==="OL");return`
 
 `+l.trim()+`
 

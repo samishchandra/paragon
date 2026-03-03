@@ -15251,6 +15251,23 @@ $1`), c = c.replace(/\u200B/g, "").trim(), `- [${f ? "x" : " "}] ` + (c || "​"
     `) + `
 `;
     }
+  }), n.addRule("listItem", {
+    filter: (c) => c.nodeName === "LI" && c.getAttribute("data-type") !== "taskItem",
+    replacement: (c, l) => {
+      c = c.replace(/^\n+/, "").replace(/\n+$/, ""), c = c.replace(/\n\n+(- |\d+\. )/g, `
+$1`), c = c.replace(/\u200B/g, "").trim();
+      const u = c || "​", d = l.parentNode;
+      let f;
+      if (d && d.nodeName === "OL") {
+        const g = Array.from(d.children).filter((v) => v.nodeName === "LI").indexOf(l);
+        f = `${parseInt(d.getAttribute("start") || "1", 10) + g}. `;
+      } else
+        f = "-   ";
+      const p = " ".repeat(f.length);
+      return f + u.replace(/\n/gm, `
+` + p) + `
+`;
+    }
   }), n.addRule("tightListParagraph", {
     filter: (c) => c.nodeName === "P" && c.parentNode !== null && c.parentNode.nodeName === "LI",
     replacement: (c) => c
@@ -15404,7 +15421,12 @@ ${d}
   }), n.addRule("listSeparation", {
     filter: (c) => c.nodeName === "UL" || c.nodeName === "OL",
     replacement: (c, l) => {
-      const u = l.previousElementSibling, d = u && (u.nodeName === "UL" || u.nodeName === "OL");
+      const u = l.parentNode;
+      if (u && u.nodeName === "LI")
+        return `
+` + c.trimEnd() + `
+`;
+      const f = l.previousElementSibling, p = f && (f.nodeName === "UL" || f.nodeName === "OL");
       return `
 
 ` + c.trim() + `
