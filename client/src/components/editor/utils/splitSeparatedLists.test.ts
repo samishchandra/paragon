@@ -199,6 +199,50 @@ describe('splitSeparatedLists', () => {
   });
 
   // ============================================================
+  // Sibling items with nested children — must NOT be split
+  // ============================================================
+
+  it('should not insert list-break for two siblings each with a nested child (exact reported pattern)', () => {
+    // This is the exact markdown that Turndown produces after the fix:
+    // two top-level items, each with an indented nested child containing a link.
+    const md = '-   first\n    -   [www.first.com](http://www.first.com)\n-   second\n    -   [www.second.com](http://www.second.com)';
+    const result = splitSeparatedLists(md);
+    expect(result).not.toContain('<!-- list-break -->');
+    expect(result).toBe(md);
+  });
+
+  it('should not insert list-break for three siblings each with nested children', () => {
+    const md = '-   alpha\n    -   [a.com](http://a.com)\n-   beta\n    -   [b.com](http://b.com)\n-   gamma\n    -   [c.com](http://c.com)';
+    const result = splitSeparatedLists(md);
+    expect(result).not.toContain('<!-- list-break -->');
+    expect(result).toBe(md);
+  });
+
+  it('should insert list-break when trailing indented blank line separates same-level siblings', () => {
+    // When an indented blank line appears between a nested child and a
+    // same-level sibling, splitSeparatedLists correctly treats them as
+    // separate lists. The Turndown fix already prevents this pattern from
+    // being produced, so this test documents the expected fallback behavior.
+    const md = '-   first\n    -   child-a\n    \n-   second\n    -   child-b';
+    const result = splitSeparatedLists(md);
+    expect(result).toContain('<!-- list-break -->');
+  });
+
+  it('should not insert list-break for siblings with nested ordered children', () => {
+    const md = '-   first\n    1.  ordered-a\n-   second\n    1.  ordered-b';
+    const result = splitSeparatedLists(md);
+    expect(result).not.toContain('<!-- list-break -->');
+    expect(result).toBe(md);
+  });
+
+  it('should not insert list-break for siblings with mixed nested list types', () => {
+    const md = '-   first\n    -   bullet child\n-   second\n    1.  ordered child';
+    const result = splitSeparatedLists(md);
+    expect(result).not.toContain('<!-- list-break -->');
+    expect(result).toBe(md);
+  });
+
+  // ============================================================
   // Code fences — should not be modified
   // ============================================================
 

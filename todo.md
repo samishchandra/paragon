@@ -6,3 +6,4 @@
 - [x] Add round-trip tests for nested lists with links to prevent regressions
 - [x] Fix: unnecessary blank lines between list items with nested sub-lists after mode switch
 - [x] Add round-trip regression test for multiple sibling list items with nested sub-lists + links
+- [x] Add splitSeparatedLists unit test for sibling-with-nested-children pattern
