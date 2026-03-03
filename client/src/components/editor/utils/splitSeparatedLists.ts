@@ -13,6 +13,12 @@
  *
  * Handles both different-type transitions (bullet → task) and same-type lists
  * separated by blank lines — both should remain separate.
+ *
+ * IMPORTANT: Does NOT insert a list-break when the next list item is indented
+ * deeper than the previous one, because that indicates a nested sub-list, not
+ * a separate list. Turndown can produce blank lines between a parent item and
+ * its nested children (e.g. "- parent\n    \n    - child"), and those must be
+ * preserved as nested structure.
  */
 export function splitSeparatedLists(markdown: string): string {
   const lines = markdown.split('\n');
@@ -29,6 +35,12 @@ export function splitSeparatedLists(markdown: string): string {
     // Ordered list: 1. text, 2. text, etc.
     if (/^\d+\.\s+/.test(trimmed)) return 'ordered';
     return null;
+  };
+
+  // Get the indentation level (number of leading spaces) of a line
+  const getIndent = (line: string): number => {
+    const match = line.match(/^( *)/);
+    return match ? match[1].length : 0;
   };
 
   // Check if a line is a continuation of a list item (indented content)
@@ -86,7 +98,26 @@ export function splitSeparatedLists(markdown: string): string {
         const nextType = classifyLine(lines[j]);
 
         if (prevType !== null && nextType !== null) {
-          // Lists separated by blank line — insert separator to keep them independent.
+          // Check indentation: if the next list item is more indented than
+          // the current one, it's a nested sub-list, not a separate list.
+          // Turndown can produce blank lines between a parent item and its
+          // nested children (e.g. "- parent\n    \n    - child").
+          // We must NOT insert a list-break in that case.
+          const prevIndent = getIndent(line);
+          const nextIndent = getIndent(lines[j]);
+
+          if (nextIndent > prevIndent) {
+            // Nested sub-list — do NOT insert list-break.
+            // Just push the blank lines and continue normally.
+            for (let k = blankStart; k < j; k++) {
+              result.push(lines[k]);
+            }
+            i = j - 1;
+            continue;
+          }
+
+          // Lists separated by blank line at the same or lesser indentation —
+          // insert separator to keep them independent.
           // This handles both different-type (bullet → task) and same-type (bullet → bullet)
           // transitions. Without this, marked merges them into a single list.
           // Push the blank lines, then add a separator before the next list item
