@@ -469,6 +469,49 @@ describe('Round-trip: Markdown → HTML → Markdown', () => {
       expect(result).toContain('level 3');
       expect(result).not.toContain('```');
     });
+
+    it('should preserve multiple sibling items each with nested sub-list links', () => {
+      // Exact pattern from the reported bug: two sibling items, each with a
+      // nested child containing a link. Previously produced extra blank lines
+      // and split into separate lists on round-trip.
+      const md = '-   first\n    -   [www.first.com](http://www.first.com)\n-   second\n    -   [www.second.com](http://www.second.com)';
+      const result = normalise(roundTrip(md));
+      expect(result).toContain('first');
+      expect(result).toContain('www.first.com');
+      expect(result).toContain('http://www.first.com');
+      expect(result).toContain('second');
+      expect(result).toContain('www.second.com');
+      expect(result).toContain('http://www.second.com');
+      // Must NOT be split into separate lists or rendered as code blocks
+      expect(result).not.toContain('```');
+      expect(result).not.toContain('<!-- list-break -->');
+    });
+
+    it('should not accumulate blank lines across multiple round-trips for sibling nested lists', () => {
+      const md = '-   first\n    -   [www.first.com](http://www.first.com)\n-   second\n    -   [www.second.com](http://www.second.com)';
+      const trip1 = normalise(roundTrip(md));
+      const trip2 = normalise(roundTrip(trip1));
+      const trip3 = normalise(roundTrip(trip2));
+      // Output must stabilise — no growing blank lines on each switch
+      expect(trip2).toBe(trip3);
+      // All content must survive
+      expect(trip3).toContain('first');
+      expect(trip3).toContain('www.first.com');
+      expect(trip3).toContain('second');
+      expect(trip3).toContain('www.second.com');
+    });
+
+    it('should preserve three sibling items each with nested sub-list links', () => {
+      const md = '-   alpha\n    -   [a.com](http://a.com)\n-   beta\n    -   [b.com](http://b.com)\n-   gamma\n    -   [c.com](http://c.com)';
+      const result = normalise(roundTrip(md));
+      expect(result).toContain('alpha');
+      expect(result).toContain('[a.com](http://a.com)');
+      expect(result).toContain('beta');
+      expect(result).toContain('[b.com](http://b.com)');
+      expect(result).toContain('gamma');
+      expect(result).toContain('[c.com](http://c.com)');
+      expect(result).not.toContain('```');
+    });
   });
 
   describe('Code blocks', () => {
