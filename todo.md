@@ -17,3 +17,4 @@
 - [x] Fix: code block showing an extra blank line in WYSIWYG editor
 - [x] Add round-trip tests for code blocks to verify trailing newline stripping doesn't lose content
 - [x] Add Copy as Markdown button to floating formatting toolbar after code block button with divider
+- [x] Fix: selecting multiple lines and toggling code block creates multiple code blocks instead of one

@@ -291,14 +291,94 @@ function CodeBlockComponent({ node, updateAttributes, extension }: any) {
   );
 }
 
-export const CodeBlockWithFeatures = CodeBlockLowlight.extend({
-  addNodeView() {
-    return ReactNodeViewRenderer(CodeBlockComponent);
-  },
-}).configure({
-  lowlight,
-  defaultLanguage: 'plaintext',
-  HTMLAttributes: {
-    class: 'code-block',
-  },
-});
+export const CodeBlockWithFeatures = CodeBlockLowlight
+  .configure({
+    lowlight,
+    defaultLanguage: 'plaintext',
+    HTMLAttributes: {
+      class: 'code-block',
+    },
+  })
+  .extend({
+    addNodeView() {
+      return ReactNodeViewRenderer(CodeBlockComponent);
+    },
+    addKeyboardShortcuts() {
+      const parentShortcuts = this.parent?.() ?? {};
+      return {
+        ...parentShortcuts,
+        'Mod-Alt-c': () => toggleCodeBlockMerged(this.editor),
+      };
+    },
+  });
+
+/**
+ * Helper: toggle code block for multi-block selections.
+ *
+ * When the selection spans multiple blocks (paragraphs, headings, etc.),
+ * the default TipTap `toggleCodeBlock` converts each block individually,
+ * producing multiple code blocks. This helper instead collects all text
+ * from the selected blocks, joins with newlines, and replaces the range
+ * with a single code block.
+ *
+ * For single-block or collapsed selections, it falls back to the default
+ * `toggleCodeBlock` command.
+ */
+export function toggleCodeBlockMerged(editor: any): boolean {
+  // Read the selection from ProseMirror state (preserved even when DOM is blurred)
+  const { state } = editor;
+  const { from, to, empty } = state.selection;
+
+  // If already inside a code block, just toggle off
+  if (editor.isActive('codeBlock')) {
+    return editor.chain().focus().toggleCodeBlock().run();
+  }
+
+  // For collapsed cursor, use default behavior
+  if (empty) {
+    return editor.chain().focus().toggleCodeBlock().run();
+  }
+
+  // Count textblock nodes in the selection to detect multi-block
+  let textblockCount = 0;
+  const lines: string[] = [];
+  state.doc.nodesBetween(from, to, (node: any) => {
+    if (node.isTextblock) {
+      textblockCount++;
+      lines.push(node.textContent);
+      return false; // don't descend into inline children
+    }
+    return true;
+  });
+
+  // Single-block selection: use default behavior
+  if (textblockCount <= 1) {
+    return editor.chain().focus().toggleCodeBlock().run();
+  }
+
+  // Multi-block selection: merge all text into a single code block
+  const text = lines.join('\n');
+  const codeBlockType = state.schema.nodes.codeBlock;
+
+  // Expand to cover the full blocks — resolve depth dynamically
+  const $from = state.doc.resolve(from);
+  const $to = state.doc.resolve(to);
+  // Find the outermost block ancestor for each end of the selection
+  const fromDepth = Math.max(1, $from.depth);
+  const toDepth = Math.max(1, $to.depth);
+  const rangeFrom = $from.before(fromDepth);
+  const rangeTo = $to.after(toDepth);
+
+  return editor
+    .chain()
+    .focus()
+    .command(({ tr }: { tr: any }) => {
+      const codeBlock = codeBlockType.create(
+        { language: null },
+        text ? state.schema.text(text) : undefined,
+      );
+      tr.replaceWith(rangeFrom, rangeTo, codeBlock);
+      return true;
+    })
+    .run();
+}

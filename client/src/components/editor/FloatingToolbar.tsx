@@ -1,4 +1,5 @@
 import { Editor } from '@tiptap/react';
+import { toggleCodeBlockMerged } from './extensions/CodeBlockWithFeatures';
 import {
   Bold,
   Italic,
@@ -594,7 +595,7 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
         <CheckSquare size={iconSize} />
       </ToolbarButton>
       <ToolbarButton
-        onMouseDown={(e) => executeCommand(e, () => editor.chain().focus().toggleCodeBlock().run())}
+        onMouseDown={(e) => executeCommand(e, () => toggleCodeBlockMerged(editor))}
         isActive={editorState?.isCodeBlock}
         title="Code Block"
       >

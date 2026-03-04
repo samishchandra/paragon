@@ -1,5 +1,6 @@
 import { Editor, useEditorState } from '@tiptap/react';
 import { memo } from 'react';
+import { toggleCodeBlockMerged } from './extensions/CodeBlockWithFeatures';
 import {
   Bold,
   Italic,
@@ -98,7 +99,11 @@ interface ToolbarButtonProps {
 const ToolbarButton = ({ onClick, isActive, disabled, children, tooltip }: ToolbarButtonProps) => {
   const button = (
     <button
-      onClick={onClick}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!disabled) onClick();
+      }}
       disabled={disabled}
       className={`
         flex items-center justify-center w-8 h-8 rounded-md shrink-0
@@ -544,7 +549,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
         <Quote size={16} />
       </ToolbarButton>
       <ToolbarButton
-        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        onClick={() => toggleCodeBlockMerged(editor)}
         isActive={editorState?.isCodeBlock}
         tooltip="Code Block"
       >
