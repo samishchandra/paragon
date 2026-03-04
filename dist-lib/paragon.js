@@ -16021,7 +16021,10 @@ function Dk(e) {
   return t = t.replace(
     /(?:<p>\s*\u200B\s*<\/p>\s*)*<!--\s*list-break\s*-->(?:\s*<p>\s*\u200B\s*<\/p>)*/g,
     '<p class="list-separator" data-list-separator="true">​</p>'
-  ), t = bk(t), t = xk(t), t = kk(t), t = Sk(t), t;
+  ), t = bk(t), t = xk(t), t = kk(t), t = Sk(t), t = t.replace(
+    /(<pre[^>]*>\s*<code[^>]*>)([\s\S]*?)(<\/code>\s*<\/pre>)/g,
+    (n, r, o, s) => r + o.replace(/\n+$/, "") + s
+  ), t;
 }
 function Nk(e, t, n = {}) {
   const r = Ek(e, t, n), o = t(r);
