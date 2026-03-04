@@ -9,5 +9,6 @@ export { splitSeparatedLists } from './splitSeparatedLists';
 export { structureImagesInListItems } from './structureImagesInListItems';
 export { restoreHeaderColumn } from './restoreHeaderColumn';
 export { insertHorizontalRuleClean } from './insertHorizontalRule';
+export { stripZWSP } from './stripZWSP';
 export { preprocessMarkdown, postprocessHtml, markdownToHtml, reconstructTableCells, inlineMarkdownToHtml, imgToFigure, lineToBlocks, parseListLine, buildNestedListHtml, } from './markdownPipeline';
 export type { PreprocessOptions, ListLineInfo } from './markdownPipeline';
