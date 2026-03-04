@@ -15,3 +15,4 @@
 - [x] Fix: blank line preservation broken by stripZWSP — extra newlines between sections are lost after mode switch
 - [x] Add stripZWSP unit tests and blank line preservation round-trip tests
 - [x] Fix: code block showing an extra blank line in WYSIWYG editor
+- [x] Add round-trip tests for code blocks to verify trailing newline stripping doesn't lose content

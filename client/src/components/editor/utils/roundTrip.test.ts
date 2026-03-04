@@ -528,6 +528,82 @@ describe('Round-trip: Markdown → HTML → Markdown', () => {
       expect(result).toContain('```javascript');
       expect(result).toContain('const x = 1;');
     });
+
+    it('should preserve single-line code block without adding extra lines', () => {
+      const md = '```plaintext\nsomething\n```';
+      const result = roundTrip(md);
+      // The content must survive
+      expect(result).toContain('something');
+      // Must not have trailing blank lines inside the code fence
+      const codeContent = result.match(/```[^\n]*\n([\s\S]*?)\n```/);
+      expect(codeContent).not.toBeNull();
+      expect(codeContent![1]).toBe('something');
+    });
+
+    it('should preserve multi-line code block without losing the last line', () => {
+      const md = '```javascript\nconst x = 1;\nconst y = 2;\nconsole.log(x + y);\n```';
+      const result = roundTrip(md);
+      expect(result).toContain('const x = 1;');
+      expect(result).toContain('const y = 2;');
+      expect(result).toContain('console.log(x + y);');
+      // Verify all three lines are present between the fences
+      const codeContent = result.match(/```[^\n]*\n([\s\S]*?)\n```/);
+      expect(codeContent).not.toBeNull();
+      const lines = codeContent![1].split('\n');
+      expect(lines).toHaveLength(3);
+      expect(lines[0]).toBe('const x = 1;');
+      expect(lines[1]).toBe('const y = 2;');
+      expect(lines[2]).toBe('console.log(x + y);');
+    });
+
+    it('should stabilise code block across multiple round-trips', () => {
+      const md = '```python\ndef hello():\n    print("world")\n```';
+      const trip1 = normalise(roundTrip(md));
+      const trip2 = normalise(roundTrip(trip1));
+      const trip3 = normalise(roundTrip(trip2));
+      // Must stabilise — no growing or shrinking content
+      expect(trip2).toBe(trip1);
+      expect(trip3).toBe(trip2);
+    });
+
+    it('should preserve code block with empty lines inside', () => {
+      const md = '```javascript\nconst x = 1;\n\nconst y = 2;\n```';
+      const result = roundTrip(md);
+      expect(result).toContain('const x = 1;');
+      expect(result).toContain('const y = 2;');
+      // The empty line between the two const declarations must survive
+      const codeContent = result.match(/```[^\n]*\n([\s\S]*?)\n```/);
+      expect(codeContent).not.toBeNull();
+      expect(codeContent![1]).toContain('\n\n');
+    });
+
+    it('should preserve code block surrounded by other content', () => {
+      const md = 'Paragraph before.\n\n```bash\necho hello\n```\n\nParagraph after.';
+      const result = normalise(roundTrip(md));
+      expect(result).toContain('Paragraph before.');
+      expect(result).toContain('echo hello');
+      expect(result).toContain('Paragraph after.');
+    });
+
+    it('should preserve code block with plaintext language', () => {
+      const md = '```plaintext\njust some text\nwith multiple lines\n```';
+      const result = roundTrip(md);
+      expect(result).toContain('just some text');
+      expect(result).toContain('with multiple lines');
+    });
+
+    it('should not add extra blank line to code block on round-trip', () => {
+      const md = '```\nsingle line\n```';
+      const trip1 = roundTrip(md);
+      const trip2 = roundTrip(trip1);
+      // Count lines inside code fence — should be exactly 1
+      const content1 = trip1.match(/```[^\n]*\n([\s\S]*?)\n```/);
+      const content2 = trip2.match(/```[^\n]*\n([\s\S]*?)\n```/);
+      expect(content1).not.toBeNull();
+      expect(content2).not.toBeNull();
+      expect(content1![1].split('\n').length).toBe(1);
+      expect(content2![1].split('\n').length).toBe(1);
+    });
   });
 
   describe('Blockquotes', () => {
