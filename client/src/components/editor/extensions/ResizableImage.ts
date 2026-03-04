@@ -1,5 +1,7 @@
 import Image from '@tiptap/extension-image';
 import { mergeAttributes } from '@tiptap/core';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { NodeSelection } from '@tiptap/pm/state';
 
 export interface ResizableImageOptions {
   HTMLAttributes: Record<string, unknown>;
@@ -125,6 +127,92 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         'img',
         mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
       ],
+    ];
+  },
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('resizableImageCopy'),
+        props: {
+          handleDOMEvents: {
+            copy(view, event) {
+              const { state } = view;
+              // Only intercept when a single image node is selected
+              if (!(state.selection instanceof NodeSelection)) return false;
+              const node = state.selection.node;
+              if (node.type.name !== 'resizableImage') return false;
+
+              const src = node.attrs.src;
+              if (!src) return false;
+
+              // Prevent default ProseMirror copy (which copies HTML/text)
+              event.preventDefault();
+
+              // Also put the markdown image syntax on the clipboard for
+              // paste-as-text fallback so the image round-trips in the editor
+              const alt = node.attrs.alt || '';
+              const markdownText = `![${alt}](${src})`;
+
+              // Async: fetch image blob and write to clipboard
+              (async () => {
+                try {
+                  // Try direct fetch first (same-origin or CORS-enabled)
+                  const response = await fetch(src);
+                  const blob = await response.blob();
+                  await navigator.clipboard.write([
+                    new ClipboardItem({
+                      [blob.type]: blob,
+                      'text/plain': new Blob([markdownText], { type: 'text/plain' }),
+                    }),
+                  ]);
+                } catch {
+                  // Fallback: draw to canvas to bypass CORS
+                  try {
+                    const img = new window.Image();
+                    img.crossOrigin = 'anonymous';
+                    await new Promise<void>((resolve, reject) => {
+                      img.onload = () => resolve();
+                      img.onerror = () => reject(new Error('Image load failed'));
+                      img.src = src;
+                    });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                      ctx.drawImage(img, 0, 0);
+                      const blob = await new Promise<Blob | null>((resolve) =>
+                        canvas.toBlob(resolve, 'image/png')
+                      );
+                      if (blob) {
+                        await navigator.clipboard.write([
+                          new ClipboardItem({
+                            'image/png': blob,
+                            'text/plain': new Blob([markdownText], { type: 'text/plain' }),
+                          }),
+                        ]);
+                        return;
+                      }
+                    }
+                    // Canvas fallback failed — copy text
+                    await navigator.clipboard.writeText(markdownText);
+                  } catch {
+                    // Final fallback: copy markdown text
+                    try {
+                      await navigator.clipboard.writeText(markdownText);
+                    } catch {
+                      // Silent fail
+                    }
+                  }
+                }
+              })();
+
+              return true;
+            },
+          },
+        },
+      }),
     ];
   },
 

@@ -9,3 +9,4 @@
 - [x] Add splitSeparatedLists unit test for sibling-with-nested-children pattern
 - [x] Feature: indent on ordered list item should convert to bullet list instead of nested ordered list
 - [x] Fix: pressing Enter in list item with inline code carries over code mark to new list item
+- [x] Fix: selecting an image and pressing Cmd+C should copy the image
