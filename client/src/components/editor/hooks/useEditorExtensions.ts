@@ -39,6 +39,7 @@ import { ExpandSelection } from '../extensions/ExpandSelection';
 import { HexColorMark } from '../extensions/HexColorMark';
 import { SelectAllOccurrences } from '../extensions/SelectAllOccurrences';
 import { LinkBoundary } from '../extensions/LinkBoundary';
+import { SmartCopyPaste } from '../extensions/SmartCopyPaste';
 import { ImageUpload } from '../extensions/ImageUpload';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import Code from '@tiptap/extension-code';
@@ -188,6 +189,8 @@ export function useEditorExtensions({
       }),
       // Prevent typed text from being absorbed into a link mark at the start of a textblock
       LinkBoundary,
+      // Smart copy-paste: partial selection inside code block/callout unwraps the container
+      SmartCopyPaste,
       Underline,
       Subscript,
       Superscript,

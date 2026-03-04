@@ -19,3 +19,7 @@
 - [x] Add Copy as Markdown button to floating formatting toolbar after code block button with divider
 - [x] Fix: selecting multiple lines and toggling code block creates multiple code blocks instead of one
 - [x] Fix: typing before a hyperlink at the start of a line/list-item absorbs text into the link
+- [x] Feature: smart copy-paste for code blocks and callouts
+  - Full selection of container content → paste preserves the code block/callout wrapper
+  - Partial selection inside container → paste unwraps, pastes inner content only (plain text, list items, paragraphs)
+  - Applies to both code blocks and callout blocks
