@@ -687,4 +687,97 @@ describe('Round-trip: Markdown → HTML → Markdown', () => {
       expect(result).toContain('![fig | right | 400](https://example.com/fig.jpg)');
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Blank line preservation
+  // -------------------------------------------------------------------------
+  describe('Blank line preservation', () => {
+    it('should preserve blank line between paragraphs via ZWSP', () => {
+      // An intentional blank line between paragraphs is represented as
+      // \n\n\u200B\n\n in Turndown output. After round-trip, the blank line
+      // must still produce a ZWSP marker so it survives further round-trips.
+      const md = 'paragraph one\n\n\u200B\n\nparagraph two';
+      const result = roundTrip(md);
+      // The round-trip output must contain a ZWSP line to preserve the blank line
+      expect(result).toContain('\u200B');
+      // Both paragraphs must survive
+      expect(result).toContain('paragraph one');
+      expect(result).toContain('paragraph two');
+    });
+
+    it('should preserve blank line between list and paragraph', () => {
+      const md = '-   something\n-   finding\n\n\u200B\n\nwonderful\nfine';
+      const result = roundTrip(md);
+      expect(result).toContain('something');
+      expect(result).toContain('finding');
+      expect(result).toContain('wonderful');
+      expect(result).toContain('fine');
+      // The ZWSP blank line marker must survive
+      expect(result).toContain('\u200B');
+    });
+
+    it('should preserve blank lines between list, paragraph, and list', () => {
+      const md = [
+        '-   something',
+        '-   finding',
+        '',
+        '\u200B',
+        '',
+        'wonderful',
+        'fine',
+        '',
+        '\u200B',
+        '',
+        '-   great',
+        '-   second',
+      ].join('\n');
+      const result = roundTrip(md);
+      // All content must survive
+      expect(result).toContain('something');
+      expect(result).toContain('finding');
+      expect(result).toContain('wonderful');
+      expect(result).toContain('fine');
+      expect(result).toContain('great');
+      expect(result).toContain('second');
+      // Both ZWSP blank line markers must survive for further round-trips
+      const zwspCount = (result.match(/\u200B/g) || []).length;
+      expect(zwspCount).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should stabilise blank lines across multiple round-trips', () => {
+      const md = 'first\n\n\u200B\n\nsecond\n\n\u200B\n\nthird';
+      const trip1 = roundTrip(md);
+      const trip2 = roundTrip(trip1);
+      const trip3 = roundTrip(trip2);
+      // Output must stabilise — no growing or shrinking blank lines
+      expect(normalise(trip2)).toBe(normalise(trip1));
+      expect(normalise(trip3)).toBe(normalise(trip2));
+    });
+
+    it('should preserve blank line between heading and paragraph', () => {
+      const md = '# Title\n\n\u200B\n\nContent after blank line.';
+      const result = roundTrip(md);
+      expect(result).toContain('# Title');
+      expect(result).toContain('Content after blank line.');
+      expect(result).toContain('\u200B');
+    });
+
+    it('should preserve blank line between blockquote and paragraph', () => {
+      const md = '> A quote\n\n\u200B\n\nText after blank line.';
+      const result = roundTrip(md);
+      expect(result).toContain('> A quote');
+      expect(result).toContain('Text after blank line.');
+      expect(result).toContain('\u200B');
+    });
+
+    it('should preserve multiple consecutive blank lines', () => {
+      const md = 'top\n\n\u200B\n\n\u200B\n\nbottom';
+      const result = roundTrip(md);
+      expect(result).toContain('top');
+      expect(result).toContain('bottom');
+      // At least 2 ZWSP markers for the 2 blank lines
+      const zwspCount = (result.match(/\u200B/g) || []).length;
+      expect(zwspCount).toBeGreaterThanOrEqual(2);
+    });
+  });
 });
