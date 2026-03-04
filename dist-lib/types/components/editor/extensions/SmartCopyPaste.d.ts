@@ -8,8 +8,9 @@
  *   or callout with the same content.
  * - **Partial selection** (some content inside a code block or callout):
  *   The paste unwraps the container and pastes only the inner content.
- *   For code blocks, this means plain text. For callouts, this means
- *   the selected paragraphs, list items, etc. without the callout wrapper.
+ *   For code blocks, lines are converted to separate paragraphs so
+ *   newlines are preserved. For callouts, the selected paragraphs,
+ *   list items, etc. are pasted without the callout wrapper.
  *
  * Implementation:
  * Uses a two-part approach:
