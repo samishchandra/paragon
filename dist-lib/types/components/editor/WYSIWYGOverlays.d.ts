@@ -39,6 +39,7 @@ export interface WYSIWYGOverlaysProps {
     aiEnabled: boolean;
     onAISetupRequired?: () => void;
     onAISparklesClick: (anchorEl?: HTMLElement) => void;
+    onCopySelectionAsMarkdown?: () => void;
     aiDropdown: AIDropdownState | null;
     aiActions?: AIActionDefinition[];
     onAIActionSelect: (actionId: string, customPrompt?: string) => void;
@@ -64,4 +65,4 @@ export interface WYSIWYGOverlaysProps {
     onImageDelete: () => void;
     onImageEditClose: () => void;
 }
-export declare function WYSIWYGOverlays({ editor, isMobile, disabledFeatures, containerRef, editable, showFloatingToolbar, isLinkPopoverOpen, aiEnabled, onAISetupRequired, onAISparklesClick, aiDropdown, aiActions, onAIActionSelect, onAIDropdownClose, aiState, aiPopoverPosition, onAIReplace, onAIInsert, onAIRetry, onAIDiscard, onLinkPopoverClose, onEditLink, onWikiLinkSearch, imageEditState, onImageSave, onImageDelete, onImageEditClose, }: WYSIWYGOverlaysProps): import("react").JSX.Element;
+export declare function WYSIWYGOverlays({ editor, isMobile, disabledFeatures, containerRef, editable, showFloatingToolbar, isLinkPopoverOpen, aiEnabled, onAISetupRequired, onAISparklesClick, onCopySelectionAsMarkdown, aiDropdown, aiActions, onAIActionSelect, onAIDropdownClose, aiState, aiPopoverPosition, onAIReplace, onAIInsert, onAIRetry, onAIDiscard, onLinkPopoverClose, onEditLink, onWikiLinkSearch, imageEditState, onImageSave, onImageDelete, onImageEditClose, }: WYSIWYGOverlaysProps): import("react").JSX.Element;
