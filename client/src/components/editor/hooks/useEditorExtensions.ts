@@ -40,6 +40,7 @@ import { HexColorMark } from '../extensions/HexColorMark';
 import { SelectAllOccurrences } from '../extensions/SelectAllOccurrences';
 import { ImageUpload } from '../extensions/ImageUpload';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
+import Code from '@tiptap/extension-code';
 import { InputRule } from '@tiptap/core';
 import { TextSelection } from '@tiptap/pm/state';
 
@@ -153,7 +154,14 @@ export function useEditorExtensions({
             class: 'italic',
           },
         },
+        // Disable built-in Code mark — we extend it below with keepOnSplit: false
+        // so that pressing Enter in a list item with inline code does not carry
+        // the code formatting into the new list item.
+        code: false,
       }),
+      // Inline code mark with keepOnSplit disabled — prevents the code style
+      // from carrying over when pressing Enter to create a new list item.
+      Code.configure({}).extend({ keepOnSplit: false }),
       // Mixed list extensions - allow inter-mixing of bullet, ordered, and task list items
       MixedBulletList,
       MixedOrderedList,
