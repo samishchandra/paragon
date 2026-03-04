@@ -38,6 +38,7 @@ import { TabIndent } from '../extensions/TabIndent';
 import { ExpandSelection } from '../extensions/ExpandSelection';
 import { HexColorMark } from '../extensions/HexColorMark';
 import { SelectAllOccurrences } from '../extensions/SelectAllOccurrences';
+import { LinkBoundary } from '../extensions/LinkBoundary';
 import { ImageUpload } from '../extensions/ImageUpload';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import Code from '@tiptap/extension-code';
@@ -185,6 +186,8 @@ export function useEditorExtensions({
           target: '_blank',
         },
       }),
+      // Prevent typed text from being absorbed into a link mark at the start of a textblock
+      LinkBoundary,
       Underline,
       Subscript,
       Superscript,
