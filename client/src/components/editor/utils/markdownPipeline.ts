@@ -433,6 +433,14 @@ export function postprocessHtml(html: string): string {
   // 5. Reconstruct rich content inside table cells
   result = reconstructTableCells(result);
 
+  // 6. Strip trailing newlines inside <code> blocks within <pre> tags.
+  //    marked emits `<pre><code>content\n</code></pre>` with a trailing
+  //    newline that TipTap interprets as an extra empty line.
+  result = result.replace(
+    /(<pre[^>]*>\s*<code[^>]*>)([\s\S]*?)(<\/code>\s*<\/pre>)/g,
+    (_match, open, content, close) => open + content.replace(/\n+$/, '') + close,
+  );
+
   return result;
 }
 
