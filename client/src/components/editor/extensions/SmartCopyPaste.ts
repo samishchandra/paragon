@@ -8,8 +8,9 @@
  *   or callout with the same content.
  * - **Partial selection** (some content inside a code block or callout):
  *   The paste unwraps the container and pastes only the inner content.
- *   For code blocks, this means plain text. For callouts, this means
- *   the selected paragraphs, list items, etc. without the callout wrapper.
+ *   For code blocks, lines are converted to separate paragraphs so
+ *   newlines are preserved. For callouts, the selected paragraphs,
+ *   list items, etc. are pasted without the callout wrapper.
  *
  * Implementation:
  * Uses a two-part approach:
@@ -26,7 +27,7 @@
  */
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { Slice } from '@tiptap/pm/model';
+import { Slice, Fragment } from '@tiptap/pm/model';
 import type { EditorView } from '@tiptap/pm/view';
 
 const smartCopyPastePluginKey = new PluginKey('smartCopyPaste');
@@ -42,12 +43,6 @@ const CONTAINER_TYPES = new Set(['codeBlock', 'callout']);
  * - For code blocks: the selection covers all text from position 0 to the end
  * - For callouts: the selection spans from the very start of the first child
  *   to the very end of the last child (i.e., all block children are fully covered)
- *
- * The tricky part: when you "select all" inside a callout, the selection
- * positions are inside the first and last child nodes (e.g., inside paragraphs),
- * not at the callout's own content boundaries. So we need to check whether
- * the selection reaches the first text position of the first child and the
- * last text position of the last child.
  */
 function analyzeSelection(view: EditorView): { isFullContainer: boolean; containerType: string | null } {
   const { state } = view;
@@ -78,34 +73,6 @@ function analyzeSelection(view: EditorView): { isFullContainer: boolean; contain
       return { isFullContainer: false, containerType: null };
     }
 
-    // Check if selection covers the entire content.
-    //
-    // For code blocks (content: "text*"):
-    //   containerContentStart is right after the opening of the code block.
-    //   containerContentEnd is right before the closing.
-    //   A full selection means from === containerContentStart and to === containerContentEnd.
-    //
-    // For callouts (content: "block+"):
-    //   The callout contains child blocks (paragraphs, lists, etc.).
-    //   containerContentStart is right after the opening of the callout.
-    //   containerContentEnd is right before the closing.
-    //   When you "select all" inside a callout, the cursor starts inside
-    //   the first child (e.g., first paragraph) and ends inside the last child.
-    //   So selection.from > containerContentStart and selection.to < containerContentEnd.
-    //
-    //   To detect "full content", we check:
-    //   - The selection starts at or before the first text position of the first child
-    //   - The selection ends at or after the last text position of the last child
-    //
-    //   The first text position of the first child is containerContentStart + 1
-    //   (entering the first child block). For a paragraph, the text starts at +1.
-    //   The last text position of the last child is containerContentEnd - 1
-    //   (just before the closing of the last child block).
-    //
-    //   But we need to handle deeply nested structures too. The safest approach:
-    //   resolve the "deepest first position" and "deepest last position" inside
-    //   the container and check if the selection covers those.
-
     const selFrom = selection.from;
     const selTo = selection.to;
 
@@ -117,57 +84,14 @@ function analyzeSelection(view: EditorView): { isFullContainer: boolean; contain
     } else {
       // Callout (or other block containers): check if selection covers
       // from the first leaf position to the last leaf position.
-      //
-      // The first "enterable" position inside the container is the position
-      // just inside the first child. For a callout with paragraphs:
-      //   callout pos = containerContentStart - 1
-      //   first paragraph opens at containerContentStart
-      //   first text position = containerContentStart + 1
-      //
-      // The last "enterable" position is just inside the last child:
-      //   last paragraph closes at containerContentEnd
-      //   last text position = containerContentEnd - 1
-      //
-      // If the first child is a list (which has list items, which have paragraphs),
-      // the nesting goes deeper, but the first/last text positions are still
-      // the deepest positions reachable from the container boundaries.
-
-      // Use ProseMirror's resolve to find the deepest positions
-      const firstInnerPos = containerContentStart + 1; // enter first child
-      const lastInnerPos = containerContentEnd - 1; // enter last child
-
-      // Check if selection reaches from the start of the first child's content
-      // to the end of the last child's content
-      // We need to check that $from is at or before the first child's content start
-      // and $to is at or after the last child's content end.
-
-      // For the first child: its content starts at containerContentStart + 1
-      // (the position just inside the first child node)
-      // For the last child: its content ends at containerContentEnd - 1
-
-      // But for nested structures (list > listItem > paragraph), we need
-      // to go deeper. The simplest reliable check: the selection must include
-      // ALL direct children of the container.
-
-      // Check: does the selection start within the first child and end within the last child,
-      // AND cover all children in between?
       const firstChild = node.firstChild;
       const lastChild = node.lastChild;
 
       if (!firstChild || !lastChild) {
         isFullContent = false;
       } else {
-        // First child starts at containerContentStart, ends at containerContentStart + firstChild.nodeSize
-        // Last child starts at containerContentEnd - lastChild.nodeSize, ends at containerContentEnd
-
         // The selection must start at or before the first text position of the first child
         // and end at or after the last text position of the last child.
-        // First text position of first child = containerContentStart + 1 (entering the child)
-        // Last text position of last child = containerContentEnd - 1 (just before closing the child)
-
-        // For the selection to cover "all content", it must:
-        // 1. Start at position <= containerContentStart + 1 (at or before first child's content)
-        // 2. End at position >= containerContentEnd - 1 (at or after last child's content)
         isFullContent = selFrom <= containerContentStart + 1 && selTo >= containerContentEnd - 1;
       }
     }
@@ -185,6 +109,8 @@ export const SmartCopyPaste = Extension.create({
   name: 'smartCopyPaste',
 
   addProseMirrorPlugins() {
+    const editor = this.editor;
+
     // We store the analysis result so transformCopied can read it
     let lastAnalysis: { isFullContainer: boolean; containerType: string | null } = {
       isFullContainer: false,
@@ -240,19 +166,52 @@ export const SmartCopyPaste = Extension.create({
               return slice;
             }
 
-            // Unwrap: extract the inner content and reduce open depth by 1
-            // For code blocks (content: "text*"):
-            //   The inner content is text nodes. openStart was 1 (inside code block).
-            //   After unwrap, openStart becomes 0 and content is the text fragment.
-            // For callouts (content: "block+"):
-            //   The inner content is block nodes (paragraphs, lists, etc.).
-            //   openStart was 1+ (inside callout, possibly inside a paragraph).
-            //   After unwrap, openStart decreases by 1.
-            const innerContent = outerNode.content;
-            const newOpenStart = Math.max(0, openStart - 1);
-            const newOpenEnd = Math.max(0, openEnd - 1);
+            if (containerType === 'codeBlock') {
+              // Code block special handling:
+              // The inner content is a text node with \n for line breaks.
+              // We need to split on \n and create separate paragraph nodes
+              // so that the pasted content preserves line structure.
+              const schema = editor.schema;
+              const paragraphType = schema.nodes.paragraph;
 
-            return new Slice(innerContent, newOpenStart, newOpenEnd);
+              if (!paragraphType) {
+                // Fallback: just unwrap without conversion
+                const innerContent = outerNode.content;
+                return new Slice(innerContent, Math.max(0, openStart - 1), Math.max(0, openEnd - 1));
+              }
+
+              // Collect all text from the code block's inner content
+              let fullText = '';
+              outerNode.content.forEach((node) => {
+                fullText += node.text || '';
+              });
+
+              // Split by newlines and create paragraph nodes
+              const lines = fullText.split('\n');
+
+              // Remove trailing empty line if present (code blocks often end with \n)
+              if (lines.length > 1 && lines[lines.length - 1] === '') {
+                lines.pop();
+              }
+
+              const paragraphs = lines.map((line) => {
+                if (line === '') {
+                  return paragraphType.create();
+                }
+                return paragraphType.create(null, schema.text(line));
+              });
+
+              const fragment = Fragment.from(paragraphs);
+              // openStart=0, openEnd=0: these are complete paragraph nodes
+              return new Slice(fragment, 0, 0);
+            } else {
+              // Callout: unwrap by extracting inner content and reducing open depth
+              const innerContent = outerNode.content;
+              const newOpenStart = Math.max(0, openStart - 1);
+              const newOpenEnd = Math.max(0, openEnd - 1);
+
+              return new Slice(innerContent, newOpenStart, newOpenEnd);
+            }
           },
         },
       }),

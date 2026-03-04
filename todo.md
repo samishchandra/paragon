@@ -23,3 +23,4 @@
   - Full selection of container content → paste preserves the code block/callout wrapper
   - Partial selection inside container → paste unwraps, pastes inner content only (plain text, list items, paragraphs)
   - Applies to both code blocks and callout blocks
+- [x] Fix: partial copy from code block loses newlines and line structure when pasted outside

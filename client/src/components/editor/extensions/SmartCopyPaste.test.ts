@@ -323,11 +323,12 @@ describe('SmartCopyPaste', () => {
 
       const result = transformCopied(slice);
 
-      // Should unwrap: content should be just the text, not wrapped in code block
+      // Should unwrap: content should be a paragraph with the text, not wrapped in code block
       expect(result.openStart).toBe(0);
       expect(result.openEnd).toBe(0);
-      expect(result.content.firstChild?.isText).toBe(true);
-      expect(result.content.firstChild?.text).toBe('line 2');
+      // Code block text is converted to paragraph(s) when unwrapped
+      expect(result.content.firstChild?.type.name).toBe('paragraph');
+      expect(result.content.firstChild?.textContent).toBe('line 2');
 
       editor.destroy();
     });
@@ -525,6 +526,54 @@ describe('SmartCopyPaste', () => {
       const slice = Slice.empty;
       const result = transformCopied(slice);
       expect(result).toBe(slice);
+
+      editor.destroy();
+    });
+
+    it('should convert multi-line code block text to separate paragraphs when unwrapping', () => {
+      const editor = createEditor({
+        type: 'doc',
+        content: [
+          {
+            type: 'codeBlock',
+            attrs: { language: null },
+            content: [{ type: 'text', text: 'something\n* nice to have\n* wonderful' }],
+          },
+        ],
+      });
+
+      const plugins = editor.view.state.plugins;
+      const smartPlugin = plugins.find(
+        p => (p as unknown as { key: string }).key.includes('smartCopyPaste')
+      );
+      const props = (smartPlugin as unknown as { props: Record<string, unknown> }).props;
+      const transformCopied = props.transformCopied as (slice: Slice) => Slice;
+      const handleDOMEvents = props.handleDOMEvents as Record<string, (view: unknown) => boolean>;
+
+      // Select only "* nice to have\n* wonderful" (partial selection)
+      const codeBlockStart = 1; // inside code block
+      const textStart = codeBlockStart + 'something\n'.length;
+      const textEnd = codeBlockStart + 'something\n* nice to have\n* wonderful'.length;
+      editor.commands.setTextSelection({ from: textStart, to: textEnd });
+
+      // Trigger the copy DOM event handler
+      handleDOMEvents.copy(editor.view);
+
+      // Create a slice that ProseMirror would create for this partial selection
+      const selectedText = editor.state.schema.text('* nice to have\n* wonderful');
+      const codeBlock = editor.state.schema.nodes.codeBlock.create(null, selectedText);
+      const slice = new Slice(Fragment.from(codeBlock), 1, 1);
+
+      const result = transformCopied(slice);
+
+      // Should unwrap and convert to separate paragraphs
+      expect(result.openStart).toBe(0);
+      expect(result.openEnd).toBe(0);
+      expect(result.content.childCount).toBe(2);
+      expect(result.content.child(0).type.name).toBe('paragraph');
+      expect(result.content.child(0).textContent).toBe('* nice to have');
+      expect(result.content.child(1).type.name).toBe('paragraph');
+      expect(result.content.child(1).textContent).toBe('* wonderful');
 
       editor.destroy();
     });
