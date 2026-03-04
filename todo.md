@@ -11,3 +11,5 @@
 - [x] Fix: pressing Enter in list item with inline code carries over code mark to new list item
 - [x] Fix: selecting an image and pressing Cmd+C should copy the image
 - [x] Fix: zero-width space character (U+200B) present in copied markdown text
+- [ ] Audit: scan codebase for invisible Unicode characters that could leak into markdown output
+- [x] Fix: blank line preservation broken by stripZWSP — extra newlines between sections are lost after mode switch

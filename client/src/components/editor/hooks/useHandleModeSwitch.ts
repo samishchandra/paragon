@@ -8,7 +8,6 @@
 import { useCallback } from 'react';
 import type { Editor } from '@tiptap/core';
 import { markdownToHtml, type PreprocessOptions } from '../utils';
-import { stripZWSP } from '../utils/stripZWSP';
 import { parseDateFromMarkdown, getDateVariant } from '../extensions/DatePill';
 import { isValidTag, normalizeTag } from '../extensions/TagPill';
 
@@ -54,7 +53,7 @@ export function useHandleModeSwitch({
     if (newMode === 'markdown' && editorModeRef.current === 'wysiwyg') {
       // Convert HTML to Markdown
       const html = editor.getHTML();
-      const markdown = stripZWSP(turndownService.turndown(html));
+      const markdown = turndownService.turndown(html);
       setRawMarkdown(markdown);
       rawMarkdownRef.current = markdown;
     } else if (newMode === 'wysiwyg' && editorModeRef.current === 'markdown') {

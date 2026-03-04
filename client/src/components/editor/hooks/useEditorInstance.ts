@@ -194,9 +194,9 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
           }
           // Flush rawMarkdown sync on blur too
           if (editorModeRef.current === 'wysiwyg' && turndownServiceRef.current) {
-            const markdown = stripZWSP(turndownServiceRef.current.turndown(html));
+            const markdown = turndownServiceRef.current.turndown(html);
             rawMarkdownRef.current = markdown;
-            onMarkdownChangeRef.current?.(markdown);
+            onMarkdownChangeRef.current?.(stripZWSP(markdown));
           }
         }
       }
@@ -255,9 +255,9 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
           }
           // Flush rawMarkdown sync on unmount too
           if (editorModeRef.current === 'wysiwyg' && turndownServiceRef.current) {
-            const markdown = stripZWSP(turndownServiceRef.current.turndown(html));
+            const markdown = turndownServiceRef.current.turndown(html);
             rawMarkdownRef.current = markdown;
-            onMarkdownChangeRef.current?.(markdown);
+            onMarkdownChangeRef.current?.(stripZWSP(markdown));
           }
         }
       }
@@ -284,7 +284,7 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
       turndownService
     ) {
       const html = editor.getHTML();
-      const markdown = stripZWSP(turndownService.turndown(html));
+      const markdown = turndownService.turndown(html);
       setRawMarkdown(markdown);
       rawMarkdownRef.current = markdown;
       rawMarkdownInitializedRef.current = true;
