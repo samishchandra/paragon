@@ -3,6 +3,7 @@ import { useEditor } from '@tiptap/react';
 import type { Extensions } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import { useTurndownService } from './useTurndownService';
+import { stripZWSP } from '../utils/stripZWSP';
 
 export interface UseEditorInstanceOptions {
   extensions: Extensions;
@@ -193,7 +194,7 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
           }
           // Flush rawMarkdown sync on blur too
           if (editorModeRef.current === 'wysiwyg' && turndownServiceRef.current) {
-            const markdown = turndownServiceRef.current.turndown(html);
+            const markdown = stripZWSP(turndownServiceRef.current.turndown(html));
             rawMarkdownRef.current = markdown;
             onMarkdownChangeRef.current?.(markdown);
           }
@@ -254,7 +255,7 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
           }
           // Flush rawMarkdown sync on unmount too
           if (editorModeRef.current === 'wysiwyg' && turndownServiceRef.current) {
-            const markdown = turndownServiceRef.current.turndown(html);
+            const markdown = stripZWSP(turndownServiceRef.current.turndown(html));
             rawMarkdownRef.current = markdown;
             onMarkdownChangeRef.current?.(markdown);
           }
@@ -283,7 +284,7 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
       turndownService
     ) {
       const html = editor.getHTML();
-      const markdown = turndownService.turndown(html);
+      const markdown = stripZWSP(turndownService.turndown(html));
       setRawMarkdown(markdown);
       rawMarkdownRef.current = markdown;
       rawMarkdownInitializedRef.current = true;

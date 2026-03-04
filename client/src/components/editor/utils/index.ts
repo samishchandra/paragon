@@ -10,6 +10,7 @@ export { splitSeparatedLists } from './splitSeparatedLists';
 export { structureImagesInListItems } from './structureImagesInListItems';
 export { restoreHeaderColumn } from './restoreHeaderColumn';
 export { insertHorizontalRuleClean } from './insertHorizontalRule';
+export { stripZWSP } from './stripZWSP';
 export {
   preprocessMarkdown,
   postprocessHtml,

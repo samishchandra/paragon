@@ -21,6 +21,8 @@ describe('utils barrel file (index.ts)', () => {
       'restoreHeaderColumn',
       // insertHorizontalRule.ts
       'insertHorizontalRuleClean',
+      // stripZWSP.ts
+      'stripZWSP',
       // markdownPipeline.ts
       'preprocessMarkdown',
       'postprocessHtml',
@@ -56,6 +58,7 @@ describe('utils barrel file (index.ts)', () => {
         'structureImagesInListItems',
         'restoreHeaderColumn',
         'insertHorizontalRuleClean',
+        'stripZWSP',
         'preprocessMarkdown',
         'postprocessHtml',
         'markdownToHtml',

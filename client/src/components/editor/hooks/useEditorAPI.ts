@@ -12,6 +12,7 @@ import type { Editor } from '@tiptap/core';
 import type { TurndownLike } from './useHandleModeSwitch';
 import type { MarkdownEditorRef } from '../MarkdownEditor';
 import { insertHorizontalRuleClean } from '../utils/insertHorizontalRule';
+import { stripZWSP } from '../utils/stripZWSP';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -50,7 +51,7 @@ export function useEditorAPI(
     getHTML: () => editor?.getHTML() || '',
     getMarkdown: () => {
       if (!editor) return '';
-      return turndownService.turndown(editor.getHTML());
+      return stripZWSP(turndownService.turndown(editor.getHTML()));
     },
     getText: () => editor?.getText() || '',
     setContent: (content: string) => {
