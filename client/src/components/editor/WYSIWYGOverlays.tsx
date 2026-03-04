@@ -49,6 +49,7 @@ export interface WYSIWYGOverlaysProps {
   aiEnabled: boolean;
   onAISetupRequired?: () => void;
   onAISparklesClick: (anchorEl?: HTMLElement) => void;
+  onCopySelectionAsMarkdown?: () => void;
 
   // AI
   aiDropdown: AIDropdownState | null;
@@ -87,6 +88,7 @@ export function WYSIWYGOverlays({
   aiEnabled,
   onAISetupRequired,
   onAISparklesClick,
+  onCopySelectionAsMarkdown,
   aiDropdown,
   aiActions,
   onAIActionSelect,
@@ -119,6 +121,7 @@ export function WYSIWYGOverlays({
           suppressWhenLinkPopoverOpen={isLinkPopoverOpen}
           aiEnabled={aiEnabled || !!onAISetupRequired}
           onAISparklesClick={(anchorEl) => onAISparklesClick(anchorEl)}
+          onCopySelectionAsMarkdown={onCopySelectionAsMarkdown}
         />
       )}
 

@@ -16,3 +16,4 @@
 - [x] Add stripZWSP unit tests and blank line preservation round-trip tests
 - [x] Fix: code block showing an extra blank line in WYSIWYG editor
 - [x] Add round-trip tests for code blocks to verify trailing newline stripping doesn't lose content
+- [x] Add Copy as Markdown button to floating formatting toolbar after code block button with divider

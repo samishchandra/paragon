@@ -52,6 +52,8 @@ import { EditorErrorBoundary } from './EditorErrorBoundary';
 import { EditorLoadingSkeleton } from './EditorLoadingSkeleton';
 import { EditorModeToggle } from './EditorModeToggle';
 import { WYSIWYGOverlays } from './WYSIWYGOverlays';
+import { stripZWSP } from './utils/stripZWSP';
+import { DOMSerializer } from '@tiptap/pm/model';
 import CustomScrollbar from './CustomScrollbar';
 import './PerformanceProfiler.css';
 import { Sparkles } from 'lucide-react';
@@ -828,6 +830,27 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }
   }, [aiState, resetAI, executeAIAction]);
 
+  // Copy selected text as markdown to clipboard
+  const handleCopySelectionAsMarkdown = useCallback(() => {
+    if (!editor) return;
+    const { from, to, empty } = editor.state.selection;
+    if (empty) return;
+    // Get the selected slice and serialize to HTML
+    const slice = editor.state.doc.slice(from, to);
+    const serializer = DOMSerializer.fromSchema(editor.schema);
+    const div = document.createElement('div');
+    const domFragment = serializer.serializeFragment(slice.content);
+    div.appendChild(domFragment);
+    const html = div.innerHTML;
+    // Convert HTML to markdown using turndown and strip invisible chars
+    const md = stripZWSP(turndownService.turndown(html));
+    navigator.clipboard.writeText(md).catch(() => {
+      // Fallback: use plain text
+      const text = editor.state.doc.textBetween(from, to, '\n');
+      navigator.clipboard.writeText(text);
+    });
+  }, [editor, turndownService]);
+
   if (!editor) {
     return <EditorLoadingSkeleton className={className} theme={theme} />;
   }
@@ -963,6 +986,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
               aiEnabled={aiEnabled}
               onAISetupRequired={onAISetupRequired}
               onAISparklesClick={(anchorEl) => handleAISparklesClick('selection', anchorEl)}
+              onCopySelectionAsMarkdown={handleCopySelectionAsMarkdown}
               aiDropdown={aiDropdown}
               aiActions={aiActions}
               onAIActionSelect={handleAIActionSelect}

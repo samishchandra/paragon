@@ -14,6 +14,8 @@ import {
   FileCode,
   Sparkles,
   ChevronDown,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { useCallback, useState, useEffect, useRef, memo } from 'react';
 import { DialogSafePortal } from './DialogSafePortal';
@@ -35,6 +37,8 @@ export interface FloatingToolbarProps {
   aiEnabled?: boolean;
   /** Called when the sparkles button is clicked, with the button element for positioning */
   onAISparklesClick?: (anchorEl: HTMLElement) => void;
+  /** Called to copy the current selection as markdown */
+  onCopySelectionAsMarkdown?: () => void;
 }
 
 interface ToolbarButtonProps {
@@ -180,7 +184,36 @@ const HeadingDropdown = memo(function HeadingDropdown({ editor, isH1, isH2, isH3
   );
 });
 
-export const FloatingToolbar = memo(function FloatingToolbar({ editor, className = '', suppressWhenLinkPopoverOpen = false, aiEnabled = false, onAISparklesClick }: FloatingToolbarProps) {
+const CopyMarkdownButton = memo(function CopyMarkdownButton({ onCopy, iconSize }: { onCopy: () => void; iconSize: number }) {
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const handleCopy = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onCopy();
+    setCopied(true);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setCopied(false), 1500);
+  }, [onCopy]);
+
+  return (
+    <ToolbarButton
+      onMouseDown={handleCopy}
+      title={copied ? 'Copied!' : 'Copy as Markdown'}
+    >
+      {copied ? <Check size={iconSize} className="text-green-500" /> : <Copy size={iconSize} />}
+    </ToolbarButton>
+  );
+});
+
+export const FloatingToolbar = memo(function FloatingToolbar({ editor, className = '', suppressWhenLinkPopoverOpen = false, aiEnabled = false, onAISparklesClick, onCopySelectionAsMarkdown }: FloatingToolbarProps) {
   const aiButtonRef = useRef<HTMLButtonElement>(null);
   // Performance: Use useEditorState for selective re-renders based on active formatting states
   const editorState = useEditorState({
@@ -567,6 +600,14 @@ export const FloatingToolbar = memo(function FloatingToolbar({ editor, className
       >
         <FileCode size={iconSize} />
       </ToolbarButton>
+
+      {/* Copy as Markdown button */}
+      {onCopySelectionAsMarkdown && (
+        <>
+          <Divider />
+          <CopyMarkdownButton onCopy={onCopySelectionAsMarkdown} iconSize={iconSize} />
+        </>
+      )}
 
       {/* AI Sparkles button (only shown when AI is enabled) */}
       {aiEnabled && (
