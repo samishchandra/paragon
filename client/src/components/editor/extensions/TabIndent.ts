@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
-import type { EditorState } from '@tiptap/pm/state';
+import type { EditorState, Transaction } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { sinkListItem, liftListItem } from '@tiptap/pm/schema-list';
 
@@ -23,6 +23,11 @@ import { sinkListItem, liftListItem } from '@tiptap/pm/schema-list';
  * detect the IMMEDIATE list item type (listItem vs taskItem) rather than
  * the parent list type, because sinkListItem/liftListItem operate on the
  * node type of the item itself.
+ * 
+ * INDENT BEHAVIOR: When indenting inside an ordered list, the newly created
+ * nested sub-list is converted from orderedList to bulletList. This matches
+ * common note-taking conventions (e.g., Notion, Bear) where nested items
+ * under numbered lists become bullets rather than restarting numbering.
  */
 
 const tabIndentPluginKey = new PluginKey('tabIndent');
@@ -46,6 +51,59 @@ function getListItemTypeName(state: EditorState): 'taskItem' | 'listItem' | null
   }
   
   return null;
+}
+
+/**
+ * After a successful sinkListItem, check if the newly created nested list
+ * is an orderedList and convert it to a bulletList. This makes indented
+ * items inside ordered lists appear as bullets instead of nested numbers.
+ * 
+ * ProseMirror's sinkListItem creates the nested list using `parent.type`,
+ * so indenting inside an orderedList creates a nested orderedList. We
+ * post-process the transaction to convert it.
+ */
+function convertNestedOrderedToBullet(
+  state: EditorState,
+  dispatch: ((tr: Transaction) => void) | undefined,
+): boolean {
+  const { $from } = state.selection;
+  const orderedListType = state.schema.nodes.orderedList;
+  const bulletListType = state.schema.nodes.bulletList;
+
+  if (!orderedListType || !bulletListType) return false;
+
+  // Walk up from the cursor to find the immediate parent list.
+  // After sinkListItem, the cursor is inside the nested list item,
+  // so the nearest list ancestor is the newly created nested list.
+  for (let depth = $from.depth; depth >= 0; depth--) {
+    const node = $from.node(depth);
+    if (node.type === orderedListType) {
+      // Check if this orderedList is itself nested inside another list item.
+      // If depth > 1, look at the grandparent to see if we're nested.
+      if (depth >= 2) {
+        const grandparent = $from.node(depth - 1);
+        if (
+          grandparent.type.name === 'listItem' ||
+          grandparent.type.name === 'taskItem'
+        ) {
+          // This is a nested orderedList inside a list item — convert to bulletList
+          if (dispatch) {
+            const pos = $from.before(depth);
+            const tr = state.tr.setNodeMarkup(pos, bulletListType, node.attrs);
+            dispatch(tr);
+          }
+          return true;
+        }
+      }
+      break;
+    }
+    // If we hit a bulletList or taskList first, no conversion needed
+    if (node.type.name === 'bulletList' || node.type.name === 'taskList') {
+      break;
+    }
+  }
+
+  return false;
 }
 
 export const TabIndent = Extension.create({
@@ -95,12 +153,19 @@ export const TabIndent = Extension.create({
               const cmd = sinkListItem(nodeType);
               const result = cmd(state, dispatch);
               
-              if (!result) {
+              if (result) {
+                // After successful sink, convert nested orderedList to bulletList
+                // Use the updated state from the view (after dispatch)
+                convertNestedOrderedToBullet(view.state, dispatch);
+              } else {
                 // Fallback: try the other item type
                 const fallbackName = itemTypeName === 'taskItem' ? 'listItem' : 'taskItem';
                 const fallbackType = state.schema.nodes[fallbackName];
                 if (fallbackType) {
-                  sinkListItem(fallbackType)(state, dispatch);
+                  const fallbackResult = sinkListItem(fallbackType)(state, dispatch);
+                  if (fallbackResult) {
+                    convertNestedOrderedToBullet(view.state, dispatch);
+                  }
                 }
               }
             }

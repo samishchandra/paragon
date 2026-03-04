@@ -556,6 +556,28 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
             editor.chain().focus().sinkListItem('taskItem').run();
           } else if (editorState?.isBulletList || editorState?.isOrderedList) {
             editor.chain().focus().sinkListItem('listItem').run();
+            // After sinking inside an ordered list, convert the nested
+            // orderedList to a bulletList (matches note-taking conventions)
+            if (editorState?.isOrderedList) {
+              const { state, view } = editor;
+              const { $from } = state.selection;
+              const orderedListType = state.schema.nodes.orderedList;
+              const bulletListType = state.schema.nodes.bulletList;
+              if (orderedListType && bulletListType) {
+                for (let depth = $from.depth; depth >= 0; depth--) {
+                  const node = $from.node(depth);
+                  if (node.type === orderedListType && depth >= 2) {
+                    const grandparent = $from.node(depth - 1);
+                    if (grandparent.type.name === 'listItem' || grandparent.type.name === 'taskItem') {
+                      const pos = $from.before(depth);
+                      view.dispatch(state.tr.setNodeMarkup(pos, bulletListType, node.attrs));
+                      break;
+                    }
+                  }
+                  if (node.type.name === 'bulletList' || node.type.name === 'taskList') break;
+                }
+              }
+            }
           }
         }}
         disabled={!editorState?.isBulletList && !editorState?.isOrderedList && !editorState?.isTaskList}
