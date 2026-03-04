@@ -20,3 +20,16 @@ declare const lowlight: {
 declare function loadLanguageIfNeeded(lang: string): Promise<boolean>;
 export { lowlight, loadLanguageIfNeeded };
 export declare const CodeBlockWithFeatures: import("@tiptap/core").Node<import("@tiptap/extension-code-block-lowlight").CodeBlockLowlightOptions, any>;
+/**
+ * Helper: toggle code block for multi-block selections.
+ *
+ * When the selection spans multiple blocks (paragraphs, headings, etc.),
+ * the default TipTap `toggleCodeBlock` converts each block individually,
+ * producing multiple code blocks. This helper instead collects all text
+ * from the selected blocks, joins with newlines, and replaces the range
+ * with a single code block.
+ *
+ * For single-block or collapsed selections, it falls back to the default
+ * `toggleCodeBlock` command.
+ */
+export declare function toggleCodeBlockMerged(editor: any): boolean;
