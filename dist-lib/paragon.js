@@ -156,7 +156,7 @@ function Tf() {
 }
 class Sf {
   constructor(t, n, o) {
-    this.isVisible = !1, this.languageReady = !1, this.copied = !1, this.copiedTimeout = null, this.observer = null, this.handleLanguageChange = () => {
+    this.isVisible = !1, this.languageReady = !1, this.copied = !1, this.copiedTimeout = null, this.handleLanguageChange = () => {
       const l = this.selectEl.value, c = this.getPos();
       c != null && this.view.dispatch(
         this.view.state.tr.setNodeMarkup(c, void 0, {
@@ -178,7 +178,10 @@ class Sf {
     const a = document.createElement("div");
     a.className = "code-block-language-wrapper", this.selectEl = document.createElement("select"), this.selectEl.className = "code-block-language-select", this.selectEl.value = r, this.populateLanguageOptions(r), this.selectEl.addEventListener("change", this.handleLanguageChange), this.labelEl = document.createElement("span"), this.labelEl.className = "code-block-language-label", this.labelEl.textContent = this.formatLanguageLabel(r);
     const i = Lo(Ef, 12, "code-block-language-chevron");
-    a.appendChild(this.selectEl), a.appendChild(this.labelEl), a.appendChild(i), this.copyBtn = document.createElement("button"), this.copyBtn.type = "button", this.copyBtn.className = "code-block-copy-btn", this.copyBtn.title = "Copy code", this.copyBtn.appendChild(Lo(Ji, 14)), this.copyBtn.addEventListener("click", this.handleCopy), s.appendChild(a), s.appendChild(this.copyBtn), this.preEl = document.createElement("pre"), this.preEl.className = "code-block-pre code-block-deferred", this.codeEl = document.createElement("code"), this.codeEl.className = "language-plaintext", this.preEl.appendChild(this.codeEl), this.contentDOM = this.codeEl, this.dom.appendChild(s), this.dom.appendChild(this.preEl), this.setupVisibilityObserver();
+    a.appendChild(this.selectEl), a.appendChild(this.labelEl), a.appendChild(i), this.copyBtn = document.createElement("button"), this.copyBtn.type = "button", this.copyBtn.className = "code-block-copy-btn", this.copyBtn.title = "Copy code", this.copyBtn.appendChild(Lo(Ji, 14)), this.copyBtn.addEventListener("click", this.handleCopy), s.appendChild(a), s.appendChild(this.copyBtn), this.preEl = document.createElement("pre"), this.preEl.className = "code-block-pre", this.codeEl = document.createElement("code"), this.codeEl.className = `language-${r}`, this.preEl.appendChild(this.codeEl), this.contentDOM = this.codeEl, this.dom.appendChild(s), this.dom.appendChild(this.preEl), setTimeout(() => {
+      this.isVisible = !0, this.onBecameVisible().catch(() => {
+      });
+    }, 0);
   }
   // ── Language select ──
   populateLanguageOptions(t) {
@@ -200,16 +203,7 @@ class Sf {
       Lo(t ? Cf : Ji, 14)
     );
   }
-  // ── Lazy visibility / language loading ──
-  setupVisibilityObserver() {
-    this.observer = new IntersectionObserver(
-      (t) => {
-        for (const n of t)
-          n.isIntersecting && (this.isVisible = !0, this.observer?.unobserve(this.dom), this.observer?.disconnect(), this.observer = null, this.onBecameVisible());
-      },
-      { rootMargin: "200px 0px", threshold: 0 }
-    ), this.observer.observe(this.dom);
-  }
+  // ── Language loading ──
   async onBecameVisible() {
     const t = this.node.attrs.language || "plaintext";
     if (t === "plaintext") {
@@ -217,16 +211,35 @@ class Sf {
       return;
     }
     if (We.registered(t)) {
-      this.setLanguageReady(!0);
+      this.setLanguageReady(!0), this.forceRehighlight(t);
       return;
     }
     const n = await Zi(t);
-    this.setLanguageReady(n || t === "plaintext"), this.populateLanguageOptions(t);
+    this.setLanguageReady(n || t === "plaintext"), this.populateLanguageOptions(t), n && this.forceRehighlight(t);
+  }
+  /**
+   * Force the lowlight ProseMirror plugin to recompute syntax highlighting
+   * decorations by dispatching a setNodeMarkup transaction that "touches"
+   * the language attribute. This is needed after lazy-loading a language
+   * because the lowlight plugin may have already run and cached empty
+   * decorations for this code block.
+   */
+  forceRehighlight(t) {
+    const n = this.getPos();
+    if (n != null)
+      try {
+        const { tr: o } = this.view.state;
+        o.setNodeMarkup(n, void 0, {
+          ...this.node.attrs,
+          language: t
+        }), o.setMeta("addToHistory", !1), this.view.dispatch(o);
+      } catch {
+      }
   }
   setLanguageReady(t) {
     this.languageReady = t;
     const n = this.node.attrs.language || "plaintext";
-    this.isVisible && t ? (this.preEl.className = "code-block-pre", this.codeEl.className = `language-${n}`) : (this.preEl.className = "code-block-pre code-block-deferred", this.codeEl.className = "language-plaintext");
+    this.codeEl.className = `language-${n}`;
   }
   // ── ProseMirror NodeView interface ──
   update(t) {
@@ -243,7 +256,7 @@ class Sf {
     this.dom.classList.remove("ProseMirror-selectednode");
   }
   destroy() {
-    this.observer && (this.observer.disconnect(), this.observer = null), this.copiedTimeout && (clearTimeout(this.copiedTimeout), this.copiedTimeout = null), this.selectEl.removeEventListener("change", this.handleLanguageChange), this.copyBtn.removeEventListener("click", this.handleCopy);
+    this.copiedTimeout && (clearTimeout(this.copiedTimeout), this.copiedTimeout = null), this.selectEl.removeEventListener("change", this.handleLanguageChange), this.copyBtn.removeEventListener("click", this.handleCopy);
   }
   // Let ProseMirror handle mutations inside the <code> contentDOM
   ignoreMutation(t) {

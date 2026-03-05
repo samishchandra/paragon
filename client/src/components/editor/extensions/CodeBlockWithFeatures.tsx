@@ -259,7 +259,7 @@ class CodeBlockNodeView implements NodeView {
   private languageReady = false;
   private copied = false;
   private copiedTimeout: ReturnType<typeof setTimeout> | null = null;
-  private observer: IntersectionObserver | null = null;
+
 
   // DOM references for incremental updates
   private selectEl: HTMLSelectElement;
@@ -322,10 +322,10 @@ class CodeBlockNodeView implements NodeView {
 
     // Pre > code (contentDOM is the <code> element where ProseMirror renders text)
     this.preEl = document.createElement('pre');
-    this.preEl.className = 'code-block-pre code-block-deferred';
+    this.preEl.className = 'code-block-pre';
 
     this.codeEl = document.createElement('code');
-    this.codeEl.className = 'language-plaintext';
+    this.codeEl.className = `language-${currentLanguage}`;
     this.preEl.appendChild(this.codeEl);
 
     // contentDOM tells ProseMirror where to render the node's text content
@@ -334,8 +334,15 @@ class CodeBlockNodeView implements NodeView {
     this.dom.appendChild(controls);
     this.dom.appendChild(this.preEl);
 
-    // Set up IntersectionObserver for lazy highlighting
-    this.setupVisibilityObserver();
+    // Trigger language loading after DOM attachment.
+    // setTimeout(0) ensures ProseMirror has fully attached the dom element
+    // to the document before we dispatch forceRehighlight transactions.
+    setTimeout(() => {
+      this.isVisible = true;
+      this.onBecameVisible().catch(() => {
+        // Silently ignore — language loading failed, code will display without highlighting
+      });
+    }, 0);
   }
 
   // ── Language select ──
@@ -406,25 +413,7 @@ class CodeBlockNodeView implements NodeView {
     );
   }
 
-  // ── Lazy visibility / language loading ──
-
-  private setupVisibilityObserver() {
-    this.observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            this.isVisible = true;
-            this.observer?.unobserve(this.dom);
-            this.observer?.disconnect();
-            this.observer = null;
-            this.onBecameVisible();
-          }
-        }
-      },
-      { rootMargin: '200px 0px', threshold: 0 }
-    );
-    this.observer.observe(this.dom);
-  }
+  // ── Language loading ──
 
   private async onBecameVisible() {
     const lang = this.node.attrs.language || 'plaintext';
@@ -434,25 +423,53 @@ class CodeBlockNodeView implements NodeView {
     }
     if (lowlight.registered(lang)) {
       this.setLanguageReady(true);
+      // Force the lowlight plugin to re-run decorations in case it ran
+      // before the language was registered (lazy-loading race condition)
+      this.forceRehighlight(lang);
       return;
     }
     const loaded = await loadLanguageIfNeeded(lang);
     this.setLanguageReady(loaded || lang === 'plaintext');
     // Repopulate options in case new languages were registered
     this.populateLanguageOptions(lang);
+    // Force the lowlight plugin to re-run decorations now that the language
+    // is registered. Without this, the plugin's cached decorations remain
+    // empty because it ran before the language was available.
+    if (loaded) {
+      this.forceRehighlight(lang);
+    }
+  }
+
+  /**
+   * Force the lowlight ProseMirror plugin to recompute syntax highlighting
+   * decorations by dispatching a setNodeMarkup transaction that "touches"
+   * the language attribute. This is needed after lazy-loading a language
+   * because the lowlight plugin may have already run and cached empty
+   * decorations for this code block.
+   */
+  private forceRehighlight(lang: string) {
+    const pos = this.getPos();
+    if (pos == null) return;
+    try {
+      const { tr } = this.view.state;
+      // Setting the same attributes triggers the lowlight plugin to re-run
+      tr.setNodeMarkup(pos, undefined, {
+        ...this.node.attrs,
+        language: lang,
+      });
+      // Mark as a non-addToHistory transaction to avoid polluting undo stack
+      tr.setMeta('addToHistory', false);
+      this.view.dispatch(tr);
+    } catch {
+      // Silently ignore if the position is stale
+    }
   }
 
   private setLanguageReady(ready: boolean) {
     this.languageReady = ready;
     const lang = this.node.attrs.language || 'plaintext';
-    
-    if (this.isVisible && ready) {
-      this.preEl.className = 'code-block-pre';
-      this.codeEl.className = `language-${lang}`;
-    } else {
-      this.preEl.className = 'code-block-pre code-block-deferred';
-      this.codeEl.className = 'language-plaintext';
-    }
+    // Always update the code element's class to match the current language
+    this.codeEl.className = `language-${lang}`;
   }
 
   // ── ProseMirror NodeView interface ──
@@ -500,10 +517,7 @@ class CodeBlockNodeView implements NodeView {
   }
 
   destroy() {
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
-    }
+
     if (this.copiedTimeout) {
       clearTimeout(this.copiedTimeout);
       this.copiedTimeout = null;

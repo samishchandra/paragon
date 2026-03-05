@@ -355,6 +355,9 @@
     padding: 0;
     font-size: inherit;
     color: var(--foreground);
+    border: none;
+    border-radius: 0;
+    display: block;
   }
   
   /* Blockquotes - Things theme pelorous color */
@@ -1902,6 +1905,10 @@
   line-height: 1.6;
   color: oklch(0.25 0.02 250);
   background: transparent;
+  border: none;
+  border-radius: 0;
+  display: block;
+  padding: 0;
 }
 
 .dark .code-block-pre code {
