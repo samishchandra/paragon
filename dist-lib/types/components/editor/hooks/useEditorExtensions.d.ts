@@ -56,6 +56,7 @@ export interface UseEditorExtensionsOptions {
     disabledFeatures: DisabledFeatures;
     progressiveSelectAll: boolean;
     enableCollapsibleHeadings: boolean;
+    enableCollapsibleLists: boolean;
     enableTagAutoDetect: boolean;
     enableHexColorHighlight: boolean;
     isLightweight: boolean;
@@ -64,4 +65,4 @@ export interface UseEditorExtensionsOptions {
     /** Callback refs for image upload, wiki links, etc. */
     callbackRefs: ExtensionCallbackRefs;
 }
-export declare function useEditorExtensions({ placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures, progressiveSelectAll, enableCollapsibleHeadings, enableTagAutoDetect, enableHexColorHighlight, isLightweight, setImageEditState, callbackRefs, }: UseEditorExtensionsOptions): any[];
+export declare function useEditorExtensions({ placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures, progressiveSelectAll, enableCollapsibleHeadings, enableCollapsibleLists, enableTagAutoDetect, enableHexColorHighlight, isLightweight, setImageEditState, callbackRefs, }: UseEditorExtensionsOptions): any[];

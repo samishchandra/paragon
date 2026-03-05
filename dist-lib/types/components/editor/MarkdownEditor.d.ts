@@ -297,6 +297,8 @@ export interface MarkdownEditorProps {
     enableHexColorHighlight?: boolean;
     /** Enable collapsible headings that can be folded/unfolded (default: false) */
     enableCollapsibleHeadings?: boolean;
+    /** Enable collapsible list items that can be folded/unfolded (default: false) */
+    enableCollapsibleLists?: boolean;
     /**
      * Performance mode for large documents.
      * - 'auto': Automatically disables non-essential plugins when document exceeds ~2000 paragraphs (default)
@@ -304,8 +306,10 @@ export interface MarkdownEditorProps {
      * - 'lightweight': Non-essential plugins always disabled for maximum performance
      *
      * Non-essential plugins disabled in lightweight mode:
-     * Typography (auto-character conversion), TableSorting, CollapsibleList,
-     * SelectAllOccurrences, CollapsibleHeading, HexColorMark
+     * Typography (auto-character conversion), TableSorting,
+     * SelectAllOccurrences, CollapsibleHeading, CollapsibleList, HexColorMark
+     * Note: CollapsibleHeading and CollapsibleList also require their respective
+     * enable props (enableCollapsibleHeadings, enableCollapsibleLists) to be true.
      */
     performanceMode?: 'auto' | 'full' | 'lightweight';
     /** Callback when the editor crashes — useful for external error reporting */
