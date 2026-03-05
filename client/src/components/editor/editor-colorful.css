@@ -1777,7 +1777,9 @@
   border-color: var(--border);
 }
 
-/* Show controls on hover */
+/* Show controls on hover — JS class toggle is the primary mechanism.
+   CSS :hover is kept as a fallback but can flicker inside ProseMirror's
+   contentEditable due to transactions causing DOM reflows. */
 .code-block-wrapper:hover .code-block-controls {
   opacity: 1;
 }

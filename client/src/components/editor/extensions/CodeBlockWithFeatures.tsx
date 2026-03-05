@@ -259,9 +259,11 @@ class CodeBlockNodeView implements NodeView {
   private languageReady = false;
   private copied = false;
   private copiedTimeout: ReturnType<typeof setTimeout> | null = null;
+  private highlightForced = false;
 
 
   // DOM references for incremental updates
+  private controlsEl: HTMLElement;
   private selectEl: HTMLSelectElement;
   private labelEl: HTMLSpanElement;
   private copyBtn: HTMLButtonElement;
@@ -282,9 +284,9 @@ class CodeBlockNodeView implements NodeView {
     this.dom.setAttribute('data-node-view-wrapper', '');
 
     // Controls overlay (contentEditable=false to prevent editing)
-    const controls = document.createElement('div');
-    controls.className = 'code-block-controls';
-    controls.contentEditable = 'false';
+    this.controlsEl = document.createElement('div');
+    this.controlsEl.className = 'code-block-controls';
+    this.controlsEl.contentEditable = 'false';
 
     // Language wrapper
     const langWrapper = document.createElement('div');
@@ -317,8 +319,8 @@ class CodeBlockNodeView implements NodeView {
     this.copyBtn.appendChild(createSvgIcon(COPY_PATHS, 14));
     this.copyBtn.addEventListener('click', this.handleCopy);
 
-    controls.appendChild(langWrapper);
-    controls.appendChild(this.copyBtn);
+    this.controlsEl.appendChild(langWrapper);
+    this.controlsEl.appendChild(this.copyBtn);
 
     // Pre > code (contentDOM is the <code> element where ProseMirror renders text)
     this.preEl = document.createElement('pre');
@@ -331,8 +333,14 @@ class CodeBlockNodeView implements NodeView {
     // contentDOM tells ProseMirror where to render the node's text content
     this.contentDOM = this.codeEl;
 
-    this.dom.appendChild(controls);
+    this.dom.appendChild(this.controlsEl);
     this.dom.appendChild(this.preEl);
+
+    // Use JS mouseenter/mouseleave for reliable hover in contentEditable.
+    // CSS :hover can be unreliable inside ProseMirror's contentEditable context
+    // because transactions may cause brief DOM reflows that disrupt the hover state.
+    this.dom.addEventListener('mouseenter', this.handleMouseEnter);
+    this.dom.addEventListener('mouseleave', this.handleMouseLeave);
 
     // Trigger language loading after DOM attachment.
     // setTimeout(0) ensures ProseMirror has fully attached the dom element
@@ -344,6 +352,32 @@ class CodeBlockNodeView implements NodeView {
       });
     }, 0);
   }
+
+  // ── Hover handlers ──
+
+  private handleMouseEnter = () => {
+    // Use inline styles with !important to show controls instantly.
+    //
+    // Why not CSS :hover?
+    //   ProseMirror transactions cause DOM reflows inside contentEditable that
+    //   briefly disrupt the :hover state, causing visible flickering.
+    //
+    // Why not a CSS class toggle?
+    //   The `transition: opacity 0.15s` on .code-block-controls delays the
+    //   visual change, and ProseMirror mutations can reset the class before
+    //   the transition completes.
+    //
+    // Inline styles with transition:none bypass both issues — the controls
+    // appear instantly and persist until a real mouseleave.
+    this.controlsEl.style.setProperty('opacity', '1', 'important');
+    this.controlsEl.style.setProperty('transition', 'none', 'important');
+  };
+
+  private handleMouseLeave = () => {
+    // Remove inline overrides so the CSS defaults (opacity: 0, transition) take effect
+    this.controlsEl.style.removeProperty('opacity');
+    this.controlsEl.style.removeProperty('transition');
+  };
 
   // ── Language select ──
 
@@ -423,9 +457,10 @@ class CodeBlockNodeView implements NodeView {
     }
     if (lowlight.registered(lang)) {
       this.setLanguageReady(true);
-      // Force the lowlight plugin to re-run decorations in case it ran
-      // before the language was registered (lazy-loading race condition)
-      this.forceRehighlight(lang);
+      // Language is already registered — the lowlight plugin will produce
+      // correct decorations on the next transaction. No need to force
+      // rehighlight, which would cause an infinite destroy/create loop
+      // because setNodeMarkup triggers NodeView recreation.
       return;
     }
     const loaded = await loadLanguageIfNeeded(lang);
@@ -435,7 +470,9 @@ class CodeBlockNodeView implements NodeView {
     // Force the lowlight plugin to re-run decorations now that the language
     // is registered. Without this, the plugin's cached decorations remain
     // empty because it ran before the language was available.
-    if (loaded) {
+    // Guard: only force once per NodeView instance to prevent infinite loops.
+    if (loaded && !this.highlightForced) {
+      this.highlightForced = true;
       this.forceRehighlight(lang);
     }
   }
@@ -468,8 +505,14 @@ class CodeBlockNodeView implements NodeView {
   private setLanguageReady(ready: boolean) {
     this.languageReady = ready;
     const lang = this.node.attrs.language || 'plaintext';
-    // Always update the code element's class to match the current language
-    this.codeEl.className = `language-${lang}`;
+    const expected = `language-${lang}`;
+    // Only update if the class actually changed — setting className on the
+    // contentDOM triggers a MutationObserver in ProseMirror which interprets
+    // it as a content change, causing NodeView destruction and recreation.
+    // This guard prevents an infinite destroy/create loop.
+    if (this.codeEl.className !== expected) {
+      this.codeEl.className = expected;
+    }
   }
 
   // ── ProseMirror NodeView interface ──
@@ -524,6 +567,8 @@ class CodeBlockNodeView implements NodeView {
     }
     this.selectEl.removeEventListener('change', this.handleLanguageChange);
     this.copyBtn.removeEventListener('click', this.handleCopy);
+    this.dom.removeEventListener('mouseenter', this.handleMouseEnter);
+    this.dom.removeEventListener('mouseleave', this.handleMouseLeave);
   }
 
   // Let ProseMirror handle mutations inside the <code> contentDOM
