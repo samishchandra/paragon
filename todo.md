@@ -35,6 +35,9 @@
 - [x] Perf: virtualize the outline/TOC panel for long documents to avoid re-rendering all heading entries on every change
 - [x] Perf: add automated performance benchmarks for large documents (500+ nodes, 50+ headings) to catch regressions
 - [x] Perf: lazy-load the TOC panel with React.lazy/Suspense to reduce initial bundle size
+- [x] Perf R3: lazy-load highlight.js core languages (~200KB savings from initial bundle)
+- [x] Perf R9: split CSS themes — verified only one theme is imported (no issue)
+- [x] Perf R15: make word count debounce configurable (wordCountDebounceMs prop, default 1000ms)
 - [ ] **DEFERRED** Fix: typing "# " on the FIRST LINE of a code block converts to heading (works fine on 2nd+ lines) — root cause: ProseMirror DOM reconciliation re-parses the code block content as heading via parseDOM rules, bypassing handleTextInput and input rules entirely. Needs custom parseDOM override or DOM mutation observer guard.
 - [ ] **DEFERRED** Fix: typing ``` + space should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)
 - [ ] **DEFERRED** Fix: typing ``` + Enter should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)

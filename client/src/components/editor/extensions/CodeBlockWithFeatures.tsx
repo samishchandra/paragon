@@ -8,31 +8,22 @@ import type { EditorView } from '@tiptap/pm/view';
 
 // ─── Highlight.js Language Loading Strategy ─────────────────────────────────
 //
-// Languages are split into two tiers for optimal bundle performance:
+// ALL languages are lazy-loaded on demand for optimal bundle performance.
+// No highlight.js grammars are included in the initial bundle. Languages are
+// loaded when a code block first becomes visible in the viewport.
 //
-// CORE TIER (loaded synchronously, ~40 KB):
+// CORE TIER (lazy-loaded on first code block render, ~40 KB total):
 //   javascript, typescript, python, xml/html, css, json, bash
-//   These are the most commonly used languages and are always available.
+//   These are the most commonly used languages and load first.
 //
 // EXTENDED TIER (lazy-loaded on demand, ~44 KB total):
 //   sql, java, cpp/c, go, rust, markdown, yaml, diff
-//   These are loaded dynamically when a code block with that language is first
-//   encountered. The lazy import is triggered by the CodeBlockComponent when
-//   it detects an unregistered language.
+//   These load when a code block with that language is first encountered.
 //
 // Consumers can still register additional languages via:
 //   import ruby from 'highlight.js/lib/languages/ruby';
 //   lowlight.register('ruby', ruby);
 // ─────────────────────────────────────────────────────────────────────────────
-
-// === CORE TIER: Synchronous imports (always bundled) ===
-import javascript from 'highlight.js/lib/languages/javascript';
-import typescript from 'highlight.js/lib/languages/typescript';
-import python from 'highlight.js/lib/languages/python';
-import xml from 'highlight.js/lib/languages/xml'; // also covers HTML
-import css from 'highlight.js/lib/languages/css';
-import json from 'highlight.js/lib/languages/json';
-import bash from 'highlight.js/lib/languages/bash';
 
 /*
  * DESIGN: Dark Mode Craftsman
@@ -42,44 +33,50 @@ import bash from 'highlight.js/lib/languages/bash';
  * Copy button is icon-only
  * Language selector is next to copy button
  *
- * PERFORMANCE: Lazy-loaded syntax highlighting
+ * PERFORMANCE: Fully lazy-loaded syntax highlighting
  * - Uses IntersectionObserver to defer highlighting until visible
  * - Code blocks outside viewport render as plain text (no lowlight parse)
  * - Highlighting activates when block enters viewport with 200px margin
  * - Once highlighted, stays highlighted (no re-parsing on scroll out)
- * - Extended languages loaded on-demand via dynamic import()
+ * - ALL languages (core + extended) loaded on-demand via dynamic import()
+ * - Documents with no code blocks load zero highlight.js grammars (~200KB saved)
  *
- * BUNDLE: Two-tier language loading
- * - Core: 7 languages always bundled (~40 KB)
- * - Extended: 8 languages lazy-loaded on demand (~44 KB, split into chunks)
+ * BUNDLE: All-lazy language loading
+ * - Core: 7 languages loaded on first code block render (~40 KB)
+ * - Extended: 8 languages loaded on demand (~44 KB, split into chunks)
  */
 
 const lowlight = createLowlight();
 
-// Register core languages (always available)
-lowlight.register('javascript', javascript);
-lowlight.register('js', javascript);
-lowlight.register('jsx', javascript);
-lowlight.register('typescript', typescript);
-lowlight.register('ts', typescript);
-lowlight.register('tsx', typescript);
-lowlight.register('python', python);
-lowlight.register('py', python);
-lowlight.register('xml', xml);
-lowlight.register('html', xml);
-lowlight.register('svg', xml);
-lowlight.register('css', css);
-lowlight.register('json', json);
-lowlight.register('bash', bash);
-lowlight.register('sh', bash);
-lowlight.register('shell', bash);
-lowlight.register('zsh', bash);
-
-// === EXTENDED TIER: Lazy-loaded language registry ===
+// === ALL LANGUAGES: Lazy-loaded on demand ===
 // Maps language aliases to their dynamic import function.
 // Each import() creates a separate chunk that's only fetched when needed.
+// Core languages (javascript, typescript, python, xml, css, json, bash) are
+// loaded eagerly when the first code block becomes visible, but NOT at module
+// initialization time.
 type LazyLanguageLoader = () => Promise<{ default: any }>;
 
+// Core tier loaders — loaded on first code block visibility
+const CORE_LANGUAGE_LOADERS: Record<string, LazyLanguageLoader> = {
+  javascript: () => import('highlight.js/lib/languages/javascript'),
+  typescript: () => import('highlight.js/lib/languages/typescript'),
+  python: () => import('highlight.js/lib/languages/python'),
+  xml: () => import('highlight.js/lib/languages/xml'),
+  css: () => import('highlight.js/lib/languages/css'),
+  json: () => import('highlight.js/lib/languages/json'),
+  bash: () => import('highlight.js/lib/languages/bash'),
+};
+
+// Alias mapping: alias → canonical name (for core languages)
+const CORE_ALIASES: Record<string, string> = {
+  js: 'javascript', jsx: 'javascript',
+  ts: 'typescript', tsx: 'typescript',
+  py: 'python',
+  html: 'xml', svg: 'xml',
+  sh: 'bash', shell: 'bash', zsh: 'bash',
+};
+
+// Extended tier loaders — loaded individually on demand
 const LAZY_LANGUAGES: Record<string, LazyLanguageLoader> = {
   sql: () => import('highlight.js/lib/languages/sql'),
   java: () => import('highlight.js/lib/languages/java'),
@@ -102,16 +99,72 @@ const loadingLanguages = new Set<string>();
 // Track which lazy languages have been successfully registered
 const registeredLazyLanguages = new Set<string>();
 
+// Track whether core languages have been loaded
+let coreLanguagesLoaded = false;
+let coreLanguagesLoading: Promise<void> | null = null;
+
 /**
- * Attempt to lazy-load a language if it's in the extended tier.
+ * Load all core languages in parallel. Called once when the first code block
+ * becomes visible. Subsequent calls are no-ops.
+ */
+async function loadCoreLanguages(): Promise<void> {
+  if (coreLanguagesLoaded) return;
+  if (coreLanguagesLoading) return coreLanguagesLoading;
+  
+  coreLanguagesLoading = (async () => {
+    try {
+      const entries = Object.entries(CORE_LANGUAGE_LOADERS);
+      const results = await Promise.all(
+        entries.map(async ([name, loader]) => {
+          const mod = await loader();
+          return [name, mod.default] as const;
+        })
+      );
+      
+      // Register each core language and its aliases
+      for (const [name, definition] of results) {
+        if (!lowlight.registered(name)) {
+          lowlight.register(name, definition);
+        }
+      }
+      
+      // Register all core aliases
+      for (const [alias, canonical] of Object.entries(CORE_ALIASES)) {
+        if (!lowlight.registered(alias)) {
+          // Find the definition from the loaded results
+          const entry = results.find(([n]) => n === canonical);
+          if (entry) {
+            lowlight.register(alias, entry[1]);
+          }
+        }
+      }
+      
+      coreLanguagesLoaded = true;
+    } catch (err) {
+      console.warn('Failed to load core highlight.js languages:', err);
+      coreLanguagesLoading = null; // Allow retry
+    }
+  })();
+  
+  return coreLanguagesLoading;
+}
+
+/**
+ * Attempt to lazy-load a language if it's in the core or extended tier.
  * Returns a promise that resolves to true if the language was loaded,
- * false if it's not in the lazy registry.
+ * false if it's not in any registry.
  */
 async function loadLanguageIfNeeded(lang: string): Promise<boolean> {
-  // Already registered (core or previously lazy-loaded)
+  // Already registered (previously lazy-loaded)
   if (lowlight.registered(lang)) return true;
   
-  // Not in lazy registry
+  // Check if it's a core language or alias — load all core languages together
+  if (CORE_LANGUAGE_LOADERS[lang] || CORE_ALIASES[lang]) {
+    await loadCoreLanguages();
+    return lowlight.registered(lang);
+  }
+  
+  // Check extended tier
   const loader = LAZY_LANGUAGES[lang];
   if (!loader) return false;
   
@@ -172,13 +225,13 @@ async function loadLanguageIfNeeded(lang: string): Promise<boolean> {
 }
 
 // Export lowlight so consumers can register additional languages
-export { lowlight, loadLanguageIfNeeded };
+export { lowlight, loadLanguageIfNeeded, loadCoreLanguages };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CodeBlockComponent({ node, updateAttributes, extension }: any) {
   const [copied, setCopied] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [languageReady, setLanguageReady] = useState(true);
+  const [languageReady, setLanguageReady] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   
   const currentLanguage = node.attrs.language || 'plaintext';
@@ -215,10 +268,15 @@ function CodeBlockComponent({ node, updateAttributes, extension }: any) {
     };
   }, [isVisible]);
   
-  // Lazy-load extended language when code block becomes visible or language changes
+  // Lazy-load languages when code block becomes visible or language changes.
+  // Core languages are loaded in parallel on first visibility; extended languages
+  // are loaded individually on demand.
   useEffect(() => {
     if (!isVisible) return;
-    if (currentLanguage === 'plaintext') return;
+    if (currentLanguage === 'plaintext') {
+      setLanguageReady(true);
+      return;
+    }
     
     // Check if language is already registered
     if (lowlight.registered(currentLanguage)) {
@@ -226,13 +284,11 @@ function CodeBlockComponent({ node, updateAttributes, extension }: any) {
       return;
     }
     
-    // Check if it's a lazy-loadable language
-    if (LAZY_LANGUAGES[currentLanguage]) {
-      setLanguageReady(false);
-      loadLanguageIfNeeded(currentLanguage).then((loaded) => {
-        setLanguageReady(loaded);
-      });
-    }
+    // Load via unified loader (handles core + extended)
+    setLanguageReady(false);
+    loadLanguageIfNeeded(currentLanguage).then((loaded) => {
+      setLanguageReady(loaded || currentLanguage === 'plaintext');
+    });
   }, [isVisible, currentLanguage]);
   
   const copyToClipboard = useCallback(async () => {

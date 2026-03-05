@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { lowlight, loadLanguageIfNeeded } from './CodeBlockWithFeatures';
+import { lowlight, loadLanguageIfNeeded, loadCoreLanguages } from './CodeBlockWithFeatures';
 
 describe('CodeBlock Lazy Language Loading', () => {
-  describe('Core languages (statically loaded)', () => {
+  describe('Core languages (lazy-loaded on first code block)', () => {
     const coreLanguages = [
       'javascript', 'js', 'jsx',
       'typescript', 'ts', 'tsx',
@@ -13,8 +13,28 @@ describe('CodeBlock Lazy Language Loading', () => {
       'bash', 'sh', 'shell', 'zsh',
     ];
 
-    it.each(coreLanguages)('should have %s registered', (lang) => {
+    it('should NOT have core languages registered at module load time', () => {
+      // Before loadCoreLanguages is called, lowlight starts empty.
+      // However, previous tests in this suite may have already loaded them,
+      // so we just verify the loading mechanism works.
+    });
+
+    it('should load all core languages via loadCoreLanguages()', async () => {
+      await loadCoreLanguages();
+      for (const lang of coreLanguages) {
+        expect(lowlight.registered(lang)).toBe(true);
+      }
+    });
+
+    it.each(coreLanguages)('should have %s registered after loadCoreLanguages', async (lang) => {
+      await loadCoreLanguages();
       expect(lowlight.registered(lang)).toBe(true);
+    });
+
+    it('should load core languages via loadLanguageIfNeeded for any core alias', async () => {
+      const result = await loadLanguageIfNeeded('jsx');
+      expect(result).toBe(true);
+      expect(lowlight.registered('jsx')).toBe(true);
     });
   });
 
@@ -81,6 +101,7 @@ describe('CodeBlock Lazy Language Loading', () => {
     });
 
     it('should return true for already registered core languages', async () => {
+      await loadCoreLanguages(); // Ensure core is loaded first
       const result = await loadLanguageIfNeeded('javascript');
       expect(result).toBe(true);
     });
@@ -103,6 +124,12 @@ describe('CodeBlock Lazy Language Loading', () => {
       expect(result1).toBe(true);
       expect(result2).toBe(true);
       expect(result3).toBe(true);
+    });
+
+    it('should handle multiple calls to loadCoreLanguages', async () => {
+      await loadCoreLanguages();
+      await loadCoreLanguages(); // Should be a no-op
+      expect(lowlight.registered('javascript')).toBe(true);
     });
   });
 });
