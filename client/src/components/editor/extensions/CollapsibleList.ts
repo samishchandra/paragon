@@ -78,9 +78,6 @@ function getNestedListRange(
   return { start, end };
 }
 
-// Store view reference for click handlers
-let currentView: EditorView | null = null;
-
 /**
  * Collect a fingerprint of the list structure in a document.
  * Returns an array of { depth, hasNested, textSnippet } for each list item.
@@ -132,7 +129,8 @@ function listStructureChanged(
 function buildDecorations(
   doc: ProseMirrorNode,
   storage: CollapsibleListStorage,
-  options: CollapsibleListOptions
+  options: CollapsibleListOptions,
+  viewRef: { current: EditorView | null }
 ): DecorationSet {
   const decorations: Decoration[] = [];
 
@@ -212,9 +210,9 @@ function buildDecorations(
               storage.collapsedItems.add(itemId);
             }
 
-            if (currentView) {
-              currentView.dispatch(
-                currentView.state.tr.setMeta('collapsibleList', { toggled: itemId })
+            if (viewRef.current) {
+              viewRef.current.dispatch(
+                viewRef.current.state.tr.setMeta('collapsibleList', { toggled: itemId })
               );
             }
           });
@@ -330,18 +328,20 @@ export const CollapsibleList = Extension.create<CollapsibleListOptions, Collapsi
   addProseMirrorPlugins() {
     const storage = this.storage as CollapsibleListStorage;
     const options = this.options;
+    // Per-instance view reference (not module-scope) to support multiple editors
+    const viewRef: { current: EditorView | null } = { current: null };
 
     return [
       new Plugin({
         key: collapsibleListPluginKey,
         view(view) {
-          currentView = view;
+          viewRef.current = view;
           return {
             update(view) {
-              currentView = view;
+              viewRef.current = view;
             },
             destroy() {
-              currentView = null;
+              viewRef.current = null;
             },
           };
         },
@@ -349,7 +349,7 @@ export const CollapsibleList = Extension.create<CollapsibleListOptions, Collapsi
           init(_, state) {
             return {
               collapsedItems: new Set<string>(),
-              decorations: buildDecorations(state.doc, storage, options),
+              decorations: buildDecorations(state.doc, storage, options, viewRef),
               docVersion: 0,
             };
           },
@@ -361,7 +361,7 @@ export const CollapsibleList = Extension.create<CollapsibleListOptions, Collapsi
             if (meta) {
               return {
                 collapsedItems: new Set(storage.collapsedItems),
-                decorations: buildDecorations(newState.doc, storage, options),
+                decorations: buildDecorations(newState.doc, storage, options, viewRef),
                 docVersion: value.docVersion + 1,
               };
             }
@@ -373,7 +373,7 @@ export const CollapsibleList = Extension.create<CollapsibleListOptions, Collapsi
               if (listStructureChanged(oldState.doc, newState.doc, options.listItemTypes)) {
                 return {
                   collapsedItems: new Set(storage.collapsedItems),
-                  decorations: buildDecorations(newState.doc, storage, options),
+                  decorations: buildDecorations(newState.doc, storage, options, viewRef),
                   docVersion: value.docVersion + 1,
                 };
               }
@@ -398,7 +398,7 @@ export const CollapsibleList = Extension.create<CollapsibleListOptions, Collapsi
             if (pluginState?.decorations) {
               return pluginState.decorations;
             }
-            return buildDecorations(state.doc, storage, options);
+            return buildDecorations(state.doc, storage, options, viewRef);
           },
         },
       }),

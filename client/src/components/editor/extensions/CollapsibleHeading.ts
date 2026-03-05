@@ -59,9 +59,6 @@ function buildHeadingIdMap(
   return idMap;
 }
 
-// Store view reference for click handlers
-let currentView: EditorView | null = null;
-
 /**
  * Performance: Extract decoration building into a standalone function.
  * This is called from plugin state management, which caches the result
@@ -70,7 +67,8 @@ let currentView: EditorView | null = null;
 function buildDecorations(
   doc: ProseMirrorNode,
   storage: CollapsibleHeadingStorage,
-  options: CollapsibleHeadingOptions
+  options: CollapsibleHeadingOptions,
+  viewRef: { current: EditorView | null }
 ): DecorationSet {
   const decorations: Decoration[] = [];
   const headingIdMap = buildHeadingIdMap(doc, options.levels);
@@ -191,8 +189,8 @@ function buildDecorations(
           } else {
             storage.collapsedHeadings.add(headingId);
           }
-          if (currentView) {
-            currentView.dispatch(currentView.state.tr.setMeta('collapsibleHeading', { toggled: headingId }));
+          if (viewRef.current) {
+            viewRef.current.dispatch(viewRef.current.state.tr.setMeta('collapsibleHeading', { toggled: headingId }));
           }
         });
 
@@ -353,18 +351,20 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
   addProseMirrorPlugins() {
     const storage = this.storage as CollapsibleHeadingStorage;
     const options = this.options;
+    // Per-instance view reference (not module-scope) to support multiple editors
+    const viewRef: { current: EditorView | null } = { current: null };
 
     return [
       new Plugin({
         key: collapsibleHeadingPluginKey,
         view(view) {
-          currentView = view;
+          viewRef.current = view;
           return {
             update(view) {
-              currentView = view;
+              viewRef.current = view;
             },
             destroy() {
-              currentView = null;
+              viewRef.current = null;
             },
           };
         },
@@ -372,7 +372,7 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
           init(_, state) {
             return {
               collapsedHeadings: new Set<string>(),
-              decorations: buildDecorations(state.doc, storage, options),
+              decorations: buildDecorations(state.doc, storage, options, viewRef),
               docVersion: 0,
             };
           },
@@ -384,7 +384,7 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
             if (meta) {
               return {
                 collapsedHeadings: new Set(storage.collapsedHeadings),
-                decorations: buildDecorations(newState.doc, storage, options),
+                decorations: buildDecorations(newState.doc, storage, options, viewRef),
                 docVersion: value.docVersion + 1,
               };
             }
@@ -399,7 +399,7 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
               if (headingStructureChanged(oldState.doc, newState.doc, options.levels)) {
                 return {
                   collapsedHeadings: new Set(storage.collapsedHeadings),
-                  decorations: buildDecorations(newState.doc, storage, options),
+                  decorations: buildDecorations(newState.doc, storage, options, viewRef),
                   docVersion: value.docVersion + 1,
                 };
               }
@@ -424,7 +424,7 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
             if (pluginState?.decorations) {
               return pluginState.decorations;
             }
-            return buildDecorations(state.doc, storage, options);
+            return buildDecorations(state.doc, storage, options, viewRef);
           },
         },
       }),

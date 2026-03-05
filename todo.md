@@ -40,6 +40,9 @@
 - [x] Perf R15: make word count debounce configurable (wordCountDebounceMs prop, default 1000ms)
 - [x] Perf R5: consolidate handleTextInput hooks into single InputDispatcher
 - [x] Perf R6: consolidate handleKeyDown hooks into single InputDispatcher
+- [x] Audit: verify all recent perf optimizations are multi-instance safe (fixed 2 bugs in CollapsibleHeading/List)
+- [x] Perf R7: verified shouldRerenderOnTransaction: false is already set
+- [x] Perf R8: memoize CodeBlock language select options (useMemo for allLanguages + languageLabel)
 - [ ] **DEFERRED** Fix: typing "# " on the FIRST LINE of a code block converts to heading (works fine on 2nd+ lines) — root cause: ProseMirror DOM reconciliation re-parses the code block content as heading via parseDOM rules, bypassing handleTextInput and input rules entirely. Needs custom parseDOM override or DOM mutation observer guard.
 - [ ] **DEFERRED** Fix: typing ``` + space should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)
 - [ ] **DEFERRED** Fix: typing ``` + Enter should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)

@@ -1,7 +1,7 @@
 import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { createLowlight } from 'lowlight';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Copy, Check, ChevronDown } from 'lucide-react';
 // Plugin/PluginKey/TextSelection/EditorView removed — handleKeyDown moved to InputDispatcher
 
@@ -300,14 +300,21 @@ function CodeBlockComponent({ node, updateAttributes, extension }: any) {
     }
   }, [node.textContent]);
 
-  // Get the list of supported languages (core + any lazy-loaded ones)
-  // Also include all lazy language names so they appear in the dropdown
-  const coreLanguages: string[] = extension.options.lowlight?.listLanguages?.() || [];
-  const allLanguages = Array.from(new Set([...coreLanguages, ...Object.keys(LAZY_LANGUAGES)])).sort();
+  // Performance (R8): Memoize the language list to avoid rebuilding on every render.
+  // The list only changes when new languages are registered (rare, after lazy-load).
+  const allLanguages = useMemo(() => {
+    const coreLanguages: string[] = extension.options.lowlight?.listLanguages?.() || [];
+    return Array.from(new Set([...coreLanguages, ...Object.keys(LAZY_LANGUAGES)])).sort();
+    // languageReady is included as a dependency so the list updates after a lazy-load completes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extension.options.lowlight, languageReady]);
   
-  const languageLabel = currentLanguage === 'plaintext' 
-    ? 'Plain Text' 
-    : currentLanguage.charAt(0).toUpperCase() + currentLanguage.slice(1);
+  const languageLabel = useMemo(
+    () => currentLanguage === 'plaintext' 
+      ? 'Plain Text' 
+      : currentLanguage.charAt(0).toUpperCase() + currentLanguage.slice(1),
+    [currentLanguage]
+  );
 
   return (
     <NodeViewWrapper className="code-block-wrapper" ref={wrapperRef}>
