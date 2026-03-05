@@ -41,6 +41,7 @@ function makeDefaultOptions(overrides: Partial<UseEditorExtensionsOptions> = {})
     disabledFeatures: {},
     progressiveSelectAll: false,
     enableCollapsibleHeadings: false,
+    enableCollapsibleLists: false,
     enableTagAutoDetect: false,
     enableHexColorHighlight: false,
     isLightweight: false,
@@ -142,13 +143,18 @@ describe('useEditorExtensions', () => {
       expect(names).not.toContain('selectAllOccurrences');
     });
 
-    it('should include CollapsibleList on desktop in full mode', () => {
-      const { names } = renderExtensions({ isLightweight: false, isMobile: false });
+    it('should include CollapsibleList on desktop in full mode when enabled', () => {
+      const { names } = renderExtensions({ isLightweight: false, isMobile: false, enableCollapsibleLists: true });
       expect(names).toContain('collapsibleList');
     });
 
-    it('should exclude CollapsibleList in lightweight mode', () => {
-      const { names } = renderExtensions({ isLightweight: true, isMobile: false });
+    it('should exclude CollapsibleList by default (disabled)', () => {
+      const { names } = renderExtensions({ isLightweight: false, isMobile: false });
+      expect(names).not.toContain('collapsibleList');
+    });
+
+    it('should exclude CollapsibleList in lightweight mode even when enabled', () => {
+      const { names } = renderExtensions({ isLightweight: true, isMobile: false, enableCollapsibleLists: true });
       expect(names).not.toContain('collapsibleList');
     });
 
@@ -371,9 +377,14 @@ describe('useEditorExtensions', () => {
       expect(names).not.toContain('collapsibleList');
     });
 
-    it('should include CollapsibleList on desktop in full mode', () => {
-      const { names } = renderExtensions({ isMobile: false, isLightweight: false });
+    it('should include CollapsibleList on desktop in full mode when enabled', () => {
+      const { names } = renderExtensions({ isMobile: false, isLightweight: false, enableCollapsibleLists: true });
       expect(names).toContain('collapsibleList');
+    });
+
+    it('should exclude CollapsibleList on desktop by default (disabled)', () => {
+      const { names } = renderExtensions({ isMobile: false, isLightweight: false });
+      expect(names).not.toContain('collapsibleList');
     });
   });
 

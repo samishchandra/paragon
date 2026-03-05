@@ -25,6 +25,9 @@
   - Applies to both code blocks and callout blocks
 - [x] Fix: partial copy from code block loses newlines and line structure when pasted outside
 - [x] Fix: pressing Enter at end of bold/italic/strikethrough/code text should clear marks on new line (paragraphs and list items)
+- [x] Performance analysis report: deep audit of editor performance and actionable recommendations (see PERFORMANCE_REPORT.md)
+- [x] Perf: make CollapsibleHeading optional via prop, disabled by default (was already done — `enableCollapsibleHeadings` defaults to `false`)
+- [x] Perf: make CollapsibleList optional via prop, disabled by default (added `enableCollapsibleLists` prop, defaults to `false`)
 - [ ] **DEFERRED** Fix: typing "# " on the FIRST LINE of a code block converts to heading (works fine on 2nd+ lines) — root cause: ProseMirror DOM reconciliation re-parses the code block content as heading via parseDOM rules, bypassing handleTextInput and input rules entirely. Needs custom parseDOM override or DOM mutation observer guard.
 - [ ] **DEFERRED** Fix: typing ``` + space should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)
 - [ ] **DEFERRED** Fix: typing ``` + Enter should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)

@@ -375,6 +375,8 @@ export interface MarkdownEditorProps {
   enableHexColorHighlight?: boolean;
   /** Enable collapsible headings that can be folded/unfolded (default: false) */
   enableCollapsibleHeadings?: boolean;
+  /** Enable collapsible list items that can be folded/unfolded (default: false) */
+  enableCollapsibleLists?: boolean;
   
   // === PERFORMANCE MODE ===
   
@@ -385,8 +387,10 @@ export interface MarkdownEditorProps {
    * - 'lightweight': Non-essential plugins always disabled for maximum performance
    * 
    * Non-essential plugins disabled in lightweight mode:
-   * Typography (auto-character conversion), TableSorting, CollapsibleList,
-   * SelectAllOccurrences, CollapsibleHeading, HexColorMark
+   * Typography (auto-character conversion), TableSorting,
+   * SelectAllOccurrences, CollapsibleHeading, CollapsibleList, HexColorMark
+   * Note: CollapsibleHeading and CollapsibleList also require their respective
+   * enable props (enableCollapsibleHeadings, enableCollapsibleLists) to be true.
    */
   performanceMode?: 'auto' | 'full' | 'lightweight';
   
@@ -495,6 +499,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   enableTagAutoDetect = false,
   enableHexColorHighlight = false,
   enableCollapsibleHeadings = false,
+  enableCollapsibleLists = false,
   // Performance mode
   performanceMode = 'auto',
   // Error boundary
@@ -603,6 +608,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     disabledFeatures,
     progressiveSelectAll,
     enableCollapsibleHeadings,
+    enableCollapsibleLists,
     enableTagAutoDetect,
     enableHexColorHighlight,
     isLightweight,

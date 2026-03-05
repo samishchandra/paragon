@@ -98,6 +98,7 @@ export interface UseEditorExtensionsOptions {
   disabledFeatures: DisabledFeatures;
   progressiveSelectAll: boolean;
   enableCollapsibleHeadings: boolean;
+  enableCollapsibleLists: boolean;
   enableTagAutoDetect: boolean;
   enableHexColorHighlight: boolean;
   isLightweight: boolean;
@@ -120,6 +121,7 @@ export function useEditorExtensions({
   disabledFeatures,
   progressiveSelectAll,
   enableCollapsibleHeadings,
+  enableCollapsibleLists,
   enableTagAutoDetect,
   enableHexColorHighlight,
   isLightweight,
@@ -283,8 +285,8 @@ export function useEditorExtensions({
       );
     }
 
-    // Collapsible list items (desktop only, skip in lightweight mode)
-    if (!isMobile && !isLightweight) {
+    // Collapsible list items (requires enableCollapsibleLists prop, desktop only, skip in lightweight mode)
+    if (enableCollapsibleLists && !isMobile && !isLightweight) {
       baseExtensions.push(
         CollapsibleList.configure({
           listItemTypes: ['listItem', 'taskItem'],
@@ -404,5 +406,5 @@ export function useEditorExtensions({
     return baseExtensions;
   // Dependencies: only stable values (primitives, objects compared by reference that don't change).
   // Callback props are accessed via refs, so they don't need to be in the deps array.
-  }, [placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures, progressiveSelectAll, enableCollapsibleHeadings, enableTagAutoDetect, enableHexColorHighlight, isLightweight]);
+  }, [placeholder, isMobile, maxImageSize, headingLevels, collapsibleHeadingLevels, disabledFeatures, progressiveSelectAll, enableCollapsibleHeadings, enableCollapsibleLists, enableTagAutoDetect, enableHexColorHighlight, isLightweight]);
 }
