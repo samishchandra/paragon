@@ -23,6 +23,7 @@ This report identifies **17 specific bottlenecks** across four categories and pr
 6. [Bundle Size Analysis](#6-bundle-size-analysis)
 7. [Prioritized Recommendations](#7-prioritized-recommendations)
 8. [Quick Wins vs. Deep Investments](#8-quick-wins-vs-deep-investments)
+9. [Resolution Status](#9-resolution-status)
 
 ---
 
@@ -502,6 +503,58 @@ The `migrateCollapsedIds` function in `CollapsibleHeading` calls `doc.descendant
 | R12 | Web Worker serialization | 1 week | Medium |
 | R13 | Transaction batching | 3-5 days | Medium |
 | R11 | Viewport virtualization | 2-4 weeks | Very High |
+
+---
+
+## 9. Resolution Status
+
+**Last updated:** March 5, 2026
+
+This section documents the implementation status and outcome for each recommendation. All changes are individually revertable via `git revert` with detailed commit messages.
+
+### Completed
+
+| # | Recommendation | Status | Commit | Notes |
+|---|---|---|---|---|
+| R1 | Incremental CollapsibleHeading | **Done** | `a8aefada` | Fingerprint-based caching compares heading structure (count, text, level) between old and new docs. For normal typing in paragraphs, uses `DecorationSet.map()` — O(1) instead of O(n). Full rebuilds only on heading structure changes or collapse toggles. |
+| R2 | Incremental CollapsibleList | **Done** | `a8aefada` | Same fingerprint pattern as R1. Compares list item fingerprints (hasNested, text). Uses `DecorationSet.map()` for non-list changes. |
+| R3 | Lazy-load highlight.js core | **Done** | `e307be07` | All 7 core languages moved from synchronous imports to lazy-loaded dynamic imports. Documents with no code blocks load zero grammars (~200 KB saved from initial bundle). Core languages load in parallel on first code block visibility. |
+| R4 | Conditional extension registration | **Already implemented** | `58254ccf` | The `disabledFeatures` prop and `isLightweight` auto-detection (with `LIGHTWEIGHT_THRESHOLD=2000`) already gate extensions conditionally. The `enableCollapsibleLists` prop (default: false) was added to require opt-in for CollapsibleList. |
+| R5 | Consolidate handleTextInput | **Done** | `bce30ac9` | Created `InputDispatcher` extension that merges MixedLists/taskItem `handleTextInput`, TabIndent `handleKeyDown`, CalloutInputRule `handleKeyDown`, and CodeBlockEnterShortcut `handleKeyDown` into a single ProseMirror plugin with early-exit checks. |
+| R6 | Consolidate handleKeyDown | **Done** | `bce30ac9` | Merged into the same `InputDispatcher` as R5. Stateful handlers (ExpandSelection, SelectAllOccurrences) remain separate because they maintain plugin state. Reduces per-keystroke function call overhead from 5+ plugin iterations to 1. |
+| R7 | Verify shouldRerenderOnTransaction | **Verified** | `cea58496` | Already set to `false` in the TipTap v3 configuration. All UI components use `useEditorState` selectors. No action needed. |
+| R8 | Memoize CodeBlock language options | **Done** | `cea58496` | Language select options memoized with `useMemo` in the React component. After R10, the plain NodeView builds options once in the constructor and only rebuilds on language registration changes. |
+| R9 | Split CSS themes | **Verified — no issue** | `e307be07` | Only one CSS theme is imported per editor instance. The consumer app controls which theme file is loaded. No duplicate CSS parsing occurs. |
+| R10 | Plain NodeViews for CodeBlock/Callout | **Done** | `82a32928` + `84d1a876` | Replaced `ReactNodeViewRenderer` with plain ProseMirror `NodeView` classes for both CodeBlock and Callout. Eliminates React root overhead (~0.5ms per node per transaction). Uses inline SVG icons instead of Lucide React components. Fix commit resolved CSS bleed-through, removed problematic `code-block-deferred` mechanism, and added `forceRehighlight()` for reliable syntax highlighting after lazy language loading. |
+| R15 | Configurable word count debounce | **Done** | `e307be07` | Added `wordCountDebounceMs` prop to MarkdownEditor with default increased from 500ms to 1000ms. Consumers can tune this for their use case. |
+| R17 | Optimize migrateCollapsedIds | **Done** | `a03701cd` | Replaced `migrateCollapsedIds()` + `headingStructureChanged()` (3 full doc traversals per docChanged) with `analyzeHeadingChanges()` (1 traversal + cached fingerprint comparison). CollapsibleList similarly reduced from 2 traversals to 1. |
+
+### Not Implemented (Assessed and Deferred)
+
+| # | Recommendation | Status | Rationale |
+|---|---|---|---|
+| R11 | Virtualize long documents | **Deferred** | Architecturally complex with ProseMirror — requires collapsing off-screen sections into placeholder nodes while keeping the document model intact. The existing `isLightweight` mode (which disables expensive extensions for docs >2,000 nodes) provides a simpler mitigation. Revisit if users report lag in very large documents. |
+| R12 | Web Worker for HTML/Markdown serialization | **Deferred** | The current lazy-sync approach (serialize only on blur/unmount/mode-switch) already avoids main-thread blocking during typing. The optional `markdownChangeDebounceMs` prop provides a configurable debounced alternative. Web Worker adds complexity (structured cloning of ProseMirror JSON, worker lifecycle management) for marginal gain given the lazy-sync baseline. |
+| R13 | Transaction batching | **Deferred** | ProseMirror's `readDOMChange` already batches DOM mutations into single transactions. Intercepting at the `handleTextInput` level risks breaking input method editors (IME for CJK languages) and ProseMirror's internal state tracking. The risk-to-reward ratio is unfavorable. |
+| R14 | Cache decoration widget DOM elements | **Superseded by R1/R2** | The incremental decoration updates (R1/R2) mean widgets are rarely rebuilt. When heading structure hasn't changed, `DecorationSet.map()` reuses existing widgets entirely. Caching provides negligible additional benefit. |
+| R16 | Lazy-load table extensions | **Not feasible** | TipTap requires all schema-defining extensions to be registered at editor creation time. True lazy-loading would require destroying and recreating the editor instance when a table is first inserted. The `disabledFeatures.tables` prop already allows consumers to exclude table extensions entirely for lightweight use cases. |
+
+### Additional Optimizations (Beyond Original Report)
+
+Several optimizations were implemented that were not in the original 17 recommendations:
+
+| Optimization | Commit | Description |
+|---|---|---|
+| `shouldUpdate` for ReactNodeViewRenderers | `a8aefada` | Before R10, added `update` options to CodeBlock and Callout ReactNodeViewRenderers that compare attributes and content equality, skipping React re-render when only cursor position changed. Superseded by R10 (plain NodeViews). |
+| Debounced `onMarkdownChange` | `214581ca` | Added `markdownChangeDebounceMs` prop. When set to a positive value, `onMarkdownChange` fires after the user stops typing for that duration. Default 0 keeps the lazy-sync behavior. |
+| Virtualized TOC panel | `214581ca` | Rewrote TableOfContents with incremental heading extraction (fingerprinting), memoized individual TOC items, and windowed rendering for documents with 30+ headings. |
+| Lazy-loaded TOC panel | `3ca6bd37` | Replaced static import with `React.lazy()` + `Suspense`. TOC module only downloaded when `showTableOfContents` is true. |
+| Performance benchmark suite | `3ca6bd37` | 14 automated benchmarks measuring editor init, insertion latency, serialization speed, heading extraction, and rapid typing simulation. Run via `npm run bench`. |
+| Multi-instance safety fixes | `cea58496` | Fixed module-scope `currentView` singletons in CollapsibleHeading and CollapsibleList — now per-plugin-instance closures. Prevents cross-contamination between multiple editor instances. |
+
+### Summary
+
+Of the 17 original recommendations, **12 were completed** (R1–R10, R15, R17), **2 were already implemented** (R4, R9), and **3 were assessed and deferred** (R11, R12, R13). R14 was superseded by R1/R2, and R16 was determined to be not feasible with TipTap's architecture.
 
 ---
 
