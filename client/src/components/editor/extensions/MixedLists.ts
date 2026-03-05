@@ -22,8 +22,7 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import { InputRule } from '@tiptap/core';
 import { findWrapping } from '@tiptap/pm/transform';
-import { canJoin } from '@tiptap/pm/transform';
-import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import { TextSelection } from '@tiptap/pm/state';
 import { Fragment, Slice } from '@tiptap/pm/model';
 
 /**
@@ -458,71 +457,8 @@ export const MixedTaskItem = TaskItem.extend({
     return [];
   },
 
-  addProseMirrorPlugins() {
-    // Backup ProseMirror plugin for task item creation via handleTextInput.
-    // The primary handler is the document-level handleKeyDown in MarkdownEditor.tsx.
-    // This plugin serves as a fallback for cases where text input reaches ProseMirror
-    // (e.g., paste, IME composition, or if the document handler is bypassed).
-    const taskItemType = this.type;
-    const taskListType = this.editor.schema.nodes.taskList;
-    
-    return [
-      new Plugin({
-        key: new PluginKey('taskItemInputRule'),
-        props: {
-          handleTextInput(view, from, to, text) {
-            if (text !== ' ') return false;
-            
-            const { state } = view;
-            const $from = state.doc.resolve(from);
-            
-            const textBefore = $from.parent.textBetween(
-              0,
-              $from.parentOffset,
-              undefined,
-              '\ufffc'
-            );
-            
-            // Match patterns: [] , [ ] , [x] , - [] , - [ ] , - [x]
-            const inputRegex = /^\s*(-\s*)?\[([( |x])?\]$/;
-            const match = inputRegex.exec(textBefore);
-            
-            if (!match) return false;
-            
-            const checked = match[2] === 'x';
-            
-            const matchStart = $from.start() + (match.index || 0);
-            const matchEnd = from;
-            
-            const tr = state.tr;
-            tr.delete(matchStart, matchEnd);
-            
-            const $start = tr.doc.resolve(matchStart);
-            const blockRange = $start.blockRange();
-            
-            if (!blockRange || !taskListType || !taskItemType) return false;
-            
-            const wrapping = [
-              { type: taskListType, attrs: {} },
-              { type: taskItemType, attrs: { checked } },
-            ];
-            
-            tr.wrap(blockRange, wrapping);
-            
-            if (matchStart > 1) {
-              const before = tr.doc.resolve(matchStart - 1).nodeBefore;
-              if (before && before.type === taskListType && canJoin(tr.doc, matchStart - 1)) {
-                tr.join(matchStart - 1);
-              }
-            }
-            
-            view.dispatch(tr);
-            return true;
-          },
-        },
-      }),
-    ];
-  },
+  // handleTextInput for task item creation has been moved to InputDispatcher
+  // for consolidated input handling (R5 performance optimization).
 });
 
 /**

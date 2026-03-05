@@ -35,6 +35,7 @@ import { MarkdownLinkInputRule } from '../extensions/MarkdownLinkInputRule';
 import { CalloutInputRule } from '../extensions/CalloutInputRule';
 import { SearchHighlight } from '../extensions/SearchHighlight';
 import { TabIndent } from '../extensions/TabIndent';
+import { InputDispatcher } from '../extensions/InputDispatcher';
 import { ExpandSelection } from '../extensions/ExpandSelection';
 import { HexColorMark } from '../extensions/HexColorMark';
 import { SelectAllOccurrences } from '../extensions/SelectAllOccurrences';
@@ -204,6 +205,7 @@ export function useEditorExtensions({
       // SelectAllOccurrences adds decoration plugins; skip in lightweight mode
       ...(!isLightweight ? [SelectAllOccurrences] : []),
       TabIndent,
+      InputDispatcher,
       // Add HorizontalRule with custom input rules that use insertHorizontalRuleClean
       // to avoid the extra empty paragraph that the default command creates.
       // Triggers on: ---, —-, ___, ***  (at start of line)

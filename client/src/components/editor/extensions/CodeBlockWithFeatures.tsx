@@ -3,8 +3,7 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { createLowlight } from 'lowlight';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Copy, Check, ChevronDown } from 'lucide-react';
-import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
-import type { EditorView } from '@tiptap/pm/view';
+// Plugin/PluginKey/TextSelection/EditorView removed — handleKeyDown moved to InputDispatcher
 
 // ─── Highlight.js Language Loading Strategy ─────────────────────────────────
 //
@@ -384,55 +383,11 @@ export const CodeBlockWithFeatures = CodeBlockLowlight
     },
 
     addProseMirrorPlugins() {
+      // The ``` + Enter shortcut has been moved to InputDispatcher
+      // for consolidated input handling (R6 performance optimization).
+      // Only parent plugins (lowlight syntax highlighting) remain.
       const parentPlugins = this.parent?.() ?? [];
-      const codeBlockType = this.type;
-
-      return [
-        // Plugin: Handle ``` + Enter shortcut to create code block with cursor inside
-        new Plugin({
-          key: new PluginKey('codeBlockEnterShortcut'),
-          props: {
-            handleKeyDown(view: EditorView, event: KeyboardEvent) {
-              if (event.key !== 'Enter') return false;
-
-              const { state } = view;
-              const { $from, empty } = state.selection;
-              if (!empty) return false;
-              if ($from.parent.type.spec.code) return false;
-
-              const textBefore = $from.parent.textBetween(
-                0,
-                $from.parentOffset,
-                undefined,
-                '\ufffc'
-              );
-
-              const match = textBefore.match(/^```([a-zA-Z]*)$/);
-              if (!match) return false;
-
-              event.preventDefault();
-              const language = match[1] || null;
-
-              const tr = state.tr;
-              const paragraphType = state.schema.nodes.paragraph;
-              const codeBlock = codeBlockType.create({ language }, undefined);
-              const replaceFrom = $from.before($from.depth);
-              const replaceTo = $from.after($from.depth);
-
-              const paragraph = paragraphType.create();
-              tr.replaceWith(replaceFrom, replaceTo, [codeBlock, paragraph]);
-
-              const cursorPos = replaceFrom + 1;
-              tr.setSelection(TextSelection.create(tr.doc, cursorPos));
-
-              view.dispatch(tr);
-              return true;
-            },
-          },
-        }),
-
-        ...parentPlugins,
-      ];
+      return [...parentPlugins];
     },
   });
 
