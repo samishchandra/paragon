@@ -35,7 +35,7 @@ export { AutoSaveIndicator, type AutoSaveIndicatorProps, } from '@/components/ed
 export { RecoveryBanner, type RecoveryBannerProps, } from '@/components/editor/RecoveryBanner';
 export { ImageDropZone } from '@/components/editor/ImageDropZone';
 export { CodeBlockComponent } from '@/components/editor/CodeBlockComponent';
-export { lowlight, loadLanguageIfNeeded } from '@/components/editor/extensions/CodeBlockWithFeatures';
+export { lowlight, loadLanguageIfNeeded, loadCoreLanguages } from '@/components/editor/extensions/CodeBlockWithFeatures';
 export { FindReplace } from '@/components/editor/FindReplace';
 export { SelectAllActionBar } from '@/components/editor/SelectAllActionBar';
 export { TableOfContents } from '@/components/editor/TableOfContents';

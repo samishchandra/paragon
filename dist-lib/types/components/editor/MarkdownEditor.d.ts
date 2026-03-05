@@ -138,6 +138,9 @@ export interface MarkdownEditorProps {
     showToolbar?: boolean;
     /** Show word count in footer (default: true) */
     showWordCount?: boolean;
+    /** Word count debounce delay in ms (default: 1000). Higher values reduce
+     *  main-thread work during fast typing at the cost of slower count updates. */
+    wordCountDebounceMs?: number;
     /** Theme mode - controls dark/light styling of the editor */
     theme?: 'dark' | 'light';
     /** Color theme for headings and table accents (default: 'colorful') */

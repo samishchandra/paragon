@@ -13,12 +13,17 @@ declare const lowlight: {
     registered: (aliasOrName: string) => boolean;
 };
 /**
- * Attempt to lazy-load a language if it's in the extended tier.
+ * Load all core languages in parallel. Called once when the first code block
+ * becomes visible. Subsequent calls are no-ops.
+ */
+declare function loadCoreLanguages(): Promise<void>;
+/**
+ * Attempt to lazy-load a language if it's in the core or extended tier.
  * Returns a promise that resolves to true if the language was loaded,
- * false if it's not in the lazy registry.
+ * false if it's not in any registry.
  */
 declare function loadLanguageIfNeeded(lang: string): Promise<boolean>;
-export { lowlight, loadLanguageIfNeeded };
+export { lowlight, loadLanguageIfNeeded, loadCoreLanguages };
 export declare const CodeBlockWithFeatures: import("@tiptap/core").Node<import("@tiptap/extension-code-block-lowlight").CodeBlockLowlightOptions, any>;
 /**
  * Helper: toggle code block for multi-block selections.
