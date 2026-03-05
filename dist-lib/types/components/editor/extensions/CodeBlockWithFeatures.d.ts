@@ -19,8 +19,6 @@ declare const lowlight: {
 declare function loadCoreLanguages(): Promise<void>;
 /**
  * Attempt to lazy-load a language if it's in the core or extended tier.
- * Returns a promise that resolves to true if the language was loaded,
- * false if it's not in any registry.
  */
 declare function loadLanguageIfNeeded(lang: string): Promise<boolean>;
 export { lowlight, loadLanguageIfNeeded, loadCoreLanguages };

@@ -1,9 +1,7 @@
-import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { createLowlight } from 'lowlight';
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Copy, Check, ChevronDown } from 'lucide-react';
-// Plugin/PluginKey/TextSelection/EditorView removed — handleKeyDown moved to InputDispatcher
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
+import type { EditorView, NodeView } from '@tiptap/pm/view';
 
 // ─── Highlight.js Language Loading Strategy ─────────────────────────────────
 //
@@ -25,34 +23,22 @@ import { Copy, Check, ChevronDown } from 'lucide-react';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /*
- * DESIGN: Dark Mode Craftsman
- * Code block with syntax highlighting and copy button
- * Controls appear inside the code block on hover (top-right corner)
- * No line numbers by default for cleaner look
- * Copy button is icon-only
- * Language selector is next to copy button
+ * PERFORMANCE (R10): Plain ProseMirror NodeView
+ * Replaces ReactNodeViewRenderer to eliminate React reconciliation overhead.
+ * The DOM is built once and updated incrementally via the `update()` method.
  *
- * PERFORMANCE: Fully lazy-loaded syntax highlighting
- * - Uses IntersectionObserver to defer highlighting until visible
- * - Code blocks outside viewport render as plain text (no lowlight parse)
- * - Highlighting activates when block enters viewport with 200px margin
- * - Once highlighted, stays highlighted (no re-parsing on scroll out)
- * - ALL languages (core + extended) loaded on-demand via dynamic import()
- * - Documents with no code blocks load zero highlight.js grammars (~200KB saved)
- *
- * BUNDLE: All-lazy language loading
- * - Core: 7 languages loaded on first code block render (~40 KB)
- * - Extended: 8 languages loaded on demand (~44 KB, split into chunks)
+ * Features preserved:
+ * - Language selector dropdown (<select> with all core + extended languages)
+ * - Copy-to-clipboard button with "Copied!" feedback
+ * - IntersectionObserver for lazy highlighting
+ * - Language lazy-loading (core + extended)
+ * - All CSS classes match the previous React output
+ * - Inline SVG icons (Copy, Check, ChevronDown) replace Lucide React components
  */
 
 const lowlight = createLowlight();
 
 // === ALL LANGUAGES: Lazy-loaded on demand ===
-// Maps language aliases to their dynamic import function.
-// Each import() creates a separate chunk that's only fetched when needed.
-// Core languages (javascript, typescript, python, xml, css, json, bash) are
-// loaded eagerly when the first code block becomes visible, but NOT at module
-// initialization time.
 type LazyLanguageLoader = () => Promise<{ default: any }>;
 
 // Core tier loaders — loaded on first code block visibility
@@ -120,17 +106,14 @@ async function loadCoreLanguages(): Promise<void> {
         })
       );
       
-      // Register each core language and its aliases
       for (const [name, definition] of results) {
         if (!lowlight.registered(name)) {
           lowlight.register(name, definition);
         }
       }
       
-      // Register all core aliases
       for (const [alias, canonical] of Object.entries(CORE_ALIASES)) {
         if (!lowlight.registered(alias)) {
-          // Find the definition from the loaded results
           const entry = results.find(([n]) => n === canonical);
           if (entry) {
             lowlight.register(alias, entry[1]);
@@ -141,7 +124,7 @@ async function loadCoreLanguages(): Promise<void> {
       coreLanguagesLoaded = true;
     } catch (err) {
       console.warn('Failed to load core highlight.js languages:', err);
-      coreLanguagesLoading = null; // Allow retry
+      coreLanguagesLoading = null;
     }
   })();
   
@@ -150,35 +133,27 @@ async function loadCoreLanguages(): Promise<void> {
 
 /**
  * Attempt to lazy-load a language if it's in the core or extended tier.
- * Returns a promise that resolves to true if the language was loaded,
- * false if it's not in any registry.
  */
 async function loadLanguageIfNeeded(lang: string): Promise<boolean> {
-  // Already registered (previously lazy-loaded)
   if (lowlight.registered(lang)) return true;
   
-  // Check if it's a core language or alias — load all core languages together
   if (CORE_LANGUAGE_LOADERS[lang] || CORE_ALIASES[lang]) {
     await loadCoreLanguages();
     return lowlight.registered(lang);
   }
   
-  // Check extended tier
   const loader = LAZY_LANGUAGES[lang];
   if (!loader) return false;
   
-  // Already loaded via a different alias
   if (registeredLazyLanguages.has(lang)) return true;
   
-  // Currently loading (another code block triggered it)
   if (loadingLanguages.has(lang)) {
-    // Wait for it to finish
     return new Promise((resolve) => {
       const check = () => {
         if (registeredLazyLanguages.has(lang)) {
           resolve(true);
         } else if (!loadingLanguages.has(lang)) {
-          resolve(false); // Loading failed
+          resolve(false);
         } else {
           setTimeout(check, 50);
         }
@@ -194,7 +169,6 @@ async function loadLanguageIfNeeded(lang: string): Promise<boolean> {
     lowlight.register(lang, definition);
     registeredLazyLanguages.add(lang);
     
-    // Also register common aliases for the same language
     const aliasGroups: string[][] = [
       ['cpp', 'c'],
       ['go', 'golang'],
@@ -223,138 +197,341 @@ async function loadLanguageIfNeeded(lang: string): Promise<boolean> {
   }
 }
 
-// Export lowlight so consumers can register additional languages
 export { lowlight, loadLanguageIfNeeded, loadCoreLanguages };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CodeBlockComponent({ node, updateAttributes, extension }: any) {
-  const [copied, setCopied] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const [languageReady, setLanguageReady] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  
-  const currentLanguage = node.attrs.language || 'plaintext';
-  
-  // Lazy-load: Use IntersectionObserver to detect when code block enters viewport
-  useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
+// ─── SVG Icons (inline, matching Lucide's output) ──────────────────────────
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function createSvgIcon(paths: string[], size: number, className?: string): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(size));
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  if (className) svg.setAttribute('class', className);
+  for (const d of paths) {
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', d);
+    svg.appendChild(path);
+  }
+  return svg;
+}
+
+// Lucide "copy" icon paths
+const COPY_PATHS = [
+  'M20 9h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Z',
+  'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1',
+];
+// Lucide "check" icon paths
+const CHECK_PATHS = ['M20 6 9 17l-5-5'];
+// Lucide "chevron-down" icon paths
+const CHEVRON_DOWN_PATHS = ['m6 9 6 6 6-6'];
+
+// ─── Memoized language list ────────────────────────────────────────────────
+
+let cachedAllLanguages: string[] | null = null;
+
+function getAllLanguages(): string[] {
+  // Rebuild when new languages are registered (rare)
+  // For simplicity, we always rebuild — the Set dedup + sort is fast (<1ms)
+  const registered = lowlight.listLanguages();
+  const all = Array.from(new Set([...registered, ...Object.keys(LAZY_LANGUAGES)])).sort();
+  cachedAllLanguages = all;
+  return all;
+}
+
+// ─── Plain ProseMirror NodeView ────────────────────────────────────────────
+
+class CodeBlockNodeView implements NodeView {
+  node: ProseMirrorNode;
+  view: EditorView;
+  getPos: () => number | undefined;
+  dom: HTMLElement;
+  contentDOM: HTMLElement;
+
+  // Internal state
+  private isVisible = false;
+  private languageReady = false;
+  private copied = false;
+  private copiedTimeout: ReturnType<typeof setTimeout> | null = null;
+  private observer: IntersectionObserver | null = null;
+
+  // DOM references for incremental updates
+  private selectEl: HTMLSelectElement;
+  private labelEl: HTMLSpanElement;
+  private copyBtn: HTMLButtonElement;
+  private preEl: HTMLPreElement;
+  private codeEl: HTMLElement;
+
+  constructor(node: ProseMirrorNode, view: EditorView, getPos: () => number | undefined) {
+    this.node = node;
+    this.view = view;
+    this.getPos = getPos;
+
+    const currentLanguage = node.attrs.language || 'plaintext';
+
+    // Build DOM structure matching the React output exactly
+    // Outer wrapper
+    this.dom = document.createElement('div');
+    this.dom.className = 'code-block-wrapper';
+    this.dom.setAttribute('data-node-view-wrapper', '');
+
+    // Controls overlay (contentEditable=false to prevent editing)
+    const controls = document.createElement('div');
+    controls.className = 'code-block-controls';
+    controls.contentEditable = 'false';
+
+    // Language wrapper
+    const langWrapper = document.createElement('div');
+    langWrapper.className = 'code-block-language-wrapper';
+
+    // Language select (invisible, overlays the label)
+    this.selectEl = document.createElement('select');
+    this.selectEl.className = 'code-block-language-select';
+    this.selectEl.value = currentLanguage;
+    this.populateLanguageOptions(currentLanguage);
+    this.selectEl.addEventListener('change', this.handleLanguageChange);
+
+    // Language label (visible text)
+    this.labelEl = document.createElement('span');
+    this.labelEl.className = 'code-block-language-label';
+    this.labelEl.textContent = this.formatLanguageLabel(currentLanguage);
+
+    // Chevron icon
+    const chevron = createSvgIcon(CHEVRON_DOWN_PATHS, 12, 'code-block-language-chevron');
+
+    langWrapper.appendChild(this.selectEl);
+    langWrapper.appendChild(this.labelEl);
+    langWrapper.appendChild(chevron);
+
+    // Copy button
+    this.copyBtn = document.createElement('button');
+    this.copyBtn.type = 'button';
+    this.copyBtn.className = 'code-block-copy-btn';
+    this.copyBtn.title = 'Copy code';
+    this.copyBtn.appendChild(createSvgIcon(COPY_PATHS, 14));
+    this.copyBtn.addEventListener('click', this.handleCopy);
+
+    controls.appendChild(langWrapper);
+    controls.appendChild(this.copyBtn);
+
+    // Pre > code (contentDOM is the <code> element where ProseMirror renders text)
+    this.preEl = document.createElement('pre');
+    this.preEl.className = 'code-block-pre code-block-deferred';
+
+    this.codeEl = document.createElement('code');
+    this.codeEl.className = 'language-plaintext';
+    this.preEl.appendChild(this.codeEl);
+
+    // contentDOM tells ProseMirror where to render the node's text content
+    this.contentDOM = this.codeEl;
+
+    this.dom.appendChild(controls);
+    this.dom.appendChild(this.preEl);
+
+    // Set up IntersectionObserver for lazy highlighting
+    this.setupVisibilityObserver();
+  }
+
+  // ── Language select ──
+
+  private populateLanguageOptions(currentLanguage: string) {
+    // Clear existing options
+    this.selectEl.innerHTML = '';
+
+    const plainOpt = document.createElement('option');
+    plainOpt.value = 'plaintext';
+    plainOpt.textContent = 'Plain Text';
+    this.selectEl.appendChild(plainOpt);
+
+    const allLangs = getAllLanguages();
+    for (const lang of allLangs) {
+      const opt = document.createElement('option');
+      opt.value = lang;
+      opt.textContent = lang.charAt(0).toUpperCase() + lang.slice(1);
+      this.selectEl.appendChild(opt);
+    }
+
+    this.selectEl.value = currentLanguage;
+  }
+
+  private formatLanguageLabel(lang: string): string {
+    return lang === 'plaintext'
+      ? 'Plain Text'
+      : lang.charAt(0).toUpperCase() + lang.slice(1);
+  }
+
+  private handleLanguageChange = () => {
+    const newLang = this.selectEl.value;
+    const pos = this.getPos();
+    if (pos == null) return;
     
-    // If already visible, no need to observe
-    if (isVisible) return;
-    
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-            // Once visible, stop observing — highlighting persists
-            observer.unobserve(el);
-          }
-        }
-      },
-      {
-        // Start highlighting 200px before the block enters viewport
-        rootMargin: '200px 0px',
-        threshold: 0,
-      }
+    // Update the node attribute via a ProseMirror transaction
+    this.view.dispatch(
+      this.view.state.tr.setNodeMarkup(pos, undefined, {
+        ...this.node.attrs,
+        language: newLang,
+      })
     );
-    
-    observer.observe(el);
-    
-    return () => {
-      observer.disconnect();
-    };
-  }, [isVisible]);
-  
-  // Lazy-load languages when code block becomes visible or language changes.
-  // Core languages are loaded in parallel on first visibility; extended languages
-  // are loaded individually on demand.
-  useEffect(() => {
-    if (!isVisible) return;
-    if (currentLanguage === 'plaintext') {
-      setLanguageReady(true);
-      return;
-    }
-    
-    // Check if language is already registered
-    if (lowlight.registered(currentLanguage)) {
-      setLanguageReady(true);
-      return;
-    }
-    
-    // Load via unified loader (handles core + extended)
-    setLanguageReady(false);
-    loadLanguageIfNeeded(currentLanguage).then((loaded) => {
-      setLanguageReady(loaded || currentLanguage === 'plaintext');
-    });
-  }, [isVisible, currentLanguage]);
-  
-  const copyToClipboard = useCallback(async () => {
+  };
+
+  // ── Copy button ──
+
+  private handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(node.textContent);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(this.node.textContent);
+      this.setCopiedState(true);
+      if (this.copiedTimeout) clearTimeout(this.copiedTimeout);
+      this.copiedTimeout = setTimeout(() => this.setCopiedState(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
     }
-  }, [node.textContent]);
+  };
 
-  // Performance (R8): Memoize the language list to avoid rebuilding on every render.
-  // The list only changes when new languages are registered (rare, after lazy-load).
-  const allLanguages = useMemo(() => {
-    const coreLanguages: string[] = extension.options.lowlight?.listLanguages?.() || [];
-    return Array.from(new Set([...coreLanguages, ...Object.keys(LAZY_LANGUAGES)])).sort();
-    // languageReady is included as a dependency so the list updates after a lazy-load completes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [extension.options.lowlight, languageReady]);
-  
-  const languageLabel = useMemo(
-    () => currentLanguage === 'plaintext' 
-      ? 'Plain Text' 
-      : currentLanguage.charAt(0).toUpperCase() + currentLanguage.slice(1),
-    [currentLanguage]
-  );
+  private setCopiedState(copied: boolean) {
+    this.copied = copied;
+    this.copyBtn.className = `code-block-copy-btn${copied ? ' copied' : ''}`;
+    this.copyBtn.title = copied ? 'Copied!' : 'Copy code';
+    // Replace icon
+    this.copyBtn.innerHTML = '';
+    this.copyBtn.appendChild(
+      copied
+        ? createSvgIcon(CHECK_PATHS, 14)
+        : createSvgIcon(COPY_PATHS, 14)
+    );
+  }
 
-  return (
-    <NodeViewWrapper className="code-block-wrapper" ref={wrapperRef}>
-      {/* Controls overlay - appears on hover, positioned inside top-right */}
-      <div className="code-block-controls" contentEditable={false}>
-        <div className="code-block-language-wrapper">
-          <select
-            value={currentLanguage}
-            onChange={(e) => updateAttributes({ language: e.target.value })}
-            className="code-block-language-select"
-          >
-            <option value="plaintext">Plain Text</option>
-            {allLanguages.map((lang: string) => (
-              <option key={lang} value={lang}>
-                {lang.charAt(0).toUpperCase() + lang.slice(1)}
-              </option>
-            ))}
-          </select>
-          <span className="code-block-language-label">{languageLabel}</span>
-          <ChevronDown size={12} className="code-block-language-chevron" />
-        </div>
-        <button
-          type="button"
-          onClick={copyToClipboard}
-          className={`code-block-copy-btn ${copied ? 'copied' : ''}`}
-          title={copied ? 'Copied!' : 'Copy code'}
-        >
-          {copied ? <Check size={14} /> : <Copy size={14} />}
-        </button>
-      </div>
-      
-      {/* Code content - no line numbers */}
-      {/* When not yet visible or language not ready, render without syntax highlighting */}
-      <pre className={`code-block-pre ${(!isVisible || !languageReady) ? 'code-block-deferred' : ''}`}>
-        <NodeViewContent className={(isVisible && languageReady) ? `language-${currentLanguage}` : 'language-plaintext'} />
-      </pre>
-    </NodeViewWrapper>
-  );
+  // ── Lazy visibility / language loading ──
+
+  private setupVisibilityObserver() {
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            this.isVisible = true;
+            this.observer?.unobserve(this.dom);
+            this.observer?.disconnect();
+            this.observer = null;
+            this.onBecameVisible();
+          }
+        }
+      },
+      { rootMargin: '200px 0px', threshold: 0 }
+    );
+    this.observer.observe(this.dom);
+  }
+
+  private async onBecameVisible() {
+    const lang = this.node.attrs.language || 'plaintext';
+    if (lang === 'plaintext') {
+      this.setLanguageReady(true);
+      return;
+    }
+    if (lowlight.registered(lang)) {
+      this.setLanguageReady(true);
+      return;
+    }
+    const loaded = await loadLanguageIfNeeded(lang);
+    this.setLanguageReady(loaded || lang === 'plaintext');
+    // Repopulate options in case new languages were registered
+    this.populateLanguageOptions(lang);
+  }
+
+  private setLanguageReady(ready: boolean) {
+    this.languageReady = ready;
+    const lang = this.node.attrs.language || 'plaintext';
+    
+    if (this.isVisible && ready) {
+      this.preEl.className = 'code-block-pre';
+      this.codeEl.className = `language-${lang}`;
+    } else {
+      this.preEl.className = 'code-block-pre code-block-deferred';
+      this.codeEl.className = 'language-plaintext';
+    }
+  }
+
+  // ── ProseMirror NodeView interface ──
+
+  update(node: ProseMirrorNode): boolean {
+    // Reject if node type changed (ProseMirror will destroy and recreate)
+    if (node.type !== this.node.type) return false;
+
+    const oldLang = this.node.attrs.language || 'plaintext';
+    const newLang = node.attrs.language || 'plaintext';
+    this.node = node;
+
+    if (oldLang !== newLang) {
+      // Language changed — update label, select, and CSS class
+      this.labelEl.textContent = this.formatLanguageLabel(newLang);
+      this.selectEl.value = newLang;
+
+      if (newLang === 'plaintext') {
+        this.setLanguageReady(true);
+      } else if (lowlight.registered(newLang)) {
+        this.setLanguageReady(true);
+      } else if (this.isVisible) {
+        // Need to lazy-load the new language
+        this.setLanguageReady(false);
+        loadLanguageIfNeeded(newLang).then((loaded) => {
+          // Only update if language hasn't changed again
+          if ((this.node.attrs.language || 'plaintext') === newLang) {
+            this.setLanguageReady(loaded || newLang === 'plaintext');
+            this.populateLanguageOptions(newLang);
+          }
+        });
+      }
+    }
+
+    // Content changes are handled by ProseMirror via contentDOM — no action needed
+    return true;
+  }
+
+  selectNode() {
+    this.dom.classList.add('ProseMirror-selectednode');
+  }
+
+  deselectNode() {
+    this.dom.classList.remove('ProseMirror-selectednode');
+  }
+
+  destroy() {
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
+    if (this.copiedTimeout) {
+      clearTimeout(this.copiedTimeout);
+      this.copiedTimeout = null;
+    }
+    this.selectEl.removeEventListener('change', this.handleLanguageChange);
+    this.copyBtn.removeEventListener('click', this.handleCopy);
+  }
+
+  // Let ProseMirror handle mutations inside the <code> contentDOM
+  ignoreMutation(mutation: MutationRecord | { type: 'selection'; target: globalThis.Node }): boolean {
+    // Ignore mutations inside the controls (non-editable area)
+    if (!this.contentDOM.contains(mutation.target)) {
+      return true;
+    }
+    return false;
+  }
+
+  stopEvent(event: Event): boolean {
+    // Stop events from the controls area (select, button) from reaching ProseMirror
+    const target = event.target as HTMLElement;
+    if (target && !this.contentDOM.contains(target) && this.dom.contains(target)) {
+      return true;
+    }
+    return false;
+  }
 }
 
+// ─── Extension Definition ──────────────────────────────────────────────────
 
 export const CodeBlockWithFeatures = CodeBlockLowlight
   .configure({
@@ -366,20 +543,9 @@ export const CodeBlockWithFeatures = CodeBlockLowlight
   })
   .extend({
     addNodeView() {
-      return ReactNodeViewRenderer(CodeBlockComponent, {
-        update: ({ oldNode, newNode, updateProps }) => {
-          // Performance: Skip React re-render when only cursor position changed.
-          // Only re-render when the code block's language or text content changes.
-          // NodeViewContent handles content rendering via ProseMirror, so we only
-          // need React to re-render for language changes (which affect the UI controls).
-          const languageChanged = oldNode.attrs.language !== newNode.attrs.language;
-          const contentChanged = !oldNode.content.eq(newNode.content);
-          if (languageChanged || contentChanged) {
-            updateProps();
-          }
-          return true;
-        },
-      });
+      return ({ node, view, getPos }) => {
+        return new CodeBlockNodeView(node, view, getPos as () => number | undefined);
+      };
     },
     addKeyboardShortcuts() {
       const parentShortcuts = this.parent?.() ?? {};
@@ -411,45 +577,37 @@ export const CodeBlockWithFeatures = CodeBlockLowlight
  * `toggleCodeBlock` command.
  */
 export function toggleCodeBlockMerged(editor: any): boolean {
-  // Read the selection from ProseMirror state (preserved even when DOM is blurred)
   const { state } = editor;
   const { from, to, empty } = state.selection;
 
-  // If already inside a code block, just toggle off
   if (editor.isActive('codeBlock')) {
     return editor.chain().focus().toggleCodeBlock().run();
   }
 
-  // For collapsed cursor, use default behavior
   if (empty) {
     return editor.chain().focus().toggleCodeBlock().run();
   }
 
-  // Count textblock nodes in the selection to detect multi-block
   let textblockCount = 0;
   const lines: string[] = [];
   state.doc.nodesBetween(from, to, (node: any) => {
     if (node.isTextblock) {
       textblockCount++;
       lines.push(node.textContent);
-      return false; // don't descend into inline children
+      return false;
     }
     return true;
   });
 
-  // Single-block selection: use default behavior
   if (textblockCount <= 1) {
     return editor.chain().focus().toggleCodeBlock().run();
   }
 
-  // Multi-block selection: merge all text into a single code block
   const text = lines.join('\n');
   const codeBlockType = state.schema.nodes.codeBlock;
 
-  // Expand to cover the full blocks — resolve depth dynamically
   const $from = state.doc.resolve(from);
   const $to = state.doc.resolve(to);
-  // Find the outermost block ancestor for each end of the selection
   const fromDepth = Math.max(1, $from.depth);
   const toDepth = Math.max(1, $to.depth);
   const rangeFrom = $from.before(fromDepth);
