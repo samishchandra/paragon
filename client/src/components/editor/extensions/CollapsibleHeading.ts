@@ -220,7 +220,7 @@ function buildDecorations(
  * position-based IDs but not occurrence-based IDs.
  */
 function migrateCollapsedIds(
-  oldDoc: ProseMirrorNode,
+  _oldDoc: ProseMirrorNode,
   newDoc: ProseMirrorNode,
   storage: CollapsibleHeadingStorage,
   levels: number[]
@@ -241,6 +241,47 @@ function migrateCollapsedIds(
   for (const id of toRemove) {
     storage.collapsedHeadings.delete(id);
   }
+}
+
+/**
+ * Check if a document change affects heading structure.
+ * Returns true if any heading was added, removed, or had its level/text changed.
+ * When false, we can use DecorationSet.map() instead of a full rebuild.
+ */
+function headingStructureChanged(
+  oldDoc: ProseMirrorNode,
+  newDoc: ProseMirrorNode,
+  levels: number[]
+): boolean {
+  // Quick check: if doc sizes differ significantly, likely structural change
+  // (This is a cheap heuristic to avoid the full scan in obvious cases)
+
+  // Collect headings from both docs
+  const oldHeadings: Array<{ level: number; text: string }> = [];
+  const newHeadings: Array<{ level: number; text: string }> = [];
+
+  oldDoc.descendants((node) => {
+    if (node.type.name === 'heading' && levels.includes(node.attrs.level)) {
+      oldHeadings.push({ level: node.attrs.level, text: node.textContent.slice(0, 50) });
+    }
+  });
+
+  newDoc.descendants((node) => {
+    if (node.type.name === 'heading' && levels.includes(node.attrs.level)) {
+      newHeadings.push({ level: node.attrs.level, text: node.textContent.slice(0, 50) });
+    }
+  });
+
+  // Different number of headings = structural change
+  if (oldHeadings.length !== newHeadings.length) return true;
+
+  // Compare each heading's level and text
+  for (let i = 0; i < oldHeadings.length; i++) {
+    if (oldHeadings[i].level !== newHeadings[i].level) return true;
+    if (oldHeadings[i].text !== newHeadings[i].text) return true;
+  }
+
+  return false;
 }
 
 export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, CollapsibleHeadingStorage>({
@@ -337,19 +378,40 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
           },
           apply(tr, value, oldState, newState) {
             const meta = tr.getMeta('collapsibleHeading');
-            // Performance: Only rebuild decorations when doc changes or collapse state changes
-            if (meta || tr.docChanged) {
-              // When doc changes, migrate collapsed IDs to account for any structural shifts
-              if (tr.docChanged && !meta) {
-                migrateCollapsedIds(oldState.doc, newState.doc, storage, options.levels);
-              }
+
+            // Collapse/expand toggle always requires full rebuild
+            // (hidden ranges change, chevron states change)
+            if (meta) {
               return {
                 collapsedHeadings: new Set(storage.collapsedHeadings),
                 decorations: buildDecorations(newState.doc, storage, options),
                 docVersion: value.docVersion + 1,
               };
             }
-            // If doc hasn't changed and no collapse toggle, reuse existing decorations
+
+            if (tr.docChanged) {
+              // Migrate collapsed IDs to account for structural shifts
+              migrateCollapsedIds(oldState.doc, newState.doc, storage, options.levels);
+
+              // Performance: Only do a full rebuild if heading structure actually changed.
+              // For normal typing within paragraphs/non-heading nodes, we can just map
+              // existing decorations through the transaction mapping.
+              if (headingStructureChanged(oldState.doc, newState.doc, options.levels)) {
+                return {
+                  collapsedHeadings: new Set(storage.collapsedHeadings),
+                  decorations: buildDecorations(newState.doc, storage, options),
+                  docVersion: value.docVersion + 1,
+                };
+              }
+
+              // Heading structure unchanged — map existing decorations
+              return {
+                ...value,
+                decorations: value.decorations.map(tr.mapping, tr.doc),
+              };
+            }
+
+            // No doc change, no meta — reuse existing decorations mapped through transaction
             return {
               ...value,
               decorations: value.decorations.map(tr.mapping, tr.doc),

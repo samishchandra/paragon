@@ -304,7 +304,20 @@ export const CodeBlockWithFeatures = CodeBlockLowlight
   })
   .extend({
     addNodeView() {
-      return ReactNodeViewRenderer(CodeBlockComponent);
+      return ReactNodeViewRenderer(CodeBlockComponent, {
+        update: ({ oldNode, newNode, updateProps }) => {
+          // Performance: Skip React re-render when only cursor position changed.
+          // Only re-render when the code block's language or text content changes.
+          // NodeViewContent handles content rendering via ProseMirror, so we only
+          // need React to re-render for language changes (which affect the UI controls).
+          const languageChanged = oldNode.attrs.language !== newNode.attrs.language;
+          const contentChanged = !oldNode.content.eq(newNode.content);
+          if (languageChanged || contentChanged) {
+            updateProps();
+          }
+          return true;
+        },
+      });
     },
     addKeyboardShortcuts() {
       const parentShortcuts = this.parent?.() ?? {};

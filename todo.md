@@ -28,6 +28,9 @@
 - [x] Performance analysis report: deep audit of editor performance and actionable recommendations (see PERFORMANCE_REPORT.md)
 - [x] Perf: make CollapsibleHeading optional via prop, disabled by default (was already done — `enableCollapsibleHeadings` defaults to `false`)
 - [x] Perf: make CollapsibleList optional via prop, disabled by default (added `enableCollapsibleLists` prop, defaults to `false`)
+- [ ] Perf: implement incremental decoration updates for CollapsibleHeading (replace full doc.descendants with DecorationSet.map)
+- [ ] Perf: implement incremental decoration updates for CollapsibleList (replace full doc.descendants with DecorationSet.map)
+- [ ] Perf: add shouldUpdate to ReactNodeViewRenderers (CodeBlock, Callout, ResizableImage)
 - [ ] **DEFERRED** Fix: typing "# " on the FIRST LINE of a code block converts to heading (works fine on 2nd+ lines) — root cause: ProseMirror DOM reconciliation re-parses the code block content as heading via parseDOM rules, bypassing handleTextInput and input rules entirely. Needs custom parseDOM override or DOM mutation observer guard.
 - [ ] **DEFERRED** Fix: typing ``` + space should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)
 - [ ] **DEFERRED** Fix: typing ``` + Enter should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)

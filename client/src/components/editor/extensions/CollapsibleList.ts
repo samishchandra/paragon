@@ -82,6 +82,50 @@ function getNestedListRange(
 let currentView: EditorView | null = null;
 
 /**
+ * Collect a fingerprint of the list structure in a document.
+ * Returns an array of { depth, hasNested, textSnippet } for each list item.
+ * Used to detect whether list structure has changed (items added/removed/reordered).
+ */
+function collectListFingerprint(
+  doc: ProseMirrorNode,
+  listItemTypes: string[]
+): Array<{ hasNested: boolean; text: string }> {
+  const items: Array<{ hasNested: boolean; text: string }> = [];
+  doc.descendants((node) => {
+    if (listItemTypes.includes(node.type.name)) {
+      items.push({
+        hasNested: hasNestedList(node),
+        text: node.firstChild?.textContent.slice(0, 50) ?? '',
+      });
+    }
+  });
+  return items;
+}
+
+/**
+ * Check if list structure changed between two documents.
+ * Returns true if any list item was added, removed, or had its nesting changed.
+ * When false, we can use DecorationSet.map() instead of a full rebuild.
+ */
+function listStructureChanged(
+  oldDoc: ProseMirrorNode,
+  newDoc: ProseMirrorNode,
+  listItemTypes: string[]
+): boolean {
+  const oldItems = collectListFingerprint(oldDoc, listItemTypes);
+  const newItems = collectListFingerprint(newDoc, listItemTypes);
+
+  if (oldItems.length !== newItems.length) return true;
+
+  for (let i = 0; i < oldItems.length; i++) {
+    if (oldItems[i].hasNested !== newItems[i].hasNested) return true;
+    if (oldItems[i].text !== newItems[i].text) return true;
+  }
+
+  return false;
+}
+
+/**
  * Build decorations for collapsible list items.
  * Only list items with nested children get a chevron widget.
  */
@@ -309,17 +353,39 @@ export const CollapsibleList = Extension.create<CollapsibleListOptions, Collapsi
               docVersion: 0,
             };
           },
-          apply(tr, value, _oldState, newState) {
+          apply(tr, value, oldState, newState) {
             const meta = tr.getMeta('collapsibleList');
-            // Only rebuild decorations when doc changes or collapse state changes
-            if (meta || tr.docChanged) {
+
+            // Collapse/expand toggle always requires full rebuild
+            // (hidden ranges change, chevron states change)
+            if (meta) {
               return {
                 collapsedItems: new Set(storage.collapsedItems),
                 decorations: buildDecorations(newState.doc, storage, options),
                 docVersion: value.docVersion + 1,
               };
             }
-            // Reuse existing decorations, mapped through the transaction
+
+            if (tr.docChanged) {
+              // Performance: Only do a full rebuild if list structure actually changed.
+              // For normal typing within paragraphs or non-list nodes, we can just map
+              // existing decorations through the transaction mapping.
+              if (listStructureChanged(oldState.doc, newState.doc, options.listItemTypes)) {
+                return {
+                  collapsedItems: new Set(storage.collapsedItems),
+                  decorations: buildDecorations(newState.doc, storage, options),
+                  docVersion: value.docVersion + 1,
+                };
+              }
+
+              // List structure unchanged — map existing decorations
+              return {
+                ...value,
+                decorations: value.decorations.map(tr.mapping, tr.doc),
+              };
+            }
+
+            // No doc change, no meta — reuse existing decorations mapped through transaction
             return {
               ...value,
               decorations: value.decorations.map(tr.mapping, tr.doc),

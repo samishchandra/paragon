@@ -232,7 +232,19 @@ export const CalloutWithMenu = Node.create<CalloutOptions>({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(CalloutComponent);
+    return ReactNodeViewRenderer(CalloutComponent, {
+      update: ({ oldNode, newNode, updateProps }) => {
+        // Performance: Skip React re-render when only inner content changed.
+        // NodeViewContent handles content rendering via ProseMirror, so we only
+        // need React to re-render when the callout type attribute changes
+        // (which affects the icon, label, colors, and styling).
+        const typeChanged = oldNode.attrs.type !== newNode.attrs.type;
+        if (typeChanged) {
+          updateProps();
+        }
+        return true;
+      },
+    });
   },
 
   addCommands() {
