@@ -30,7 +30,7 @@ import { EditorContent } from '@tiptap/react';
  *     structureImagesInListItems – restructures images inside list items for TipTap
  *     restoreHeaderColumn   – restores header-column markers in table HTML
  */
-import { useCallback, useMemo, useState, useRef, forwardRef } from 'react';
+import { useCallback, useMemo, useState, useRef, forwardRef, lazy, Suspense } from 'react';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace, type SearchMatch } from './FindReplace';
 import { SelectAllActionBar } from './SelectAllActionBar';
@@ -59,7 +59,12 @@ import './PerformanceProfiler.css';
 import { Sparkles } from 'lucide-react';
 import type { AIActionDefinition, AIActionHandler, AIState } from './ai/types';
 import { useAIState } from './ai/useAIState';
-import { TableOfContents } from './TableOfContents';
+import type { TableOfContentsProps } from './TableOfContents';
+
+// Lazy-load the TOC panel — only downloaded when showTableOfContents is true
+const LazyTableOfContents = lazy(() =>
+  import('./TableOfContents').then(mod => ({ default: mod.TableOfContents }))
+);
 
 import type { Editor } from '@tiptap/react';
 
@@ -955,24 +960,26 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       <div className={`editor-main-area ${showTableOfContents ? 'editor-with-toc' : ''}`}>
       {/* TOC sidebar - left position */}
       {showTableOfContents && tocPosition === 'left' && (
-        <TableOfContents
-          editor={editor}
-          visible={tocVisible}
-          onVisibilityChange={onTocVisibilityChange}
-          title={tocTitle}
-          minLevel={tocMinLevel}
-          maxLevel={tocMaxLevel}
-          showLevelIndicators={tocShowLevelIndicators}
-          highlightActive={tocHighlightActive}
-          treeView={tocTreeView}
-          width={tocWidth}
-          position={tocPosition}
-          scrollOffset={tocScrollOffset}
-          onItemClick={onTocItemClick}
-          renderItem={renderTocItem}
-          showToggleButton={tocShowToggleButton}
-          scrollContainerRef={editorContentRef as React.RefObject<HTMLElement>}
-        />
+        <Suspense fallback={null}>
+          <LazyTableOfContents
+            editor={editor}
+            visible={tocVisible}
+            onVisibilityChange={onTocVisibilityChange}
+            title={tocTitle}
+            minLevel={tocMinLevel}
+            maxLevel={tocMaxLevel}
+            showLevelIndicators={tocShowLevelIndicators}
+            highlightActive={tocHighlightActive}
+            treeView={tocTreeView}
+            width={tocWidth}
+            position={tocPosition}
+            scrollOffset={tocScrollOffset}
+            onItemClick={onTocItemClick}
+            renderItem={renderTocItem}
+            showToggleButton={tocShowToggleButton}
+            scrollContainerRef={editorContentRef as React.RefObject<HTMLElement>}
+          />
+        </Suspense>
       )}
       <EditorErrorBoundary
         resetKey={`${content}-${editorErrorKey}`}
@@ -1050,24 +1057,26 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       </EditorErrorBoundary>
       {/* TOC sidebar - right position */}
       {showTableOfContents && tocPosition === 'right' && (
-        <TableOfContents
-          editor={editor}
-          visible={tocVisible}
-          onVisibilityChange={onTocVisibilityChange}
-          title={tocTitle}
-          minLevel={tocMinLevel}
-          maxLevel={tocMaxLevel}
-          showLevelIndicators={tocShowLevelIndicators}
-          highlightActive={tocHighlightActive}
-          treeView={tocTreeView}
-          width={tocWidth}
-          position={tocPosition}
-          scrollOffset={tocScrollOffset}
-          onItemClick={onTocItemClick}
-          renderItem={renderTocItem}
-          showToggleButton={tocShowToggleButton}
-          scrollContainerRef={editorContentRef as React.RefObject<HTMLElement>}
-        />
+        <Suspense fallback={null}>
+          <LazyTableOfContents
+            editor={editor}
+            visible={tocVisible}
+            onVisibilityChange={onTocVisibilityChange}
+            title={tocTitle}
+            minLevel={tocMinLevel}
+            maxLevel={tocMaxLevel}
+            showLevelIndicators={tocShowLevelIndicators}
+            highlightActive={tocHighlightActive}
+            treeView={tocTreeView}
+            width={tocWidth}
+            position={tocPosition}
+            scrollOffset={tocScrollOffset}
+            onItemClick={onTocItemClick}
+            renderItem={renderTocItem}
+            showToggleButton={tocShowToggleButton}
+            scrollContainerRef={editorContentRef as React.RefObject<HTMLElement>}
+          />
+        </Suspense>
       )}
       </div>
       
