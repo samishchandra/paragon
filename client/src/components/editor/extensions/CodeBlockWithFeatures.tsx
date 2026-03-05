@@ -3,6 +3,8 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { createLowlight } from 'lowlight';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Copy, Check, ChevronDown } from 'lucide-react';
+import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import type { EditorView } from '@tiptap/pm/view';
 
 // ─── Highlight.js Language Loading Strategy ─────────────────────────────────
 //
@@ -309,6 +311,81 @@ export const CodeBlockWithFeatures = CodeBlockLowlight
         ...parentShortcuts,
         'Mod-Alt-c': () => toggleCodeBlockMerged(this.editor),
       };
+    },
+    addProseMirrorPlugins() {
+      const parentPlugins = this.parent?.() ?? [];
+      const editor = this.editor;
+      const codeBlockType = this.type;
+
+      return [
+        ...parentPlugins,
+        // Plugin: Handle ``` + Enter to create a code block and place cursor inside
+        new Plugin({
+          key: new PluginKey('codeBlockEnterShortcut'),
+          props: {
+            handleKeyDown(view: EditorView, event: KeyboardEvent) {
+              // Only handle Enter key
+              if (event.key !== 'Enter') return false;
+
+              const { state } = view;
+              const { $from, empty } = state.selection;
+
+              // Only for collapsed cursor in a non-code textblock
+              if (!empty) return false;
+              if ($from.parent.type.spec.code) return false;
+
+              // Get the text before the cursor in the current block
+              const textBefore = $from.parent.textBetween(
+                0,
+                $from.parentOffset,
+                undefined,
+                '\ufffc'
+              );
+
+              // Match ```language or just ```
+              const match = textBefore.match(/^```([a-zA-Z]*)$/);
+              if (!match) return false;
+
+              event.preventDefault();
+
+              const language = match[1] || null;
+              const blockStart = $from.start();
+              const blockEnd = $from.end();
+
+              // Delete the ``` text and replace the block with a code block
+              const tr = state.tr;
+              const paragraphType = state.schema.nodes.paragraph;
+
+              // Create an empty code block
+              const codeBlock = codeBlockType.create(
+                { language },
+                undefined
+              );
+
+              // Replace the entire current block with the code block
+              // We need to replace from before the block to after the block
+              const replaceFrom = $from.before($from.depth);
+              const replaceTo = $from.after($from.depth);
+
+              // Insert code block followed by an empty paragraph (for escape)
+              const paragraph = paragraphType.create();
+              tr.replaceWith(replaceFrom, replaceTo, [
+                codeBlock,
+                paragraph,
+              ]);
+
+              // Place cursor inside the code block (position = replaceFrom + 1)
+              const cursorPos = replaceFrom + 1;
+              tr.setSelection(
+                TextSelection.create(tr.doc, cursorPos)
+              );
+
+              view.dispatch(tr);
+              return true;
+            },
+          },
+        }),
+      ];
     },
   });
 
