@@ -195,6 +195,16 @@ export interface MarkdownEditorProps {
   onHTMLChange?: (html: string) => void;
   /** Callback when raw markdown content changes */
   onMarkdownChange?: (markdown: string) => void;
+  /**
+   * Debounce delay in ms for firing onMarkdownChange during WYSIWYG typing.
+   * When set to a positive value, onMarkdownChange fires after the user stops
+   * typing for this duration (in addition to blur/unmount/mode-switch).
+   * When 0 or undefined, onMarkdownChange only fires on blur, unmount, and mode-switch
+   * (lazy sync — best performance for large documents).
+   * Recommended: 300–500ms for responsive sync, 0 for maximum typing performance.
+   * (default: 0)
+   */
+  markdownChangeDebounceMs?: number;
   /** Placeholder text when editor is empty */
   placeholder?: string;
   /** Whether the editor is editable */
@@ -426,6 +436,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   onChange,
   onHTMLChange,
   onMarkdownChange,
+  markdownChangeDebounceMs = 0,
   placeholder = 'Start writing... Use "/" for commands',
   editable = true,
   autofocus = false,
@@ -637,6 +648,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     onChange,
     onHTMLChange,
     onMarkdownChange,
+    markdownChangeDebounceMs,
     onReady,
     onDestroy,
     onFocus,

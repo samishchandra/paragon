@@ -1,19 +1,30 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import { memo } from 'react';
 
 /*
  * TABLE OF CONTENTS SIDEBAR
- * Modern, minimalistic component that displays document heading hierarchy
+ * Modern, minimalistic component that displays document heading hierarchy.
  * Supports click-to-scroll, active heading tracking, collapsible sections,
  * and draggable width with localStorage persistence.
+ *
+ * Performance optimizations:
+ * - Incremental heading extraction: only updates state when headings actually change
+ * - Memoized individual TOC items: each item only re-renders when its data or active state changes
+ * - Windowed rendering for flat list: only renders items visible in the scroll viewport
+ * - Stable refs for callbacks to avoid cascading re-renders
  */
 
 const TOC_WIDTH_STORAGE_KEY = 'paragon-editor-toc-width';
 const TOC_DEFAULT_WIDTH = 280; // px — wider default
 const TOC_MIN_WIDTH = 200;
 const TOC_MAX_WIDTH = 500;
+
+/** Height of each TOC item in pixels (must match CSS) */
+const TOC_ITEM_HEIGHT = 30;
+/** Number of extra items to render above/below the visible area */
+const OVERSCAN_COUNT = 5;
 
 /** Get stored width from localStorage, or return default */
 function getStoredWidth(): number {
@@ -87,6 +98,20 @@ function extractHeadings(editor: Editor, minLevel: number, maxLevel: number): To
   return headings;
 }
 
+/**
+ * Create a fingerprint string for a headings array.
+ * Used to detect whether headings actually changed (avoiding unnecessary React state updates).
+ */
+function headingsFingerprint(headings: TocItem[]): string {
+  // Fast path: just join pos+level+text for each heading
+  let fp = '';
+  for (let i = 0; i < headings.length; i++) {
+    const h = headings[i];
+    fp += `${h.pos}:${h.level}:${h.text};`;
+  }
+  return fp;
+}
+
 function buildTree(headings: TocItem[]): TocItem[] {
   if (headings.length === 0) return [];
   const root: TocItem[] = [];
@@ -120,6 +145,202 @@ function findHeadingElement(editor: Editor, pos: number): HTMLElement | null {
   }
   return null;
 }
+
+// ── Memoized individual TOC item component ──
+// Only re-renders when its own props change (not when other items' active state changes)
+interface TocItemRowProps {
+  item: TocItem;
+  isActive: boolean;
+  minLevel: number;
+  showLevelIndicators: boolean;
+  hasChildren: boolean;
+  isCollapsed: boolean;
+  treeView: boolean;
+  onItemClick: (item: TocItem) => void;
+  onToggleCollapse: (id: string) => void;
+  style?: React.CSSProperties;
+}
+
+const TocItemRow = memo(function TocItemRow({
+  item,
+  isActive,
+  minLevel,
+  showLevelIndicators,
+  hasChildren,
+  isCollapsed,
+  treeView,
+  onItemClick,
+  onToggleCollapse,
+  style,
+}: TocItemRowProps) {
+  const indent = (item.level - minLevel) * 14;
+
+  return (
+    <div
+      className={`toc-item ${isActive ? 'toc-item-active' : ''} toc-level-${item.level}`}
+      style={{ paddingLeft: `${indent + 10}px`, ...style }}
+    >
+      <button
+        className="toc-item-button"
+        onClick={() => onItemClick(item)}
+        title={item.text}
+      >
+        {treeView && hasChildren && (
+          <span
+            className="toc-collapse-toggle"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleCollapse(item.id);
+            }}
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              {isCollapsed
+                ? <path d="M3.5 2L7 5L3.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                : <path d="M2 3.5L5 7L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              }
+            </svg>
+          </span>
+        )}
+        {showLevelIndicators && (
+          <span className="toc-level-indicator">H{item.level}</span>
+        )}
+        <span className="toc-item-text">{item.text}</span>
+      </button>
+    </div>
+  );
+});
+
+// ── Virtualized flat list ──
+// Only renders items visible in the scroll viewport + overscan
+interface VirtualizedTocListProps {
+  headings: TocItem[];
+  activeId: string | null;
+  minLevel: number;
+  showLevelIndicators: boolean;
+  onItemClick: (item: TocItem) => void;
+  onToggleCollapse: (id: string) => void;
+}
+
+const VirtualizedTocList = memo(function VirtualizedTocList({
+  headings,
+  activeId,
+  minLevel,
+  showLevelIndicators,
+  onItemClick,
+  onToggleCollapse,
+}: VirtualizedTocListProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  // Measure container height on mount and resize
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const measure = () => {
+      setContainerHeight(container.clientHeight);
+    };
+    measure();
+
+    // Use ResizeObserver for dynamic height changes
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(measure);
+      observer.observe(container);
+    }
+
+    return () => {
+      observer?.disconnect();
+    };
+  }, []);
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  // Calculate visible range
+  const totalHeight = headings.length * TOC_ITEM_HEIGHT;
+  const startIndex = Math.max(0, Math.floor(scrollTop / TOC_ITEM_HEIGHT) - OVERSCAN_COUNT);
+  const endIndex = Math.min(
+    headings.length,
+    Math.ceil((scrollTop + containerHeight) / TOC_ITEM_HEIGHT) + OVERSCAN_COUNT
+  );
+
+  // Render only visible items
+  const visibleItems = useMemo(() => {
+    const items: React.ReactNode[] = [];
+    for (let i = startIndex; i < endIndex; i++) {
+      const item = headings[i];
+      items.push(
+        <TocItemRow
+          key={item.id}
+          item={item}
+          isActive={activeId === item.id}
+          minLevel={minLevel}
+          showLevelIndicators={showLevelIndicators}
+          hasChildren={false}
+          isCollapsed={false}
+          treeView={false}
+          onItemClick={onItemClick}
+          onToggleCollapse={onToggleCollapse}
+          style={{
+            position: 'absolute',
+            top: `${i * TOC_ITEM_HEIGHT}px`,
+            left: 0,
+            right: 0,
+            height: `${TOC_ITEM_HEIGHT}px`,
+          }}
+        />
+      );
+    }
+    return items;
+  }, [headings, startIndex, endIndex, activeId, minLevel, showLevelIndicators, onItemClick, onToggleCollapse]);
+
+  // For small lists (< 30 items), skip virtualization overhead
+  if (headings.length < 30) {
+    return (
+      <>
+        {headings.map(item => (
+          <TocItemRow
+            key={item.id}
+            item={item}
+            isActive={activeId === item.id}
+            minLevel={minLevel}
+            showLevelIndicators={showLevelIndicators}
+            hasChildren={false}
+            isCollapsed={false}
+            treeView={false}
+            onItemClick={onItemClick}
+            onToggleCollapse={onToggleCollapse}
+          />
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className="toc-virtual-container"
+      onScroll={handleScroll}
+      style={{
+        height: '100%',
+        overflow: 'auto',
+        position: 'relative',
+      }}
+    >
+      <div
+        style={{
+          height: `${totalHeight}px`,
+          position: 'relative',
+        }}
+      >
+        {visibleItems}
+      </div>
+    </div>
+  );
+});
 
 export const TableOfContents = memo(function TableOfContents({
   editor,
@@ -157,6 +378,8 @@ export const TableOfContents = memo(function TableOfContents({
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartWidthRef = useRef(0);
+  // Fingerprint of the last headings array — used to skip no-op state updates
+  const lastFingerprintRef = useRef('');
 
   useEffect(() => {
     setIsVisible(visible);
@@ -203,14 +426,16 @@ export const TableOfContents = memo(function TableOfContents({
     };
   }, [position]);
 
+  // Incremental heading extraction — only updates state when headings actually change
   const updateHeadings = useCallback(() => {
     if (!editor || editor.isDestroyed) return;
     const newHeadings = extractHeadings(editor, minLevel, maxLevel);
+    const fp = headingsFingerprint(newHeadings);
+    // Skip state update if headings haven't changed (most common case during typing)
+    if (fp === lastFingerprintRef.current) return;
+    lastFingerprintRef.current = fp;
     setHeadings(newHeadings);
-    if (activeId && !newHeadings.find(h => h.id === activeId)) {
-      setActiveId(null);
-    }
-  }, [editor, minLevel, maxLevel, activeId]);
+  }, [editor, minLevel, maxLevel]);
 
   useEffect(() => {
     if (!editor) return;
@@ -307,75 +532,55 @@ export const TableOfContents = memo(function TableOfContents({
     });
   }, []);
 
-  const renderTocItem = useCallback((item: TocItem, isActive: boolean, depth: number = 0) => {
+  // Tree view rendering with memoized items
+  const renderTreeItem = useCallback((item: TocItem, depth: number = 0): React.ReactNode => {
     if (renderItem) {
+      const isActive = activeId === item.id;
       return renderItem(item, isActive, () => handleItemClick(item));
     }
 
-    const indent = (item.level - minLevel) * 14;
-    const hasChildren = treeView && item.children && item.children.length > 0;
+    const isActive = activeId === item.id;
+    const hasChildren = item.children && item.children.length > 0;
     const isCollapsed = collapsedSections.has(item.id);
 
     return (
-      <div
-        key={item.id}
-        className={`toc-item ${isActive ? 'toc-item-active' : ''} toc-level-${item.level}`}
-        style={{ paddingLeft: `${indent + 10}px` }}
-      >
-        <button
-          className="toc-item-button"
-          onClick={() => handleItemClick(item)}
-          title={item.text}
-        >
-          {hasChildren && (
-            <span
-              className="toc-collapse-toggle"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleCollapse(item.id);
-              }}
-            >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                {isCollapsed
-                  ? <path d="M3.5 2L7 5L3.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  : <path d="M2 3.5L5 7L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                }
-              </svg>
-            </span>
-          )}
-          {showLevelIndicators && (
-            <span className="toc-level-indicator">H{item.level}</span>
-          )}
-          <span className="toc-item-text">{item.text}</span>
-        </button>
+      <div key={item.id}>
+        <TocItemRow
+          item={item}
+          isActive={isActive}
+          minLevel={minLevel}
+          showLevelIndicators={showLevelIndicators}
+          hasChildren={!!hasChildren}
+          isCollapsed={isCollapsed}
+          treeView={true}
+          onItemClick={handleItemClick}
+          onToggleCollapse={toggleCollapse}
+        />
+        {hasChildren && !isCollapsed && (
+          <div className="toc-children">
+            {item.children!.map(child => renderTreeItem(child, depth + 1))}
+          </div>
+        )}
       </div>
     );
-  }, [renderItem, handleItemClick, treeView, minLevel, showLevelIndicators, collapsedSections, toggleCollapse]);
+  }, [activeId, collapsedSections, handleItemClick, toggleCollapse, minLevel, showLevelIndicators, renderItem]);
 
-  const renderTree = useCallback((items: TocItem[], depth: number = 0): React.ReactNode => {
-    return items.map(item => {
+  const renderTree = useCallback((items: TocItem[]): React.ReactNode => {
+    return items.map(item => renderTreeItem(item));
+  }, [renderTreeItem]);
+
+  // For flat list with custom renderItem, fall back to simple rendering
+  const renderCustomFlatList = useCallback(() => {
+    if (!renderItem) return null;
+    return headings.map(item => {
       const isActive = activeId === item.id;
-      const isCollapsed = collapsedSections.has(item.id);
-      const hasChildren = item.children && item.children.length > 0;
       return (
         <div key={item.id}>
-          {renderTocItem(item, isActive, depth)}
-          {hasChildren && !isCollapsed && (
-            <div className="toc-children">
-              {renderTree(item.children!, depth + 1)}
-            </div>
-          )}
+          {renderItem(item, isActive, () => handleItemClick(item))}
         </div>
       );
     });
-  }, [activeId, collapsedSections, renderTocItem]);
-
-  const renderFlatList = useCallback(() => {
-    return headings.map(item => {
-      const isActive = activeId === item.id;
-      return renderTocItem(item, isActive);
-    });
-  }, [headings, activeId, renderTocItem]);
+  }, [headings, activeId, renderItem, handleItemClick]);
 
   if (!editor) return null;
 
@@ -425,7 +630,21 @@ export const TableOfContents = memo(function TableOfContents({
               </div>
             ) : (
               <div className="toc-list">
-                {treeView ? renderTree(treeItems) : renderFlatList()}
+                {treeView
+                  ? renderTree(treeItems)
+                  : renderItem
+                    ? renderCustomFlatList()
+                    : (
+                      <VirtualizedTocList
+                        headings={headings}
+                        activeId={activeId}
+                        minLevel={minLevel}
+                        showLevelIndicators={showLevelIndicators}
+                        onItemClick={handleItemClick}
+                        onToggleCollapse={toggleCollapse}
+                      />
+                    )
+                }
               </div>
             )}
           </div>

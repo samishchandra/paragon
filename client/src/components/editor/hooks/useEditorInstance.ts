@@ -19,6 +19,8 @@ export interface UseEditorInstanceOptions {
   onChange?: (html: string) => void;
   onHTMLChange?: (html: string) => void;
   onMarkdownChange?: (markdown: string) => void;
+  /** Debounce delay for firing onMarkdownChange during WYSIWYG typing (0 = lazy-only) */
+  markdownChangeDebounceMs: number;
   onReady?: (editor: Editor) => void;
   onDestroy?: () => void;
   onFocus?: () => void;
@@ -65,6 +67,7 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
     onChange,
     onHTMLChange,
     onMarkdownChange,
+    markdownChangeDebounceMs,
     onReady,
     onDestroy: onDestroyProp,
     onFocus: onFocusProp,
@@ -90,14 +93,18 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
 
   // Debounced onUpdate ref for HTML serialization performance
   const onUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Separate timeout for debounced markdown change (only active when markdownChangeDebounceMs > 0)
+  const onMarkdownUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onChangeRef = useRef(onChange);
   const onHTMLChangeRef = useRef(onHTMLChange);
   const onMarkdownChangeRef = useRef(onMarkdownChange);
+  const markdownChangeDebounceMsRef = useRef(markdownChangeDebounceMs);
   // Ref for turndownService so onUpdate callback can access it (turndownService is created after useEditor)
   const turndownServiceRef = useRef<ReturnType<typeof useTurndownService> | null>(null);
   onChangeRef.current = onChange;
   onHTMLChangeRef.current = onHTMLChange;
   onMarkdownChangeRef.current = onMarkdownChange;
+  markdownChangeDebounceMsRef.current = markdownChangeDebounceMs;
 
   const editor = useEditor({
     /**
@@ -171,10 +178,23 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
           onChangeRef.current?.(html);
           onHTMLChangeRef.current?.(html);
         }
-        // NOTE: Turndown conversion is intentionally NOT done here for performance.
-        // Converting HTML→Markdown on every keystroke (even debounced at 150ms) is expensive
-        // for large documents (two full document serializations per keystroke).
-        // Instead, rawMarkdown is synced lazily: on blur, on mode-switch, and on unmount.
+        // Debounced markdown change: only when markdownChangeDebounceMs > 0
+        // This gives embedding apps opt-in control over the performance tradeoff.
+        // When 0, rawMarkdown is synced lazily: on blur, on mode-switch, and on unmount.
+        if (markdownChangeDebounceMsRef.current > 0 && onMarkdownChangeRef.current) {
+          if (onMarkdownUpdateTimeoutRef.current) {
+            clearTimeout(onMarkdownUpdateTimeoutRef.current);
+          }
+          onMarkdownUpdateTimeoutRef.current = setTimeout(() => {
+            if (editor.isDestroyed) return;
+            if (editorModeRef.current === 'wysiwyg' && turndownServiceRef.current) {
+              const mdHtml = editor.getHTML();
+              const markdown = turndownServiceRef.current.turndown(mdHtml);
+              rawMarkdownRef.current = markdown;
+              onMarkdownChangeRef.current?.(stripZWSP(markdown));
+            }
+          }, markdownChangeDebounceMsRef.current);
+        }
       }, 150);
     },
     onFocus: () => {
@@ -183,6 +203,11 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
     onBlur: () => {
       // Flush any pending debounced onChange immediately on blur
       // This prevents data loss when user switches apps (especially on mobile)
+      // Also cancel any pending debounced markdown change (blur does a full flush below)
+      if (onMarkdownUpdateTimeoutRef.current) {
+        clearTimeout(onMarkdownUpdateTimeoutRef.current);
+        onMarkdownUpdateTimeoutRef.current = null;
+      }
       if (onUpdateTimeoutRef.current) {
         clearTimeout(onUpdateTimeoutRef.current);
         onUpdateTimeoutRef.current = null;
@@ -243,6 +268,11 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
   // This ensures image resize and other pending changes are saved when navigating away
   useEffect(() => {
     return () => {
+      // Cancel any pending debounced markdown change (unmount does a full flush below)
+      if (onMarkdownUpdateTimeoutRef.current) {
+        clearTimeout(onMarkdownUpdateTimeoutRef.current);
+        onMarkdownUpdateTimeoutRef.current = null;
+      }
       if (onUpdateTimeoutRef.current) {
         clearTimeout(onUpdateTimeoutRef.current);
         onUpdateTimeoutRef.current = null;

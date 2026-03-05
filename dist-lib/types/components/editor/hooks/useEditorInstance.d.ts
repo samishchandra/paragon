@@ -12,6 +12,8 @@ export interface UseEditorInstanceOptions {
     onChange?: (html: string) => void;
     onHTMLChange?: (html: string) => void;
     onMarkdownChange?: (markdown: string) => void;
+    /** Debounce delay for firing onMarkdownChange during WYSIWYG typing (0 = lazy-only) */
+    markdownChangeDebounceMs: number;
     onReady?: (editor: Editor) => void;
     onDestroy?: () => void;
     onFocus?: () => void;
