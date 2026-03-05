@@ -212,74 +212,73 @@ function buildDecorations(
 }
 
 /**
- * Migrate collapsed heading IDs when the document changes.
- * Maps old IDs (from the previous document state) to new IDs (in the current document state).
- * This handles cases where heading positions shift due to edits, which would change
- * position-based IDs but not occurrence-based IDs.
+ * Compact heading fingerprint: "level:text(50chars)" joined by "|"
+ * Used to detect structural changes without re-traversing the old doc.
  */
-function migrateCollapsedIds(
-  _oldDoc: ProseMirrorNode,
-  newDoc: ProseMirrorNode,
-  storage: CollapsibleHeadingStorage,
-  levels: number[]
-): void {
-  if (storage.collapsedHeadings.size === 0) return;
-
-  const newIdMap = buildHeadingIdMap(newDoc, levels);
-  const newIds = new Set(newIdMap.values());
-
-  // Remove any collapsed IDs that no longer exist in the document
-  // (e.g., heading was deleted or its text changed)
-  const toRemove: string[] = [];
-  storage.collapsedHeadings.forEach((id) => {
-    if (!newIds.has(id)) {
-      toRemove.push(id);
+function buildHeadingFingerprint(doc: ProseMirrorNode, levels: number[]): string {
+  const parts: string[] = [];
+  doc.descendants((node) => {
+    if (node.type.name === 'heading' && levels.includes(node.attrs.level)) {
+      parts.push(`${node.attrs.level}:${node.textContent.slice(0, 50)}`);
     }
   });
-  for (const id of toRemove) {
-    storage.collapsedHeadings.delete(id);
-  }
+  return parts.join('|');
 }
 
 /**
- * Check if a document change affects heading structure.
- * Returns true if any heading was added, removed, or had its level/text changed.
- * When false, we can use DecorationSet.map() instead of a full rebuild.
+ * Combined heading analysis: migrates collapsed IDs and detects structural changes
+ * in a single traversal of the new document. Uses the cached fingerprint from the
+ * previous state to avoid traversing the old document.
+ *
+ * Returns: { structureChanged, newFingerprint }
+ *
+ * Previously this was 3 separate full-doc traversals per docChanged transaction:
+ *   1. buildHeadingIdMap(newDoc) inside migrateCollapsedIds
+ *   2. oldDoc.descendants() inside headingStructureChanged
+ *   3. newDoc.descendants() inside headingStructureChanged
+ * Now it's 1 traversal of newDoc + a string comparison against the cached fingerprint.
  */
-function headingStructureChanged(
-  oldDoc: ProseMirrorNode,
+function analyzeHeadingChanges(
   newDoc: ProseMirrorNode,
-  levels: number[]
-): boolean {
-  // Quick check: if doc sizes differ significantly, likely structural change
-  // (This is a cheap heuristic to avoid the full scan in obvious cases)
-
-  // Collect headings from both docs
-  const oldHeadings: Array<{ level: number; text: string }> = [];
-  const newHeadings: Array<{ level: number; text: string }> = [];
-
-  oldDoc.descendants((node) => {
-    if (node.type.name === 'heading' && levels.includes(node.attrs.level)) {
-      oldHeadings.push({ level: node.attrs.level, text: node.textContent.slice(0, 50) });
-    }
-  });
+  storage: CollapsibleHeadingStorage,
+  levels: number[],
+  oldFingerprint: string
+): { structureChanged: boolean; newFingerprint: string } {
+  // Single traversal: build fingerprint + ID set for the new doc
+  const parts: string[] = [];
+  const newIds = new Set<string>();
+  const occurrenceCounts = new Map<string, number>();
 
   newDoc.descendants((node) => {
     if (node.type.name === 'heading' && levels.includes(node.attrs.level)) {
-      newHeadings.push({ level: node.attrs.level, text: node.textContent.slice(0, 50) });
+      const level = node.attrs.level;
+      const text = node.textContent.slice(0, 50);
+      parts.push(`${level}:${text}`);
+
+      const key = `h${level}-${text}`;
+      const count = occurrenceCounts.get(key) ?? 0;
+      occurrenceCounts.set(key, count + 1);
+      newIds.add(getHeadingId(level, text, count));
     }
   });
 
-  // Different number of headings = structural change
-  if (oldHeadings.length !== newHeadings.length) return true;
+  const newFingerprint = parts.join('|');
+  const structureChanged = newFingerprint !== oldFingerprint;
 
-  // Compare each heading's level and text
-  for (let i = 0; i < oldHeadings.length; i++) {
-    if (oldHeadings[i].level !== newHeadings[i].level) return true;
-    if (oldHeadings[i].text !== newHeadings[i].text) return true;
+  // Migrate collapsed IDs: remove any that no longer exist
+  if (storage.collapsedHeadings.size > 0) {
+    const toRemove: string[] = [];
+    storage.collapsedHeadings.forEach((id) => {
+      if (!newIds.has(id)) {
+        toRemove.push(id);
+      }
+    });
+    for (const id of toRemove) {
+      storage.collapsedHeadings.delete(id);
+    }
   }
 
-  return false;
+  return { structureChanged, newFingerprint };
 }
 
 export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, CollapsibleHeadingStorage>({
@@ -374,9 +373,10 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
               collapsedHeadings: new Set<string>(),
               decorations: buildDecorations(state.doc, storage, options, viewRef),
               docVersion: 0,
+              headingFingerprint: buildHeadingFingerprint(state.doc, options.levels),
             };
           },
-          apply(tr, value, oldState, newState) {
+          apply(tr, value, _oldState, newState) {
             const meta = tr.getMeta('collapsibleHeading');
 
             // Collapse/expand toggle always requires full rebuild
@@ -386,27 +386,31 @@ export const CollapsibleHeading = Extension.create<CollapsibleHeadingOptions, Co
                 collapsedHeadings: new Set(storage.collapsedHeadings),
                 decorations: buildDecorations(newState.doc, storage, options, viewRef),
                 docVersion: value.docVersion + 1,
+                headingFingerprint: buildHeadingFingerprint(newState.doc, options.levels),
               };
             }
 
             if (tr.docChanged) {
-              // Migrate collapsed IDs to account for structural shifts
-              migrateCollapsedIds(oldState.doc, newState.doc, storage, options.levels);
+              // R17 optimization: single traversal of newDoc replaces 3 separate traversals.
+              // Combines: migrateCollapsedIds + headingStructureChanged into one pass.
+              // Uses cached headingFingerprint to avoid re-traversing the old doc.
+              const { structureChanged, newFingerprint } = analyzeHeadingChanges(
+                newState.doc, storage, options.levels, value.headingFingerprint
+              );
 
-              // Performance: Only do a full rebuild if heading structure actually changed.
-              // For normal typing within paragraphs/non-heading nodes, we can just map
-              // existing decorations through the transaction mapping.
-              if (headingStructureChanged(oldState.doc, newState.doc, options.levels)) {
+              if (structureChanged) {
                 return {
                   collapsedHeadings: new Set(storage.collapsedHeadings),
                   decorations: buildDecorations(newState.doc, storage, options, viewRef),
                   docVersion: value.docVersion + 1,
+                  headingFingerprint: newFingerprint,
                 };
               }
 
               // Heading structure unchanged — map existing decorations
               return {
                 ...value,
+                headingFingerprint: newFingerprint,
                 decorations: value.decorations.map(tr.mapping, tr.doc),
               };
             }

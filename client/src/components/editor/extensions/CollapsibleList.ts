@@ -79,47 +79,24 @@ function getNestedListRange(
 }
 
 /**
- * Collect a fingerprint of the list structure in a document.
- * Returns an array of { depth, hasNested, textSnippet } for each list item.
- * Used to detect whether list structure has changed (items added/removed/reordered).
+ * Build a compact string fingerprint of the list structure in a document.
+ * Encodes hasNested + text for each list item, joined by "|".
+ * Used to detect structural changes via string comparison against cached fingerprint,
+ * avoiding re-traversal of the old document (R17 optimization).
  */
-function collectListFingerprint(
+function buildListFingerprint(
   doc: ProseMirrorNode,
   listItemTypes: string[]
-): Array<{ hasNested: boolean; text: string }> {
-  const items: Array<{ hasNested: boolean; text: string }> = [];
+): string {
+  const parts: string[] = [];
   doc.descendants((node) => {
     if (listItemTypes.includes(node.type.name)) {
-      items.push({
-        hasNested: hasNestedList(node),
-        text: node.firstChild?.textContent.slice(0, 50) ?? '',
-      });
+      const nested = hasNestedList(node) ? '1' : '0';
+      const text = node.firstChild?.textContent.slice(0, 50) ?? '';
+      parts.push(`${nested}:${text}`);
     }
   });
-  return items;
-}
-
-/**
- * Check if list structure changed between two documents.
- * Returns true if any list item was added, removed, or had its nesting changed.
- * When false, we can use DecorationSet.map() instead of a full rebuild.
- */
-function listStructureChanged(
-  oldDoc: ProseMirrorNode,
-  newDoc: ProseMirrorNode,
-  listItemTypes: string[]
-): boolean {
-  const oldItems = collectListFingerprint(oldDoc, listItemTypes);
-  const newItems = collectListFingerprint(newDoc, listItemTypes);
-
-  if (oldItems.length !== newItems.length) return true;
-
-  for (let i = 0; i < oldItems.length; i++) {
-    if (oldItems[i].hasNested !== newItems[i].hasNested) return true;
-    if (oldItems[i].text !== newItems[i].text) return true;
-  }
-
-  return false;
+  return parts.join('|');
 }
 
 /**
@@ -351,9 +328,10 @@ export const CollapsibleList = Extension.create<CollapsibleListOptions, Collapsi
               collapsedItems: new Set<string>(),
               decorations: buildDecorations(state.doc, storage, options, viewRef),
               docVersion: 0,
+              listFingerprint: buildListFingerprint(state.doc, options.listItemTypes),
             };
           },
-          apply(tr, value, oldState, newState) {
+          apply(tr, value, _oldState, newState) {
             const meta = tr.getMeta('collapsibleList');
 
             // Collapse/expand toggle always requires full rebuild
@@ -363,24 +341,28 @@ export const CollapsibleList = Extension.create<CollapsibleListOptions, Collapsi
                 collapsedItems: new Set(storage.collapsedItems),
                 decorations: buildDecorations(newState.doc, storage, options, viewRef),
                 docVersion: value.docVersion + 1,
+                listFingerprint: buildListFingerprint(newState.doc, options.listItemTypes),
               };
             }
 
             if (tr.docChanged) {
-              // Performance: Only do a full rebuild if list structure actually changed.
-              // For normal typing within paragraphs or non-list nodes, we can just map
-              // existing decorations through the transaction mapping.
-              if (listStructureChanged(oldState.doc, newState.doc, options.listItemTypes)) {
+              // R17 optimization: single traversal of newDoc + string comparison
+              // against cached fingerprint. Replaces 2 full traversals (old + new doc).
+              const newFingerprint = buildListFingerprint(newState.doc, options.listItemTypes);
+
+              if (newFingerprint !== value.listFingerprint) {
                 return {
                   collapsedItems: new Set(storage.collapsedItems),
                   decorations: buildDecorations(newState.doc, storage, options, viewRef),
                   docVersion: value.docVersion + 1,
+                  listFingerprint: newFingerprint,
                 };
               }
 
               // List structure unchanged — map existing decorations
               return {
                 ...value,
+                listFingerprint: newFingerprint,
                 decorations: value.decorations.map(tr.mapping, tr.doc),
               };
             }

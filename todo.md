@@ -48,6 +48,9 @@
   - [x] R10b: plain NodeView for Callout (type selector, icon, portal dropdown, collapse toggle)
   - [x] R10c: verify all 1012 tests pass with zero regressions
   - [x] R10d: manual edge case testing (multi-instance, React removal, type safety)
+- [x] Perf R17: optimize migrateCollapsedIds + headingStructureChanged + listStructureChanged with cached fingerprints (3 traversals → 1)
+- [x] Perf R4: conditional extension registration — already implemented via disabledFeatures + isLightweight auto-detection
+- [x] Perf R16: table extensions — already gated by disabledFeatures.tables; true lazy-load not feasible (TipTap requires schema at creation)
 - [ ] **DEFERRED** Fix: typing "# " on the FIRST LINE of a code block converts to heading (works fine on 2nd+ lines) — root cause: ProseMirror DOM reconciliation re-parses the code block content as heading via parseDOM rules, bypassing handleTextInput and input rules entirely. Needs custom parseDOM override or DOM mutation observer guard.
 - [ ] **DEFERRED** Fix: typing ``` + space should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)
 - [ ] **DEFERRED** Fix: typing ``` + Enter should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)
