@@ -198,12 +198,9 @@ const cm = zd.configure({
     };
   },
   addProseMirrorPlugins() {
-    const e = this.parent?.() ?? [];
-    this.editor;
-    const t = this.type;
+    const e = this.parent?.() ?? [], t = this.type;
     return [
-      ...e,
-      // Plugin: Handle ``` + Enter to create a code block and place cursor inside
+      // Plugin: Handle ``` + Enter shortcut to create code block with cursor inside
       new Ce({
         key: new Me("codeBlockEnterShortcut"),
         props: {
@@ -219,23 +216,14 @@ const cm = zd.configure({
             ).match(/^```([a-zA-Z]*)$/);
             if (!c) return !1;
             r.preventDefault();
-            const l = c[1] || null;
-            s.start(), s.end();
-            const u = o.tr, d = o.schema.nodes.paragraph, f = t.create(
-              { language: l },
-              void 0
-            ), p = s.before(s.depth), h = s.after(s.depth), g = d.create();
-            u.replaceWith(p, h, [
-              f,
-              g
-            ]);
+            const l = c[1] || null, u = o.tr, d = o.schema.nodes.paragraph, f = t.create({ language: l }, void 0), p = s.before(s.depth), h = s.after(s.depth), g = d.create();
+            u.replaceWith(p, h, [f, g]);
             const y = p + 1;
-            return u.setSelection(
-              Ve.create(u.doc, y)
-            ), n.dispatch(u), !0;
+            return u.setSelection(Ve.create(u.doc, y)), n.dispatch(u), !0;
           }
         }
-      })
+      }),
+      ...e
     ];
   }
 });
