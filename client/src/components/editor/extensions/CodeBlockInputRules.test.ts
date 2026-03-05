@@ -107,6 +107,42 @@ describe('Code block input rules', () => {
       }
     });
 
+    it('should create a code block when typing ``` and pressing Space', () => {
+      const editor = createEditor('<p></p>');
+      
+      // Position cursor at the start of the paragraph
+      editor.commands.setTextSelection(1);
+      
+      // Insert ``` text first
+      editor.commands.insertContent('```');
+      
+      // Now simulate space being typed via handleTextInput
+      const view = (editor as any).view;
+      const { from, to } = editor.state.selection;
+      
+      // handleTextInput simulates typing a space character
+      const handled = view.someProp('handleTextInput', (f: any) => f(view, from, to, ' '));
+      
+      if (handled) {
+        // Verify a code block was created
+        const doc = editor.state.doc;
+        let hasCodeBlock = false;
+        doc.descendants((node: any) => {
+          if (node.type.name === 'codeBlock') {
+            hasCodeBlock = true;
+          }
+        });
+        expect(hasCodeBlock).toBe(true);
+        
+        // Verify cursor is inside the code block
+        const { $from } = editor.state.selection;
+        expect($from.parent.type.name).toBe('codeBlock');
+      } else {
+        // If not handled, the input rule didn't fire - this is a bug
+        throw new Error('handleTextInput did not handle ``` + space - input rule not firing');
+      }
+    });
+
     it('should NOT trigger on non-backtick text + Enter', () => {
       const editor = createEditor('<p>hello world</p>');
       
