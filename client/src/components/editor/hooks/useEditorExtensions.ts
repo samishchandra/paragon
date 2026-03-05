@@ -43,6 +43,9 @@ import { SmartCopyPaste } from '../extensions/SmartCopyPaste';
 import { ImageUpload } from '../extensions/ImageUpload';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import Code from '@tiptap/extension-code';
+import Bold from '@tiptap/extension-bold';
+import Italic from '@tiptap/extension-italic';
+import Strike from '@tiptap/extension-strike';
 import { InputRule } from '@tiptap/core';
 import { TextSelection } from '@tiptap/pm/state';
 
@@ -146,23 +149,20 @@ export function useEditorExtensions({
         // via our custom space shortcut handler (insertHorizontalRuleClean)
         // to avoid the extra empty paragraph that the default command creates
         horizontalRule: false,
-        bold: {
-          HTMLAttributes: {
-            class: 'font-bold',
-          },
-        },
-        italic: {
-          HTMLAttributes: {
-            class: 'italic',
-          },
-        },
-        // Disable built-in Code mark — we extend it below with keepOnSplit: false
-        // so that pressing Enter in a list item with inline code does not carry
-        // the code formatting into the new list item.
+        // Disable built-in Bold, Italic, Strike, and Code marks — we extend
+        // them below with keepOnSplit: false so that pressing Enter at the end
+        // of formatted text does not carry the formatting into the new line.
+        bold: false,
+        italic: false,
+        strike: false,
         code: false,
       }),
-      // Inline code mark with keepOnSplit disabled — prevents the code style
-      // from carrying over when pressing Enter to create a new list item.
+      // Inline formatting marks with keepOnSplit disabled — prevents bold,
+      // italic, strikethrough, and code styles from carrying over when pressing
+      // Enter to create a new line or list item.
+      Bold.configure({ HTMLAttributes: { class: 'font-bold' } }).extend({ keepOnSplit: false }),
+      Italic.configure({ HTMLAttributes: { class: 'italic' } }).extend({ keepOnSplit: false }),
+      Strike.configure({}).extend({ keepOnSplit: false }),
       Code.configure({}).extend({ keepOnSplit: false }),
       // Mixed list extensions - allow inter-mixing of bullet, ordered, and task list items
       MixedBulletList,
