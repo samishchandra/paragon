@@ -35,7 +35,10 @@ function run(cmd, label) {
 }
 
 // Step 1: Build the library bundle
-run('npx vite build --config vite.lib.config.ts', 'Building library bundle');
+// Force NODE_ENV=production so @vitejs/plugin-react uses react/jsx-runtime
+// instead of react/jsx-dev-runtime. Without this, jsxDEV calls in the bundle
+// crash consuming apps with "f.jsxDEV is not a function".
+run('NODE_ENV=production npx vite build --config vite.lib.config.ts', 'Building library bundle');
 
 // Step 2: Generate TypeScript declarations
 run('npx tsc --project tsconfig.lib.json', 'Generating TypeScript declarations');
