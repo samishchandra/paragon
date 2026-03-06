@@ -1,6 +1,6 @@
 import { MarkdownEditor } from '@/components/editor';
 import { useState, useCallback } from 'react';
-import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun, Search, Calendar, ListTree, BookOpen, Shield, ArrowUpDown, FileCode2, Wand2, Github, PenLine } from 'lucide-react';
+import { FileText, Keyboard, Palette, Zap, Code2, Table, CheckSquare, Quote, Image, Sparkles, X, Maximize2, Moon, Sun, Search, Calendar, ListTree, BookOpen, Shield, ArrowUpDown, FileCode2, Wand2, Github, PenLine, Gauge, ClipboardCopy, Link2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import SiteHeader from '@/components/SiteHeader';
@@ -320,7 +320,7 @@ const features = [
   {
     icon: <Code2 className="w-5 h-5" />,
     title: 'Syntax Highlighting',
-    description: 'Code blocks with 20+ languages and copy button',
+    description: 'Code blocks with 20+ lazy-loaded languages and copy button',
   },
   {
     icon: <FileCode2 className="w-5 h-5" />,
@@ -376,6 +376,21 @@ const features = [
     icon: <Palette className="w-5 h-5" />,
     title: 'Customizable Theme',
     description: 'Colorful & neutral themes with dark/light modes',
+  },
+  {
+    icon: <Gauge className="w-5 h-5" />,
+    title: 'Performance Optimized',
+    description: 'Incremental decorations, lazy loading, plain NodeViews',
+  },
+  {
+    icon: <ClipboardCopy className="w-5 h-5" />,
+    title: 'Copy as Markdown',
+    description: 'Copy selected content as formatted markdown',
+  },
+  {
+    icon: <Link2 className="w-5 h-5" />,
+    title: 'Smart Links',
+    description: 'Hover tooltips, PWA-compatible, validation',
   },
   {
     icon: <Shield className="w-5 h-5" />,
@@ -475,15 +490,15 @@ export default function Home() {
           <div className="max-w-3xl mx-auto text-center px-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 sm:mb-6 text-xs font-medium bg-primary/10 text-primary rounded-full">
               <Sparkles className="w-3 h-3" />
-              Built with TipTap & React &mdash; Now with AI
+              Built with TipTap & React &mdash; AI + Performance Optimized
             </div>
             <h2 className="text-2xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">
               The Best Markdown Editor for Your App
             </h2>
             <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-8">
               A professional, feature-rich markdown editor component with AI writing assistant, 
-              dual WYSIWYG/raw mode, colorful and neutral themes, date pills, Find &amp; Replace, and 35+ features &mdash; 
-              designed as a drop-in for Taskmate, Momentum, and more.
+              dual WYSIWYG/raw mode, performance-optimized rendering, colorful and neutral themes, and 35+ features &mdash; 
+              backed by 1,012 tests. Designed as a drop-in for Taskmate, Momentum, and more.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -759,6 +774,12 @@ function MyApp() {
                       <td className="px-4 py-2 text-muted-foreground">Custom footer render function</td>
                     </tr>
                     <tr>
+                      <td className="px-4 py-2 font-mono text-primary">markdownChangeDebounceMs</td>
+                      <td className="px-4 py-2 text-muted-foreground">number</td>
+                      <td className="px-4 py-2 text-muted-foreground">150</td>
+                      <td className="px-4 py-2 text-muted-foreground">Debounce delay for markdown sync (ms)</td>
+                    </tr>
+                    <tr>
                       <td className="px-4 py-2 font-mono text-primary">disabledFeatures</td>
                       <td className="px-4 py-2 text-muted-foreground">object</td>
                       <td className="px-4 py-2 text-muted-foreground">{'{}'}</td>
@@ -861,7 +882,7 @@ function MyApp() {
       <footer className="py-6 border-t border-border">
         <div className="container">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <p>Built with TipTap, React, and TypeScript</p>
+            <p>Built with TipTap, React, and TypeScript &mdash; 1,012 tests</p>
             <p>Designed for Taskmate, Momentum, and more</p>
           </div>
         </div>

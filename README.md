@@ -6,10 +6,11 @@ A professional, feature-rich markdown editor component designed as a drop-in for
 
 - **Dual Mode**: WYSIWYG visual editing and raw markdown with real-time sync
 - **AI Writing Assistant**: Provider-agnostic integration with streaming support
-- **30+ Features**: Tables, code blocks, date pills, callouts, Find & Replace, TOC, and more
+- **35+ Features**: Tables, code blocks, date pills, callouts, Find & Replace, TOC, and more
 - **Zero Lock-in**: Opt-in AI, modular extensions, CSS-variable theming
 - **Production Ready**: Error boundary, auto-save/recovery, performance profiler
-- **Fully Tested**: 847 unit tests + 40 Playwright E2E browser tests
+- **Performance Optimized**: Incremental decorations, lazy-loaded languages, plain NodeViews, consolidated input handlers
+- **Fully Tested**: 1,012 unit tests + 14 benchmarks + 40 Playwright E2E browser tests
 
 ---
 
@@ -309,6 +310,8 @@ function MyApp() {
 | `autoReorderChecklist` | `boolean` | `false` | Auto-sort completed tasks to bottom |
 | `headingLevels` | `number[]` | `[1,2,3,4,5,6]` | Enabled heading levels |
 | `collapsibleHeadingLevels` | `number[]` | `[1,2,3]` | Collapsible heading levels |
+| `enableCollapsibleHeadings` | `boolean` | `false` | Enable collapsible heading sections |
+| `enableCollapsibleLists` | `boolean` | `false` | Enable collapsible nested list items |
 | `disabledFeatures` | `object` | `{}` | Disable specific features |
 
 The `disabledFeatures` object supports:
@@ -328,6 +331,15 @@ The `disabledFeatures` object supports:
   dragAndDrop?: boolean;
 }
 ```
+
+### Performance Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `markdownChangeDebounceMs` | `number` | `150` | Debounce delay for `onMarkdownChange` callback (ms) |
+| `wordCountDebounceMs` | `number` | `1000` | Debounce delay for word count updates (ms) |
+| `showPerformanceProfiler` | `boolean` | `false` | Show built-in performance profiler panel |
+| `onPerformanceProfilerClose` | `function` | - | Callback when profiler is closed |
 
 ### Event Props
 
@@ -451,16 +463,26 @@ The `colorTheme` prop is also available as a query parameter on the demo editor 
 
 ## Testing
 
-Paragon has comprehensive test coverage across two layers:
+Paragon has comprehensive test coverage across three layers:
 
 ### Unit Tests (Vitest)
 
-847 unit tests covering all hooks, utilities, extensions, and components:
+1,012 unit tests across 40 test files covering all hooks, utilities, extensions, and components:
 
 ```bash
 pnpm test        # Run all unit tests
 pnpm test:watch  # Watch mode
 ```
+
+### Performance Benchmarks
+
+14 benchmark tests for large document operations (500+ nodes, 50+ headings) to catch performance regressions:
+
+```bash
+pnpm run bench   # Run benchmarks only (~3 seconds)
+```
+
+Benchmarks cover single character insertion, bulk typing, cursor movement, heading operations, code block creation, table operations, undo/redo, and mode switching — all on large synthetic documents.
 
 ### E2E Tests (Playwright)
 
@@ -481,6 +503,27 @@ E2E tests cover:
 
 ---
 
+## Performance
+
+Paragon includes several performance optimizations designed for large documents and multi-instance deployments:
+
+| Optimization | Description |
+|---|---|
+| Incremental decorations | CollapsibleHeading and CollapsibleList use `DecorationSet.map()` to recompute only changed ranges |
+| Lazy-loaded highlight.js | Core languages loaded on demand via dynamic `import()`, saving ~200 KB from initial bundle |
+| Plain NodeViews | CodeBlock and Callout use imperative ProseMirror NodeViews instead of ReactNodeViewRenderer |
+| Consolidated input handlers | Multiple `handleTextInput` and `handleKeyDown` hooks merged into a single InputDispatcher |
+| Configurable debounce | `markdownChangeDebounceMs` and `wordCountDebounceMs` props for tuning serialization overhead |
+| Conditional extensions | Extensions gated by `disabledFeatures` are not registered; `isLightweight` auto-detection for large docs |
+| Virtualized TOC | Table of Contents uses windowed rendering for documents with many headings |
+| Cached fingerprints | Structure change detection uses a single cached traversal instead of multiple full-document scans |
+
+For the full audit with 17 recommendations and resolution status, see `PERFORMANCE_REPORT.md`.
+
+Run `pnpm run bench` to execute the 14 performance benchmark tests.
+
+---
+
 ## Architecture
 
 ```
@@ -491,7 +534,8 @@ components/editor/
 ├── FloatingToolbar.tsx         # Selection-based floating toolbar (scroll-dismiss)
 ├── SlashCommands.tsx           # Slash command palette
 ├── FindReplace.tsx             # Find & Replace panel
-├── CodeBlockComponent.tsx      # Code block with language selector + copy
+├── CodeBlockComponent.tsx      # Code block with language selector + copy (legacy React version)
+├── CodeBlockWithFeatures.tsx   # Code block plain NodeView (language selector, copy, lazy highlight)
 ├── SyntaxHighlightedMarkdown.tsx # Raw markdown editor with syntax overlay
 ├── TableOfContents.tsx         # Auto-generated TOC sidebar
 ├── EditorErrorBoundary.tsx     # Crash recovery wrapper
@@ -507,8 +551,8 @@ components/editor/
 ├── ThemeProvider.tsx           # React context for theming
 ├── PerformanceProfiler.tsx     # Built-in performance monitor
 ├── index.ts                    # Public exports
-├── editor.css                  # Main stylesheet (6,500+ lines, colorful default + neutral overrides)
-├── editor-colorful.css         # Backup of original colorful theme
+├── editor.css                  # Main stylesheet (neutral theme, 1,800+ lines)
+├── editor-colorful.css         # Colorful theme stylesheet (1,800+ lines)
 ├── ai/
 │   ├── AIDropdownMenu.tsx      # AI action dropdown
 │   ├── AIResultPopover.tsx     # AI result display with accept/reject
@@ -518,7 +562,7 @@ components/editor/
 ├── extensions/
 │   ├── Callout.ts              # Callout block extension
 │   ├── CalloutInputRule.ts     # Callout auto-detection
-│   ├── CalloutWithMenu.tsx     # Callout with type switcher
+│   ├── CalloutWithMenu.tsx     # Callout plain NodeView (type selector, icon, collapse toggle)
 │   ├── CollapsibleHeading.ts   # Collapsible heading extension
 │   ├── CollapsibleList.ts      # Collapsible list extension
 │   ├── CustomTableCell.ts      # Enhanced table cell
@@ -538,7 +582,8 @@ components/editor/
 │   ├── TableRowDrag.ts         # Table row drag-and-drop
 │   ├── TableSorting.tsx        # Table column sorting
 │   ├── TagPill.ts              # Tag pill inline node
-│   └── WikiLink.ts             # Wiki link extension
+│   ├── WikiLink.ts             # Wiki link extension
+│   └── InputDispatcher.ts      # Consolidated handleTextInput/handleKeyDown dispatcher
 ├── hooks/
 │   ├── index.ts                # Barrel file — consolidated hook exports
 │   ├── useAutoSave.ts          # Auto-save hook
@@ -549,7 +594,7 @@ components/editor/
 │   ├── useGlobalEditorAPI.ts   # Global editor API via ref
 │   ├── useHandleModeSwitch.ts  # WYSIWYG ↔ markdown mode switching
 │   ├── useTurndownService.ts   # HTML→Markdown conversion (lazy-loaded)
-│   └── useWordCount.ts         # Word/character counting
+│   └── useWordCount.ts         # Word/character counting (debounced)
 ├── utils/
 │   ├── index.ts                # Barrel file — consolidated utility exports
 │   ├── convertCheckboxLists.ts # Checkbox list conversion
@@ -561,6 +606,7 @@ components/editor/
 │   └── structureImagesInListItems.ts # Image-in-list structuring
 ├── themes/
 │   └── index.ts                # Theme definitions and utilities
+├── performance.benchmark.test.ts # Performance benchmark tests (14 benchmarks)
 └── e2e/                        # (project root)
     └── editor.spec.ts          # Playwright E2E tests (40 tests)
 ```
@@ -647,4 +693,4 @@ Built with:
 - [Marked](https://github.com/markedjs/marked) — Markdown to HTML
 - [Lucide](https://lucide.dev/) — Icons
 - [Playwright](https://playwright.dev/) — E2E browser testing
-- [Vitest](https://vitest.dev/) — Unit testing framework
+- [Vitest](https://vitest.dev/) — Unit testing and benchmark framework
