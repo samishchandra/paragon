@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useEditor } from '@tiptap/react';
 import type { Extensions } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
-import { NodeSelection, TextSelection } from '@tiptap/pm/state';
+import { NodeSelection } from '@tiptap/pm/state';
 
 import { useTurndownService } from './useTurndownService';
 import { stripZWSP } from '../utils/stripZWSP';
@@ -123,19 +123,17 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
     onCreate: ({ editor }) => {
       (window as any).__tiptapEditor = editor;
       // Fix: Clear NodeSelection that TipTap creates when initial content
-      // ends with a node view (HR, image). This prevents the blue outline
-      // from appearing when switching between items.
-      if (editor.state.selection instanceof NodeSelection) {
-        // Use setTimeout(0) to run after TipTap's own onCreate processing
-        setTimeout(() => {
-          if (!editor.isDestroyed && editor.state.selection instanceof NodeSelection) {
-            const tr = editor.state.tr.setSelection(
-              TextSelection.create(editor.state.doc, 1)
-            );
-            editor.view.dispatch(tr);
+      // ends with a node view (HR, image). Uses requestAnimationFrame to
+      // ensure ProseMirror has fully initialized before modifying selection.
+      requestAnimationFrame(() => {
+        if (!editor.isDestroyed && editor.state.selection instanceof NodeSelection) {
+          try {
+            editor.commands.setTextSelection(1);
+          } catch {
+            // Silently ignore if editor state doesn't support this position
           }
-        }, 0);
-      }
+        }
+      });
       onReady?.(editor);
     },
     onDestroy: () => {
@@ -268,12 +266,14 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
         if (!editor.isDestroyed) {
           editor.commands.setContent(contentToSet);
           // Fix: Clear NodeSelection that TipTap creates when content ends
-          // with a node view (HR, image). Replace with a safe TextSelection.
+          // with a node view (HR, image). Use commands API (safe) instead
+          // of raw view.dispatch which can crash during initialization.
           if (editor.state.selection instanceof NodeSelection) {
-            const tr = editor.state.tr.setSelection(
-              TextSelection.create(editor.state.doc, 1)
-            );
-            editor.view.dispatch(tr);
+            try {
+              editor.commands.setTextSelection(1);
+            } catch {
+              // Silently ignore if editor state doesn't support this position
+            }
           }
         }
       }, 0);

@@ -60,13 +60,14 @@ export function useEditorAPI(
         queueMicrotask(() => {
           editor.commands.setContent(content);
           // Fix: Clear NodeSelection that TipTap creates when content ends
-          // with a node view (HR, image). Replace with a safe TextSelection
-          // at the start of the document so nothing appears selected.
+          // with a node view (HR, image). Use commands API (safe) instead
+          // of raw view.dispatch which can crash during initialization.
           if (editor.state.selection instanceof NodeSelection) {
-            const tr = editor.state.tr.setSelection(
-              TextSelection.create(editor.state.doc, 1)
-            );
-            editor.view.dispatch(tr);
+            try {
+              editor.commands.setTextSelection(1);
+            } catch {
+              // Silently ignore if editor state doesn't support this position
+            }
           }
         });
       }
