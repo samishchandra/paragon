@@ -233,7 +233,13 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
 
   const handleOpenLink = useCallback(() => {
     if (tooltip.url) {
-      window.open(tooltip.url, '_blank', 'noopener,noreferrer');
+      // Use anchor element click instead of window.open() with features string
+      // to ensure external links open in the default browser when running as a PWA
+      const a = document.createElement('a');
+      a.href = tooltip.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.click();
     }
   }, [tooltip.url]);
 
