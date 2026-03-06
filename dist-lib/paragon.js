@@ -18137,7 +18137,10 @@ function LC({ editor: e, onEditLink: t }) {
       f(!0), setTimeout(() => f(!1), 1500);
     });
   }, [n.url]), g = F(() => {
-    n.url && window.open(n.url, "_blank", "noopener,noreferrer");
+    if (n.url) {
+      const w = document.createElement("a");
+      w.href = n.url, w.target = "_blank", w.rel = "noopener noreferrer", w.click();
+    }
   }, [n.url]), m = F(() => {
     if (n.linkElement) {
       const { view: w } = e, { doc: E } = w.state;
