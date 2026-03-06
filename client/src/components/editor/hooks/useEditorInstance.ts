@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useEditor } from '@tiptap/react';
 import type { Extensions } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
+import { TextSelection, NodeSelection } from '@tiptap/pm/state';
 import { useTurndownService } from './useTurndownService';
 import { stripZWSP } from '../utils/stripZWSP';
 
@@ -120,6 +121,15 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
     // @ts-ignore - Expose editor globally for debugging
     onCreate: ({ editor }) => {
       (window as any).__tiptapEditor = editor;
+      // Fix: If the initial content ends with a node view (HR, image, etc.),
+      // TipTap may create a NodeSelection on it. Clear it to avoid the
+      // visual "auto-select" artifact when the editor is not focused.
+      if (!autofocus && editor.state.selection instanceof NodeSelection) {
+        const tr = editor.state.tr.setSelection(
+          TextSelection.create(editor.state.doc, 0)
+        );
+        editor.view.dispatch(tr);
+      }
       onReady?.(editor);
     },
     onDestroy: () => {
@@ -251,6 +261,14 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
       const timerId = setTimeout(() => {
         if (!editor.isDestroyed) {
           editor.commands.setContent(contentToSet);
+          // Fix: After deferred content injection, clear any NodeSelection
+          // that TipTap may have created on the last node view (HR, image, etc.)
+          if (editor.state.selection instanceof NodeSelection) {
+            const tr = editor.state.tr.setSelection(
+              TextSelection.create(editor.state.doc, 0)
+            );
+            editor.view.dispatch(tr);
+          }
         }
       }, 0);
       // Store timerId for cleanup
