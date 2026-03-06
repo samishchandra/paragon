@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useEditor } from '@tiptap/react';
 import type { Extensions } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
+import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 
 import { useTurndownService } from './useTurndownService';
 import { stripZWSP } from '../utils/stripZWSP';
@@ -121,6 +122,20 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
     // @ts-ignore - Expose editor globally for debugging
     onCreate: ({ editor }) => {
       (window as any).__tiptapEditor = editor;
+      // Fix: Clear NodeSelection that TipTap creates when initial content
+      // ends with a node view (HR, image). This prevents the blue outline
+      // from appearing when switching between items.
+      if (editor.state.selection instanceof NodeSelection) {
+        // Use setTimeout(0) to run after TipTap's own onCreate processing
+        setTimeout(() => {
+          if (!editor.isDestroyed && editor.state.selection instanceof NodeSelection) {
+            const tr = editor.state.tr.setSelection(
+              TextSelection.create(editor.state.doc, 1)
+            );
+            editor.view.dispatch(tr);
+          }
+        }, 0);
+      }
       onReady?.(editor);
     },
     onDestroy: () => {
@@ -252,6 +267,14 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
       const timerId = setTimeout(() => {
         if (!editor.isDestroyed) {
           editor.commands.setContent(contentToSet);
+          // Fix: Clear NodeSelection that TipTap creates when content ends
+          // with a node view (HR, image). Replace with a safe TextSelection.
+          if (editor.state.selection instanceof NodeSelection) {
+            const tr = editor.state.tr.setSelection(
+              TextSelection.create(editor.state.doc, 1)
+            );
+            editor.view.dispatch(tr);
+          }
         }
       }, 0);
       // Store timerId for cleanup

@@ -7,6 +7,7 @@
  */
 import { useImperativeHandle, type Ref } from 'react';
 import type { Editor } from '@tiptap/core';
+import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 // Re-use the shared TurndownLike interface (accepts both TurndownService
 // and the LazyTurndownService wrapper from useTurndownService).
 import type { TurndownLike } from './useHandleModeSwitch';
@@ -58,6 +59,15 @@ export function useEditorAPI(
       if (editor && !editor.isDestroyed) {
         queueMicrotask(() => {
           editor.commands.setContent(content);
+          // Fix: Clear NodeSelection that TipTap creates when content ends
+          // with a node view (HR, image). Replace with a safe TextSelection
+          // at the start of the document so nothing appears selected.
+          if (editor.state.selection instanceof NodeSelection) {
+            const tr = editor.state.tr.setSelection(
+              TextSelection.create(editor.state.doc, 1)
+            );
+            editor.view.dispatch(tr);
+          }
         });
       }
     },
