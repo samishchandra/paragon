@@ -54,4 +54,11 @@
 - [ ] **DEFERRED** Fix: typing "# " on the FIRST LINE of a code block converts to heading (works fine on 2nd+ lines) — root cause: ProseMirror DOM reconciliation re-parses the code block content as heading via parseDOM rules, bypassing handleTextInput and input rules entirely. Needs custom parseDOM override or DOM mutation observer guard.
 - [ ] **DEFERRED** Fix: typing ``` + space should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)
 - [ ] **DEFERRED** Fix: typing ``` + Enter should place cursor inside the new code block, not after it (only affects Paragon, not momentum apps)
-- [ ] Fix: code block controls (language selector + copy button) not visible on hover — flickering
+- [x] Fix: code block controls (language selector + copy button) not visible on hover — flickering
+  - Root cause 1: infinite NodeView recreation loop (~330/sec) from unconditional codeEl.className mutation
+  - Root cause 2: CSS :hover unreliable in ProseMirror contentEditable; fixed with inline style + !important
+- [ ] Pull latest changes from GitHub and update documentation + home page
+  - [ ] Pull from user_github remote (master branch)
+  - [ ] Update README.md with recent performance optimizations and code block fixes
+  - [ ] Update CHANGELOG.md with recent changes
+  - [ ] Update Home.tsx landing page to reflect recent changes
