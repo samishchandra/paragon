@@ -4,7 +4,7 @@ import * as T from "react";
 import X, { useState as j, useRef as Y, useEffect as q, useLayoutEffect as fo, memo as bt, useCallback as F, useImperativeHandle as Ku, createContext as hl, useContext as ml, useMemo as St, Component as Gu, useReducer as qu, lazy as Xu, forwardRef as Zu, Suspense as Fa } from "react";
 import Qu from "@tiptap/extension-code-block-lowlight";
 import { createLowlight as Ju } from "lowlight";
-import { Image as Bs, X as mt, Link2 as Ws, Type as po, Undo as ef, Redo as tf, Bold as zs, Italic as Fs, Underline as Us, Strikethrough as Ys, Code as gl, Highlighter as yl, Link as js, ChevronDown as Jn, List as Vs, ListOrdered as Ks, CheckSquare as Gs, Quote as qs, Code2 as vl, IndentIncrease as nf, IndentDecrease as rf, Table as ms, Minus as bl, Info as gs, BookOpen as wl, PenLine as of, Library as sf, ListTodo as xl, Columns as Ua, Trash2 as dn, Rows as Ya, ToggleLeft as ja, ArrowUpDown as af, Sparkles as ho, Copy as bn, Search as lf, ChevronUp as cf, MousePointerClick as df, CaseSensitive as uf, WholeWord as ff, Regex as pf, Replace as ys, ReplaceAll as hf, Plus as Xs, ChevronLeftIcon as mf, ChevronRightIcon as gf, ChevronDownIcon as yf, Calendar as kl, Hash as Va, Cloud as vf, Loader2 as Cl, Check as wn, CloudOff as bf, AlertCircle as wf, RotateCcw as Zs, Activity as xf, Maximize2 as El, Minimize2 as Ml, AlertTriangle as kf, ChevronRight as Cf, CheckCircle2 as Ef, Eye as Mf, FileText as Qs, FileCode as Tf, ExternalLink as Sf, Pencil as Nf, Unlink as Df, Heading1 as Lf, Heading2 as Af, Heading3 as If, Heading4 as Rf, Heading5 as Pf, StickyNote as Of, MessageSquareText as _f, ImagePlus as $f, MessageSquare as Tl, RefreshCw as Hf, SpellCheck as Bf, PanelRightClose as Wf, PanelRightOpen as zf } from "lucide-react";
+import { Image as Bs, X as mt, Link2 as Ws, Type as po, Undo as ef, Redo as tf, Bold as zs, Italic as Fs, Underline as Us, Strikethrough as Ys, Code as gl, Highlighter as yl, Link as js, ChevronDown as Jn, List as Vs, ListOrdered as Ks, CheckSquare as Gs, Quote as qs, FileCode as vl, IndentIncrease as nf, IndentDecrease as rf, Table as ms, Minus as bl, Info as gs, BookOpen as wl, PenLine as of, Library as sf, ListTodo as xl, Columns as Ua, Trash2 as dn, Rows as Ya, ToggleLeft as ja, ArrowUpDown as af, Sparkles as ho, Copy as bn, Search as lf, ChevronUp as cf, MousePointerClick as df, CaseSensitive as uf, WholeWord as ff, Regex as pf, Replace as ys, ReplaceAll as hf, Plus as Xs, ChevronLeftIcon as mf, ChevronRightIcon as gf, ChevronDownIcon as yf, Calendar as kl, Hash as Va, Cloud as vf, Loader2 as Cl, Check as wn, CloudOff as bf, AlertCircle as wf, RotateCcw as Zs, Activity as xf, Maximize2 as El, Minimize2 as Ml, AlertTriangle as kf, ChevronRight as Cf, CheckCircle2 as Ef, Eye as Mf, FileText as Qs, ExternalLink as Tf, Pencil as Sf, Unlink as Nf, Heading1 as Df, Heading2 as Lf, Heading3 as Af, Heading4 as If, Heading5 as Rf, Code2 as Pf, StickyNote as Of, MessageSquareText as _f, ImagePlus as $f, MessageSquare as Tl, RefreshCw as Hf, SpellCheck as Bf, PanelRightClose as Wf, PanelRightOpen as zf } from "lucide-react";
 import * as Sl from "react-dom";
 import Ff, { createPortal as Uf } from "react-dom";
 import { TextSelection as Ve, Plugin as Ne, PluginKey as De, NodeSelection as Yf, AllSelection as jf } from "@tiptap/pm/state";
@@ -17939,7 +17939,7 @@ const $e = ({ onMouseDown: e, isActive: t, disabled: n, children: r, title: o })
             onMouseDown: (C) => E(C, () => Js(t)),
             isActive: l?.isCodeBlock,
             title: "Code Block",
-            children: /* @__PURE__ */ h(Tf, { size: k })
+            children: /* @__PURE__ */ h(vl, { size: k })
           }
         ),
         i && /* @__PURE__ */ I(ye, { children: [
@@ -18191,7 +18191,7 @@ function LC({ editor: e, onEditLink: t }) {
             className: "link-hover-tooltip-link",
             title: n.url,
             children: [
-              /* @__PURE__ */ h(Sf, { size: 13, className: "link-hover-tooltip-link-icon" }),
+              /* @__PURE__ */ h(Tf, { size: 13, className: "link-hover-tooltip-link-icon" }),
               /* @__PURE__ */ h("span", { className: "link-hover-tooltip-url", children: v || "No URL" })
             ]
           }
@@ -18203,7 +18203,7 @@ function LC({ editor: e, onEditLink: t }) {
               onClick: y,
               className: "link-hover-tooltip-btn",
               title: "Edit link",
-              children: /* @__PURE__ */ h(Nf, { size: 14 })
+              children: /* @__PURE__ */ h(Sf, { size: 14 })
             }
           ),
           /* @__PURE__ */ h(
@@ -18221,7 +18221,7 @@ function LC({ editor: e, onEditLink: t }) {
               onClick: m,
               className: "link-hover-tooltip-btn link-hover-tooltip-btn-danger",
               title: "Remove link",
-              children: /* @__PURE__ */ h(Df, { size: 14 })
+              children: /* @__PURE__ */ h(Nf, { size: 14 })
             }
           )
         ] })
@@ -18239,31 +18239,31 @@ const AC = [
   },
   {
     title: "Heading 1",
-    icon: /* @__PURE__ */ h(Lf, { size: 16 }),
+    icon: /* @__PURE__ */ h(Df, { size: 16 }),
     command: (e) => e.chain().focus().toggleHeading({ level: 1 }).run(),
     keywords: ["h1", "title", "large"]
   },
   {
     title: "Heading 2",
-    icon: /* @__PURE__ */ h(Af, { size: 16 }),
+    icon: /* @__PURE__ */ h(Lf, { size: 16 }),
     command: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(),
     keywords: ["h2", "subtitle"]
   },
   {
     title: "Heading 3",
-    icon: /* @__PURE__ */ h(If, { size: 16 }),
+    icon: /* @__PURE__ */ h(Af, { size: 16 }),
     command: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(),
     keywords: ["h3", "subheading"]
   },
   {
     title: "Heading 4",
-    icon: /* @__PURE__ */ h(Rf, { size: 16 }),
+    icon: /* @__PURE__ */ h(If, { size: 16 }),
     command: (e) => e.chain().focus().toggleHeading({ level: 4 }).run(),
     keywords: ["h4", "small heading"]
   },
   {
     title: "Heading 5",
-    icon: /* @__PURE__ */ h(Pf, { size: 16 }),
+    icon: /* @__PURE__ */ h(Rf, { size: 16 }),
     command: (e) => e.chain().focus().toggleHeading({ level: 5 }).run(),
     keywords: ["h5", "minor heading"]
   },
@@ -18293,7 +18293,7 @@ const AC = [
   },
   {
     title: "Code Block",
-    icon: /* @__PURE__ */ h(vl, { size: 16 }),
+    icon: /* @__PURE__ */ h(Pf, { size: 16 }),
     command: (e) => e.chain().focus().toggleCodeBlock().run(),
     keywords: ["code", "pre", "syntax"]
   },
