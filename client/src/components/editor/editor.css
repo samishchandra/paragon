@@ -6521,3 +6521,17 @@ pre.with-line-numbers code .line::before {
 .color-theme-neutral:not(.dark) .syntax-highlight-overlay .md-h6 {
   color: var(--muted-foreground);
 }
+
+/* ===================================================================
+ * Fix: Suppress NodeSelection visuals when editor is not focused.
+ * When switching between items, TipTap may create a NodeSelection on
+ * the last node view (HR, image, etc.), causing a visible blue outline.
+ * This rule hides that outline when the editor doesn't have focus,
+ * so users only see selection indicators during active editing.
+ * =================================================================== */
+.tiptap-editor:not(.ProseMirror-focused) .ProseMirror-selectednode {
+  outline: none !important;
+}
+.tiptap-editor:not(.ProseMirror-focused) li.ProseMirror-selectednode:after {
+  border: none !important;
+}
