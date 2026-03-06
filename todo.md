@@ -62,3 +62,7 @@
   - [ ] Update README.md with recent performance optimizations and code block fixes
   - [ ] Update CHANGELOG.md with recent changes
   - [ ] Update Home.tsx landing page to reflect recent changes
+- [ ] Fix: table multi-cell text selection only highlights one cell instead of all selected cells
+  - [ ] Investigate CSS for table cell selection styles
+  - [ ] Check table extension code for selection handling
+  - [ ] Implement fix

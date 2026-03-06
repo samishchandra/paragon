@@ -24,7 +24,7 @@ import {
   PenLine,
   Library,
   ListTodo,
-  Code2,
+  FileCode,
   Rows,
   Columns,
   Plus,
@@ -553,7 +553,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
         isActive={editorState?.isCodeBlock}
         tooltip="Code Block"
       >
-        <Code2 size={16} />
+        <FileCode size={16} />
       </ToolbarButton>
       <ToolbarButton
         onClick={() => {
