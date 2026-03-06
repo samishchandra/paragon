@@ -251,17 +251,6 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
       const timerId = setTimeout(() => {
         if (!editor.isDestroyed) {
           editor.commands.setContent(contentToSet);
-          // Fix: After setContent, TipTap may place a NodeSelection on the
-          // last node (HR, image, etc.) which shows a visible blue highlight.
-          // Detect and fix by moving to a TextSelection at the start.
-          requestAnimationFrame(() => {
-            if (!editor.isDestroyed) {
-              const { selection } = editor.state;
-              if ('node' in selection && (selection as any).node) {
-                editor.commands.focus('start');
-              }
-            }
-          });
         }
       }, 0);
       // Store timerId for cleanup
