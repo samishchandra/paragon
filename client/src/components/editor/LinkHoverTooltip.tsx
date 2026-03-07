@@ -54,8 +54,18 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
       const href = linkElement.getAttribute('href') || '';
       const rect = linkElement.getBoundingClientRect();
 
-      // Use viewport-relative (fixed) positioning
-      const top = rect.bottom + 8;
+      // Estimated tooltip height: ~40px (padding 0.25rem*2 + button 1.75rem + border)
+      const tooltipHeight = 44;
+      const gap = 8;
+
+      // Prefer positioning above the link; fall back to below if not enough space
+      const spaceAbove = rect.top;
+      const canFitAbove = spaceAbove >= tooltipHeight + gap;
+
+      const top = canFitAbove
+        ? rect.top - tooltipHeight - gap
+        : rect.bottom + gap;
+
       const left = Math.max(16, Math.min(rect.left, window.innerWidth - 340));
 
       activeLinkRef.current = linkElement;
