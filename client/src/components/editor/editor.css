@@ -6523,15 +6523,38 @@ pre.with-line-numbers code .line::before {
 }
 
 /* ===================================================================
- * Fix: Suppress NodeSelection visuals when editor is not focused.
+ * Fix: Suppress unwanted NodeSelection visuals.
  * When switching between items, TipTap may create a NodeSelection on
  * the last node view (HR, image, etc.), causing a visible blue outline.
- * This rule hides that outline when the editor doesn't have focus,
- * so users only see selection indicators during active editing.
+ *
+ * Two-layer approach:
+ * 1. When editor is NOT focused: always hide selection outlines.
+ * 2. When editor IS focused: use a fade-in animation so that
+ *    auto-selections from content loading are invisible (they get
+ *    replaced by a text cursor within ~100ms), but deliberate
+ *    user clicks still show the outline after the brief delay.
  * =================================================================== */
+@keyframes fadeInOutline {
+  0% { outline-color: transparent; }
+  100% { outline-color: var(--primary, #8cf); }
+}
+
+/* Layer 1: Unfocused editor — always hide */
 .tiptap-editor:not(.ProseMirror-focused) .ProseMirror-selectednode {
   outline: none !important;
 }
 .tiptap-editor:not(.ProseMirror-focused) li.ProseMirror-selectednode:after {
   border: none !important;
+}
+
+/* Layer 2: Focused editor — delay outline appearance so auto-selections
+   from content load are invisible (they're replaced within ~100ms) */
+.tiptap-editor.ProseMirror-focused .ProseMirror-selectednode {
+  outline: 2px solid transparent;
+  animation: fadeInOutline 0.3s ease-in 0.15s forwards;
+}
+
+/* Override: image resizer should show outline immediately on click */
+.tiptap-editor.ProseMirror-focused .image-resizer.ProseMirror-selectednode {
+  animation-delay: 0s;
 }

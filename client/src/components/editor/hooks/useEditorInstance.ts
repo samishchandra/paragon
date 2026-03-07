@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useEditor } from '@tiptap/react';
 import type { Extensions } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
-import { NodeSelection } from '@tiptap/pm/state';
-
 import { useTurndownService } from './useTurndownService';
 import { stripZWSP } from '../utils/stripZWSP';
 
@@ -122,18 +120,6 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
     // @ts-ignore - Expose editor globally for debugging
     onCreate: ({ editor }) => {
       (window as any).__tiptapEditor = editor;
-      // Fix: Clear NodeSelection that TipTap creates when initial content
-      // ends with a node view (HR, image). Uses requestAnimationFrame to
-      // ensure ProseMirror has fully initialized before modifying selection.
-      requestAnimationFrame(() => {
-        if (!editor.isDestroyed && editor.state.selection instanceof NodeSelection) {
-          try {
-            editor.commands.setTextSelection(1);
-          } catch {
-            // Silently ignore if editor state doesn't support this position
-          }
-        }
-      });
       onReady?.(editor);
     },
     onDestroy: () => {
@@ -265,16 +251,6 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
       const timerId = setTimeout(() => {
         if (!editor.isDestroyed) {
           editor.commands.setContent(contentToSet);
-          // Fix: Clear NodeSelection that TipTap creates when content ends
-          // with a node view (HR, image). Use commands API (safe) instead
-          // of raw view.dispatch which can crash during initialization.
-          if (editor.state.selection instanceof NodeSelection) {
-            try {
-              editor.commands.setTextSelection(1);
-            } catch {
-              // Silently ignore if editor state doesn't support this position
-            }
-          }
         }
       }, 0);
       // Store timerId for cleanup
