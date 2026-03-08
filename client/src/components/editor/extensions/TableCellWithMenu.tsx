@@ -14,6 +14,16 @@ function createTableCellMenuPlugin(editor: any) {
           const cell = target.closest('td, th') as HTMLElement;
           
           if (cell && cell.closest('.ProseMirror')) {
+            // If text is selected within the cell, allow the default browser context menu
+            // so the user can copy/paste/etc. the selected text normally
+            const { selection } = view.state;
+            const hasTextSelection = !selection.empty;
+            
+            if (hasTextSelection) {
+              // Let the browser handle it — default copy/cut/paste menu
+              return false;
+            }
+            
             event.preventDefault();
             
             // Get the ProseMirror position for this cell

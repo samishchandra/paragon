@@ -66,3 +66,8 @@
   - [ ] Investigate CSS for table cell selection styles
   - [ ] Check table extension code for selection handling
   - [ ] Implement fix
+- [ ] Context-aware right-click on table cells
+  - [ ] Show custom table menu when no text is selected in the cell
+  - [ ] Use default browser context menu when text is selected
+  - [ ] Find and read TableCellMenu component
+  - [ ] Implement selection check in the contextmenu handler
