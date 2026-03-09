@@ -6,8 +6,9 @@
  * This script:
  * 1. Builds the library bundle using Vite in library mode
  * 2. Generates TypeScript declarations
- * 3. Copies the package.lib.json as package.json into dist-lib/
- * 4. Copies the README for the library
+ * 3. Rewrites @/ path aliases to relative paths in .d.ts files
+ * 4. Copies the package.lib.json as package.json into dist-lib/
+ * 5. Copies the README for the library
  * 
  * Usage:
  *   node scripts/build-lib.mjs
@@ -16,7 +17,7 @@
  */
 
 import { execSync } from 'node:child_process';
-import { copyFileSync, readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { copyFileSync, readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -42,6 +43,59 @@ run('NODE_ENV=production npx vite build --config vite.lib.config.ts', 'Building 
 
 // Step 2: Generate TypeScript declarations
 run('npx tsc --project tsconfig.lib.json', 'Generating TypeScript declarations');
+
+// Step 2.5: Rewrite @/ path aliases to relative paths in .d.ts files
+// TypeScript doesn't rewrite path aliases in emitted declarations, so
+// `from '@/components/editor/...'` stays as-is. Since @/ maps to client/src/
+// and types are emitted under dist-lib/types/ (rootDir=client/src), we compute
+// the correct relative path from each .d.ts file to the referenced module.
+(function rewritePathAliases() {
+  const typesDir = path.resolve(DIST, 'types');
+  if (!existsSync(typesDir)) return;
+
+  console.log('\n📦 Rewriting @/ path aliases in .d.ts files...');
+
+  function findDtsFiles(dir) {
+    const results = [];
+    for (const entry of readdirSync(dir)) {
+      const fullPath = path.join(dir, entry);
+      if (statSync(fullPath).isDirectory()) {
+        results.push(...findDtsFiles(fullPath));
+      } else if (entry.endsWith('.d.ts')) {
+        results.push(fullPath);
+      }
+    }
+    return results;
+  }
+
+  const dtsFiles = findDtsFiles(typesDir);
+  let totalRewrites = 0;
+
+  for (const filePath of dtsFiles) {
+    const content = readFileSync(filePath, 'utf-8');
+    const fileDir = path.dirname(filePath);
+
+    const rewritten = content.replace(
+      /(from\s+['"])@\/([^'"]+)(['"])/g,
+      (_match, prefix, importPath, suffix) => {
+        const targetAbsolute = path.resolve(typesDir, importPath);
+        let relativePath = path.relative(fileDir, targetAbsolute);
+        if (!relativePath.startsWith('.')) {
+          relativePath = './' + relativePath;
+        }
+        relativePath = relativePath.replace(/\\/g, '/');
+        totalRewrites++;
+        return `${prefix}${relativePath}${suffix}`;
+      }
+    );
+
+    if (rewritten !== content) {
+      writeFileSync(filePath, rewritten, 'utf-8');
+    }
+  }
+
+  console.log(`   Rewrote ${totalRewrites} @/ imports across ${dtsFiles.length} .d.ts files`);
+})();
 
 // Step 3: Copy package.json for publishing
 console.log('\n📦 Preparing package.json...');
