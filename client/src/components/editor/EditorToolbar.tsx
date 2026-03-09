@@ -458,7 +458,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
             className={`
               flex items-center gap-1 h-8 px-2 rounded-md shrink-0
               transition-all duration-100 ease-out touch-manipulation
-              text-xs font-semibold
+              text-xs font-normal
               ${editorState?.isH1 || editorState?.isH2 || editorState?.isH3 || editorState?.isH4 || editorState?.isH5
                 ? 'bg-secondary text-foreground'
                 : 'bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80'
@@ -476,43 +476,43 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
             onClick={() => editor.chain().focus().setParagraph().run()}
             className={!editorState?.isH1 && !editorState?.isH2 && !editorState?.isH3 && !editorState?.isH4 && !editorState?.isH5 ? 'bg-accent font-medium' : ''}
           >
-            <span className="w-6 text-xs font-semibold text-muted-foreground">P</span>
+            <span className="w-6 text-xs font-normal text-muted-foreground">P</span>
             Paragraph
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             className={editorState?.isH1 ? 'bg-accent font-medium' : ''}
           >
-            <span className="w-6 text-xs font-semibold text-muted-foreground">H1</span>
-            <span className="font-semibold">Heading 1</span>
+            <span className="w-6 text-xs font-normal text-muted-foreground">H1</span>
+            <span>Heading 1</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             className={editorState?.isH2 ? 'bg-accent font-medium' : ''}
           >
-            <span className="w-6 text-xs font-semibold text-muted-foreground">H2</span>
-            <span className="font-semibold">Heading 2</span>
+            <span className="w-6 text-xs font-normal text-muted-foreground">H2</span>
+            <span>Heading 2</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             className={editorState?.isH3 ? 'bg-accent font-medium' : ''}
           >
-            <span className="w-6 text-xs font-semibold text-muted-foreground">H3</span>
-            <span className="font-semibold">Heading 3</span>
+            <span className="w-6 text-xs font-normal text-muted-foreground">H3</span>
+            <span>Heading 3</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
             className={editorState?.isH4 ? 'bg-accent font-medium' : ''}
           >
-            <span className="w-6 text-xs font-semibold text-muted-foreground">H4</span>
-            <span className="font-semibold">Heading 4</span>
+            <span className="w-6 text-xs font-normal text-muted-foreground">H4</span>
+            <span>Heading 4</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => editor.chain().focus().toggleHeading({ level: 5 }).run()}
             className={editorState?.isH5 ? 'bg-accent font-medium' : ''}
           >
-            <span className="w-6 text-xs font-semibold text-muted-foreground">H5</span>
-            <span className="font-semibold">Heading 5</span>
+            <span className="w-6 text-xs font-normal text-muted-foreground">H5</span>
+            <span>Heading 5</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
