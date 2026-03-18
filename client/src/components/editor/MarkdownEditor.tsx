@@ -93,6 +93,22 @@ const isMobileDevice = () => {
   return (hasTouchEvents && (isMobileUA || isSmallScreen)) || (isMobileUA && isSmallScreen);
 };
 
+/** Show a brief toast notification for copy actions */
+function showCopyToast(message: string) {
+  const existing = document.querySelector('.copy-md-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'copy-md-toast';
+  toast.textContent = message;
+  const isDark = document.documentElement.classList.contains('dark');
+  toast.style.cssText = `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)'};color:${isDark ? '#e5e5e5' : '#333'};padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.15);border:1px solid ${isDark ? '#3a3a3a' : '#e5e5e5'};animation:sortToastIn 0.2s ease;`;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'sortToastOut 0.2s ease forwards';
+    setTimeout(() => toast.remove(), 200);
+  }, 1500);
+}
+
 /**
  * Editor ref handle - methods exposed via ref for external control
  */
@@ -299,6 +315,8 @@ export interface MarkdownEditorProps {
   findReplaceOpen?: boolean;
   /** Callback when find/replace panel state changes */
   onFindReplaceChange?: (isOpen: boolean) => void;
+  /** Show "Copy as Markdown" button in the toolbar (default: true) */
+  showCopyButton?: boolean;
   /** Custom toolbar render function - allows replacing or extending toolbar */
   renderToolbar?: (editor: Editor, defaultToolbar: React.ReactNode) => React.ReactNode;
   /** Custom footer render function - allows replacing or extending footer */
@@ -482,6 +500,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   onLinkClick,
   findReplaceOpen,
   onFindReplaceChange,
+  showCopyButton = true,
   renderToolbar,
   renderFooter,
   disabledFeatures = {},
@@ -879,9 +898,14 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }
     // Convert HTML to markdown using turndown and strip invisible chars
     const md = stripZWSP(turndownService.turndown(html));
-    navigator.clipboard.writeText(md).catch(() => {
+    navigator.clipboard.writeText(md).then(() => {
+      // Show copy toast
+      showCopyToast(empty ? 'Document copied as Markdown' : 'Selection copied as Markdown');
+    }).catch(() => {
       // Fallback: use plain text
-      navigator.clipboard.writeText(fallbackText);
+      navigator.clipboard.writeText(fallbackText).then(() => {
+        showCopyToast(empty ? 'Document copied' : 'Selection copied');
+      });
     });
   }, [editor, turndownService]);
 
@@ -893,7 +917,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   const defaultToolbar = (
     <EditorToolbar 
       editor={editor} 
-      onCopyMarkdown={handleCopyAsMarkdown}
+      onCopyMarkdown={showCopyButton ? handleCopyAsMarkdown : undefined}
       onOpenLinkPopover={() => setIsLinkPopoverOpen(true)}
       className="flex-1"
       onOpenFindReplace={() => {
