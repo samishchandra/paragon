@@ -380,6 +380,18 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
 
   return (
     <div className={`flex items-center gap-0.5 px-2 py-1.5 border-b border-border/30 bg-muted/30 overflow-x-auto scrollbar-hide editor-toolbar ${className}`}>
+      {/* Copy as Markdown */}
+      {onCopyMarkdown && (
+        <ToolbarButton
+          onClick={onCopyMarkdown}
+          tooltip="Copy as Markdown"
+        >
+          <Copy size={16} />
+        </ToolbarButton>
+      )}
+
+      {onCopyMarkdown && <Divider />}
+
       {/* Undo/Redo */}
       <ToolbarButton
         onClick={() => editor.chain().focus().undo().run()}
@@ -780,26 +792,6 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
 
       {/* Spacer */}
       <div className="flex-1 min-w-2" />
-
-      {/* Copy as Markdown */}
-      {onCopyMarkdown && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 px-2 gap-1 shrink-0" 
-              onClick={onCopyMarkdown}
-            >
-              <Copy size={16} />
-              <span className="text-xs hidden md:inline">Copy MD</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs">
-            Copy content as Markdown
-          </TooltipContent>
-        </Tooltip>
-      )}
     </div>
   );
 });

@@ -857,24 +857,31 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }
   }, [aiState, resetAI, executeAIAction]);
 
-  // Copy selected text as markdown to clipboard
-  const handleCopySelectionAsMarkdown = useCallback(() => {
+  // Copy as markdown to clipboard: selection if text is selected, otherwise full document
+  const handleCopyAsMarkdown = useCallback(() => {
     if (!editor) return;
     const { from, to, empty } = editor.state.selection;
-    if (empty) return;
-    // Get the selected slice and serialize to HTML
-    const slice = editor.state.doc.slice(from, to);
-    const serializer = DOMSerializer.fromSchema(editor.schema);
-    const div = document.createElement('div');
-    const domFragment = serializer.serializeFragment(slice.content);
-    div.appendChild(domFragment);
-    const html = div.innerHTML;
+    let html: string;
+    let fallbackText: string;
+    if (empty) {
+      // No selection — copy entire document as markdown
+      html = editor.getHTML();
+      fallbackText = editor.getText();
+    } else {
+      // Selection — copy selected content as markdown
+      const slice = editor.state.doc.slice(from, to);
+      const serializer = DOMSerializer.fromSchema(editor.schema);
+      const div = document.createElement('div');
+      const domFragment = serializer.serializeFragment(slice.content);
+      div.appendChild(domFragment);
+      html = div.innerHTML;
+      fallbackText = editor.state.doc.textBetween(from, to, '\n');
+    }
     // Convert HTML to markdown using turndown and strip invisible chars
     const md = stripZWSP(turndownService.turndown(html));
     navigator.clipboard.writeText(md).catch(() => {
       // Fallback: use plain text
-      const text = editor.state.doc.textBetween(from, to, '\n');
-      navigator.clipboard.writeText(text);
+      navigator.clipboard.writeText(fallbackText);
     });
   }, [editor, turndownService]);
 
@@ -886,6 +893,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   const defaultToolbar = (
     <EditorToolbar 
       editor={editor} 
+      onCopyMarkdown={handleCopyAsMarkdown}
       onOpenLinkPopover={() => setIsLinkPopoverOpen(true)}
       className="flex-1"
       onOpenFindReplace={() => {
@@ -1015,7 +1023,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
               aiEnabled={aiEnabled}
               onAISetupRequired={onAISetupRequired}
               onAISparklesClick={(anchorEl) => handleAISparklesClick('selection', anchorEl)}
-              onCopySelectionAsMarkdown={handleCopySelectionAsMarkdown}
+              onCopySelectionAsMarkdown={handleCopyAsMarkdown}
               aiDropdown={aiDropdown}
               aiActions={aiActions}
               onAIActionSelect={handleAIActionSelect}
