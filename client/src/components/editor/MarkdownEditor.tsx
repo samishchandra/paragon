@@ -93,6 +93,32 @@ const isMobileDevice = () => {
   return (hasTouchEvents && (isMobileUA || isSmallScreen)) || (isMobileUA && isSmallScreen);
 };
 
+/** Map callout type slugs to display labels for copy-as-markdown heading prefixes */
+const CALLOUT_LABELS: Record<string, string> = {
+  info: 'Info',
+  note: 'Note',
+  prompt: 'Prompt',
+  resources: 'Resources',
+  todo: 'Todo',
+  summary: 'Summary',
+};
+
+/**
+ * Transform callout code blocks into H4 headings followed by the callout content.
+ * Used only for full-document copy (not partial selections).
+ * Example: ```ad-resources\nSome content\n``` becomes #### Resources\nSome content
+ */
+function transformCalloutsToHeadings(md: string): string {
+  return md.replace(
+    /```ad-(\w+)\n([\s\S]*?)```/g,
+    (_match: string, type: string, content: string) => {
+      const label = CALLOUT_LABELS[type] || type.charAt(0).toUpperCase() + type.slice(1);
+      const trimmedContent = content.trim();
+      return `#### ${label}\n\n${trimmedContent}`;
+    }
+  );
+}
+
 /** Show a brief toast notification for copy actions */
 function showCopyToast(message: string) {
   const existing = document.querySelector('.copy-md-toast');
@@ -897,7 +923,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       fallbackText = editor.state.doc.textBetween(from, to, '\n');
     }
     // Convert HTML to markdown using turndown and strip invisible chars
-    const md = stripZWSP(turndownService.turndown(html));
+    let md = stripZWSP(turndownService.turndown(html));
+    // For full-document copy, transform callout code blocks into H4 headings
+    if (empty) md = transformCalloutsToHeadings(md);
     navigator.clipboard.writeText(md).then(() => {
       // Show copy toast
       showCopyToast(empty ? 'Document copied as Markdown' : 'Selection copied as Markdown');
