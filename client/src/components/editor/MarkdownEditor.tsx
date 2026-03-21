@@ -53,6 +53,8 @@ import { EditorLoadingSkeleton } from './EditorLoadingSkeleton';
 import { EditorModeToggle } from './EditorModeToggle';
 import { WYSIWYGOverlays } from './WYSIWYGOverlays';
 import { stripZWSP } from './utils/stripZWSP';
+import { transformCalloutsToHeadings } from './utils/transformCalloutsToHeadings';
+import { showCopyToast } from './utils/showCopyToast';
 import { DOMSerializer } from '@tiptap/pm/model';
 import CustomScrollbar from './CustomScrollbar';
 import './PerformanceProfiler.css';
@@ -92,48 +94,6 @@ const isMobileDevice = () => {
   // This prevents desktop browsers with touch simulation from being detected as mobile
   return (hasTouchEvents && (isMobileUA || isSmallScreen)) || (isMobileUA && isSmallScreen);
 };
-
-/** Map callout type slugs to display labels for copy-as-markdown heading prefixes */
-const CALLOUT_LABELS: Record<string, string> = {
-  info: 'Info',
-  note: 'Note',
-  prompt: 'Prompt',
-  resources: 'Resources',
-  todo: 'Todo',
-  summary: 'Summary',
-};
-
-/**
- * Transform callout code blocks into H4 headings followed by the callout content.
- * Used only for full-document copy (not partial selections).
- * Example: ```ad-resources\nSome content\n``` becomes #### Resources\nSome content
- */
-function transformCalloutsToHeadings(md: string): string {
-  return md.replace(
-    /```ad-(\w+)\n([\s\S]*?)```/g,
-    (_match: string, type: string, content: string) => {
-      const label = CALLOUT_LABELS[type] || type.charAt(0).toUpperCase() + type.slice(1);
-      const trimmedContent = content.trim();
-      return `#### ${label}\n\n${trimmedContent}`;
-    }
-  );
-}
-
-/** Show a brief toast notification for copy actions */
-function showCopyToast(message: string) {
-  const existing = document.querySelector('.copy-md-toast');
-  if (existing) existing.remove();
-  const toast = document.createElement('div');
-  toast.className = 'copy-md-toast';
-  toast.textContent = message;
-  const isDark = document.documentElement.classList.contains('dark');
-  toast.style.cssText = `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${isDark ? 'rgba(30,30,30,0.95)' : 'rgba(255,255,255,0.95)'};color:${isDark ? '#e5e5e5' : '#333'};padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.15);border:1px solid ${isDark ? '#3a3a3a' : '#e5e5e5'};animation:sortToastIn 0.2s ease;`;
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.style.animation = 'sortToastOut 0.2s ease forwards';
-    setTimeout(() => toast.remove(), 200);
-  }, 1500);
-}
 
 /**
  * Editor ref handle - methods exposed via ref for external control
@@ -231,6 +191,18 @@ export interface MarkdownEditorRef {
   getTableOfContents: () => { id: string; text: string; level: number; pos: number }[];
   /** Scroll to a heading by position */
   scrollToHeading: (pos: number) => void;
+  /**
+   * Copy content as markdown to clipboard and return the markdown string.
+   * If text is selected, copies only the selection; otherwise copies the full document.
+   * Full-document copy transforms callout code blocks into #### headings.
+   */
+  copyAsMarkdown: () => Promise<string>;
+  /**
+   * Get the full document as markdown for export purposes.
+   * Transforms callout code blocks into #### headings.
+   * Does NOT copy to clipboard — use copyAsMarkdown() for that.
+   */
+  getMarkdownForExport: () => string;
 }
 
 export interface MarkdownEditorProps {

@@ -23,3 +23,5 @@ export {
   buildNestedListHtml,
 } from './markdownPipeline';
 export type { PreprocessOptions, ListLineInfo } from './markdownPipeline';
+export { transformCalloutsToHeadings } from './transformCalloutsToHeadings';
+export { showCopyToast } from './showCopyToast';

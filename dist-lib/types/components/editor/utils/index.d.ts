@@ -12,3 +12,5 @@ export { insertHorizontalRuleClean } from './insertHorizontalRule';
 export { stripZWSP } from './stripZWSP';
 export { preprocessMarkdown, postprocessHtml, markdownToHtml, reconstructTableCells, inlineMarkdownToHtml, imgToFigure, lineToBlocks, parseListLine, buildNestedListHtml, } from './markdownPipeline';
 export type { PreprocessOptions, ListLineInfo } from './markdownPipeline';
+export { transformCalloutsToHeadings } from './transformCalloutsToHeadings';
+export { showCopyToast } from './showCopyToast';

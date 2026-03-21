@@ -106,6 +106,18 @@ export interface MarkdownEditorRef {
     }[];
     /** Scroll to a heading by position */
     scrollToHeading: (pos: number) => void;
+    /**
+     * Copy content as markdown to clipboard and return the markdown string.
+     * If text is selected, copies only the selection; otherwise copies the full document.
+     * Full-document copy transforms callout code blocks into #### headings.
+     */
+    copyAsMarkdown: () => Promise<string>;
+    /**
+     * Get the full document as markdown for export purposes.
+     * Transforms callout code blocks into #### headings.
+     * Does NOT copy to clipboard — use copyAsMarkdown() for that.
+     */
+    getMarkdownForExport: () => string;
 }
 export interface MarkdownEditorProps {
     /** Initial HTML content */

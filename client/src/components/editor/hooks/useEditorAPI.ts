@@ -13,6 +13,9 @@ import type { TurndownLike } from './useHandleModeSwitch';
 import type { MarkdownEditorRef } from '../MarkdownEditor';
 import { insertHorizontalRuleClean } from '../utils/insertHorizontalRule';
 import { stripZWSP } from '../utils/stripZWSP';
+import { transformCalloutsToHeadings } from '../utils/transformCalloutsToHeadings';
+import { showCopyToast } from '../utils/showCopyToast';
+import { DOMSerializer } from '@tiptap/pm/model';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -175,6 +178,41 @@ export function useEditorAPI(
         }
         editor.commands.setTextSelection(pos + 1);
       } catch { /* position might be invalid */ }
+    },
+    copyAsMarkdown: async () => {
+      if (!editor) return '';
+      const { from, to, empty } = editor.state.selection;
+      let html: string;
+      let fallbackText: string;
+      if (empty) {
+        html = editor.getHTML();
+        fallbackText = editor.getText();
+      } else {
+        const slice = editor.state.doc.slice(from, to);
+        const serializer = DOMSerializer.fromSchema(editor.schema);
+        const div = document.createElement('div');
+        const domFragment = serializer.serializeFragment(slice.content);
+        div.appendChild(domFragment);
+        html = div.innerHTML;
+        fallbackText = editor.state.doc.textBetween(from, to, '\n');
+      }
+      let md = stripZWSP(turndownService.turndown(html));
+      if (empty) md = transformCalloutsToHeadings(md);
+      try {
+        await navigator.clipboard.writeText(md);
+        showCopyToast(empty ? 'Document copied as Markdown' : 'Selection copied as Markdown');
+      } catch {
+        try {
+          await navigator.clipboard.writeText(fallbackText);
+          showCopyToast(empty ? 'Document copied' : 'Selection copied');
+        } catch { /* clipboard write failed */ }
+      }
+      return md;
+    },
+    getMarkdownForExport: () => {
+      if (!editor) return '';
+      const md = stripZWSP(turndownService.turndown(editor.getHTML()));
+      return transformCalloutsToHeadings(md);
     },
   }), [editor, turndownService, handleModeSwitch, wordCount, autoSaveState, setIsFindReplaceOpen]);
 }
