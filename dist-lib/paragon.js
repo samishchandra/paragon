@@ -1,8 +1,7 @@
 import { jsxs as I, jsx as h, Fragment as ye } from "react/jsx-runtime";
 import { useEditorState as fl, NodeViewWrapper as eo, ReactNodeViewRenderer as pl, useEditor as Vu, EditorContent as Ku, NodeViewContent as Gu } from "@tiptap/react";
 import * as T from "react";
-<<<<<<< Updated upstream
-import X, { useState as j, useRef as Y, useEffect as q, useLayoutEffect as po, memo as bt, useCallback as F, useImperativeHandle as qu, createContext as hl, useContext as ml, useMemo as Tt, Component as Xu, useReducer as Zu, lazy as Qu, forwardRef as Ju, Suspense as za } from "react";
+import X, { useState as j, useRef as Y, useEffect as q, useLayoutEffect as po, memo as bt, useCallback as F, useImperativeHandle as qu, createContext as hl, useContext as ml, useMemo as St, Component as Xu, useReducer as Zu, lazy as Qu, forwardRef as Ju, Suspense as za } from "react";
 import ef from "@tiptap/extension-code-block-lowlight";
 import { createLowlight as tf } from "lowlight";
 import { Image as $s, X as mt, Link2 as Hs, Type as ho, Copy as bn, Undo as nf, Redo as rf, Bold as Bs, Italic as Ws, Underline as zs, Strikethrough as Fs, Code as gl, Highlighter as yl, Link as Us, ChevronDown as tr, List as Ys, ListOrdered as js, CheckSquare as Vs, Quote as Ks, FileCode as vl, IndentIncrease as of, IndentDecrease as sf, Table as gs, Minus as bl, Info as ys, BookOpen as wl, PenLine as af, Library as lf, ListTodo as xl, Columns as Fa, Trash2 as dn, Rows as Ua, ToggleLeft as Ya, ArrowUpDown as cf, Sparkles as mo, Search as df, ChevronUp as uf, MousePointerClick as ff, CaseSensitive as pf, WholeWord as hf, Regex as mf, Replace as vs, ReplaceAll as gf, Plus as Gs, ChevronLeftIcon as yf, ChevronRightIcon as vf, ChevronDownIcon as bf, Calendar as kl, Hash as ja, Cloud as wf, Loader2 as Cl, Check as wn, CloudOff as xf, AlertCircle as kf, RotateCcw as qs, Activity as Cf, Maximize2 as El, Minimize2 as Ml, AlertTriangle as Ef, ChevronRight as Mf, CheckCircle2 as Tf, Eye as Sf, FileText as Xs, ExternalLink as Df, Pencil as Nf, Unlink as Lf, Heading1 as Af, Heading2 as If, Heading3 as Rf, Heading4 as Pf, Heading5 as Of, Code2 as _f, StickyNote as $f, MessageSquareText as Hf, ImagePlus as Bf, MessageSquare as Tl, RefreshCw as Wf, SpellCheck as zf, PanelRightClose as Ff, PanelRightOpen as Uf } from "lucide-react";
@@ -19,28 +18,7 @@ import { Table as ep } from "@tiptap/extension-table";
 import tp from "@tiptap/extension-table-row";
 import np from "@tiptap/extension-table-cell";
 import rp from "@tiptap/extension-table-header";
-import { Extension as _e, Node as go, mergeAttributes as xn, InputRule as Oe, Mark as Nl } from "@tiptap/core";
-=======
-import X, { useState as j, useRef as Y, useEffect as q, useLayoutEffect as fr, memo as wt, useCallback as F, useImperativeHandle as qd, createContext as hl, useContext as pl, useMemo as St, Component as Xd, useReducer as Zd, lazy as Qd, forwardRef as Jd, Suspense as Fi } from "react";
-import em from "@tiptap/extension-code-block-lowlight";
-import { createLowlight as tm } from "lowlight";
-import { Image as $s, X as pt, Link2 as Bs, Type as hr, Copy as wn, Undo as nm, Redo as om, Bold as Hs, Italic as Ws, Underline as Fs, Strikethrough as zs, Code as gl, Highlighter as bl, Link as Us, ChevronDown as to, List as Ys, ListOrdered as js, CheckSquare as Vs, Quote as Ks, FileCode as vl, IndentIncrease as rm, IndentDecrease as sm, Table as gs, Minus as wl, Info as bs, BookOpen as yl, PenLine as im, Library as am, ListTodo as Nl, Columns as zi, Trash2 as un, Rows as Ui, ToggleLeft as Yi, ArrowUpDown as lm, Sparkles as pr, Search as cm, ChevronUp as um, MousePointerClick as dm, CaseSensitive as mm, WholeWord as fm, Regex as hm, Replace as vs, ReplaceAll as pm, Plus as Gs, ChevronLeftIcon as gm, ChevronRightIcon as bm, ChevronDownIcon as vm, Calendar as kl, Hash as ji, Cloud as wm, Loader2 as xl, Check as yn, CloudOff as ym, AlertCircle as Nm, RotateCcw as qs, Activity as km, Maximize2 as Cl, Minimize2 as El, AlertTriangle as xm, ChevronRight as Cm, CheckCircle2 as Em, Eye as Tm, FileText as Xs, ExternalLink as Sm, Pencil as Mm, Unlink as Dm, Heading1 as Am, Heading2 as Lm, Heading3 as Pm, Heading4 as Im, Heading5 as Rm, Code2 as Om, StickyNote as _m, MessageSquareText as $m, ImagePlus as Bm, MessageSquare as Tl, RefreshCw as Hm, SpellCheck as Wm, PanelRightClose as Fm, PanelRightOpen as zm } from "lucide-react";
-import { jsx as z, Fragment as Um, jsxs as Ym } from "react/jsx-runtime";
-import * as Sl from "react-dom";
-import jm, { createPortal as Vm } from "react-dom";
-import { TextSelection as Ke, Plugin as Me, PluginKey as De, NodeSelection as Km, AllSelection as Gm } from "@tiptap/pm/state";
-import { Fragment as Ml, Slice as Yr, DOMSerializer as qm } from "@tiptap/pm/model";
-import Xm from "@tiptap/starter-kit";
-import Zm from "@tiptap/extension-placeholder";
-import Qm from "@tiptap/extension-text-align";
-import Jm from "@tiptap/extension-highlight";
-import ef from "@tiptap/extension-link";
-import { Table as tf } from "@tiptap/extension-table";
-import nf from "@tiptap/extension-table-row";
-import of from "@tiptap/extension-table-cell";
-import rf from "@tiptap/extension-table-header";
-import { Extension as $e, Node as gr, mergeAttributes as Nn, InputRule as _e, Mark as Dl } from "@tiptap/core";
->>>>>>> Stashed changes
+import { Extension as $e, Node as go, mergeAttributes as xn, InputRule as _e, Mark as Nl } from "@tiptap/core";
 import { DecorationSet as Ve, Decoration as Ze } from "@tiptap/pm/view";
 import op from "@tiptap/extension-bullet-list";
 import sp from "@tiptap/extension-ordered-list";
@@ -69,11 +47,7 @@ const ze = tf(), Ll = {
   css: () => import("highlight.js/lib/languages/css"),
   json: () => import("highlight.js/lib/languages/json"),
   bash: () => import("highlight.js/lib/languages/bash")
-<<<<<<< Updated upstream
 }, Al = {
-=======
-}, Ll = {
->>>>>>> Stashed changes
   js: "javascript",
   jsx: "javascript",
   ts: "typescript",
@@ -84,11 +58,7 @@ const ze = tf(), Ll = {
   sh: "bash",
   shell: "bash",
   zsh: "bash"
-<<<<<<< Updated upstream
 }, Il = {
-=======
-}, Pl = {
->>>>>>> Stashed changes
   sql: () => import("highlight.js/lib/languages/sql"),
   java: () => import("highlight.js/lib/languages/java"),
   cpp: () => import("highlight.js/lib/languages/cpp"),
@@ -103,19 +73,11 @@ const ze = tf(), Ll = {
   yml: () => import("highlight.js/lib/languages/yaml"),
   diff: () => import("highlight.js/lib/languages/diff"),
   patch: () => import("highlight.js/lib/languages/diff")
-<<<<<<< Updated upstream
 }, Lr = /* @__PURE__ */ new Set(), Ar = /* @__PURE__ */ new Set();
 let qa = !1, Pn = null;
 async function Cp() {
   if (!qa)
     return Pn || (Pn = (async () => {
-=======
-}, Lo = /* @__PURE__ */ new Set(), Po = /* @__PURE__ */ new Set();
-let qi = !1, Rn = null;
-async function Ef() {
-  if (!qi)
-    return Rn || (Rn = (async () => {
->>>>>>> Stashed changes
       try {
         const e = Object.entries(Ll), t = await Promise.all(
           e.map(async ([n, r]) => {
@@ -123,21 +85,12 @@ async function Ef() {
             return [n, o.default];
           })
         );
-<<<<<<< Updated upstream
         for (const [n, r] of t)
           ze.registered(n) || ze.register(n, r);
         for (const [n, r] of Object.entries(Al))
           if (!ze.registered(n)) {
             const o = t.find(([s]) => s === r);
             o && ze.register(n, o[1]);
-=======
-        for (const [n, o] of t)
-          Fe.registered(n) || Fe.register(n, o);
-        for (const [n, o] of Object.entries(Ll))
-          if (!Fe.registered(n)) {
-            const r = t.find(([s]) => s === o);
-            r && Fe.register(n, r[1]);
->>>>>>> Stashed changes
           }
         qa = !0;
       } catch (e) {
@@ -145,7 +98,6 @@ async function Ef() {
       }
     })(), Pn);
 }
-<<<<<<< Updated upstream
 async function Xa(e) {
   if (ze.registered(e)) return !0;
   if (Ll[e] || Al[e])
@@ -157,35 +109,14 @@ async function Xa(e) {
     return new Promise((n) => {
       const r = () => {
         Ar.has(e) ? n(!0) : Lr.has(e) ? setTimeout(r, 50) : n(!1);
-=======
-async function Xi(e) {
-  if (Fe.registered(e)) return !0;
-  if (Al[e] || Ll[e])
-    return await Ef(), Fe.registered(e);
-  const t = Pl[e];
-  if (!t) return !1;
-  if (Po.has(e)) return !0;
-  if (Lo.has(e))
-    return new Promise((n) => {
-      const o = () => {
-        Po.has(e) ? n(!0) : Lo.has(e) ? setTimeout(o, 50) : n(!1);
->>>>>>> Stashed changes
       };
       setTimeout(r, 50);
     });
-<<<<<<< Updated upstream
   Lr.add(e);
   try {
     const r = (await t()).default;
     ze.register(e, r), Ar.add(e);
     const o = [
-=======
-  Lo.add(e);
-  try {
-    const o = (await t()).default;
-    Fe.register(e, o), Po.add(e);
-    const r = [
->>>>>>> Stashed changes
       ["cpp", "c"],
       ["go", "golang"],
       ["rust", "rs"],
@@ -195,22 +126,13 @@ async function Xi(e) {
     ];
     for (const s of o)
       if (s.includes(e))
-<<<<<<< Updated upstream
         for (const i of s)
           i !== e && !ze.registered(i) && (ze.register(i, r), Ar.add(i));
-=======
-        for (const a of s)
-          a !== e && !Fe.registered(a) && (Fe.register(a, o), Po.add(a));
->>>>>>> Stashed changes
     return !0;
   } catch (n) {
     return console.warn(`Failed to lazy-load highlight.js language: ${e}`, n), !1;
   } finally {
-<<<<<<< Updated upstream
     Lr.delete(e);
-=======
-    Lo.delete(e);
->>>>>>> Stashed changes
   }
 }
 const Za = "http://www.w3.org/2000/svg";
@@ -226,17 +148,10 @@ function Ir(e, t, n) {
 const Qa = [
   "M20 9h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Z",
   "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-<<<<<<< Updated upstream
 ], Ep = ["M20 6 9 17l-5-5"], Mp = ["m6 9 6 6 6-6"];
 function Tp() {
   const e = ze.listLanguages();
   return Array.from(/* @__PURE__ */ new Set([...e, ...Object.keys(Il)])).sort();
-=======
-], Tf = ["M20 6 9 17l-5-5"], Sf = ["m6 9 6 6 6-6"];
-function Mf() {
-  const e = Fe.listLanguages();
-  return Array.from(/* @__PURE__ */ new Set([...e, ...Object.keys(Pl)])).sort();
->>>>>>> Stashed changes
 }
 class Sp {
   constructor(t, n, r) {
@@ -556,13 +471,8 @@ function yo(...e) {
       };
   };
 }
-<<<<<<< Updated upstream
 function Ie(...e) {
   return T.useCallback(yo(...e), e);
-=======
-function Pe(...e) {
-  return T.useCallback(br(...e), e);
->>>>>>> Stashed changes
 }
 function kn(e, t = []) {
   let n = [];
@@ -592,15 +502,9 @@ function kn(e, t = []) {
       );
     };
   };
-<<<<<<< Updated upstream
   return o.scopeName = e, [r, Np(o, ...t)];
 }
 function Np(...e) {
-=======
-  return r.scopeName = e, [o, Lf(r, ...t)];
-}
-function Lf(...e) {
->>>>>>> Stashed changes
   const t = e[0];
   if (e.length === 1) return t;
   const n = () => {
@@ -618,13 +522,8 @@ function Lf(...e) {
   };
   return n.scopeName = t.scopeName, n;
 }
-<<<<<<< Updated upstream
-var St = globalThis?.document ? T.useLayoutEffect : () => {
-}, Lp = T[" useInsertionEffect ".trim().toString()] || St;
-=======
-var Mt = globalThis?.document ? T.useLayoutEffect : () => {
-}, Pf = T[" useInsertionEffect ".trim().toString()] || Mt;
->>>>>>> Stashed changes
+var Dt = globalThis?.document ? T.useLayoutEffect : () => {
+}, Lp = T[" useInsertionEffect ".trim().toString()] || Dt;
 function Qs({
   prop: e,
   defaultProp: t,
@@ -661,13 +560,8 @@ function Ap({
   defaultProp: e,
   onChange: t
 }) {
-<<<<<<< Updated upstream
   const [n, r] = T.useState(e), o = T.useRef(n), s = T.useRef(t);
   return Lp(() => {
-=======
-  const [n, o] = T.useState(e), r = T.useRef(n), s = T.useRef(t);
-  return Pf(() => {
->>>>>>> Stashed changes
     s.current = t;
   }, [t]), T.useEffect(() => {
     o.current !== n && (s.current?.(n), o.current = n);
@@ -761,7 +655,6 @@ function _l(e) {
     const { scope: y, children: v } = m, b = X.useRef(null), x = X.useRef(/* @__PURE__ */ new Map()).current;
     return /* @__PURE__ */ h(o, { scope: y, itemMap: x, collectionRef: b, children: v });
   };
-<<<<<<< Updated upstream
   i.displayName = t;
   const a = e + "CollectionSlot", l = /* @__PURE__ */ Kn(a), c = X.forwardRef(
     (m, y) => {
@@ -774,20 +667,6 @@ function _l(e) {
     (m, y) => {
       const { scope: v, children: b, ...x } = m, M = X.useRef(null), w = Ie(y, M), E = s(d, v);
       return X.useEffect(() => (E.itemMap.set(M, { ref: M, ...x }), () => void E.itemMap.delete(M))), /* @__PURE__ */ h(f, { [u]: "", ref: w, children: b });
-=======
-  a.displayName = t;
-  const i = e + "CollectionSlot", l = /* @__PURE__ */ Kn(i), c = X.forwardRef(
-    (p, b) => {
-      const { scope: v, children: w } = p, N = s(i, v), E = Pe(b, N.collectionRef);
-      return /* @__PURE__ */ z(l, { ref: E, children: w });
-    }
-  );
-  c.displayName = i;
-  const u = e + "CollectionItemSlot", d = "data-radix-collection-item", f = /* @__PURE__ */ Kn(u), h = X.forwardRef(
-    (p, b) => {
-      const { scope: v, children: w, ...N } = p, E = X.useRef(null), y = Pe(b, E), C = s(u, v);
-      return X.useEffect(() => (C.itemMap.set(E, { ref: E, ...N }), () => void C.itemMap.delete(E))), /* @__PURE__ */ z(f, { [d]: "", ref: y, children: w });
->>>>>>> Stashed changes
     }
   );
   p.displayName = d;
@@ -842,17 +721,10 @@ var Fp = "DismissableLayer", bs = "dismissableLayer.update", Up = "dismissableLa
       onInteractOutside: i,
       onDismiss: a,
       ...l
-<<<<<<< Updated upstream
     } = e, c = T.useContext(Hl), [d, u] = T.useState(null), f = d?.ownerDocument ?? globalThis?.document, [, p] = T.useState({}), g = Ie(t, (S) => u(S)), m = Array.from(c.layers), [y] = [...c.layersWithOutsidePointerEventsDisabled].slice(-1), v = m.indexOf(y), b = d ? m.indexOf(d) : -1, x = c.layersWithOutsidePointerEventsDisabled.size > 0, M = b >= v, w = Kp((S) => {
       const k = S.target, N = [...c.branches].some((C) => C.contains(k));
       !M || N || (o?.(S), i?.(S), S.defaultPrevented || a?.());
     }, f), E = Gp((S) => {
-=======
-    } = e, c = T.useContext(Bl), [u, d] = T.useState(null), f = u?.ownerDocument ?? globalThis?.document, [, h] = T.useState({}), g = Pe(t, (S) => d(S)), p = Array.from(c.layers), [b] = [...c.layersWithOutsidePointerEventsDisabled].slice(-1), v = p.indexOf(b), w = u ? p.indexOf(u) : -1, N = c.layersWithOutsidePointerEventsDisabled.size > 0, E = w >= v, y = qf((S) => {
-      const k = S.target, D = [...c.branches].some((x) => x.contains(k));
-      !E || D || (r?.(S), a?.(S), S.defaultPrevented || i?.());
-    }, f), C = Xf((S) => {
->>>>>>> Stashed changes
       const k = S.target;
       [...c.branches].some((C) => C.contains(k)) || (s?.(S), i?.(S), S.defaultPrevented || a?.());
     }, f);
@@ -887,15 +759,9 @@ var Fp = "DismissableLayer", bs = "dismissableLayer.update", Up = "dismissableLa
     );
   }
 );
-<<<<<<< Updated upstream
 Js.displayName = Fp;
 var jp = "DismissableLayerBranch", Vp = T.forwardRef((e, t) => {
   const n = T.useContext(Hl), r = T.useRef(null), o = Ie(t, r);
-=======
-Js.displayName = Yf;
-var Kf = "DismissableLayerBranch", Gf = T.forwardRef((e, t) => {
-  const n = T.useContext(Bl), o = T.useRef(null), r = Pe(t, o);
->>>>>>> Stashed changes
   return T.useEffect(() => {
     const s = r.current;
     if (s)
@@ -976,13 +842,8 @@ var Vo = "focusScope.autoFocusOnMount", Ko = "focusScope.autoFocusOnUnmount", ri
     trapped: r = !1,
     onMountAutoFocus: o,
     onUnmountAutoFocus: s,
-<<<<<<< Updated upstream
     ...i
   } = e, [a, l] = T.useState(null), c = gt(o), d = gt(s), u = T.useRef(null), f = Ie(t, (m) => l(m)), p = T.useRef({
-=======
-    ...a
-  } = e, [i, l] = T.useState(null), c = gt(r), u = gt(s), d = T.useRef(null), f = Pe(t, (p) => l(p)), h = T.useRef({
->>>>>>> Stashed changes
     paused: !1,
     pause() {
       this.paused = !0;
@@ -992,35 +853,19 @@ var Vo = "focusScope.autoFocusOnMount", Ko = "focusScope.autoFocusOnUnmount", ri
     }
   }).current;
   T.useEffect(() => {
-<<<<<<< Updated upstream
     if (r) {
       let m = function(x) {
         if (p.paused || !a) return;
         const M = x.target;
-        a.contains(M) ? u.current = M : Mt(u.current, { select: !0 });
+        a.contains(M) ? u.current = M : Tt(u.current, { select: !0 });
       }, y = function(x) {
         if (p.paused || !a) return;
         const M = x.relatedTarget;
-        M !== null && (a.contains(M) || Mt(u.current, { select: !0 }));
+        M !== null && (a.contains(M) || Tt(u.current, { select: !0 }));
       }, v = function(x) {
         if (document.activeElement === document.body)
           for (const w of x)
-            w.removedNodes.length > 0 && Mt(a);
-=======
-    if (o) {
-      let p = function(N) {
-        if (h.paused || !i) return;
-        const E = N.target;
-        i.contains(E) ? d.current = E : Tt(d.current, { select: !0 });
-      }, b = function(N) {
-        if (h.paused || !i) return;
-        const E = N.relatedTarget;
-        E !== null && (i.contains(E) || Tt(d.current, { select: !0 }));
-      }, v = function(N) {
-        if (document.activeElement === document.body)
-          for (const y of N)
-            y.removedNodes.length > 0 && Tt(i);
->>>>>>> Stashed changes
+            w.removedNodes.length > 0 && Tt(a);
       };
       document.addEventListener("focusin", m), document.addEventListener("focusout", y);
       const b = new MutationObserver(v);
@@ -1028,53 +873,29 @@ var Vo = "focusScope.autoFocusOnMount", Ko = "focusScope.autoFocusOnUnmount", ri
         document.removeEventListener("focusin", m), document.removeEventListener("focusout", y), b.disconnect();
       };
     }
-<<<<<<< Updated upstream
   }, [r, a, p.paused]), T.useEffect(() => {
     if (a) {
       si.add(p);
       const m = document.activeElement;
       if (!a.contains(m)) {
         const v = new CustomEvent(Vo, ri);
-        a.addEventListener(Vo, c), a.dispatchEvent(v), v.defaultPrevented || (Zp(nh(zl(a)), { select: !0 }), document.activeElement === m && Mt(a));
+        a.addEventListener(Vo, c), a.dispatchEvent(v), v.defaultPrevented || (Zp(nh(zl(a)), { select: !0 }), document.activeElement === m && Tt(a));
       }
       return () => {
         a.removeEventListener(Vo, c), setTimeout(() => {
           const v = new CustomEvent(Ko, ri);
-          a.addEventListener(Ko, d), a.dispatchEvent(v), v.defaultPrevented || Mt(m ?? document.body, { select: !0 }), a.removeEventListener(Ko, d), si.remove(p);
-=======
-  }, [o, i, h.paused]), T.useEffect(() => {
-    if (i) {
-      sa.add(h);
-      const p = document.activeElement;
-      if (!i.contains(p)) {
-        const v = new CustomEvent(Vr, oa);
-        i.addEventListener(Vr, c), i.dispatchEvent(v), v.defaultPrevented || (Jf(rh(Fl(i)), { select: !0 }), document.activeElement === p && Tt(i));
-      }
-      return () => {
-        i.removeEventListener(Vr, c), setTimeout(() => {
-          const v = new CustomEvent(Kr, oa);
-          i.addEventListener(Kr, u), i.dispatchEvent(v), v.defaultPrevented || Tt(p ?? document.body, { select: !0 }), i.removeEventListener(Kr, u), sa.remove(h);
->>>>>>> Stashed changes
+          a.addEventListener(Ko, d), a.dispatchEvent(v), v.defaultPrevented || Tt(m ?? document.body, { select: !0 }), a.removeEventListener(Ko, d), si.remove(p);
         }, 0);
       };
     }
   }, [a, c, d, p]);
   const g = T.useCallback(
-<<<<<<< Updated upstream
     (m) => {
       if (!n && !r || p.paused) return;
       const y = m.key === "Tab" && !m.altKey && !m.ctrlKey && !m.metaKey, v = document.activeElement;
       if (y && v) {
         const b = m.currentTarget, [x, M] = Qp(b);
-        x && M ? !m.shiftKey && v === M ? (m.preventDefault(), n && Mt(x, { select: !0 })) : m.shiftKey && v === x && (m.preventDefault(), n && Mt(M, { select: !0 })) : v === b && m.preventDefault();
-=======
-    (p) => {
-      if (!n && !o || h.paused) return;
-      const b = p.key === "Tab" && !p.altKey && !p.ctrlKey && !p.metaKey, v = document.activeElement;
-      if (b && v) {
-        const w = p.currentTarget, [N, E] = eh(w);
-        N && E ? !p.shiftKey && v === E ? (p.preventDefault(), n && Tt(N, { select: !0 })) : p.shiftKey && v === N && (p.preventDefault(), n && Tt(E, { select: !0 })) : v === w && p.preventDefault();
->>>>>>> Stashed changes
+        x && M ? !m.shiftKey && v === M ? (m.preventDefault(), n && Tt(x, { select: !0 })) : m.shiftKey && v === x && (m.preventDefault(), n && Tt(M, { select: !0 })) : v === b && m.preventDefault();
       }
     },
     [n, r, p.paused]
@@ -1084,13 +905,8 @@ var Vo = "focusScope.autoFocusOnMount", Ko = "focusScope.autoFocusOnUnmount", ri
 Wl.displayName = Xp;
 function Zp(e, { select: t = !1 } = {}) {
   const n = document.activeElement;
-<<<<<<< Updated upstream
   for (const r of e)
-    if (Mt(r, { select: t }), document.activeElement !== n) return;
-=======
-  for (const o of e)
-    if (Tt(o, { select: t }), document.activeElement !== n) return;
->>>>>>> Stashed changes
+    if (Tt(r, { select: t }), document.activeElement !== n) return;
 }
 function Qp(e) {
   const t = zl(e), n = oi(t, e), r = oi(t.reverse(), e);
@@ -1122,11 +938,7 @@ function Jp(e, { upTo: t }) {
 function eh(e) {
   return e instanceof HTMLInputElement && "select" in e;
 }
-<<<<<<< Updated upstream
-function Mt(e, { select: t = !1 } = {}) {
-=======
 function Tt(e, { select: t = !1 } = {}) {
->>>>>>> Stashed changes
   if (e && e.focus) {
     const n = document.activeElement;
     e.focus({ preventScroll: !0 }), e !== n && eh(e) && t && e.select();
@@ -1152,27 +964,15 @@ function ai(e, t) {
 function nh(e) {
   return e.filter((t) => t.tagName !== "A");
 }
-<<<<<<< Updated upstream
 var rh = T[" useId ".trim().toString()] || (() => {
 }), oh = 0;
 function to(e) {
   const [t, n] = T.useState(rh());
-  return St(() => {
+  return Dt(() => {
     n((r) => r ?? String(oh++));
   }, [e]), e || (t ? `radix-${t}` : "");
 }
-const sh = ["top", "right", "bottom", "left"], Dt = Math.min, We = Math.max, no = Math.round, Rr = Math.floor, st = (e) => ({
-=======
-var sh = T[" useId ".trim().toString()] || (() => {
-}), ih = 0;
-function nr(e) {
-  const [t, n] = T.useState(sh());
-  return Mt(() => {
-    n((o) => o ?? String(ih++));
-  }, [e]), e || (t ? `radix-${t}` : "");
-}
-const ah = ["top", "right", "bottom", "left"], Dt = Math.min, We = Math.max, or = Math.round, Ro = Math.floor, st = (e) => ({
->>>>>>> Stashed changes
+const sh = ["top", "right", "bottom", "left"], Nt = Math.min, We = Math.max, no = Math.round, Rr = Math.floor, st = (e) => ({
   x: e,
   y: e
 }), ah = {
@@ -1184,12 +984,8 @@ const ah = ["top", "right", "bottom", "left"], Dt = Math.min, We = Math.max, or 
   start: "end",
   end: "start"
 };
-<<<<<<< Updated upstream
 function ws(e, t, n) {
-=======
-function ys(e, t, n) {
->>>>>>> Stashed changes
-  return We(e, Dt(t, n));
+  return We(e, Nt(t, n));
 }
 function yt(e, t) {
   return typeof e == "function" ? e(t) : e;
@@ -1456,19 +1252,11 @@ const yh = (e) => ({
       return {};
     const u = Fl(d), f = {
       x: n,
-<<<<<<< Updated upstream
       y: r
     }, p = na(o), g = ta(p), m = await i.getDimensions(c), y = p === "y", v = y ? "top" : "left", b = y ? "bottom" : "right", x = y ? "clientHeight" : "clientWidth", M = s.reference[g] + s.reference[p] - f[p] - s.floating[g], w = f[p] - s.reference[p], E = await (i.getOffsetParent == null ? void 0 : i.getOffsetParent(c));
     let S = E ? E[x] : 0;
     (!S || !await (i.isElement == null ? void 0 : i.isElement(E))) && (S = a.floating[x] || s.floating[g]);
-    const k = M / 2 - w / 2, N = S / 2 - m[g] / 2 - 1, C = Dt(u[v], N), D = Dt(u[b], N), L = C, P = S - m[g] - D, O = S / 2 - m[g] / 2 + k, $ = ws(L, O, P), W = !l.arrow && Cn(o) != null && O !== $ && s.reference[g] / 2 - (O < L ? C : D) - m[g] / 2 < 0, V = W ? O < L ? O - L : O - P : 0;
-=======
-      y: o
-    }, h = ni(r), g = ti(h), p = await a.getDimensions(c), b = h === "y", v = b ? "top" : "left", w = b ? "bottom" : "right", N = b ? "clientHeight" : "clientWidth", E = s.reference[g] + s.reference[h] - f[h] - s.floating[g], y = f[h] - s.reference[h], C = await (a.getOffsetParent == null ? void 0 : a.getOffsetParent(c));
-    let S = C ? C[N] : 0;
-    (!S || !await (a.isElement == null ? void 0 : a.isElement(C))) && (S = i.floating[N] || s.floating[g]);
-    const k = E / 2 - y / 2, D = S / 2 - p[g] / 2 - 1, x = Dt(d[v], D), M = Dt(d[w], D), A = x, I = S - p[g] - M, R = S / 2 - p[g] / 2 + k, _ = ys(A, R, I), H = !l.arrow && xn(r) != null && R !== _ && s.reference[g] / 2 - (R < A ? x : M) - p[g] / 2 < 0, V = H ? R < A ? R - A : R - I : 0;
->>>>>>> Stashed changes
+    const k = M / 2 - w / 2, N = S / 2 - m[g] / 2 - 1, C = Nt(u[v], N), D = Nt(u[b], N), L = C, P = S - m[g] - D, O = S / 2 - m[g] / 2 + k, $ = ws(L, O, P), W = !l.arrow && Cn(o) != null && O !== $ && s.reference[g] / 2 - (O < L ? C : D) - m[g] / 2 < 0, V = W ? O < L ? O - L : O - P : 0;
     return {
       [p]: f[p] + V,
       data: {
@@ -1521,11 +1309,7 @@ const yh = (e) => ({
         const O = (((D = s.flip) == null ? void 0 : D.index) || 0) + 1, $ = S[O];
         if ($ && (!(u === "alignment" ? b !== rt($) : !1) || // We leave the current main axis only if every placement on that axis
         // overflows the main axis.
-<<<<<<< Updated upstream
         C.every((R) => rt(R.placement) === b ? R.overflows[0] > 0 : !0)))
-=======
-        x.every((P) => ot(P.placement) === w ? P.overflows[0] > 0 : !0)))
->>>>>>> Stashed changes
           return {
             data: {
               index: O,
@@ -1535,7 +1319,6 @@ const yh = (e) => ({
               placement: $
             }
           };
-<<<<<<< Updated upstream
         let W = (L = C.filter((V) => V.overflows[0] <= 0).sort((V, R) => V.overflows[1] - R.overflows[1])[0]) == null ? void 0 : L.placement;
         if (!W)
           switch (p) {
@@ -1551,23 +1334,6 @@ const yh = (e) => ({
                 return !0;
               }).map((R) => [R.placement, R.overflows.filter((A) => A > 0).reduce((A, H) => A + H, 0)]).sort((R, A) => R[1] - A[1])[0]) == null ? void 0 : P[0];
               V && (W = V);
-=======
-        let H = (A = x.filter((V) => V.overflows[0] <= 0).sort((V, P) => V.overflows[1] - P.overflows[1])[0]) == null ? void 0 : A.placement;
-        if (!H)
-          switch (h) {
-            case "bestFit": {
-              var I;
-              const V = (I = x.filter((P) => {
-                if (C) {
-                  const L = ot(P.placement);
-                  return L === w || // Create a bias to the `y` side axis due to horizontal
-                  // reading directions favoring greater width.
-                  L === "y";
-                }
-                return !0;
-              }).map((P) => [P.placement, P.overflows.filter((L) => L > 0).reduce((L, $) => L + $, 0)]).sort((P, L) => P[1] - L[1])[0]) == null ? void 0 : I[0];
-              V && (H = V);
->>>>>>> Stashed changes
               break;
             }
             case "initialPlacement":
@@ -1804,23 +1570,13 @@ const xh = function(e) {
         width: g,
         height: m
       } = s.floating;
-<<<<<<< Updated upstream
       let y, v;
       u === "top" || u === "bottom" ? (y = u, v = f === (await (i.isRTL == null ? void 0 : i.isRTL(a.floating)) ? "start" : "end") ? "left" : "right") : (v = u, y = f === "end" ? "top" : "bottom");
-      const b = m - d.top - d.bottom, x = g - d.left - d.right, M = Dt(m - d[y], b), w = Dt(g - d[v], x), E = !t.middlewareData.shift;
+      const b = m - d.top - d.bottom, x = g - d.left - d.right, M = Nt(m - d[y], b), w = Nt(g - d[v], x), E = !t.middlewareData.shift;
       let S = M, k = w;
       if ((n = t.middlewareData.shift) != null && n.enabled.x && (k = x), (r = t.middlewareData.shift) != null && r.enabled.y && (S = b), E && !f) {
         const C = We(d.left, 0), D = We(d.right, 0), L = We(d.top, 0), P = We(d.bottom, 0);
         p ? k = g - 2 * (C !== 0 || D !== 0 ? C + D : We(d.left, d.right)) : S = m - 2 * (L !== 0 || P !== 0 ? L + P : We(d.top, d.bottom));
-=======
-      let b, v;
-      d === "top" || d === "bottom" ? (b = d, v = f === (await (a.isRTL == null ? void 0 : a.isRTL(i.floating)) ? "start" : "end") ? "left" : "right") : (v = d, b = f === "end" ? "top" : "bottom");
-      const w = p - u.top - u.bottom, N = g - u.left - u.right, E = Dt(p - u[b], w), y = Dt(g - u[v], N), C = !t.middlewareData.shift;
-      let S = E, k = y;
-      if ((n = t.middlewareData.shift) != null && n.enabled.x && (k = N), (o = t.middlewareData.shift) != null && o.enabled.y && (S = w), C && !f) {
-        const x = We(u.left, 0), M = We(u.right, 0), A = We(u.top, 0), I = We(u.bottom, 0);
-        h ? k = g - 2 * (x !== 0 || M !== 0 ? x + M : We(u.left, u.right)) : S = p - 2 * (A !== 0 || I !== 0 ? A + I : We(u.top, u.bottom));
->>>>>>> Stashed changes
       }
       await l({
         ...t,
@@ -1886,35 +1642,19 @@ function bo(e) {
     }
   });
 }
-<<<<<<< Updated upstream
 const Nh = ["transform", "translate", "scale", "rotate", "perspective"], Lh = ["transform", "translate", "scale", "rotate", "perspective", "filter"], Ah = ["paint", "layout", "strict", "content"];
 function ra(e) {
   const t = oa(), n = Qe(e) ? Je(e) : e;
   return Nh.some((r) => n[r] ? n[r] !== "none" : !1) || (n.containerType ? n.containerType !== "normal" : !1) || !t && (n.backdropFilter ? n.backdropFilter !== "none" : !1) || !t && (n.filter ? n.filter !== "none" : !1) || Lh.some((r) => (n.willChange || "").includes(r)) || Ah.some((r) => (n.contain || "").includes(r));
 }
 function Ih(e) {
-  let t = Nt(e);
+  let t = Lt(e);
   for (; at(t) && !gn(t); ) {
     if (ra(t))
-=======
-const Lh = ["transform", "translate", "scale", "rotate", "perspective"], Ph = ["transform", "translate", "scale", "rotate", "perspective", "filter"], Ih = ["paint", "layout", "strict", "content"];
-function oi(e) {
-  const t = ri(), n = Qe(e) ? Je(e) : e;
-  return Lh.some((o) => n[o] ? n[o] !== "none" : !1) || (n.containerType ? n.containerType !== "normal" : !1) || !t && (n.backdropFilter ? n.backdropFilter !== "none" : !1) || !t && (n.filter ? n.filter !== "none" : !1) || Ph.some((o) => (n.willChange || "").includes(o)) || Ih.some((o) => (n.contain || "").includes(o));
-}
-function Rh(e) {
-  let t = At(e);
-  for (; it(t) && !gn(t); ) {
-    if (oi(t))
->>>>>>> Stashed changes
       return t;
     if (bo(t))
       return null;
-<<<<<<< Updated upstream
-    t = Nt(t);
-=======
-    t = At(t);
->>>>>>> Stashed changes
+    t = Lt(t);
   }
   return null;
 }
@@ -1937,13 +1677,8 @@ function wo(e) {
     scrollTop: e.scrollY
   };
 }
-<<<<<<< Updated upstream
-function Nt(e) {
+function Lt(e) {
   if (En(e) === "html")
-=======
-function At(e) {
-  if (Cn(e) === "html")
->>>>>>> Stashed changes
     return e;
   const t = (
     // Step into the shadow DOM of the parent of a slotted node.
@@ -1955,13 +1690,8 @@ function At(e) {
   return fi(t) ? t.host : t;
 }
 function jl(e) {
-<<<<<<< Updated upstream
-  const t = Nt(e);
+  const t = Lt(e);
   return gn(t) ? e.ownerDocument ? e.ownerDocument.body : e.body : at(t) && nr(t) ? t : jl(t);
-=======
-  const t = At(e);
-  return gn(t) ? e.ownerDocument ? e.ownerDocument.body : e.body : it(t) && no(t) ? t : jl(t);
->>>>>>> Stashed changes
 }
 function qn(e, t, n) {
   var r;
@@ -2015,11 +1745,7 @@ function Kl(e) {
 function Oh(e, t, n) {
   return t === void 0 && (t = !1), !n || t && n !== Fe(e) ? !1 : t;
 }
-<<<<<<< Updated upstream
-function Ut(e, t, n, r) {
-=======
-function Yt(e, t, n, o) {
->>>>>>> Stashed changes
+function Yt(e, t, n, r) {
   t === void 0 && (t = !1), n === void 0 && (n = !1);
   const o = e.getBoundingClientRect(), s = sa(e);
   let i = st(1);
@@ -2041,15 +1767,9 @@ function Yt(e, t, n, o) {
     y: c
   });
 }
-<<<<<<< Updated upstream
 function xo(e, t) {
   const n = wo(e).scrollLeft;
-  return t ? t.left + n : Ut(it(e)).left + n;
-=======
-function Nr(e, t) {
-  const n = yr(e).scrollLeft;
-  return t ? t.left + n : Yt(at(e)).left + n;
->>>>>>> Stashed changes
+  return t ? t.left + n : Yt(it(e)).left + n;
 }
 function Gl(e, t) {
   const n = e.getBoundingClientRect(), r = n.left + t.scrollLeft - xo(e, n), o = n.top + t.scrollTop;
@@ -2072,17 +1792,10 @@ function _h(e) {
     scrollLeft: 0,
     scrollTop: 0
   }, c = st(1);
-<<<<<<< Updated upstream
   const d = st(0), u = at(r);
   if ((u || !u && !s) && ((En(r) !== "body" || nr(i)) && (l = wo(r)), at(r))) {
-    const p = Ut(r);
+    const p = Yt(r);
     c = un(r), d.x = p.x + r.clientLeft, d.y = p.y + r.clientTop;
-=======
-  const u = st(0), d = it(o);
-  if ((d || !d && !s) && ((Cn(o) !== "body" || no(a)) && (l = yr(o)), it(o))) {
-    const h = Yt(o);
-    c = dn(o), u.x = h.x + o.clientLeft, u.y = h.y + o.clientTop;
->>>>>>> Stashed changes
   }
   const f = i && !u && !s ? Gl(i, l) : st(0);
   return {
@@ -2127,15 +1840,9 @@ function Bh(e, t) {
     y: l
   };
 }
-<<<<<<< Updated upstream
 const Wh = /* @__PURE__ */ new Set(["absolute", "fixed"]);
 function zh(e, t) {
-  const n = Ut(e, !0, t === "fixed"), r = n.top + e.clientTop, o = n.left + e.clientLeft, s = at(e) ? un(e) : st(1), i = e.clientWidth * s.x, a = e.clientHeight * s.y, l = o * s.x, c = r * s.y;
-=======
-const zh = /* @__PURE__ */ new Set(["absolute", "fixed"]);
-function Uh(e, t) {
-  const n = Yt(e, !0, t === "fixed"), o = n.top + e.clientTop, r = n.left + e.clientLeft, s = it(e) ? dn(e) : st(1), a = e.clientWidth * s.x, i = e.clientHeight * s.y, l = r * s.x, c = o * s.y;
->>>>>>> Stashed changes
+  const n = Yt(e, !0, t === "fixed"), r = n.top + e.clientTop, o = n.left + e.clientLeft, s = at(e) ? un(e) : st(1), i = e.clientWidth * s.x, a = e.clientHeight * s.y, l = o * s.x, c = r * s.y;
   return {
     width: i,
     height: a,
@@ -2163,11 +1870,7 @@ function hi(e, t, n) {
   return oo(r);
 }
 function ql(e, t) {
-<<<<<<< Updated upstream
-  const n = Nt(e);
-=======
-  const n = At(e);
->>>>>>> Stashed changes
+  const n = Lt(e);
   return n === t || !Qe(n) || gn(n) ? !1 : Je(n).position === "fixed" || ql(n, t);
 }
 function Fh(e, t) {
@@ -2176,17 +1879,10 @@ function Fh(e, t) {
     return n;
   let r = qn(e, [], !1).filter((a) => Qe(a) && En(a) !== "body"), o = null;
   const s = Je(e).position === "fixed";
-<<<<<<< Updated upstream
-  let i = s ? Nt(e) : e;
+  let i = s ? Lt(e) : e;
   for (; Qe(i) && !gn(i); ) {
     const a = Je(i), l = ra(i);
-    !l && a.position === "fixed" && (o = null), (s ? !l && !o : !l && a.position === "static" && !!o && Wh.has(o.position) || nr(i) && !l && ql(e, i)) ? r = r.filter((d) => d !== i) : o = a, i = Nt(i);
-=======
-  let a = s ? At(e) : e;
-  for (; Qe(a) && !gn(a); ) {
-    const i = Je(a), l = oi(a);
-    !l && i.position === "fixed" && (r = null), (s ? !l && !r : !l && i.position === "static" && !!r && zh.has(r.position) || no(a) && !l && ql(e, a)) ? o = o.filter((u) => u !== a) : r = i, a = At(a);
->>>>>>> Stashed changes
+    !l && a.position === "fixed" && (o = null), (s ? !l && !o : !l && a.position === "static" && !!o && Wh.has(o.position) || nr(i) && !l && ql(e, i)) ? r = r.filter((d) => d !== i) : o = a, i = Lt(i);
   }
   return t.set(e, r), r;
 }
@@ -2197,17 +1893,10 @@ function Uh(e) {
     rootBoundary: r,
     strategy: o
   } = e;
-<<<<<<< Updated upstream
   const i = [...n === "clippingAncestors" ? bo(t) ? [] : Fh(t, this._c) : [].concat(n), r], a = i[0], l = i.reduce((c, d) => {
     const u = hi(t, d, o);
-    return c.top = We(u.top, c.top), c.right = Dt(u.right, c.right), c.bottom = Dt(u.bottom, c.bottom), c.left = We(u.left, c.left), c;
+    return c.top = We(u.top, c.top), c.right = Nt(u.right, c.right), c.bottom = Nt(u.bottom, c.bottom), c.left = We(u.left, c.left), c;
   }, hi(t, a, o));
-=======
-  const a = [...n === "clippingAncestors" ? wr(t) ? [] : Yh(t, this._c) : [].concat(n), o], i = a[0], l = a.reduce((c, u) => {
-    const d = ha(t, u, r);
-    return c.top = We(d.top, c.top), c.right = Dt(d.right, c.right), c.bottom = Dt(d.bottom, c.bottom), c.left = We(d.left, c.left), c;
-  }, ha(t, i, r));
->>>>>>> Stashed changes
   return {
     width: l.right - l.left,
     height: l.bottom - l.top,
@@ -2225,15 +1914,9 @@ function Yh(e) {
     height: n
   };
 }
-<<<<<<< Updated upstream
 function jh(e, t, n) {
-  const r = at(t), o = it(t), s = n === "fixed", i = Ut(e, !0, s, t);
+  const r = at(t), o = it(t), s = n === "fixed", i = Yt(e, !0, s, t);
   let a = {
-=======
-function Kh(e, t, n) {
-  const o = it(t), r = at(t), s = n === "fixed", a = Yt(e, !0, s, t);
-  let i = {
->>>>>>> Stashed changes
     scrollLeft: 0,
     scrollTop: 0
   };
@@ -2241,23 +1924,13 @@ function Kh(e, t, n) {
   function c() {
     l.x = xo(o);
   }
-<<<<<<< Updated upstream
   if (r || !r && !s)
     if ((En(t) !== "body" || nr(o)) && (a = wo(t)), r) {
-      const p = Ut(t, !0, s, t);
+      const p = Yt(t, !0, s, t);
       l.x = p.x + t.clientLeft, l.y = p.y + t.clientTop;
     } else o && c();
   s && !r && o && c();
   const d = o && !r && !s ? Gl(o, a) : st(0), u = i.left + a.scrollLeft - l.x - d.x, f = i.top + a.scrollTop - l.y - d.y;
-=======
-  if (o || !o && !s)
-    if ((Cn(t) !== "body" || no(r)) && (i = yr(t)), o) {
-      const h = Yt(t, !0, s, t);
-      l.x = h.x + t.clientLeft, l.y = h.y + t.clientTop;
-    } else r && c();
-  s && !o && r && c();
-  const u = r && !o && !s ? Gl(r, i) : st(0), d = a.left + i.scrollLeft - l.x - u.x, f = a.top + i.scrollTop - l.y - u.y;
->>>>>>> Stashed changes
   return {
     x: u,
     y: f,
@@ -2280,21 +1953,12 @@ function Xl(e, t) {
   const n = Fe(e);
   if (bo(e))
     return n;
-<<<<<<< Updated upstream
   if (!at(e)) {
-    let o = Nt(e);
+    let o = Lt(e);
     for (; o && !gn(o); ) {
       if (Qe(o) && !Go(o))
         return o;
-      o = Nt(o);
-=======
-  if (!it(e)) {
-    let r = At(e);
-    for (; r && !gn(r); ) {
-      if (Qe(r) && !Gr(r))
-        return r;
-      r = At(r);
->>>>>>> Stashed changes
+      o = Lt(o);
     }
     return n;
   }
@@ -2350,14 +2014,9 @@ function qh(e, t) {
     } = c;
     if (a || t(), !f || !p)
       return;
-<<<<<<< Updated upstream
     const g = Rr(u), m = Rr(o.clientWidth - (d + f)), y = Rr(o.clientHeight - (u + p)), v = Rr(d), x = {
       rootMargin: -g + "px " + -m + "px " + -y + "px " + -v + "px",
-=======
-    const g = Ro(d), p = Ro(r.clientWidth - (u + f)), b = Ro(r.clientHeight - (d + h)), v = Ro(u), N = {
-      rootMargin: -g + "px " + -p + "px " + -b + "px " + -v + "px",
->>>>>>> Stashed changes
-      threshold: We(0, Dt(1, l)) || 1
+      threshold: We(0, Nt(1, l)) || 1
     };
     let M = !0;
     function w(E) {
@@ -2406,21 +2065,12 @@ function Xh(e, t, n, r) {
       var x;
       (x = p) == null || x.observe(t);
     })), n();
-<<<<<<< Updated upstream
   }), c && !l && p.observe(c), p.observe(t));
-  let g, m = l ? Ut(e) : null;
+  let g, m = l ? Yt(e) : null;
   l && y();
   function y() {
-    const v = Ut(e);
-    m && !Zl(m, v) && n(), m = v, g = requestAnimationFrame(y);
-=======
-  }), c && !l && h.observe(c), h.observe(t));
-  let g, p = l ? Yt(e) : null;
-  l && b();
-  function b() {
     const v = Yt(e);
-    p && !Zl(p, v) && n(), p = v, g = requestAnimationFrame(b);
->>>>>>> Stashed changes
+    m && !Zl(m, v) && n(), m = v, g = requestAnimationFrame(y);
   }
   return n(), () => {
     var v;
@@ -2508,7 +2158,6 @@ function am(e) {
     placement: t,
     middlewareData: {},
     isPositioned: !1
-<<<<<<< Updated upstream
   }), [f, p] = T.useState(r);
   so(f, r) || p(r);
   const [g, m] = T.useState(null), [y, v] = T.useState(null), b = T.useCallback((R) => {
@@ -2519,31 +2168,13 @@ function am(e) {
     if (!E.current || !S.current)
       return;
     const R = {
-=======
-  }), [f, h] = T.useState(o);
-  ir(f, o) || h(o);
-  const [g, p] = T.useState(null), [b, v] = T.useState(null), w = T.useCallback((P) => {
-    P !== C.current && (C.current = P, p(P));
-  }, []), N = T.useCallback((P) => {
-    P !== S.current && (S.current = P, v(P));
-  }, []), E = s || g, y = a || b, C = T.useRef(null), S = T.useRef(null), k = T.useRef(u), D = l != null, x = qr(l), M = qr(r), A = qr(c), I = T.useCallback(() => {
-    if (!C.current || !S.current)
-      return;
-    const P = {
->>>>>>> Stashed changes
       placement: t,
       strategy: n,
       middleware: f
     };
-<<<<<<< Updated upstream
     D.current && (R.platform = D.current), rm(E.current, S.current, R).then((A) => {
       const H = {
         ...A,
-=======
-    M.current && (P.platform = M.current), sp(C.current, S.current, P).then((L) => {
-      const $ = {
-        ...L,
->>>>>>> Stashed changes
         // The floating element's position may be recomputed while it's closed
         // but still mounted (such as when transitioning out). To ensure
         // `isPositioned` will be `false` initially on the next open, avoid
@@ -2554,17 +2185,10 @@ function am(e) {
         u(H);
       }));
     });
-<<<<<<< Updated upstream
   }, [f, t, n, D, L]);
   qr(() => {
     c === !1 && k.current.isPositioned && (k.current.isPositioned = !1, u((R) => ({
       ...R,
-=======
-  }, [f, t, n, M, A]);
-  Xo(() => {
-    c === !1 && k.current.isPositioned && (k.current.isPositioned = !1, d((P) => ({
-      ...P,
->>>>>>> Stashed changes
       isPositioned: !1
     })));
   }, [c]);
@@ -2580,7 +2204,6 @@ function am(e) {
   }, [M, w, P, C, N]);
   const $ = T.useMemo(() => ({
     reference: E,
-<<<<<<< Updated upstream
     floating: S,
     setReference: b,
     setFloating: x
@@ -2589,16 +2212,10 @@ function am(e) {
     floating: w
   }), [M, w]), V = T.useMemo(() => {
     const R = {
-=======
-    floating: y
-  }), [E, y]), V = T.useMemo(() => {
-    const P = {
->>>>>>> Stashed changes
       position: n,
       left: 0,
       top: 0
     };
-<<<<<<< Updated upstream
     if (!W.floating)
       return R;
     const A = yi(W.floating, d.x), H = yi(W.floating, d.y);
@@ -2606,26 +2223,12 @@ function am(e) {
       ...R,
       transform: "translate(" + A + "px, " + H + "px)",
       ...Ql(W.floating) >= 1.5 && {
-=======
-    if (!H.floating)
-      return P;
-    const L = ba(H.floating, u.x), $ = ba(H.floating, u.y);
-    return i ? {
-      ...P,
-      transform: "translate(" + L + "px, " + $ + "px)",
-      ...Ql(H.floating) >= 1.5 && {
->>>>>>> Stashed changes
         willChange: "transform"
       }
     } : {
       position: n,
-<<<<<<< Updated upstream
       left: A,
       top: H
-=======
-      left: L,
-      top: $
->>>>>>> Stashed changes
     };
   }, [n, a, W.floating, d.x, d.y]);
   return T.useMemo(() => ({
@@ -2698,7 +2301,7 @@ Jl.displayName = mm;
 var gm = Jl;
 function ym(e) {
   const [t, n] = T.useState(void 0);
-  return Mt(() => {
+  return Dt(() => {
     if (e) {
       n({ width: e.offsetWidth, height: e.offsetHeight });
       const r = new ResizeObserver((o) => {
@@ -2725,11 +2328,7 @@ var aa = "Popper", [ec, ko] = kn(aa), [vm, tc] = ec(aa), nc = (e) => {
 nc.displayName = aa;
 var rc = "PopperAnchor", oc = T.forwardRef(
   (e, t) => {
-<<<<<<< Updated upstream
     const { __scopePopper: n, virtualRef: r, ...o } = e, s = tc(rc, n), i = T.useRef(null), a = Ie(t, i), l = T.useRef(null);
-=======
-    const { __scopePopper: n, virtualRef: o, ...r } = e, s = tc(oc, n), a = T.useRef(null), i = Pe(t, a), l = T.useRef(null);
->>>>>>> Stashed changes
     return T.useEffect(() => {
       const c = l.current;
       l.current = r?.current || i.current, c !== l.current && s.onAnchorChange(l.current);
@@ -2753,7 +2352,6 @@ var ia = "PopperContent", [bm, wm] = ec(ia), sc = T.forwardRef(
       hideWhenDetached: f = !1,
       updatePositionStrategy: p = "optimized",
       onPlaced: g,
-<<<<<<< Updated upstream
       ...m
     } = e, y = tc(ia, n), [v, b] = T.useState(null), x = Ie(t, (_) => b(_)), [M, w] = T.useState(null), E = ym(M), S = E?.width ?? 0, k = E?.height ?? 0, N = r + (s !== "center" ? "-" + s : ""), C = typeof d == "number" ? d : { top: 0, right: 0, bottom: 0, left: 0, ...d }, D = Array.isArray(c) ? c : [c], L = D.length > 0, P = {
       padding: C,
@@ -2761,15 +2359,6 @@ var ia = "PopperContent", [bm, wm] = ec(ia), sc = T.forwardRef(
       // with `strategy: 'fixed'`, this is the only way to get it to respect boundaries
       altBoundary: L
     }, { refs: O, floatingStyles: $, placement: W, isPositioned: V, middlewareData: R } = am({
-=======
-      ...p
-    } = e, b = tc(ai, n), [v, w] = T.useState(null), N = Pe(t, (O) => w(O)), [E, y] = T.useState(null), C = wp(E), S = C?.width ?? 0, k = C?.height ?? 0, D = o + (s !== "center" ? "-" + s : ""), x = typeof u == "number" ? u : { top: 0, right: 0, bottom: 0, left: 0, ...u }, M = Array.isArray(c) ? c : [c], A = M.length > 0, I = {
-      padding: x,
-      boundary: M.filter(Cp),
-      // with `strategy: 'fixed'`, this is the only way to get it to respect boundaries
-      altBoundary: A
-    }, { refs: R, floatingStyles: _, placement: H, isPositioned: V, middlewareData: P } = lp({
->>>>>>> Stashed changes
       // default to `fixed` strategy so users don't have to pick and we also avoid focus scroll issues
       strategy: "fixed",
       placement: N,
@@ -2799,21 +2388,12 @@ var ia = "PopperContent", [bm, wm] = ec(ia), sc = T.forwardRef(
         Cm({ arrowWidth: S, arrowHeight: k }),
         f && pm({ strategy: "referenceHidden", ...P })
       ]
-<<<<<<< Updated upstream
     }), [A, H] = lc(W), G = gt(g);
-    St(() => {
+    Dt(() => {
       V && G?.();
     }, [V, G]);
     const z = R.arrow?.x, U = R.arrow?.y, K = R.arrow?.centerOffset !== 0, [B, J] = T.useState();
-    return St(() => {
-=======
-    }), [L, $] = lc(H), G = gt(g);
-    Mt(() => {
-      V && G?.();
-    }, [V, G]);
-    const W = P.arrow?.x, U = P.arrow?.y, K = P.arrow?.centerOffset !== 0, [B, J] = T.useState();
-    return Mt(() => {
->>>>>>> Stashed changes
+    return Dt(() => {
       v && J(window.getComputedStyle(v).zIndex);
     }, [v]), /* @__PURE__ */ h(
       "div",
@@ -2827,22 +2407,13 @@ var ia = "PopperContent", [bm, wm] = ec(ia), sc = T.forwardRef(
           minWidth: "max-content",
           zIndex: B,
           "--radix-popper-transform-origin": [
-<<<<<<< Updated upstream
             R.transformOrigin?.x,
             R.transformOrigin?.y
-=======
-            P.transformOrigin?.x,
-            P.transformOrigin?.y
->>>>>>> Stashed changes
           ].join(" "),
           // hide the content if using the hide middleware and should be hidden
           // set visibility to hidden and disable pointer events so the UI behaves
           // as if the PopperContent isn't there at all
-<<<<<<< Updated upstream
           ...R.hide?.referenceHidden && {
-=======
-          ...P.hide?.referenceHidden && {
->>>>>>> Stashed changes
             visibility: "hidden",
             pointerEvents: "none"
           }
@@ -2852,31 +2423,18 @@ var ia = "PopperContent", [bm, wm] = ec(ia), sc = T.forwardRef(
           bm,
           {
             scope: n,
-<<<<<<< Updated upstream
             placedSide: A,
             onArrowChange: w,
             arrowX: z,
-=======
-            placedSide: L,
-            onArrowChange: y,
-            arrowX: W,
->>>>>>> Stashed changes
             arrowY: U,
             shouldHideArrow: K,
             children: /* @__PURE__ */ h(
               Le.div,
               {
-<<<<<<< Updated upstream
                 "data-side": A,
                 "data-align": H,
                 ...m,
                 ref: x,
-=======
-                "data-side": L,
-                "data-align": $,
-                ...p,
-                ref: N,
->>>>>>> Stashed changes
                 style: {
                   ...m.style,
                   // if the PopperContent hasn't been placed yet (not all measurements done)
@@ -2959,41 +2517,23 @@ function lc(e) {
   const [t, n = "center"] = e.split("-");
   return [t, n];
 }
-<<<<<<< Updated upstream
 var cc = nc, dc = oc, uc = sc, fc = ic, Em = "Portal", la = T.forwardRef((e, t) => {
   const { container: n, ...r } = e, [o, s] = T.useState(!1);
-  St(() => s(!0), []);
+  Dt(() => s(!0), []);
   const i = n || o && globalThis?.document?.body;
   return i ? Yf.createPortal(/* @__PURE__ */ h(Le.div, { ...r, ref: t }), i) : null;
-=======
-var cc = nc, uc = rc, dc = sc, mc = ac, Tp = "Portal", li = T.forwardRef((e, t) => {
-  const { container: n, ...o } = e, [r, s] = T.useState(!1);
-  Mt(() => s(!0), []);
-  const a = n || r && globalThis?.document?.body;
-  return a ? jm.createPortal(/* @__PURE__ */ z(Ae.div, { ...o, ref: t }), a) : null;
->>>>>>> Stashed changes
 });
 la.displayName = Em;
 function Mm(e, t) {
   return T.useReducer((n, r) => t[n][r] ?? n, e);
 }
-<<<<<<< Updated upstream
-var Yt = (e) => {
+var jt = (e) => {
   const { present: t, children: n } = e, r = Tm(t), o = typeof n == "function" ? n({ present: r.isPresent }) : T.Children.only(n), s = Ie(r.ref, Sm(o));
   return typeof n == "function" || r.isPresent ? T.cloneElement(o, { ref: s }) : null;
 };
-Yt.displayName = "Presence";
+jt.displayName = "Presence";
 function Tm(e) {
   const [t, n] = T.useState(), r = T.useRef(null), o = T.useRef(e), s = T.useRef("none"), i = e ? "mounted" : "unmounted", [a, l] = Mm(i, {
-=======
-var jt = (e) => {
-  const { present: t, children: n } = e, o = Mp(t), r = typeof n == "function" ? n({ present: o.isPresent }) : T.Children.only(n), s = Pe(o.ref, Dp(r));
-  return typeof n == "function" || o.isPresent ? T.cloneElement(r, { ref: s }) : null;
-};
-jt.displayName = "Presence";
-function Mp(e) {
-  const [t, n] = T.useState(), o = T.useRef(null), r = T.useRef(e), s = T.useRef("none"), a = e ? "mounted" : "unmounted", [i, l] = Sp(a, {
->>>>>>> Stashed changes
     mounted: {
       UNMOUNT: "unmounted",
       ANIMATION_OUT: "unmountSuspended"
@@ -3007,25 +2547,15 @@ function Mp(e) {
     }
   });
   return T.useEffect(() => {
-<<<<<<< Updated upstream
     const c = Pr(r.current);
     s.current = a === "mounted" ? c : "none";
-  }, [a]), St(() => {
+  }, [a]), Dt(() => {
     const c = r.current, d = o.current;
     if (d !== e) {
       const f = s.current, p = Pr(c);
       e ? l("MOUNT") : p === "none" || c?.display === "none" ? l("UNMOUNT") : l(d && f !== p ? "ANIMATION_OUT" : "UNMOUNT"), o.current = e;
-=======
-    const c = Oo(o.current);
-    s.current = i === "mounted" ? c : "none";
-  }, [i]), Mt(() => {
-    const c = o.current, u = r.current;
-    if (u !== e) {
-      const f = s.current, h = Oo(c);
-      e ? l("MOUNT") : h === "none" || c?.display === "none" ? l("UNMOUNT") : l(u && f !== h ? "ANIMATION_OUT" : "UNMOUNT"), r.current = e;
->>>>>>> Stashed changes
     }
-  }, [e, l]), Mt(() => {
+  }, [e, l]), Dt(() => {
     if (t) {
       let c;
       const d = t.ownerDocument.defaultView ?? window, u = (p) => {
@@ -3058,19 +2588,11 @@ function Sm(e) {
   let t = Object.getOwnPropertyDescriptor(e.props, "ref")?.get, n = t && "isReactWarning" in t && t.isReactWarning;
   return n ? e.ref : (t = Object.getOwnPropertyDescriptor(e, "ref")?.get, n = t && "isReactWarning" in t && t.isReactWarning, n ? e.props.ref : e.props.ref || e.ref);
 }
-<<<<<<< Updated upstream
 var Xo = "rovingFocusGroup.onEntryFocus", Dm = { bubbles: !1, cancelable: !0 }, rr = "RovingFocusGroup", [Cs, pc, Nm] = _l(rr), [Lm, hc] = kn(
   rr,
   [Nm]
 ), [Am, Im] = Lm(rr), mc = T.forwardRef(
   (e, t) => /* @__PURE__ */ h(Cs.Provider, { scope: e.__scopeRovingFocusGroup, children: /* @__PURE__ */ h(Cs.Slot, { scope: e.__scopeRovingFocusGroup, children: /* @__PURE__ */ h(Rm, { ...e, ref: t }) }) })
-=======
-var Xr = "rovingFocusGroup.onEntryFocus", Ap = { bubbles: !1, cancelable: !0 }, oo = "RovingFocusGroup", [xs, fc, Lp] = _l(oo), [Pp, hc] = kn(
-  oo,
-  [Lp]
-), [Ip, Rp] = Pp(oo), pc = T.forwardRef(
-  (e, t) => /* @__PURE__ */ z(xs.Provider, { scope: e.__scopeRovingFocusGroup, children: /* @__PURE__ */ z(xs.Slot, { scope: e.__scopeRovingFocusGroup, children: /* @__PURE__ */ z(Op, { ...e, ref: t }) }) })
->>>>>>> Stashed changes
 );
 mc.displayName = rr;
 var Rm = T.forwardRef((e, t) => {
@@ -3083,19 +2605,11 @@ var Rm = T.forwardRef((e, t) => {
     defaultCurrentTabStopId: a,
     onCurrentTabStopIdChange: l,
     onEntryFocus: c,
-<<<<<<< Updated upstream
     preventScrollOnEntryFocus: d = !1,
     ...u
   } = e, f = T.useRef(null), p = Ie(t, f), g = $l(s), [m, y] = Qs({
     prop: i,
     defaultProp: a ?? null,
-=======
-    preventScrollOnEntryFocus: u = !1,
-    ...d
-  } = e, f = T.useRef(null), h = Pe(t, f), g = $l(s), [p, b] = Qs({
-    prop: a,
-    defaultProp: i ?? null,
->>>>>>> Stashed changes
     onChange: l,
     caller: rr
   }), [v, b] = T.useState(!1), x = gt(c), M = pc(n), w = T.useRef(!1), [E, S] = T.useState(0);
@@ -3757,7 +3271,6 @@ const Mg = Jm(kc, Cg);
 var Sc = T.forwardRef(function(e, t) {
   return T.createElement(Co, nt({}, e, { ref: t, sideCar: Mg }));
 });
-<<<<<<< Updated upstream
 Sc.classNames = Co.classNames;
 var Ms = ["Enter", " "], Tg = ["ArrowDown", "PageUp", "Home"], Dc = ["ArrowUp", "PageDown", "End"], Sg = [...Tg, ...Dc], Dg = {
   ltr: [...Ms, "ArrowRight"],
@@ -3765,27 +3278,12 @@ var Ms = ["Enter", " "], Tg = ["ArrowDown", "PageUp", "Home"], Dc = ["ArrowUp", 
 }, Ng = {
   ltr: ["ArrowLeft"],
   rtl: ["ArrowRight"]
-}, or = "Menu", [Xn, Lg, Ag] = _l(or), [jt, Nc] = kn(or, [
+}, or = "Menu", [Xn, Lg, Ag] = _l(or), [Vt, Nc] = kn(or, [
   Ag,
   ko,
   hc
-]), Eo = ko(), Lc = hc(), [Ig, Vt] = jt(or), [Rg, sr] = jt(or), Ac = (e) => {
+]), Eo = ko(), Lc = hc(), [Ig, Kt] = Vt(or), [Rg, sr] = Vt(or), Ac = (e) => {
   const { __scopeMenu: t, open: n = !1, children: r, dir: o, onOpenChange: s, modal: i = !0 } = e, a = Eo(t), [l, c] = T.useState(null), d = T.useRef(!1), u = gt(s), f = $l(o);
-=======
-Sc.classNames = xr.classNames;
-var Es = ["Enter", " "], Mg = ["ArrowDown", "PageUp", "Home"], Mc = ["ArrowUp", "PageDown", "End"], Dg = [...Mg, ...Mc], Ag = {
-  ltr: [...Es, "ArrowRight"],
-  rtl: [...Es, "ArrowLeft"]
-}, Lg = {
-  ltr: ["ArrowLeft"],
-  rtl: ["ArrowRight"]
-}, ro = "Menu", [Xn, Pg, Ig] = _l(ro), [Vt, Dc] = kn(ro, [
-  Ig,
-  kr,
-  hc
-]), Cr = kr(), Ac = hc(), [Rg, Kt] = Vt(ro), [Og, so] = Vt(ro), Lc = (e) => {
-  const { __scopeMenu: t, open: n = !1, children: o, dir: r, onOpenChange: s, modal: a = !0 } = e, i = Cr(t), [l, c] = T.useState(null), u = T.useRef(!1), d = gt(s), f = $l(r);
->>>>>>> Stashed changes
   return T.useEffect(() => {
     const p = () => {
       d.current = !0, document.addEventListener("pointerdown", g, { capture: !0, once: !0 }), document.addEventListener("pointermove", g, { capture: !0, once: !0 });
@@ -3815,53 +3313,29 @@ var Es = ["Enter", " "], Mg = ["ArrowDown", "PageUp", "Home"], Mc = ["ArrowUp", 
     }
   ) });
 };
-<<<<<<< Updated upstream
 Ac.displayName = or;
 var Pg = "MenuAnchor", ca = T.forwardRef(
-=======
-Lc.displayName = ro;
-var _g = "MenuAnchor", ci = T.forwardRef(
->>>>>>> Stashed changes
   (e, t) => {
     const { __scopeMenu: n, ...r } = e, o = Eo(n);
     return /* @__PURE__ */ h(dc, { ...o, ...r, ref: t });
   }
 );
-<<<<<<< Updated upstream
 ca.displayName = Pg;
-var da = "MenuPortal", [Og, Ic] = jt(da, {
+var da = "MenuPortal", [Og, Ic] = Vt(da, {
   forceMount: void 0
 }), Rc = (e) => {
-  const { __scopeMenu: t, forceMount: n, children: r, container: o } = e, s = Vt(da, t);
-  return /* @__PURE__ */ h(Og, { scope: t, forceMount: n, children: /* @__PURE__ */ h(Yt, { present: n || s.open, children: /* @__PURE__ */ h(la, { asChild: !0, container: o, children: r }) }) });
+  const { __scopeMenu: t, forceMount: n, children: r, container: o } = e, s = Kt(da, t);
+  return /* @__PURE__ */ h(Og, { scope: t, forceMount: n, children: /* @__PURE__ */ h(jt, { present: n || s.open, children: /* @__PURE__ */ h(la, { asChild: !0, container: o, children: r }) }) });
 };
 Rc.displayName = da;
-var Ge = "MenuContent", [_g, ua] = jt(Ge), Pc = T.forwardRef(
+var Ge = "MenuContent", [_g, ua] = Vt(Ge), Pc = T.forwardRef(
   (e, t) => {
-    const n = Ic(Ge, e.__scopeMenu), { forceMount: r = n.forceMount, ...o } = e, s = Vt(Ge, e.__scopeMenu), i = sr(Ge, e.__scopeMenu);
-    return /* @__PURE__ */ h(Xn.Provider, { scope: e.__scopeMenu, children: /* @__PURE__ */ h(Yt, { present: r || s.open, children: /* @__PURE__ */ h(Xn.Slot, { scope: e.__scopeMenu, children: i.modal ? /* @__PURE__ */ h($g, { ...o, ref: t }) : /* @__PURE__ */ h(Hg, { ...o, ref: t }) }) }) });
-=======
-ci.displayName = _g;
-var ui = "MenuPortal", [$g, Pc] = Vt(ui, {
-  forceMount: void 0
-}), Ic = (e) => {
-  const { __scopeMenu: t, forceMount: n, children: o, container: r } = e, s = Kt(ui, t);
-  return /* @__PURE__ */ z($g, { scope: t, forceMount: n, children: /* @__PURE__ */ z(jt, { present: n || s.open, children: /* @__PURE__ */ z(li, { asChild: !0, container: r, children: o }) }) });
-};
-Ic.displayName = ui;
-var Ge = "MenuContent", [Bg, di] = Vt(Ge), Rc = T.forwardRef(
-  (e, t) => {
-    const n = Pc(Ge, e.__scopeMenu), { forceMount: o = n.forceMount, ...r } = e, s = Kt(Ge, e.__scopeMenu), a = so(Ge, e.__scopeMenu);
-    return /* @__PURE__ */ z(Xn.Provider, { scope: e.__scopeMenu, children: /* @__PURE__ */ z(jt, { present: o || s.open, children: /* @__PURE__ */ z(Xn.Slot, { scope: e.__scopeMenu, children: a.modal ? /* @__PURE__ */ z(Hg, { ...r, ref: t }) : /* @__PURE__ */ z(Wg, { ...r, ref: t }) }) }) });
->>>>>>> Stashed changes
+    const n = Ic(Ge, e.__scopeMenu), { forceMount: r = n.forceMount, ...o } = e, s = Kt(Ge, e.__scopeMenu), i = sr(Ge, e.__scopeMenu);
+    return /* @__PURE__ */ h(Xn.Provider, { scope: e.__scopeMenu, children: /* @__PURE__ */ h(jt, { present: r || s.open, children: /* @__PURE__ */ h(Xn.Slot, { scope: e.__scopeMenu, children: i.modal ? /* @__PURE__ */ h($g, { ...o, ref: t }) : /* @__PURE__ */ h(Hg, { ...o, ref: t }) }) }) });
   }
 ), $g = T.forwardRef(
   (e, t) => {
-<<<<<<< Updated upstream
-    const n = Vt(Ge, e.__scopeMenu), r = T.useRef(null), o = Ie(t, r);
-=======
-    const n = Kt(Ge, e.__scopeMenu), o = T.useRef(null), r = Pe(t, o);
->>>>>>> Stashed changes
+    const n = Kt(Ge, e.__scopeMenu), r = T.useRef(null), o = Ie(t, r);
     return T.useEffect(() => {
       const s = r.current;
       if (s) return Um(s);
@@ -3882,17 +3356,10 @@ var Ge = "MenuContent", [Bg, di] = Vt(Ge), Rc = T.forwardRef(
       }
     );
   }
-<<<<<<< Updated upstream
 ), Hg = T.forwardRef((e, t) => {
-  const n = Vt(Ge, e.__scopeMenu);
+  const n = Kt(Ge, e.__scopeMenu);
   return /* @__PURE__ */ h(
     fa,
-=======
-), Wg = T.forwardRef((e, t) => {
-  const n = Kt(Ge, e.__scopeMenu);
-  return /* @__PURE__ */ z(
-    mi,
->>>>>>> Stashed changes
     {
       ...e,
       ref: t,
@@ -3918,9 +3385,8 @@ var Ge = "MenuContent", [Bg, di] = Vt(Ge), Rc = T.forwardRef(
       onInteractOutside: f,
       onDismiss: p,
       disableOutsideScroll: g,
-<<<<<<< Updated upstream
       ...m
-    } = e, y = Vt(Ge, n), v = sr(Ge, n), b = Eo(n), x = Lc(n), M = Lg(n), [w, E] = T.useState(null), S = T.useRef(null), k = Ie(t, S, y.onContentChange), N = T.useRef(0), C = T.useRef(""), D = T.useRef(0), L = T.useRef(null), P = T.useRef("right"), O = T.useRef(0), $ = g ? Sc : T.Fragment, W = g ? { as: Bg, allowPinchZoom: !0 } : void 0, V = (A) => {
+    } = e, y = Kt(Ge, n), v = sr(Ge, n), b = Eo(n), x = Lc(n), M = Lg(n), [w, E] = T.useState(null), S = T.useRef(null), k = Ie(t, S, y.onContentChange), N = T.useRef(0), C = T.useRef(""), D = T.useRef(0), L = T.useRef(null), P = T.useRef("right"), O = T.useRef(0), $ = g ? Sc : T.Fragment, W = g ? { as: Bg, allowPinchZoom: !0 } : void 0, V = (A) => {
       const H = C.current + A, G = M().filter((_) => !_.disabled), z = document.activeElement, U = G.find((_) => _.ref.current === z)?.textValue, K = G.map((_) => _.textValue), B = Zg(K, H, U), J = G.find((_) => _.textValue === B)?.ref.current;
       (function _(ee) {
         C.current = ee, window.clearTimeout(N.current), ee !== "" && (N.current = window.setTimeout(() => _(""), 1e3));
@@ -3930,24 +3396,10 @@ var Ge = "MenuContent", [Bg, di] = Vt(Ge), Rc = T.forwardRef(
     const R = T.useCallback((A) => P.current === L.current?.side && Jg(A, L.current?.area), []);
     return /* @__PURE__ */ h(
       _g,
-=======
-      ...p
-    } = e, b = Kt(Ge, n), v = so(Ge, n), w = Cr(n), N = Ac(n), E = Pg(n), [y, C] = T.useState(null), S = T.useRef(null), k = Pe(t, S, b.onContentChange), D = T.useRef(0), x = T.useRef(""), M = T.useRef(0), A = T.useRef(null), I = T.useRef("right"), R = T.useRef(0), _ = g ? Sc : T.Fragment, H = g ? { as: Fg, allowPinchZoom: !0 } : void 0, V = (L) => {
-      const $ = x.current + L, G = E().filter((O) => !O.disabled), W = document.activeElement, U = G.find((O) => O.ref.current === W)?.textValue, K = G.map((O) => O.textValue), B = Jg(K, $, U), J = G.find((O) => O.textValue === B)?.ref.current;
-      (function O(ee) {
-        x.current = ee, window.clearTimeout(D.current), ee !== "" && (D.current = window.setTimeout(() => O(""), 1e3));
-      })($), J && setTimeout(() => J.focus());
-    };
-    T.useEffect(() => () => window.clearTimeout(D.current), []), Zf();
-    const P = T.useCallback((L) => I.current === A.current?.side && tb(L, A.current?.area), []);
-    return /* @__PURE__ */ z(
-      Bg,
->>>>>>> Stashed changes
       {
         scope: n,
         searchRef: C,
         onItemEnter: T.useCallback(
-<<<<<<< Updated upstream
           (A) => {
             R(A) && A.preventDefault();
           },
@@ -3968,42 +3420,14 @@ var Ge = "MenuContent", [Bg, di] = Vt(Ge), Rc = T.forwardRef(
         pointerGraceTimerRef: D,
         onPointerGraceIntentChange: T.useCallback((A) => {
           L.current = A;
-=======
-          (L) => {
-            P(L) && L.preventDefault();
-          },
-          [P]
-        ),
-        onItemLeave: T.useCallback(
-          (L) => {
-            P(L) || (S.current?.focus(), C(null));
-          },
-          [P]
-        ),
-        onTriggerLeave: T.useCallback(
-          (L) => {
-            P(L) && L.preventDefault();
-          },
-          [P]
-        ),
-        pointerGraceTimerRef: M,
-        onPointerGraceIntentChange: T.useCallback((L) => {
-          A.current = L;
->>>>>>> Stashed changes
         }, []),
         children: /* @__PURE__ */ h($, { ...W, children: /* @__PURE__ */ h(
           Wl,
           {
             asChild: !0,
-<<<<<<< Updated upstream
             trapped: o,
             onMountAutoFocus: ie(s, (A) => {
               A.preventDefault(), S.current?.focus({ preventScroll: !0 });
-=======
-            trapped: r,
-            onMountAutoFocus: ae(s, (L) => {
-              L.preventDefault(), S.current?.focus({ preventScroll: !0 });
->>>>>>> Stashed changes
             }),
             onUnmountAutoFocus: i,
             children: /* @__PURE__ */ h(
@@ -4023,19 +3447,11 @@ var Ge = "MenuContent", [Bg, di] = Vt(Ge), Rc = T.forwardRef(
                     ...x,
                     dir: v.dir,
                     orientation: "vertical",
-<<<<<<< Updated upstream
                     loop: r,
                     currentTabStopId: w,
                     onCurrentTabStopIdChange: E,
                     onEntryFocus: ie(l, (A) => {
                       v.isUsingKeyboardRef.current || A.preventDefault();
-=======
-                    loop: o,
-                    currentTabStopId: y,
-                    onCurrentTabStopIdChange: C,
-                    onEntryFocus: ae(l, (L) => {
-                      v.isUsingKeyboardRef.current || L.preventDefault();
->>>>>>> Stashed changes
                     }),
                     preventScrollOnEntryFocus: !0,
                     children: /* @__PURE__ */ h(
@@ -4049,7 +3465,6 @@ var Ge = "MenuContent", [Bg, di] = Vt(Ge), Rc = T.forwardRef(
                         ...b,
                         ...m,
                         ref: k,
-<<<<<<< Updated upstream
                         style: { outline: "none", ...m.style },
                         onKeyDown: ie(m.onKeyDown, (A) => {
                           const G = A.target.closest("[data-radix-menu-content]") === A.currentTarget, z = A.ctrlKey || A.altKey || A.metaKey, U = A.key.length === 1;
@@ -4062,36 +3477,14 @@ var Ge = "MenuContent", [Bg, di] = Vt(Ge), Rc = T.forwardRef(
                         }),
                         onBlur: ie(e.onBlur, (A) => {
                           A.currentTarget.contains(A.target) || (window.clearTimeout(N.current), C.current = "");
-=======
-                        style: { outline: "none", ...p.style },
-                        onKeyDown: ae(p.onKeyDown, (L) => {
-                          const G = L.target.closest("[data-radix-menu-content]") === L.currentTarget, W = L.ctrlKey || L.altKey || L.metaKey, U = L.key.length === 1;
-                          G && (L.key === "Tab" && L.preventDefault(), !W && U && V(L.key));
-                          const K = S.current;
-                          if (L.target !== K || !Dg.includes(L.key)) return;
-                          L.preventDefault();
-                          const J = E().filter((O) => !O.disabled).map((O) => O.ref.current);
-                          Mc.includes(L.key) && J.reverse(), Zg(J);
-                        }),
-                        onBlur: ae(e.onBlur, (L) => {
-                          L.currentTarget.contains(L.target) || (window.clearTimeout(D.current), x.current = "");
->>>>>>> Stashed changes
                         }),
                         onPointerMove: ie(
                           e.onPointerMove,
-<<<<<<< Updated upstream
                           Zn((A) => {
                             const H = A.target, G = O.current !== A.clientX;
                             if (A.currentTarget.contains(H) && G) {
                               const z = A.clientX > O.current ? "right" : "left";
                               P.current = z, O.current = A.clientX;
-=======
-                          Zn((L) => {
-                            const $ = L.target, G = R.current !== L.clientX;
-                            if (L.currentTarget.contains($) && G) {
-                              const W = L.clientX > R.current ? "right" : "left";
-                              I.current = W, R.current = L.clientX;
->>>>>>> Stashed changes
                             }
                           })
                         )
@@ -4124,19 +3517,11 @@ var zg = "MenuLabel", Oc = T.forwardRef(
 Oc.displayName = zg;
 var ao = "MenuItem", Ci = "menu.itemSelect", Mo = T.forwardRef(
   (e, t) => {
-<<<<<<< Updated upstream
     const { disabled: n = !1, onSelect: r, ...o } = e, s = T.useRef(null), i = sr(ao, e.__scopeMenu), a = ua(ao, e.__scopeMenu), l = Ie(t, s), c = T.useRef(!1), d = () => {
       const u = s.current;
       if (!n && u) {
         const f = new CustomEvent(Ci, { bubbles: !0, cancelable: !0 });
         u.addEventListener(Ci, (p) => r?.(p), { once: !0 }), Ol(u, f), f.defaultPrevented ? c.current = !1 : i.onClose();
-=======
-    const { disabled: n = !1, onSelect: o, ...r } = e, s = T.useRef(null), a = so(ar, e.__scopeMenu), i = di(ar, e.__scopeMenu), l = Pe(t, s), c = T.useRef(!1), u = () => {
-      const d = s.current;
-      if (!n && d) {
-        const f = new CustomEvent(xa, { bubbles: !0, cancelable: !0 });
-        d.addEventListener(xa, (h) => o?.(h), { once: !0 }), Ol(d, f), f.defaultPrevented ? c.current = !1 : a.onClose();
->>>>>>> Stashed changes
       }
     };
     return /* @__PURE__ */ h(
@@ -4163,11 +3548,7 @@ var ao = "MenuItem", Ci = "menu.itemSelect", Mo = T.forwardRef(
 Mo.displayName = ao;
 var _c = T.forwardRef(
   (e, t) => {
-<<<<<<< Updated upstream
     const { __scopeMenu: n, disabled: r = !1, textValue: o, ...s } = e, i = ua(ao, n), a = Lc(n), l = T.useRef(null), c = Ie(t, l), [d, u] = T.useState(!1), [f, p] = T.useState("");
-=======
-    const { __scopeMenu: n, disabled: o = !1, textValue: r, ...s } = e, a = di(ar, n), i = Ac(n), l = T.useRef(null), c = Pe(t, l), [u, d] = T.useState(!1), [f, h] = T.useState("");
->>>>>>> Stashed changes
     return T.useEffect(() => {
       const g = l.current;
       g && p((g.textContent ?? "").trim());
@@ -4223,15 +3604,9 @@ var _c = T.forwardRef(
     ) });
   }
 );
-<<<<<<< Updated upstream
 $c.displayName = Fg;
-var Hc = "MenuRadioGroup", [Ug, Yg] = jt(
+var Hc = "MenuRadioGroup", [Ug, Yg] = Vt(
   Hc,
-=======
-$c.displayName = Yg;
-var Bc = "MenuRadioGroup", [jg, Vg] = Vt(
-  Bc,
->>>>>>> Stashed changes
   { value: void 0, onValueChange: () => {
   } }
 ), Bc = T.forwardRef(
@@ -4261,27 +3636,15 @@ var Wc = "MenuRadioItem", zc = T.forwardRef(
     ) });
   }
 );
-<<<<<<< Updated upstream
 zc.displayName = Wc;
-var ha = "MenuItemIndicator", [Fc, jg] = jt(
+var ha = "MenuItemIndicator", [Fc, jg] = Vt(
   ha,
   { checked: !1 }
 ), Uc = T.forwardRef(
   (e, t) => {
     const { __scopeMenu: n, forceMount: r, ...o } = e, s = jg(ha, n);
     return /* @__PURE__ */ h(
-      Yt,
-=======
-Fc.displayName = Wc;
-var hi = "MenuItemIndicator", [zc, Kg] = Vt(
-  hi,
-  { checked: !1 }
-), Uc = T.forwardRef(
-  (e, t) => {
-    const { __scopeMenu: n, forceMount: o, ...r } = e, s = Kg(hi, n);
-    return /* @__PURE__ */ z(
       jt,
->>>>>>> Stashed changes
       {
         present: r || io(s.checked) || s.checked === !0,
         children: /* @__PURE__ */ h(
@@ -4318,19 +3681,11 @@ var Kg = "MenuArrow", jc = T.forwardRef(
     return /* @__PURE__ */ h(fc, { ...o, ...r, ref: t });
   }
 );
-<<<<<<< Updated upstream
 jc.displayName = Kg;
-var Gg = "MenuSub", [Z1, Vc] = jt(Gg), Bn = "MenuSubTrigger", Kc = T.forwardRef(
+var Gg = "MenuSub", [J1, Vc] = Vt(Gg), Bn = "MenuSubTrigger", Kc = T.forwardRef(
   (e, t) => {
-    const n = Vt(Bn, e.__scopeMenu), r = sr(Bn, e.__scopeMenu), o = Vc(Bn, e.__scopeMenu), s = ua(Bn, e.__scopeMenu), i = T.useRef(null), { pointerGraceTimerRef: a, onPointerGraceIntentChange: l } = s, c = { __scopeMenu: e.__scopeMenu }, d = T.useCallback(() => {
+    const n = Kt(Bn, e.__scopeMenu), r = sr(Bn, e.__scopeMenu), o = Vc(Bn, e.__scopeMenu), s = ua(Bn, e.__scopeMenu), i = T.useRef(null), { pointerGraceTimerRef: a, onPointerGraceIntentChange: l } = s, c = { __scopeMenu: e.__scopeMenu }, d = T.useCallback(() => {
       i.current && window.clearTimeout(i.current), i.current = null;
-=======
-jc.displayName = qg;
-var Xg = "MenuSub", [nC, Vc] = Vt(Xg), Hn = "MenuSubTrigger", Kc = T.forwardRef(
-  (e, t) => {
-    const n = Kt(Hn, e.__scopeMenu), o = so(Hn, e.__scopeMenu), r = Vc(Hn, e.__scopeMenu), s = di(Hn, e.__scopeMenu), a = T.useRef(null), { pointerGraceTimerRef: i, onPointerGraceIntentChange: l } = s, c = { __scopeMenu: e.__scopeMenu }, u = T.useCallback(() => {
-      a.current && window.clearTimeout(a.current), a.current = null;
->>>>>>> Stashed changes
     }, []);
     return T.useEffect(() => d, [d]), T.useEffect(() => {
       const u = a.current;
@@ -4397,15 +3752,9 @@ var Xg = "MenuSub", [nC, Vc] = Vt(Xg), Hn = "MenuSubTrigger", Kc = T.forwardRef(
 Kc.displayName = Bn;
 var Gc = "MenuSubContent", qc = T.forwardRef(
   (e, t) => {
-<<<<<<< Updated upstream
-    const n = Ic(Ge, e.__scopeMenu), { forceMount: r = n.forceMount, ...o } = e, s = Vt(Ge, e.__scopeMenu), i = sr(Ge, e.__scopeMenu), a = Vc(Gc, e.__scopeMenu), l = T.useRef(null), c = Ie(t, l);
-    return /* @__PURE__ */ h(Xn.Provider, { scope: e.__scopeMenu, children: /* @__PURE__ */ h(Yt, { present: r || s.open, children: /* @__PURE__ */ h(Xn.Slot, { scope: e.__scopeMenu, children: /* @__PURE__ */ h(
+    const n = Ic(Ge, e.__scopeMenu), { forceMount: r = n.forceMount, ...o } = e, s = Kt(Ge, e.__scopeMenu), i = sr(Ge, e.__scopeMenu), a = Vc(Gc, e.__scopeMenu), l = T.useRef(null), c = Ie(t, l);
+    return /* @__PURE__ */ h(Xn.Provider, { scope: e.__scopeMenu, children: /* @__PURE__ */ h(jt, { present: r || s.open, children: /* @__PURE__ */ h(Xn.Slot, { scope: e.__scopeMenu, children: /* @__PURE__ */ h(
       fa,
-=======
-    const n = Pc(Ge, e.__scopeMenu), { forceMount: o = n.forceMount, ...r } = e, s = Kt(Ge, e.__scopeMenu), a = so(Ge, e.__scopeMenu), i = Vc(Gc, e.__scopeMenu), l = T.useRef(null), c = Pe(t, l);
-    return /* @__PURE__ */ z(Xn.Provider, { scope: e.__scopeMenu, children: /* @__PURE__ */ z(jt, { present: o || s.open, children: /* @__PURE__ */ z(Xn.Slot, { scope: e.__scopeMenu, children: /* @__PURE__ */ z(
-      mi,
->>>>>>> Stashed changes
       {
         id: a.contentId,
         "aria-labelledby": a.triggerId,
@@ -4426,15 +3775,9 @@ var Gc = "MenuSubContent", qc = T.forwardRef(
         onEscapeKeyDown: ie(e.onEscapeKeyDown, (d) => {
           i.onClose(), d.preventDefault();
         }),
-<<<<<<< Updated upstream
         onKeyDown: ie(e.onKeyDown, (d) => {
           const u = d.currentTarget.contains(d.target), f = Ng[i.dir].includes(d.key);
           u && f && (s.onOpenChange(!1), a.trigger?.focus(), d.preventDefault());
-=======
-        onKeyDown: ae(e.onKeyDown, (u) => {
-          const d = u.currentTarget.contains(u.target), f = Lg[a.dir].includes(u.key);
-          d && f && (s.onOpenChange(!1), i.trigger?.focus(), u.preventDefault());
->>>>>>> Stashed changes
         })
       }
     ) }) }) });
@@ -4484,17 +3827,10 @@ function Jg(e, t) {
 function Zn(e) {
   return (t) => t.pointerType === "mouse" ? e(t) : void 0;
 }
-<<<<<<< Updated upstream
 var ey = Ac, ty = ca, ny = Rc, ry = Pc, oy = pa, sy = Oc, ay = Mo, iy = $c, ly = Bc, cy = zc, dy = Uc, uy = Yc, fy = jc, py = Kc, hy = qc, To = "DropdownMenu", [my] = kn(
   To,
   [Nc]
 ), Pe = Nc(), [gy, Zc] = my(To), Qc = (e) => {
-=======
-var nb = Lc, ob = ci, rb = Ic, sb = Rc, ib = fi, ab = Oc, lb = Er, cb = $c, ub = Hc, db = Fc, mb = Uc, fb = Yc, hb = jc, pb = Kc, gb = qc, Tr = "DropdownMenu", [bb] = kn(
-  Tr,
-  [Dc]
-), Re = Dc(), [vb, Zc] = bb(Tr), Qc = (e) => {
->>>>>>> Stashed changes
   const {
     __scopeDropdownMenu: t,
     children: n,
@@ -4623,7 +3959,6 @@ var Sy = "DropdownMenuRadioItem", Dy = T.forwardRef((e, t) => {
   const { __scopeDropdownMenu: n, ...r } = e, o = Pe(n);
   return /* @__PURE__ */ h(cy, { ...o, ...r, ref: t });
 });
-<<<<<<< Updated upstream
 Dy.displayName = Sy;
 var Ny = "DropdownMenuItemIndicator", Ly = T.forwardRef((e, t) => {
   const { __scopeDropdownMenu: n, ...r } = e, o = Pe(n);
@@ -4633,17 +3968,6 @@ Ly.displayName = Ny;
 var Ay = "DropdownMenuSeparator", sd = T.forwardRef((e, t) => {
   const { __scopeDropdownMenu: n, ...r } = e, o = Pe(n);
   return /* @__PURE__ */ h(uy, { ...o, ...r, ref: t });
-=======
-Ab.displayName = Db;
-var Lb = "DropdownMenuItemIndicator", Pb = T.forwardRef((e, t) => {
-  const { __scopeDropdownMenu: n, ...o } = e, r = Re(n);
-  return /* @__PURE__ */ z(mb, { ...r, ...o, ref: t });
-});
-Pb.displayName = Lb;
-var Ib = "DropdownMenuSeparator", su = T.forwardRef((e, t) => {
-  const { __scopeDropdownMenu: n, ...o } = e, r = Re(n);
-  return /* @__PURE__ */ z(fb, { ...r, ...o, ref: t });
->>>>>>> Stashed changes
 });
 sd.displayName = Ay;
 var Iy = "DropdownMenuArrow", Ry = T.forwardRef(
@@ -4933,25 +4257,14 @@ function rv(e, ...t) {
 const Ee = (e) => {
   const t = (n) => n[e] || [];
   return t.isThemeGetter = !0, t;
-<<<<<<< Updated upstream
-}, dd = /^\[(?:(\w[\w-]*):)?(.+)\]$/i, ud = /^\((?:(\w[\w-]*):)?(.+)\)$/i, ov = /^\d+\/\d+$/, sv = /^(\d+(\.\d+)?)?(xs|sm|md|lg|xl)$/, av = /\d+(%|px|r?em|[sdl]?v([hwib]|min|max)|pt|pc|in|cm|mm|cap|ch|ex|r?lh|cq(w|h|i|b|min|max))|\b(calc|min|max|clamp)\(.+\)|^0$/, iv = /^(rgba?|hsla?|hwb|(ok)?(lab|lch)|color-mix)\(.+\)$/, lv = /^(inset_)?-?((\d+)?\.?(\d+)[a-z]+|0)_-?((\d+)?\.?(\d+)[a-z]+|0)/, cv = /^(url|image|image-set|cross-fade|element|(repeating-)?(linear|radial|conic)-gradient)\(.+\)$/, on = (e) => ov.test(e), ce = (e) => !!e && !Number.isNaN(Number(e)), kt = (e) => !!e && Number.isInteger(Number(e)), ts = (e) => e.endsWith("%") && ce(e.slice(0, -1)), ct = (e) => sv.test(e), dv = () => !0, uv = (e) => (
+}, dd = /^\[(?:(\w[\w-]*):)?(.+)\]$/i, ud = /^\((?:(\w[\w-]*):)?(.+)\)$/i, ov = /^\d+\/\d+$/, sv = /^(\d+(\.\d+)?)?(xs|sm|md|lg|xl)$/, av = /\d+(%|px|r?em|[sdl]?v([hwib]|min|max)|pt|pc|in|cm|mm|cap|ch|ex|r?lh|cq(w|h|i|b|min|max))|\b(calc|min|max|clamp)\(.+\)|^0$/, iv = /^(rgba?|hsla?|hwb|(ok)?(lab|lch)|color-mix)\(.+\)$/, lv = /^(inset_)?-?((\d+)?\.?(\d+)[a-z]+|0)_-?((\d+)?\.?(\d+)[a-z]+|0)/, cv = /^(url|image|image-set|cross-fade|element|(repeating-)?(linear|radial|conic)-gradient)\(.+\)$/, on = (e) => ov.test(e), ce = (e) => !!e && !Number.isNaN(Number(e)), Ct = (e) => !!e && Number.isInteger(Number(e)), ts = (e) => e.endsWith("%") && ce(e.slice(0, -1)), ct = (e) => sv.test(e), dv = () => !0, uv = (e) => (
   // `colorFunctionRegex` check is necessary because color functions can have percentages in them which which would be incorrectly classified as lengths.
   // For example, `hsl(0 0% 0%)` would be classified as a length without this check.
   // I could also use lookbehind assertion in `lengthUnitRegex` but that isn't supported widely enough.
   av.test(e) && !iv.test(e)
-), fd = () => !1, fv = (e) => lv.test(e), pv = (e) => cv.test(e), hv = (e) => !Z(e) && !Q(e), mv = (e) => Mn(e, md, fd), Z = (e) => dd.test(e), Pt = (e) => Mn(e, gd, uv), ns = (e) => Mn(e, wv, ce), Ti = (e) => Mn(e, pd, fd), gv = (e) => Mn(e, hd, pv), Br = (e) => Mn(e, yd, fv), Q = (e) => ud.test(e), On = (e) => Tn(e, gd), yv = (e) => Tn(e, xv), Si = (e) => Tn(e, pd), vv = (e) => Tn(e, md), bv = (e) => Tn(e, hd), Wr = (e) => Tn(e, yd, !0), Mn = (e, t, n) => {
+), fd = () => !1, fv = (e) => lv.test(e), pv = (e) => cv.test(e), hv = (e) => !Z(e) && !Q(e), mv = (e) => Mn(e, md, fd), Z = (e) => dd.test(e), Ot = (e) => Mn(e, gd, uv), ns = (e) => Mn(e, wv, ce), Ti = (e) => Mn(e, pd, fd), gv = (e) => Mn(e, hd, pv), Br = (e) => Mn(e, yd, fv), Q = (e) => ud.test(e), On = (e) => Tn(e, gd), yv = (e) => Tn(e, xv), Si = (e) => Tn(e, pd), vv = (e) => Tn(e, md), bv = (e) => Tn(e, hd), Wr = (e) => Tn(e, yd, !0), Mn = (e, t, n) => {
   const r = dd.exec(e);
   return r ? r[1] ? t(r[1]) : n(r[2]) : !1;
-=======
-}, uu = /^\[(?:(\w[\w-]*):)?(.+)\]$/i, du = /^\((?:(\w[\w-]*):)?(.+)\)$/i, iv = /^\d+\/\d+$/, av = /^(\d+(\.\d+)?)?(xs|sm|md|lg|xl)$/, lv = /\d+(%|px|r?em|[sdl]?v([hwib]|min|max)|pt|pc|in|cm|mm|cap|ch|ex|r?lh|cq(w|h|i|b|min|max))|\b(calc|min|max|clamp)\(.+\)|^0$/, cv = /^(rgba?|hsla?|hwb|(ok)?(lab|lch)|color-mix)\(.+\)$/, uv = /^(inset_)?-?((\d+)?\.?(\d+)[a-z]+|0)_-?((\d+)?\.?(\d+)[a-z]+|0)/, dv = /^(url|image|image-set|cross-fade|element|(repeating-)?(linear|radial|conic)-gradient)\(.+\)$/, rn = (e) => iv.test(e), ce = (e) => !!e && !Number.isNaN(Number(e)), xt = (e) => !!e && Number.isInteger(Number(e)), ts = (e) => e.endsWith("%") && ce(e.slice(0, -1)), ct = (e) => av.test(e), mv = () => !0, fv = (e) => (
-  // `colorFunctionRegex` check is necessary because color functions can have percentages in them which which would be incorrectly classified as lengths.
-  // For example, `hsl(0 0% 0%)` would be classified as a length without this check.
-  // I could also use lookbehind assertion in `lengthUnitRegex` but that isn't supported widely enough.
-  lv.test(e) && !cv.test(e)
-), mu = () => !1, hv = (e) => uv.test(e), pv = (e) => dv.test(e), gv = (e) => !Z(e) && !Q(e), bv = (e) => En(e, pu, mu), Z = (e) => uu.test(e), Ot = (e) => En(e, gu, fv), ns = (e) => En(e, kv, ce), Ta = (e) => En(e, fu, mu), vv = (e) => En(e, hu, pv), Wo = (e) => En(e, bu, hv), Q = (e) => du.test(e), On = (e) => Tn(e, gu), wv = (e) => Tn(e, xv), Sa = (e) => Tn(e, fu), yv = (e) => Tn(e, pu), Nv = (e) => Tn(e, hu), Fo = (e) => Tn(e, bu, !0), En = (e, t, n) => {
-  const o = uu.exec(e);
-  return o ? o[1] ? t(o[1]) : n(o[2]) : !1;
->>>>>>> Stashed changes
 }, Tn = (e, t, n = !1) => {
   const r = ud.exec(e);
   return r ? r[1] ? t(r[1]) : n : !1;
@@ -4974,25 +4287,15 @@ const Ee = (e) => {
     "bottom-left",
     // Deprecated since Tailwind CSS v4.1.0, see https://github.com/tailwindlabs/tailwindcss/pull/17378
     "left-bottom"
-<<<<<<< Updated upstream
-  ], w = () => [...M(), Q, Z], E = () => ["auto", "hidden", "clip", "visible", "scroll"], S = () => ["auto", "contain", "none"], k = () => [Q, Z, l], N = () => [on, "full", "auto", ...k()], C = () => [kt, "none", "subgrid", Q, Z], D = () => ["auto", {
-    span: ["full", kt, Q, Z]
-  }, kt, Q, Z], L = () => [kt, "auto", Q, Z], P = () => ["auto", "min", "max", "fr", Q, Z], O = () => ["start", "end", "center", "between", "around", "evenly", "stretch", "baseline", "center-safe", "end-safe"], $ = () => ["start", "end", "center", "stretch", "center-safe", "end-safe"], W = () => ["auto", ...k()], V = () => [on, "auto", "full", "dvw", "dvh", "lvw", "lvh", "svw", "svh", "min", "max", "fit", ...k()], R = () => [e, Q, Z], A = () => [...M(), Si, Ti, {
-=======
-  ], y = () => [...E(), Q, Z], C = () => ["auto", "hidden", "clip", "visible", "scroll"], S = () => ["auto", "contain", "none"], k = () => [Q, Z, l], D = () => [rn, "full", "auto", ...k()], x = () => [xt, "none", "subgrid", Q, Z], M = () => ["auto", {
-    span: ["full", xt, Q, Z]
-  }, xt, Q, Z], A = () => [xt, "auto", Q, Z], I = () => ["auto", "min", "max", "fr", Q, Z], R = () => ["start", "end", "center", "between", "around", "evenly", "stretch", "baseline", "center-safe", "end-safe"], _ = () => ["start", "end", "center", "stretch", "center-safe", "end-safe"], H = () => ["auto", ...k()], V = () => [rn, "auto", "full", "dvw", "dvh", "lvw", "lvh", "svw", "svh", "min", "max", "fit", ...k()], P = () => [e, Q, Z], L = () => [...E(), Sa, Ta, {
->>>>>>> Stashed changes
+  ], w = () => [...M(), Q, Z], E = () => ["auto", "hidden", "clip", "visible", "scroll"], S = () => ["auto", "contain", "none"], k = () => [Q, Z, l], N = () => [on, "full", "auto", ...k()], C = () => [Ct, "none", "subgrid", Q, Z], D = () => ["auto", {
+    span: ["full", Ct, Q, Z]
+  }, Ct, Q, Z], L = () => [Ct, "auto", Q, Z], P = () => ["auto", "min", "max", "fr", Q, Z], O = () => ["start", "end", "center", "between", "around", "evenly", "stretch", "baseline", "center-safe", "end-safe"], $ = () => ["start", "end", "center", "stretch", "center-safe", "end-safe"], W = () => ["auto", ...k()], V = () => [on, "auto", "full", "dvw", "dvh", "lvw", "lvh", "svw", "svh", "min", "max", "fit", ...k()], R = () => [e, Q, Z], A = () => [...M(), Si, Ti, {
     position: [Q, Z]
   }], H = () => ["no-repeat", {
     repeat: ["", "x", "y", "space", "round"]
   }], G = () => ["auto", "cover", "contain", vv, mv, {
     size: [Q, Z]
-<<<<<<< Updated upstream
-  }], z = () => [ts, On, Pt], U = () => [
-=======
-  }], W = () => [ts, On, Ot], U = () => [
->>>>>>> Stashed changes
+  }], z = () => [ts, On, Ot], U = () => [
     // Deprecated since Tailwind CSS v4.0.0
     "",
     "none",
@@ -5000,11 +4303,7 @@ const Ee = (e) => {
     c,
     Q,
     Z
-<<<<<<< Updated upstream
-  ], K = () => ["", ce, On, Pt], B = () => ["solid", "dashed", "dotted", "double"], J = () => ["normal", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn", "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"], _ = () => [ce, ts, Si, Ti], ee = () => [
-=======
-  ], K = () => ["", ce, On, Ot], B = () => ["solid", "dashed", "dotted", "double"], J = () => ["normal", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn", "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"], O = () => [ce, ts, Sa, Ta], ee = () => [
->>>>>>> Stashed changes
+  ], K = () => ["", ce, On, Ot], B = () => ["solid", "dashed", "dotted", "double"], J = () => ["normal", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn", "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"], _ = () => [ce, ts, Si, Ti], ee = () => [
     // Deprecated since Tailwind CSS v4.0.0
     "",
     "none",
@@ -5257,7 +4556,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/z-index
        */
       z: [{
-        z: [xt, "auto", Q, Z]
+        z: [Ct, "auto", Q, Z]
       }],
       // ------------------------
       // --- Flexbox and Grid ---
@@ -5309,7 +4608,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/order
        */
       order: [{
-        order: [xt, "first", "last", "none", Q, Z]
+        order: [Ct, "first", "last", "none", Q, Z]
       }],
       /**
        * Grid Template Columns
@@ -5704,11 +5003,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/font-size
        */
       "font-size": [{
-<<<<<<< Updated upstream
-        text: ["base", n, On, Pt]
-=======
         text: ["base", n, On, Ot]
->>>>>>> Stashed changes
       }],
       /**
        * Font Smoothing
@@ -5830,22 +5125,14 @@ const Ee = (e) => {
        * @see https://v3.tailwindcss.com/docs/placeholder-color
        */
       "placeholder-color": [{
-<<<<<<< Updated upstream
         placeholder: R()
-=======
-        placeholder: P()
->>>>>>> Stashed changes
       }],
       /**
        * Text Color
        * @see https://tailwindcss.com/docs/text-color
        */
       "text-color": [{
-<<<<<<< Updated upstream
         text: R()
-=======
-        text: P()
->>>>>>> Stashed changes
       }],
       /**
        * Text Decoration
@@ -5864,22 +5151,14 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/text-decoration-thickness
        */
       "text-decoration-thickness": [{
-<<<<<<< Updated upstream
-        decoration: [ce, "from-font", "auto", Q, Pt]
-=======
         decoration: [ce, "from-font", "auto", Q, Ot]
->>>>>>> Stashed changes
       }],
       /**
        * Text Decoration Color
        * @see https://tailwindcss.com/docs/text-decoration-color
        */
       "text-decoration-color": [{
-<<<<<<< Updated upstream
         decoration: R()
-=======
-        decoration: P()
->>>>>>> Stashed changes
       }],
       /**
        * Text Underline Offset
@@ -5983,11 +5262,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/background-position
        */
       "bg-position": [{
-<<<<<<< Updated upstream
         bg: A()
-=======
-        bg: L()
->>>>>>> Stashed changes
       }],
       /**
        * Background Repeat
@@ -6011,26 +5286,17 @@ const Ee = (e) => {
         bg: ["none", {
           linear: [{
             to: ["t", "tr", "r", "br", "b", "bl", "l", "tl"]
-          }, xt, Q, Z],
+          }, Ct, Q, Z],
           radial: ["", Q, Z],
-<<<<<<< Updated upstream
-          conic: [kt, Q, Z]
+          conic: [Ct, Q, Z]
         }, bv, gv]
-=======
-          conic: [xt, Q, Z]
-        }, Nv, vv]
->>>>>>> Stashed changes
       }],
       /**
        * Background Color
        * @see https://tailwindcss.com/docs/background-color
        */
       "bg-color": [{
-<<<<<<< Updated upstream
         bg: R()
-=======
-        bg: P()
->>>>>>> Stashed changes
       }],
       /**
        * Gradient Color Stops From Position
@@ -6058,33 +5324,21 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/gradient-color-stops
        */
       "gradient-from": [{
-<<<<<<< Updated upstream
         from: R()
-=======
-        from: P()
->>>>>>> Stashed changes
       }],
       /**
        * Gradient Color Stops Via
        * @see https://tailwindcss.com/docs/gradient-color-stops
        */
       "gradient-via": [{
-<<<<<<< Updated upstream
         via: R()
-=======
-        via: P()
->>>>>>> Stashed changes
       }],
       /**
        * Gradient Color Stops To
        * @see https://tailwindcss.com/docs/gradient-color-stops
        */
       "gradient-to": [{
-<<<<<<< Updated upstream
         to: R()
-=======
-        to: P()
->>>>>>> Stashed changes
       }],
       // ---------------
       // --- Borders ---
@@ -6300,110 +5554,70 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/border-color
        */
       "border-color": [{
-<<<<<<< Updated upstream
         border: R()
-=======
-        border: P()
->>>>>>> Stashed changes
       }],
       /**
        * Border Color X
        * @see https://tailwindcss.com/docs/border-color
        */
       "border-color-x": [{
-<<<<<<< Updated upstream
         "border-x": R()
-=======
-        "border-x": P()
->>>>>>> Stashed changes
       }],
       /**
        * Border Color Y
        * @see https://tailwindcss.com/docs/border-color
        */
       "border-color-y": [{
-<<<<<<< Updated upstream
         "border-y": R()
-=======
-        "border-y": P()
->>>>>>> Stashed changes
       }],
       /**
        * Border Color S
        * @see https://tailwindcss.com/docs/border-color
        */
       "border-color-s": [{
-<<<<<<< Updated upstream
         "border-s": R()
-=======
-        "border-s": P()
->>>>>>> Stashed changes
       }],
       /**
        * Border Color E
        * @see https://tailwindcss.com/docs/border-color
        */
       "border-color-e": [{
-<<<<<<< Updated upstream
         "border-e": R()
-=======
-        "border-e": P()
->>>>>>> Stashed changes
       }],
       /**
        * Border Color Top
        * @see https://tailwindcss.com/docs/border-color
        */
       "border-color-t": [{
-<<<<<<< Updated upstream
         "border-t": R()
-=======
-        "border-t": P()
->>>>>>> Stashed changes
       }],
       /**
        * Border Color Right
        * @see https://tailwindcss.com/docs/border-color
        */
       "border-color-r": [{
-<<<<<<< Updated upstream
         "border-r": R()
-=======
-        "border-r": P()
->>>>>>> Stashed changes
       }],
       /**
        * Border Color Bottom
        * @see https://tailwindcss.com/docs/border-color
        */
       "border-color-b": [{
-<<<<<<< Updated upstream
         "border-b": R()
-=======
-        "border-b": P()
->>>>>>> Stashed changes
       }],
       /**
        * Border Color Left
        * @see https://tailwindcss.com/docs/border-color
        */
       "border-color-l": [{
-<<<<<<< Updated upstream
         "border-l": R()
-=======
-        "border-l": P()
->>>>>>> Stashed changes
       }],
       /**
        * Divide Color
        * @see https://tailwindcss.com/docs/divide-color
        */
       "divide-color": [{
-<<<<<<< Updated upstream
         divide: R()
-=======
-        divide: P()
->>>>>>> Stashed changes
       }],
       /**
        * Outline Style
@@ -6424,22 +5638,14 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/outline-width
        */
       "outline-w": [{
-<<<<<<< Updated upstream
-        outline: ["", ce, On, Pt]
-=======
         outline: ["", ce, On, Ot]
->>>>>>> Stashed changes
       }],
       /**
        * Outline Color
        * @see https://tailwindcss.com/docs/outline-color
        */
       "outline-color": [{
-<<<<<<< Updated upstream
         outline: R()
-=======
-        outline: P()
->>>>>>> Stashed changes
       }],
       // ---------------
       // --- Effects ---
@@ -6463,11 +5669,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/box-shadow#setting-the-shadow-color
        */
       "shadow-color": [{
-<<<<<<< Updated upstream
         shadow: R()
-=======
-        shadow: P()
->>>>>>> Stashed changes
       }],
       /**
        * Inset Box Shadow
@@ -6481,11 +5683,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/box-shadow#setting-the-inset-shadow-color
        */
       "inset-shadow-color": [{
-<<<<<<< Updated upstream
         "inset-shadow": R()
-=======
-        "inset-shadow": P()
->>>>>>> Stashed changes
       }],
       /**
        * Ring Width
@@ -6506,11 +5704,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/box-shadow#setting-the-ring-color
        */
       "ring-color": [{
-<<<<<<< Updated upstream
         ring: R()
-=======
-        ring: P()
->>>>>>> Stashed changes
       }],
       /**
        * Ring Offset Width
@@ -6519,11 +5713,7 @@ const Ee = (e) => {
        * @see https://github.com/tailwindlabs/tailwindcss/blob/v4.0.0/packages/tailwindcss/src/utilities.ts#L4158
        */
       "ring-offset-w": [{
-<<<<<<< Updated upstream
-        "ring-offset": [ce, Pt]
-=======
         "ring-offset": [ce, Ot]
->>>>>>> Stashed changes
       }],
       /**
        * Ring Offset Color
@@ -6532,11 +5722,7 @@ const Ee = (e) => {
        * @see https://github.com/tailwindlabs/tailwindcss/blob/v4.0.0/packages/tailwindcss/src/utilities.ts#L4158
        */
       "ring-offset-color": [{
-<<<<<<< Updated upstream
         "ring-offset": R()
-=======
-        "ring-offset": P()
->>>>>>> Stashed changes
       }],
       /**
        * Inset Ring Width
@@ -6550,11 +5736,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/box-shadow#setting-the-inset-ring-color
        */
       "inset-ring-color": [{
-<<<<<<< Updated upstream
         "inset-ring": R()
-=======
-        "inset-ring": P()
->>>>>>> Stashed changes
       }],
       /**
        * Text Shadow
@@ -6568,11 +5750,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/text-shadow#setting-the-shadow-color
        */
       "text-shadow-color": [{
-<<<<<<< Updated upstream
         "text-shadow": R()
-=======
-        "text-shadow": P()
->>>>>>> Stashed changes
       }],
       /**
        * Opacity
@@ -6623,17 +5801,10 @@ const Ee = (e) => {
         "mask-linear-to": _()
       }],
       "mask-image-linear-from-color": [{
-<<<<<<< Updated upstream
         "mask-linear-from": R()
       }],
       "mask-image-linear-to-color": [{
         "mask-linear-to": R()
-=======
-        "mask-linear-from": P()
-      }],
-      "mask-image-linear-to-color": [{
-        "mask-linear-to": P()
->>>>>>> Stashed changes
       }],
       "mask-image-t-from-pos": [{
         "mask-t-from": _()
@@ -6642,17 +5813,10 @@ const Ee = (e) => {
         "mask-t-to": _()
       }],
       "mask-image-t-from-color": [{
-<<<<<<< Updated upstream
         "mask-t-from": R()
       }],
       "mask-image-t-to-color": [{
         "mask-t-to": R()
-=======
-        "mask-t-from": P()
-      }],
-      "mask-image-t-to-color": [{
-        "mask-t-to": P()
->>>>>>> Stashed changes
       }],
       "mask-image-r-from-pos": [{
         "mask-r-from": _()
@@ -6661,17 +5825,10 @@ const Ee = (e) => {
         "mask-r-to": _()
       }],
       "mask-image-r-from-color": [{
-<<<<<<< Updated upstream
         "mask-r-from": R()
       }],
       "mask-image-r-to-color": [{
         "mask-r-to": R()
-=======
-        "mask-r-from": P()
-      }],
-      "mask-image-r-to-color": [{
-        "mask-r-to": P()
->>>>>>> Stashed changes
       }],
       "mask-image-b-from-pos": [{
         "mask-b-from": _()
@@ -6680,17 +5837,10 @@ const Ee = (e) => {
         "mask-b-to": _()
       }],
       "mask-image-b-from-color": [{
-<<<<<<< Updated upstream
         "mask-b-from": R()
       }],
       "mask-image-b-to-color": [{
         "mask-b-to": R()
-=======
-        "mask-b-from": P()
-      }],
-      "mask-image-b-to-color": [{
-        "mask-b-to": P()
->>>>>>> Stashed changes
       }],
       "mask-image-l-from-pos": [{
         "mask-l-from": _()
@@ -6699,17 +5849,10 @@ const Ee = (e) => {
         "mask-l-to": _()
       }],
       "mask-image-l-from-color": [{
-<<<<<<< Updated upstream
         "mask-l-from": R()
       }],
       "mask-image-l-to-color": [{
         "mask-l-to": R()
-=======
-        "mask-l-from": P()
-      }],
-      "mask-image-l-to-color": [{
-        "mask-l-to": P()
->>>>>>> Stashed changes
       }],
       "mask-image-x-from-pos": [{
         "mask-x-from": _()
@@ -6718,17 +5861,10 @@ const Ee = (e) => {
         "mask-x-to": _()
       }],
       "mask-image-x-from-color": [{
-<<<<<<< Updated upstream
         "mask-x-from": R()
       }],
       "mask-image-x-to-color": [{
         "mask-x-to": R()
-=======
-        "mask-x-from": P()
-      }],
-      "mask-image-x-to-color": [{
-        "mask-x-to": P()
->>>>>>> Stashed changes
       }],
       "mask-image-y-from-pos": [{
         "mask-y-from": _()
@@ -6737,17 +5873,10 @@ const Ee = (e) => {
         "mask-y-to": _()
       }],
       "mask-image-y-from-color": [{
-<<<<<<< Updated upstream
         "mask-y-from": R()
       }],
       "mask-image-y-to-color": [{
         "mask-y-to": R()
-=======
-        "mask-y-from": P()
-      }],
-      "mask-image-y-to-color": [{
-        "mask-y-to": P()
->>>>>>> Stashed changes
       }],
       "mask-image-radial": [{
         "mask-radial": [Q, Z]
@@ -6759,17 +5888,10 @@ const Ee = (e) => {
         "mask-radial-to": _()
       }],
       "mask-image-radial-from-color": [{
-<<<<<<< Updated upstream
         "mask-radial-from": R()
       }],
       "mask-image-radial-to-color": [{
         "mask-radial-to": R()
-=======
-        "mask-radial-from": P()
-      }],
-      "mask-image-radial-to-color": [{
-        "mask-radial-to": P()
->>>>>>> Stashed changes
       }],
       "mask-image-radial-shape": [{
         "mask-radial": ["circle", "ellipse"]
@@ -6793,17 +5915,10 @@ const Ee = (e) => {
         "mask-conic-to": _()
       }],
       "mask-image-conic-from-color": [{
-<<<<<<< Updated upstream
         "mask-conic-from": R()
       }],
       "mask-image-conic-to-color": [{
         "mask-conic-to": R()
-=======
-        "mask-conic-from": P()
-      }],
-      "mask-image-conic-to-color": [{
-        "mask-conic-to": P()
->>>>>>> Stashed changes
       }],
       /**
        * Mask Mode
@@ -6824,11 +5939,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/mask-position
        */
       "mask-position": [{
-<<<<<<< Updated upstream
         mask: A()
-=======
-        mask: L()
->>>>>>> Stashed changes
       }],
       /**
        * Mask Repeat
@@ -6914,11 +6025,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/filter-drop-shadow#setting-the-shadow-color
        */
       "drop-shadow-color": [{
-<<<<<<< Updated upstream
         "drop-shadow": R()
-=======
-        "drop-shadow": P()
->>>>>>> Stashed changes
       }],
       /**
        * Grayscale
@@ -7289,11 +6396,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/accent-color
        */
       accent: [{
-<<<<<<< Updated upstream
         accent: R()
-=======
-        accent: P()
->>>>>>> Stashed changes
       }],
       /**
        * Appearance
@@ -7307,11 +6410,7 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/just-in-time-mode#caret-color-utilities
        */
       "caret-color": [{
-<<<<<<< Updated upstream
         caret: R()
-=======
-        caret: P()
->>>>>>> Stashed changes
       }],
       /**
        * Color Scheme
@@ -7557,33 +6656,21 @@ const Ee = (e) => {
        * @see https://tailwindcss.com/docs/fill
        */
       fill: [{
-<<<<<<< Updated upstream
         fill: ["none", ...R()]
-=======
-        fill: ["none", ...P()]
->>>>>>> Stashed changes
       }],
       /**
        * Stroke Width
        * @see https://tailwindcss.com/docs/stroke-width
        */
       "stroke-w": [{
-<<<<<<< Updated upstream
-        stroke: [ce, On, Pt, ns]
-=======
         stroke: [ce, On, Ot, ns]
->>>>>>> Stashed changes
       }],
       /**
        * Stroke
        * @see https://tailwindcss.com/docs/stroke
        */
       stroke: [{
-<<<<<<< Updated upstream
         stroke: ["none", ...R()]
-=======
-        stroke: ["none", ...P()]
->>>>>>> Stashed changes
       }],
       // ---------------------
       // --- Accessibility ---
@@ -7778,11 +6865,7 @@ const Di = (e) => typeof e == "boolean" ? `${e}` : e === 0 ? "0" : e, Ni = id, E
     }
   }
 );
-<<<<<<< Updated upstream
-function Ft({
-=======
 function Ut({
->>>>>>> Stashed changes
   className: e,
   variant: t,
   size: n,
@@ -7820,17 +6903,10 @@ var Mv = Object.freeze({
     }
   )
 );
-<<<<<<< Updated upstream
 vd.displayName = Tv;
 var Sv = vd, [So] = kn("Tooltip", [
   ko
 ]), Do = ko(), bd = "TooltipProvider", Dv = 700, Ls = "tooltip.open", [Nv, ya] = So(bd), wd = (e) => {
-=======
-vu.displayName = Mv;
-var Dv = vu, [Sr] = kn("Tooltip", [
-  kr
-]), Mr = kr(), wu = "TooltipProvider", Av = 700, As = "tooltip.open", [Lv, bi] = Sr(wu), yu = (e) => {
->>>>>>> Stashed changes
   const {
     __scopeTooltip: t,
     delayDuration: n = Dv,
@@ -7841,13 +6917,8 @@ var Dv = vu, [Sr] = kn("Tooltip", [
   return T.useEffect(() => {
     const c = l.current;
     return () => window.clearTimeout(c);
-<<<<<<< Updated upstream
   }, []), /* @__PURE__ */ h(
     Nv,
-=======
-  }, []), /* @__PURE__ */ z(
-    Lv,
->>>>>>> Stashed changes
     {
       scope: t,
       isOpenDelayedRef: i,
@@ -7870,13 +6941,8 @@ var Dv = vu, [Sr] = kn("Tooltip", [
     }
   );
 };
-<<<<<<< Updated upstream
 wd.displayName = bd;
 var Qn = "Tooltip", [Lv, ar] = So(Qn), xd = (e) => {
-=======
-yu.displayName = wu;
-var Qn = "Tooltip", [Pv, io] = Sr(Qn), Nu = (e) => {
->>>>>>> Stashed changes
   const {
     __scopeTooltip: t,
     children: n,
@@ -7902,15 +6968,9 @@ var Qn = "Tooltip", [Pv, io] = Sr(Qn), Nu = (e) => {
     }, m);
   }, [m, b]);
   return T.useEffect(() => () => {
-<<<<<<< Updated upstream
     p.current && (window.clearTimeout(p.current), p.current = 0);
   }, []), /* @__PURE__ */ h(cc, { ...c, children: /* @__PURE__ */ h(
     Lv,
-=======
-    h.current && (window.clearTimeout(h.current), h.current = 0);
-  }, []), /* @__PURE__ */ z(cc, { ...c, children: /* @__PURE__ */ z(
-    Pv,
->>>>>>> Stashed changes
     {
       scope: t,
       contentId: f,
@@ -7931,21 +6991,12 @@ var Qn = "Tooltip", [Pv, io] = Sr(Qn), Nu = (e) => {
     }
   ) });
 };
-<<<<<<< Updated upstream
 xd.displayName = Qn;
 var As = "TooltipTrigger", kd = T.forwardRef(
   (e, t) => {
     const { __scopeTooltip: n, ...r } = e, o = ar(As, n), s = ya(As, n), i = Do(n), a = T.useRef(null), l = Ie(t, a, o.onTriggerChange), c = T.useRef(!1), d = T.useRef(!1), u = T.useCallback(() => c.current = !1, []);
     return T.useEffect(() => () => document.removeEventListener("pointerup", u), [u]), /* @__PURE__ */ h(dc, { asChild: !0, ...i, children: /* @__PURE__ */ h(
       Le.button,
-=======
-Nu.displayName = Qn;
-var Ls = "TooltipTrigger", ku = T.forwardRef(
-  (e, t) => {
-    const { __scopeTooltip: n, ...o } = e, r = io(Ls, n), s = bi(Ls, n), a = Mr(n), i = T.useRef(null), l = Pe(t, i, r.onTriggerChange), c = T.useRef(!1), u = T.useRef(!1), d = T.useCallback(() => c.current = !1, []);
-    return T.useEffect(() => () => document.removeEventListener("pointerup", d), [d]), /* @__PURE__ */ z(uc, { asChild: !0, ...a, children: /* @__PURE__ */ z(
-      Ae.button,
->>>>>>> Stashed changes
       {
         "aria-describedby": o.open ? o.contentId : void 0,
         "data-state": o.stateAttribute,
@@ -7969,28 +7020,18 @@ var Ls = "TooltipTrigger", ku = T.forwardRef(
     ) });
   }
 );
-<<<<<<< Updated upstream
 kd.displayName = As;
 var va = "TooltipPortal", [Av, Iv] = So(va, {
   forceMount: void 0
 }), Cd = (e) => {
   const { __scopeTooltip: t, forceMount: n, children: r, container: o } = e, s = ar(va, t);
-  return /* @__PURE__ */ h(Av, { scope: t, forceMount: n, children: /* @__PURE__ */ h(Yt, { present: n || s.open, children: /* @__PURE__ */ h(la, { asChild: !0, container: o, children: r }) }) });
-=======
-ku.displayName = Ls;
-var vi = "TooltipPortal", [Iv, Rv] = Sr(vi, {
-  forceMount: void 0
-}), xu = (e) => {
-  const { __scopeTooltip: t, forceMount: n, children: o, container: r } = e, s = io(vi, t);
-  return /* @__PURE__ */ z(Iv, { scope: t, forceMount: n, children: /* @__PURE__ */ z(jt, { present: n || s.open, children: /* @__PURE__ */ z(li, { asChild: !0, container: r, children: o }) }) });
->>>>>>> Stashed changes
+  return /* @__PURE__ */ h(Av, { scope: t, forceMount: n, children: /* @__PURE__ */ h(jt, { present: n || s.open, children: /* @__PURE__ */ h(la, { asChild: !0, container: o, children: r }) }) });
 };
 Cd.displayName = va;
 var yn = "TooltipContent", Ed = T.forwardRef(
   (e, t) => {
-<<<<<<< Updated upstream
     const n = Iv(yn, e.__scopeTooltip), { forceMount: r = n.forceMount, side: o = "top", ...s } = e, i = ar(yn, e.__scopeTooltip);
-    return /* @__PURE__ */ h(Yt, { present: r || i.open, children: i.disableHoverableContent ? /* @__PURE__ */ h(Md, { side: o, ...s, ref: t }) : /* @__PURE__ */ h(Rv, { side: o, ...s, ref: t }) });
+    return /* @__PURE__ */ h(jt, { present: r || i.open, children: i.disableHoverableContent ? /* @__PURE__ */ h(Md, { side: o, ...s, ref: t }) : /* @__PURE__ */ h(Rv, { side: o, ...s, ref: t }) });
   }
 ), Rv = T.forwardRef((e, t) => {
   const n = ar(yn, e.__scopeTooltip), r = ya(yn, e.__scopeTooltip), o = T.useRef(null), s = Ie(t, o), [i, a] = T.useState(null), { trigger: l, onClose: c } = n, d = o.current, { onPointerInTransitChange: u } = r, f = T.useCallback(() => {
@@ -7999,18 +7040,6 @@ var yn = "TooltipContent", Ed = T.forwardRef(
     (g, m) => {
       const y = g.currentTarget, v = { x: g.clientX, y: g.clientY }, b = $v(v, y.getBoundingClientRect()), x = Hv(v, b), M = Bv(m.getBoundingClientRect()), w = zv([...x, ...M]);
       a(w), u(!0);
-=======
-    const n = Rv(bn, e.__scopeTooltip), { forceMount: o = n.forceMount, side: r = "top", ...s } = e, a = io(bn, e.__scopeTooltip);
-    return /* @__PURE__ */ z(jt, { present: o || a.open, children: a.disableHoverableContent ? /* @__PURE__ */ z(Eu, { side: r, ...s, ref: t }) : /* @__PURE__ */ z(Ov, { side: r, ...s, ref: t }) });
-  }
-), Ov = T.forwardRef((e, t) => {
-  const n = io(bn, e.__scopeTooltip), o = bi(bn, e.__scopeTooltip), r = T.useRef(null), s = Pe(t, r), [a, i] = T.useState(null), { trigger: l, onClose: c } = n, u = r.current, { onPointerInTransitChange: d } = o, f = T.useCallback(() => {
-    i(null), d(!1);
-  }, [d]), h = T.useCallback(
-    (g, p) => {
-      const b = g.currentTarget, v = { x: g.clientX, y: g.clientY }, w = Hv(v, b.getBoundingClientRect()), N = Wv(v, w), E = Fv(p.getBoundingClientRect()), y = Uv([...N, ...E]);
-      i(y), d(!0);
->>>>>>> Stashed changes
     },
     [u]
   );
@@ -8248,37 +7277,12 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
       children: r
     }
   );
-<<<<<<< Updated upstream
   return o ? /* @__PURE__ */ I(Dd, { children: [
     /* @__PURE__ */ h(Nd, { asChild: !0, children: s }),
     /* @__PURE__ */ h(Ld, { side: "bottom", className: "text-xs", children: o })
   ] }) : s;
-}, Ot = () => /* @__PURE__ */ h("div", { className: "w-px h-5 bg-border mx-0.5 shrink-0" }), Xv = bt(function({ editor: t, onCopyMarkdown: n, onOpenLinkPopover: r, className: o = "", autoReorderChecklist: s = !1, aiEnabled: i = !1, onAISparklesClick: a }) {
+}, _t = () => /* @__PURE__ */ h("div", { className: "w-px h-5 bg-border mx-0.5 shrink-0" }), Xv = bt(function({ editor: t, onCopyMarkdown: n, onOpenLinkPopover: r, className: o = "", autoReorderChecklist: s = !1, aiEnabled: i = !1, onAISparklesClick: a }) {
   const l = Y(null), [c, d] = j(!1), [u, f] = j(void 0), p = fl({
-=======
-  return r ? /* @__PURE__ */ m(Mu, { children: [
-    /* @__PURE__ */ m(Du, { asChild: !0, children: s }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-      lineNumber: 125,
-      columnNumber: 9
-    }, void 0),
-    /* @__PURE__ */ m(Au, { side: "bottom", className: "text-xs", children: r }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-      lineNumber: 126,
-      columnNumber: 9
-    }, void 0)
-  ] }, void 0, !0, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-    lineNumber: 124,
-    columnNumber: 7
-  }, void 0) : s;
-}, _t = () => /* @__PURE__ */ m("div", { className: "w-px h-5 bg-border mx-0.5 shrink-0" }, void 0, !1, {
-  fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-  lineNumber: 137,
-  columnNumber: 3
-}, void 0), Qv = wt(function({ editor: t, onCopyMarkdown: n, onOpenLinkPopover: o, className: r = "", autoReorderChecklist: s = !1, aiEnabled: a = !1, onAISparklesClick: i }) {
-  const l = Y(null), [c, u] = j(!1), [d, f] = j(void 0), h = ml({
->>>>>>> Stashed changes
     editor: t,
     selector: ({ editor: E }) => ({
       canUndo: E.can().undo(),
@@ -8308,7 +7312,6 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
     t.chain().focus().setImage({ src: E, alt: S }).run(), d(!1);
   }, [t]), y = F(() => {
     t.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: !0 }).run();
-<<<<<<< Updated upstream
   }, [t]), v = F((E) => {
     t.chain().focus().insertCallout({ type: E }).run();
   }, [t]), b = Y(/* @__PURE__ */ new Map()), x = Y(/* @__PURE__ */ new Map()), M = F((E) => {
@@ -8319,25 +7322,12 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
       P.querySelectorAll(":scope > li").forEach((W) => {
         const V = W, R = (V.textContent || "").trim().substring(0, 50);
         b.current.set(`${O}-${R}`, V.getBoundingClientRect());
-=======
-  }, [t]), v = F((C) => {
-    t.chain().focus().insertCallout({ type: C }).run();
-  }, [t]), w = Y(/* @__PURE__ */ new Map()), N = Y(/* @__PURE__ */ new Map()), E = F((C) => {
-    const { doc: S, tr: k } = C.state;
-    let D = !1;
-    const x = /* @__PURE__ */ new Set(["taskList", "bulletList", "orderedList"]), M = C.view.dom.querySelectorAll('ul[data-type="taskList"], ul:not([data-type]), ol');
-    w.current.clear(), M.forEach((I, R) => {
-      I.querySelectorAll(":scope > li").forEach((H) => {
-        const V = H, P = (V.textContent || "").trim().substring(0, 50);
-        w.current.set(`${R}-${P}`, V.getBoundingClientRect());
->>>>>>> Stashed changes
       });
     });
     const L = [];
     S.descendants((P, O, $, W) => {
       if (!C.has(P.type.name)) return !0;
       let V = !1;
-<<<<<<< Updated upstream
       if (P.forEach((A) => {
         A.type.name === "taskItem" && (V = !0);
       }), !V) return !0;
@@ -8349,26 +7339,12 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
       let W = 0;
       P.forEach((B) => {
         $.push({
-=======
-      if (I.forEach((L) => {
-        L.type.name === "taskItem" && (V = !0);
-      }), !V) return !0;
-      let P = 0;
-      return S.nodesBetween(0, R, (L) => (x.has(L.type.name) && P++, !0)), A.push({ node: I, pos: R, depth: P }), !0;
-    }), A.sort((I, R) => R.depth - I.depth);
-    for (const { node: I, pos: R } of A) {
-      const _ = [];
-      let H = 0;
-      I.forEach((B) => {
-        _.push({
->>>>>>> Stashed changes
           node: B,
           isTask: B.type.name === "taskItem",
           checked: B.type.name === "taskItem" && B.attrs.checked === !0,
           originalIndex: W++
         });
       });
-<<<<<<< Updated upstream
       const V = $.filter((B) => B.isTask && !B.checked), R = $.filter((B) => B.isTask && B.checked), A = [...$], H = $.map((B, J) => ({ index: J, isTask: B.isTask })).filter((B) => B.isTask).map((B) => B.index), G = [...V, ...R];
       if (H.forEach((B, J) => {
         A[B] = G[J];
@@ -8395,34 +7371,6 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
             R.style.transform = "", R.style.transition = "", R.style.zIndex = "", R.removeEventListener("transitionend", U);
           };
           R.addEventListener("transitionend", U), setTimeout(U, 400);
-=======
-      const V = _.filter((B) => B.isTask && !B.checked), P = _.filter((B) => B.isTask && B.checked), L = [..._], $ = _.map((B, J) => ({ index: J, isTask: B.isTask })).filter((B) => B.isTask).map((B) => B.index), G = [...V, ...P];
-      if ($.forEach((B, J) => {
-        L[B] = G[J];
-      }), !L.some((B, J) => B.node !== _[J].node)) continue;
-      const U = I.type.create(
-        I.attrs,
-        L.map((B) => B.node)
-      ), K = k.mapping.map(R);
-      k.replaceWith(K, K + I.nodeSize, U), D = !0;
-    }
-    D && (C.view.dispatch(k), requestAnimationFrame(() => {
-      C.view.dom.querySelectorAll('ul[data-type="taskList"], ul:not([data-type]), ol').forEach((R) => {
-        const _ = R.querySelectorAll(":scope > li"), H = /* @__PURE__ */ new Map();
-        w.current.forEach((V, P) => {
-          const L = P.replace(/^\d+-/, "");
-          H.set(L, V);
-        }), _.forEach((V) => {
-          const P = V, L = (P.textContent || "").trim().substring(0, 50), $ = H.get(L);
-          if (!$) return;
-          const G = P.getBoundingClientRect(), W = $.top - G.top;
-          if (Math.abs(W) < 2) return;
-          P.style.transform = `translateY(${W}px)`, P.style.transition = "none", P.style.zIndex = "1", P.offsetHeight, P.style.transition = "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)", P.style.transform = "translateY(0)";
-          const U = () => {
-            P.style.transform = "", P.style.transition = "", P.style.zIndex = "", P.removeEventListener("transitionend", U);
-          };
-          P.addEventListener("transitionend", U), setTimeout(U, 400);
->>>>>>> Stashed changes
         });
       });
     }));
@@ -8465,17 +7413,8 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
         children: /* @__PURE__ */ h(bn, { size: 16 })
       }
     ),
-<<<<<<< Updated upstream
-    n && /* @__PURE__ */ h(Ot, {}),
+    n && /* @__PURE__ */ h(_t, {}),
     /* @__PURE__ */ h(
-=======
-    n && /* @__PURE__ */ m(_t, {}, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-      lineNumber: 393,
-      columnNumber: 26
-    }, this),
-    /* @__PURE__ */ m(
->>>>>>> Stashed changes
       we,
       {
         onClick: () => t.chain().focus().undo().run(),
@@ -8493,17 +7432,8 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
         children: /* @__PURE__ */ h(rf, { size: 16 })
       }
     ),
-<<<<<<< Updated upstream
-    /* @__PURE__ */ h(Ot, {}),
+    /* @__PURE__ */ h(_t, {}),
     /* @__PURE__ */ h(
-=======
-    /* @__PURE__ */ m(_t, {}, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-      lineNumber: 411,
-      columnNumber: 7
-    }, this),
-    /* @__PURE__ */ m(
->>>>>>> Stashed changes
       we,
       {
         onClick: () => t.chain().focus().toggleBold().run(),
@@ -8566,19 +7496,9 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
         children: /* @__PURE__ */ h(Us, { size: 16 })
       }
     ),
-<<<<<<< Updated upstream
-    /* @__PURE__ */ h(Ot, {}),
+    /* @__PURE__ */ h(_t, {}),
     /* @__PURE__ */ I(rs, { children: [
       /* @__PURE__ */ h(os, { asChild: !0, children: /* @__PURE__ */ I(
-=======
-    /* @__PURE__ */ m(_t, {}, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-      lineNumber: 464,
-      columnNumber: 7
-    }, this),
-    /* @__PURE__ */ m(os, { children: [
-      /* @__PURE__ */ m(rs, { asChild: !0, children: /* @__PURE__ */ m(
->>>>>>> Stashed changes
         "button",
         {
           className: `
@@ -8660,29 +7580,10 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
             ]
           }
         )
-<<<<<<< Updated upstream
       ] })
     ] }),
-    /* @__PURE__ */ h(Ot, {}),
+    /* @__PURE__ */ h(_t, {}),
     /* @__PURE__ */ h(
-=======
-      ] }, void 0, !0, {
-        fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-        lineNumber: 486,
-        columnNumber: 9
-      }, this)
-    ] }, void 0, !0, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-      lineNumber: 467,
-      columnNumber: 7
-    }, this),
-    /* @__PURE__ */ m(_t, {}, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-      lineNumber: 532,
-      columnNumber: 7
-    }, this),
-    /* @__PURE__ */ m(
->>>>>>> Stashed changes
       we,
       {
         onClick: () => t.chain().focus().toggleBulletList().run(),
@@ -8766,17 +7667,8 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
         children: /* @__PURE__ */ h(sf, { size: 16 })
       }
     ),
-<<<<<<< Updated upstream
-    /* @__PURE__ */ h(Ot, {}),
+    /* @__PURE__ */ h(_t, {}),
     /* @__PURE__ */ h(
-=======
-    /* @__PURE__ */ m(_t, {}, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-      lineNumber: 619,
-      columnNumber: 7
-    }, this),
-    /* @__PURE__ */ m(
->>>>>>> Stashed changes
       we,
       {
         onClick: y,
@@ -8829,33 +7721,12 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
         /* @__PURE__ */ I(xe, { onClick: () => v("todo"), children: [
           /* @__PURE__ */ h(xl, { size: 16, className: "mr-2", style: { color: "#4479B3" } }),
           " Todo"
-<<<<<<< Updated upstream
         ] })
       ] })
     ] }),
     t.isActive("table") && /* @__PURE__ */ I(rs, { children: [
       /* @__PURE__ */ h(os, { asChild: !0, children: /* @__PURE__ */ I(
-        Ft,
-=======
-        ] }, void 0, !0, {
-          fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-          lineNumber: 663,
-          columnNumber: 11
-        }, this)
-      ] }, void 0, !0, {
-        fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-        lineNumber: 650,
-        columnNumber: 9
-      }, this)
-    ] }, void 0, !0, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-      lineNumber: 641,
-      columnNumber: 7
-    }, this),
-    t.isActive("table") && /* @__PURE__ */ m(os, { children: [
-      /* @__PURE__ */ m(rs, { asChild: !0, children: /* @__PURE__ */ m(
         Ut,
->>>>>>> Stashed changes
         {
           variant: "ghost",
           size: "sm",
@@ -8981,17 +7852,8 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
         position: u
       }
     ),
-<<<<<<< Updated upstream
-    /* @__PURE__ */ h(Ot, {}),
+    /* @__PURE__ */ h(_t, {}),
     /* @__PURE__ */ h(
-=======
-    /* @__PURE__ */ m(_t, {}, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-      lineNumber: 755,
-      columnNumber: 7
-    }, this),
-    /* @__PURE__ */ m(
->>>>>>> Stashed changes
       we,
       {
         onClick: w,
@@ -8999,21 +7861,10 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
         children: /* @__PURE__ */ h(cf, { size: 16 })
       }
     ),
-<<<<<<< Updated upstream
     i && /* @__PURE__ */ I(ye, { children: [
-      /* @__PURE__ */ h(Ot, {}),
+      /* @__PURE__ */ h(_t, {}),
       /* @__PURE__ */ I(Dd, { children: [
         /* @__PURE__ */ h(Nd, { asChild: !0, children: /* @__PURE__ */ h(
-=======
-    a && /* @__PURE__ */ m(ye, { children: [
-      /* @__PURE__ */ m(_t, {}, void 0, !1, {
-        fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorToolbar.tsx",
-        lineNumber: 766,
-        columnNumber: 11
-      }, this),
-      /* @__PURE__ */ m(Mu, { children: [
-        /* @__PURE__ */ m(Du, { asChild: !0, children: /* @__PURE__ */ m(
->>>>>>> Stashed changes
           "button",
           {
             ref: l,
@@ -9038,19 +7889,11 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
 function Zv({ editor: e, isOpen: t, onClose: n, focusTrigger: r = 0, initialSearchQuery: o, editorMode: s = "wysiwyg", rawMarkdown: i = "", onRawMarkdownChange: a, onMatchesChange: l }) {
   const c = s === "markdown", [d, u] = j(""), [f, p] = j(""), [g, m] = j(!1), [y, v] = j(!1), [b, x] = j(!1), [M, w] = j(!1), [E, S] = j([]), [k, N] = j(0), [C, D] = j(null), [L, P] = j(!1), O = Y(!1), $ = Y(null), W = Y(null), V = Y(!1);
   q(() => {
-<<<<<<< Updated upstream
     t && o && o.trim() && u(o);
   }, [t, o, r]);
   const R = F(() => {
     if (!d || !e) {
       S([]), N(0), D(null);
-=======
-    t && r && r.trim() && d(r);
-  }, [t, r, o]);
-  const P = F(() => {
-    if (!u || !e) {
-      S([]), D(0), M(null);
->>>>>>> Stashed changes
       return;
     }
     const B = [];
@@ -9093,17 +7936,10 @@ function Zv({ editor: e, isOpen: t, onClose: n, focusTrigger: r = 0, initialSear
     S(B), B.length > 0 && k >= B.length && N(0);
   }, [d, g, y, b, e, k, c, i]);
   q(() => {
-<<<<<<< Updated upstream
     R();
   }, [R]), q(() => {
     c && l && (t && E.length > 0 ? l(E, k) : l([], 0));
   }, [c, t, E, k, l]), q(() => {
-=======
-    P();
-  }, [P]), q(() => {
-    c && l && (t && C.length > 0 ? l(C, k) : l([], 0));
-  }, [c, t, C, k, l]), q(() => {
->>>>>>> Stashed changes
     if (!e) return;
     if (c) {
       typeof e.commands.clearSearchHighlight == "function" && e.commands.clearSearchHighlight();
@@ -9134,7 +7970,6 @@ function Zv({ editor: e, isOpen: t, onClose: n, focusTrigger: r = 0, initialSear
       const J = e.view.domAtPos(B.from);
       J.node && J.node.parentElement?.scrollIntoView({ behavior: "smooth", block: "center" }), V.current && (V.current = !1);
     }
-<<<<<<< Updated upstream
   }, [k, E, e, c, i]), q(() => {
     t && $.current && ($.current.focus(), $.current.select());
   }, [t, r]);
@@ -9159,50 +7994,17 @@ function Zv({ editor: e, isOpen: t, onClose: n, focusTrigger: r = 0, initialSear
       J.forEach((ee) => {
         _ = _.substring(0, ee.from) + f + _.substring(ee.to);
       }), a(_), setTimeout(R, 10);
-=======
-  }, [k, C, e, c, a]), q(() => {
-    t && _.current && (_.current.focus(), _.current.select());
-  }, [t, o]);
-  const L = F(() => {
-    C.length !== 0 && (V.current = !0, D((B) => (B + 1) % C.length));
-  }, [C.length]), $ = F(() => {
-    C.length !== 0 && (V.current = !0, D((B) => (B - 1 + C.length) % C.length));
-  }, [C.length]), G = F(() => {
-    if (C.length === 0 || k >= C.length) return;
-    const B = C[k];
-    if (c && i) {
-      const J = a.substring(0, B.from) + f + a.substring(B.to);
-      i(J), setTimeout(P, 10);
-      return;
-    }
-    e.chain().focus().setTextSelection({ from: B.from, to: B.to }).deleteSelection().insertContent(f).run(), setTimeout(P, 10);
-  }, [C, k, f, e, P, c, a, i]), W = F(() => {
-    if (C.length === 0) return;
-    if (c && i) {
-      const J = [...C].sort((ee, ne) => ne.from - ee.from);
-      let O = a;
-      J.forEach((ee) => {
-        O = O.substring(0, ee.from) + f + O.substring(ee.to);
-      }), i(O), setTimeout(P, 10);
->>>>>>> Stashed changes
       return;
     }
     const B = [...E].sort((J, _) => _.from - J.from);
     e.chain().focus(), B.forEach((J) => {
       e.chain().setTextSelection({ from: J.from, to: J.to }).deleteSelection().insertContent(f).run();
-<<<<<<< Updated upstream
     }), setTimeout(R, 10);
   }, [E, f, e, R, c, i, a]), U = F(() => {
     if (E.length === 0 || !d || !(typeof e.commands.selectAllOccurrences == "function")) return;
-=======
-    }), setTimeout(P, 10);
-  }, [C, f, e, P, c, a, i]), U = F(() => {
-    if (C.length === 0 || !u || !(typeof e.commands.selectAllOccurrences == "function")) return;
->>>>>>> Stashed changes
     e.commands.selectAllOccurrences({
       searchTerm: d,
       caseSensitive: g,
-<<<<<<< Updated upstream
       useRegex: y,
       wholeWord: b
     }) && (P(!0), O.current = !0, typeof e.commands.clearSearchHighlight == "function" && e.commands.clearSearchHighlight(), n(), e.commands.focus());
@@ -9210,15 +8012,6 @@ function Zv({ editor: e, isOpen: t, onClose: n, focusTrigger: r = 0, initialSear
     B.key === "Enter" ? (B.preventDefault(), B.shiftKey ? H() : A(), $.current?.focus()) : B.key === "Escape" ? (B.preventDefault(), n()) : B.key === "h" && (B.ctrlKey || B.metaKey) ? (B.preventDefault(), w((J) => !J)) : B.key === "l" && (B.ctrlKey || B.metaKey) && B.shiftKey && (B.preventDefault(), U());
   }, [A, H, n, U]);
   return t ? /* @__PURE__ */ I(
-=======
-      useRegex: b,
-      wholeWord: w
-    }) && (I(!0), R.current = !0, typeof e.commands.clearSearchHighlight == "function" && e.commands.clearSearchHighlight(), n(), e.commands.focus());
-  }, [C, u, g, b, w, e, n]), K = F((B) => {
-    B.key === "Enter" ? (B.preventDefault(), B.shiftKey ? $() : L(), _.current?.focus()) : B.key === "Escape" ? (B.preventDefault(), n()) : B.key === "h" && (B.ctrlKey || B.metaKey) ? (B.preventDefault(), y((J) => !J)) : B.key === "l" && (B.ctrlKey || B.metaKey) && B.shiftKey && (B.preventDefault(), U());
-  }, [L, $, n, U]);
-  return t ? /* @__PURE__ */ m(
->>>>>>> Stashed changes
     "div",
     {
       className: "find-replace-panel",
@@ -9254,13 +8047,8 @@ function Zv({ editor: e, isOpen: t, onClose: n, focusTrigger: r = 0, initialSear
           /* @__PURE__ */ h(
             "button",
             {
-<<<<<<< Updated upstream
               onClick: A,
               disabled: E.length === 0,
-=======
-              onClick: L,
-              disabled: C.length === 0,
->>>>>>> Stashed changes
               className: "find-replace-btn",
               title: "Next match (Enter)",
               children: /* @__PURE__ */ h(tr, { size: 16 })
@@ -9916,15 +8704,9 @@ const lb = np.extend({
       sb(this.editor)
     ];
   }
-<<<<<<< Updated upstream
 }), cb = rp.extend({}), Yn = new Ne("tableSorting");
-let Bt = null, Wn = null;
-function db(e) {
-=======
-}), dw = rf.extend({}), Yn = new De("tableSorting");
 let Wt = null, Wn = null;
-function mw(e) {
->>>>>>> Stashed changes
+function db(e) {
   const t = parseFloat(e.replace(/[,$%]/g, ""));
   if (!isNaN(t) && e.match(/^[\d,.$%\-+]+$/))
     return { type: "number", value: t };
@@ -9951,15 +8733,9 @@ function fb(e, t, n) {
     console.log("Table not found at position", t);
     return;
   }
-<<<<<<< Updated upstream
-  const i = Bt?.tablePos === t && Bt?.columnIndex === n && Bt?.direction === "asc" ? "desc" : "asc";
-  Bt = { tablePos: t, columnIndex: n, direction: i }, Wn = null;
+  const i = Wt?.tablePos === t && Wt?.columnIndex === n && Wt?.direction === "asc" ? "desc" : "asc";
+  Wt = { tablePos: t, columnIndex: n, direction: i }, Wn = null;
   const a = [];
-=======
-  const a = Wt?.tablePos === t && Wt?.columnIndex === n && Wt?.direction === "asc" ? "desc" : "asc";
-  Wt = { tablePos: t, columnIndex: n, direction: a }, Wn = null;
-  const i = [];
->>>>>>> Stashed changes
   s.forEach((g) => {
     if (g.type.name === "tableRow") {
       let m = !1;
@@ -10050,13 +8826,8 @@ function mb(e, t) {
               d.forEach((x, M) => {
                 x.type.name === "paragraph" && (p = f + 1 + M + x.nodeSize - 1);
               });
-<<<<<<< Updated upstream
-              const m = Bt?.tablePos === s && Bt?.columnIndex === l ? Bt.direction : null, y = l, v = s, b = Ze.widget(p, () => pb(m, v, y, t), { side: 1, key: "sort-" + s + "-" + y });
+              const m = Wt?.tablePos === s && Wt?.columnIndex === l ? Wt.direction : null, y = l, v = s, b = Ze.widget(p, () => pb(m, v, y, t), { side: 1, key: "sort-" + s + "-" + y });
               n.push(b);
-=======
-              const p = Wt?.tablePos === s && Wt?.columnIndex === l ? Wt.direction : null, b = l, v = s, w = Ze.widget(h, () => pw(p, v, b, t), { side: 1, key: "sort-" + s + "-" + b });
-              n.push(w);
->>>>>>> Stashed changes
             }
             c += d.nodeSize, l++;
           });
@@ -10065,11 +8836,7 @@ function mb(e, t) {
     }
   }), Ve.create(e, n);
 }
-<<<<<<< Updated upstream
-const gb = _e.create({
-=======
-const vw = $e.create({
->>>>>>> Stashed changes
+const gb = $e.create({
   name: "tableSorting",
   addProseMirrorPlugins() {
     return [hb(this.editor)];
@@ -10269,13 +9036,8 @@ const yb = op.extend({
   // for consolidated input handling (R5 performance optimization).
 }), xb = ap.extend({
   content: "paragraph block*"
-<<<<<<< Updated upstream
 }), Ai = new Ne("collapsibleList");
 function Is(e, t) {
-=======
-}), La = new De("collapsibleList");
-function Ps(e, t) {
->>>>>>> Stashed changes
   let n = "";
   return e.firstChild && e.firstChild.type.name === "paragraph" && (n = e.firstChild.textContent.slice(0, 50)), `li-${t}-${n}`;
 }
@@ -10307,15 +9069,9 @@ function Fr(e, t, n, r) {
   return e.descendants((s, i) => {
     if (!n.listItemTypes.includes(s.type.name) || !lo(s))
       return !0;
-<<<<<<< Updated upstream
     const a = Is(s, i), l = t.collapsedItems.has(a);
     o.push(
       Ze.node(i, i + s.nodeSize, {
-=======
-    const i = Ps(s, a), l = t.collapsedItems.has(i);
-    r.push(
-      Ze.node(a, a + s.nodeSize, {
->>>>>>> Stashed changes
         class: `collapsible-list-item ${l ? "is-collapsed" : "is-expanded"}`,
         "data-list-item-id": a
       })
@@ -10361,11 +9117,7 @@ function Fr(e, t, n, r) {
     return !0;
   }), Ve.create(e, o);
 }
-<<<<<<< Updated upstream
-const Cb = _e.create({
-=======
-const Ew = $e.create({
->>>>>>> Stashed changes
+const Cb = $e.create({
   name: "collapsibleList",
   addOptions() {
     return {
@@ -10383,24 +9135,14 @@ const Ew = $e.create({
         const r = this.storage, o = n.doc.nodeAt(e);
         if (!o || !this.options.listItemTypes.includes(o.type.name) || !lo(o))
           return !1;
-<<<<<<< Updated upstream
         const s = Is(o, e);
         return r.collapsedItems.has(s) ? r.collapsedItems.delete(s) : r.collapsedItems.add(s), t.view.dispatch(n.setMeta("collapsibleList", { toggled: s })), !0;
-=======
-        const s = Ps(r, e);
-        return o.collapsedItems.has(s) ? o.collapsedItems.delete(s) : o.collapsedItems.add(s), t.view.dispatch(n.setMeta("collapsibleList", { toggled: s })), !0;
->>>>>>> Stashed changes
       },
       expandAllListItems: () => ({ editor: e, tr: t }) => (this.storage.collapsedItems.clear(), e.view.dispatch(t.setMeta("collapsibleList", { expandAll: !0 })), !0),
       collapseAllListItems: () => ({ editor: e, tr: t }) => {
         const n = this.storage;
-<<<<<<< Updated upstream
         return t.doc.descendants((o, s) => {
           this.options.listItemTypes.includes(o.type.name) && lo(o) && n.collapsedItems.add(Is(o, s));
-=======
-        return t.doc.descendants((r, s) => {
-          this.options.listItemTypes.includes(r.type.name) && cr(r) && n.collapsedItems.add(Ps(r, s));
->>>>>>> Stashed changes
         }), e.view.dispatch(t.setMeta("collapsibleList", { collapseAll: !0 })), !0;
       }
     };
@@ -10408,21 +9150,12 @@ const Ew = $e.create({
   addProseMirrorPlugins() {
     const e = this.storage, t = this.options, n = { current: null };
     return [
-<<<<<<< Updated upstream
       new De({
         key: Ai,
         view(r) {
           return n.current = r, {
             update(o) {
               n.current = o;
-=======
-      new Me({
-        key: La,
-        view(o) {
-          return n.current = o, {
-            update(r) {
-              n.current = r;
->>>>>>> Stashed changes
             },
             destroy() {
               n.current = null;
@@ -10466,23 +9199,16 @@ const Ew = $e.create({
           }
         },
         props: {
-<<<<<<< Updated upstream
           decorations(r) {
             const o = Ai.getState(r);
             return o?.decorations ? o.decorations : Fr(r.doc, e, t, n);
-=======
-          decorations(o) {
-            const r = La.getState(o);
-            return r?.decorations ? r.decorations : Uo(o.doc, e, t, n);
->>>>>>> Stashed changes
           }
         }
       })
     ];
   }
-<<<<<<< Updated upstream
 }), Ii = "http://www.w3.org/2000/svg";
-function _t(e, t, n) {
+function $t(e, t, n) {
   const r = document.createElementNS(Ii, "svg");
   r.setAttribute("width", String(t)), r.setAttribute("height", String(t)), r.setAttribute("viewBox", "0 0 24 24"), r.setAttribute("fill", "none"), r.setAttribute("stroke", "currentColor"), r.setAttribute("stroke-width", "2"), r.setAttribute("stroke-linecap", "round"), r.setAttribute("stroke-linejoin", "round"), n && r.setAttribute("class", n);
   for (const o of e) {
@@ -10490,17 +9216,6 @@ function _t(e, t, n) {
     for (const [i, a] of Object.entries(o.attrs))
       s.setAttribute(i, a);
     r.appendChild(s);
-=======
-}), Pa = "http://www.w3.org/2000/svg";
-function $t(e, t, n) {
-  const o = document.createElementNS(Pa, "svg");
-  o.setAttribute("width", String(t)), o.setAttribute("height", String(t)), o.setAttribute("viewBox", "0 0 24 24"), o.setAttribute("fill", "none"), o.setAttribute("stroke", "currentColor"), o.setAttribute("stroke-width", "2"), o.setAttribute("stroke-linecap", "round"), o.setAttribute("stroke-linejoin", "round"), n && o.setAttribute("class", n);
-  for (const r of e) {
-    const s = document.createElementNS(Pa, r.tag);
-    for (const [a, i] of Object.entries(r.attrs))
-      s.setAttribute(a, i);
-    o.appendChild(s);
->>>>>>> Stashed changes
   }
   return r;
 }
@@ -10524,11 +9239,7 @@ const Eb = [
   { tag: "path", attrs: { d: "M13 6h8" } },
   { tag: "path", attrs: { d: "M13 12h8" } },
   { tag: "path", attrs: { d: "M13 18h8" } }
-<<<<<<< Updated upstream
 ], Nb = [
-=======
-], Lw = [
->>>>>>> Stashed changes
   { tag: "rect", attrs: { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1" } },
   { tag: "path", attrs: { d: "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" } },
   { tag: "path", attrs: { d: "M12 11h4" } },
@@ -10537,7 +9248,6 @@ const Eb = [
   { tag: "path", attrs: { d: "M8 16h.01" } }
 ], ls = [
   { tag: "path", attrs: { d: "m6 9 6 6 6-6" } }
-<<<<<<< Updated upstream
 ], Lb = [
   { tag: "path", attrs: { d: "m9 18 6-6-6-6" } }
 ], ln = {
@@ -10556,36 +9266,11 @@ class Ib {
       i.stopPropagation(), this.view.editable && this.toggleDropdown();
     }, this.node = t, this.view = n, this.getPos = r;
     const o = t.attrs.type || "info", s = ln[o] || ln.info;
-    this.boundHandleClickOutside = this.handleClickOutside.bind(this), this.boundHandleScroll = this.closeDropdown.bind(this), this.dom = document.createElement("div"), this.dom.className = `callout callout-${o}`, this.dom.setAttribute("data-callout", ""), this.dom.setAttribute("data-type", o), this.dom.setAttribute("data-node-view-wrapper", ""), this.headerEl = document.createElement("div"), this.headerEl.className = "callout-header", this.headerEl.style.cursor = "pointer", this.headerEl.style.userSelect = "none", this.headerEl.style.webkitUserSelect = "none", this.headerEl.title = "Click to collapse", this.headerEl.addEventListener("click", this.handleHeaderClick), this.headerButton = document.createElement("button"), this.headerButton.className = "callout-header-button", this.headerButton.title = n.editable ? "Click to change callout type" : s.label, this.headerButton.style.color = s.borderColor, this.headerButton.style.userSelect = "none", this.headerButton.style.webkitUserSelect = "none", this.headerButton.addEventListener("click", this.handleButtonClick), this.headerIconContainer = document.createElement("span"), this.headerIconContainer.style.display = "flex", this.headerIconContainer.appendChild(_t(s.iconElements, 18)), this.labelEl = document.createElement("span"), this.labelEl.className = "callout-label", this.labelEl.textContent = s.label, this.typeChevronEl = _t(ls, 12, "callout-type-chevron"), n.editable || (this.typeChevronEl.style.display = "none"), this.headerButton.appendChild(this.headerIconContainer), this.headerButton.appendChild(this.labelEl), this.headerButton.appendChild(this.typeChevronEl), this.collapseIndicator = document.createElement("div"), this.collapseIndicator.className = "callout-collapse-indicator", this.collapseIndicator.style.color = s.borderColor, this.collapseIndicator.appendChild(_t(ls, 16)), this.headerEl.appendChild(this.headerButton), this.headerEl.appendChild(this.collapseIndicator), this.contentWrapper = document.createElement("div"), this.contentWrapper.className = "callout-content", this.contentDOM = document.createElement("div"), this.contentWrapper.appendChild(this.contentDOM), this.dom.appendChild(this.headerEl), this.dom.appendChild(this.contentWrapper);
+    this.boundHandleClickOutside = this.handleClickOutside.bind(this), this.boundHandleScroll = this.closeDropdown.bind(this), this.dom = document.createElement("div"), this.dom.className = `callout callout-${o}`, this.dom.setAttribute("data-callout", ""), this.dom.setAttribute("data-type", o), this.dom.setAttribute("data-node-view-wrapper", ""), this.headerEl = document.createElement("div"), this.headerEl.className = "callout-header", this.headerEl.style.cursor = "pointer", this.headerEl.style.userSelect = "none", this.headerEl.style.webkitUserSelect = "none", this.headerEl.title = "Click to collapse", this.headerEl.addEventListener("click", this.handleHeaderClick), this.headerButton = document.createElement("button"), this.headerButton.className = "callout-header-button", this.headerButton.title = n.editable ? "Click to change callout type" : s.label, this.headerButton.style.color = s.borderColor, this.headerButton.style.userSelect = "none", this.headerButton.style.webkitUserSelect = "none", this.headerButton.addEventListener("click", this.handleButtonClick), this.headerIconContainer = document.createElement("span"), this.headerIconContainer.style.display = "flex", this.headerIconContainer.appendChild($t(s.iconElements, 18)), this.labelEl = document.createElement("span"), this.labelEl.className = "callout-label", this.labelEl.textContent = s.label, this.typeChevronEl = $t(ls, 12, "callout-type-chevron"), n.editable || (this.typeChevronEl.style.display = "none"), this.headerButton.appendChild(this.headerIconContainer), this.headerButton.appendChild(this.labelEl), this.headerButton.appendChild(this.typeChevronEl), this.collapseIndicator = document.createElement("div"), this.collapseIndicator.className = "callout-collapse-indicator", this.collapseIndicator.style.color = s.borderColor, this.collapseIndicator.appendChild($t(ls, 16)), this.headerEl.appendChild(this.headerButton), this.headerEl.appendChild(this.collapseIndicator), this.contentWrapper = document.createElement("div"), this.contentWrapper.className = "callout-content", this.contentDOM = document.createElement("div"), this.contentWrapper.appendChild(this.contentDOM), this.dom.appendChild(this.headerEl), this.dom.appendChild(this.contentWrapper);
   }
   toggleCollapse() {
     this.collapsed = !this.collapsed, this.collapsed ? (this.dom.classList.add("callout-collapsed"), this.contentWrapper.classList.add("callout-content-hidden"), this.headerEl.title = "Click to expand") : (this.dom.classList.remove("callout-collapsed"), this.contentWrapper.classList.remove("callout-content-hidden"), this.headerEl.title = "Click to collapse"), this.collapseIndicator.innerHTML = "", this.collapseIndicator.appendChild(
-      this.collapsed ? _t(Lb, 16) : _t(ls, 16)
-=======
-], Pw = [
-  { tag: "path", attrs: { d: "m9 18 6-6-6-6" } }
-], ln = {
-  info: { iconElements: Tw, label: "Info", color: "var(--callout-info)", borderColor: "var(--callout-info-border)" },
-  note: { iconElements: Sw, label: "Note", color: "var(--callout-note)", borderColor: "var(--callout-note-border)" },
-  prompt: { iconElements: Mw, label: "Prompt", color: "var(--callout-prompt)", borderColor: "var(--callout-prompt-border)" },
-  resources: { iconElements: Dw, label: "Resources", color: "var(--callout-resources)", borderColor: "var(--callout-resources-border)" },
-  todo: { iconElements: Aw, label: "Todo", color: "var(--callout-todo)", borderColor: "var(--callout-todo-border)" },
-  summary: { iconElements: Lw, label: "Summary", color: "var(--callout-summary)", borderColor: "var(--callout-summary-border)" }
-}, Iw = Object.keys(ln);
-class Rw {
-  constructor(t, n, o) {
-    this.collapsed = !1, this.showDropdown = !1, this.portalContainer = null, this.dropdownEl = null, this.handleHeaderClick = (a) => {
-      this.toggleCollapse();
-    }, this.handleButtonClick = (a) => {
-      a.stopPropagation(), this.view.editable && this.toggleDropdown();
-    }, this.node = t, this.view = n, this.getPos = o;
-    const r = t.attrs.type || "info", s = ln[r] || ln.info;
-    this.boundHandleClickOutside = this.handleClickOutside.bind(this), this.boundHandleScroll = this.closeDropdown.bind(this), this.dom = document.createElement("div"), this.dom.className = `callout callout-${r}`, this.dom.setAttribute("data-callout", ""), this.dom.setAttribute("data-type", r), this.dom.setAttribute("data-node-view-wrapper", ""), this.headerEl = document.createElement("div"), this.headerEl.className = "callout-header", this.headerEl.style.cursor = "pointer", this.headerEl.style.userSelect = "none", this.headerEl.style.webkitUserSelect = "none", this.headerEl.title = "Click to collapse", this.headerEl.addEventListener("click", this.handleHeaderClick), this.headerButton = document.createElement("button"), this.headerButton.className = "callout-header-button", this.headerButton.title = n.editable ? "Click to change callout type" : s.label, this.headerButton.style.color = s.borderColor, this.headerButton.style.userSelect = "none", this.headerButton.style.webkitUserSelect = "none", this.headerButton.addEventListener("click", this.handleButtonClick), this.headerIconContainer = document.createElement("span"), this.headerIconContainer.style.display = "flex", this.headerIconContainer.appendChild($t(s.iconElements, 18)), this.labelEl = document.createElement("span"), this.labelEl.className = "callout-label", this.labelEl.textContent = s.label, this.typeChevronEl = $t(ls, 12, "callout-type-chevron"), n.editable || (this.typeChevronEl.style.display = "none"), this.headerButton.appendChild(this.headerIconContainer), this.headerButton.appendChild(this.labelEl), this.headerButton.appendChild(this.typeChevronEl), this.collapseIndicator = document.createElement("div"), this.collapseIndicator.className = "callout-collapse-indicator", this.collapseIndicator.style.color = s.borderColor, this.collapseIndicator.appendChild($t(ls, 16)), this.headerEl.appendChild(this.headerButton), this.headerEl.appendChild(this.collapseIndicator), this.contentWrapper = document.createElement("div"), this.contentWrapper.className = "callout-content", this.contentDOM = document.createElement("div"), this.contentWrapper.appendChild(this.contentDOM), this.dom.appendChild(this.headerEl), this.dom.appendChild(this.contentWrapper);
-  }
-  toggleCollapse() {
-    this.collapsed = !this.collapsed, this.collapsed ? (this.dom.classList.add("callout-collapsed"), this.contentWrapper.classList.add("callout-content-hidden"), this.headerEl.title = "Click to expand") : (this.dom.classList.remove("callout-collapsed"), this.contentWrapper.classList.remove("callout-content-hidden"), this.headerEl.title = "Click to collapse"), this.collapseIndicator.innerHTML = "", this.collapseIndicator.appendChild(
-      this.collapsed ? $t(Pw, 16) : $t(ls, 16)
->>>>>>> Stashed changes
+      this.collapsed ? $t(Lb, 16) : $t(ls, 16)
     );
   }
   // ── Dropdown Portal ──
@@ -10598,25 +9283,14 @@ class Rw {
     this.portalContainer = document.createElement("div"), this.portalContainer.style.position = "fixed", this.portalContainer.style.top = "0", this.portalContainer.style.left = "0", this.portalContainer.style.width = "0", this.portalContainer.style.height = "0", this.portalContainer.style.overflow = "visible", this.portalContainer.style.zIndex = "99999", this.portalContainer.style.pointerEvents = "auto", this.portalContainer.addEventListener("mousedown", (o) => o.stopPropagation()), this.portalContainer.addEventListener("pointerdown", (o) => o.stopPropagation()), this.portalContainer.addEventListener("click", (o) => o.stopPropagation());
     const n = document.documentElement.classList.contains("dark") || document.documentElement.getAttribute("data-theme") === "dark";
     this.dropdownEl = document.createElement("div"), this.dropdownEl.className = `callout-type-dropdown-portal ${n ? "dark-theme" : "light-theme"}`, this.dropdownEl.contentEditable = "false", this.dropdownEl.style.position = "fixed", this.dropdownEl.style.top = `${t.bottom + 4}px`, this.dropdownEl.style.left = `${t.left}px`;
-<<<<<<< Updated upstream
     const r = this.node.attrs.type || "info";
     for (const o of Ab) {
       const s = ln[o], i = document.createElement("button");
       i.className = `callout-type-option${o === r ? " active" : ""}`, i.addEventListener("click", (c) => {
         c.stopPropagation(), this.handleTypeChange(o);
       }), i.addEventListener("mousedown", (c) => c.stopPropagation());
-      const a = _t(s.iconElements, 16);
+      const a = $t(s.iconElements, 16);
       a.style.color = s.borderColor;
-=======
-    const o = this.node.attrs.type || "info";
-    for (const r of Iw) {
-      const s = ln[r], a = document.createElement("button");
-      a.className = `callout-type-option${r === o ? " active" : ""}`, a.addEventListener("click", (c) => {
-        c.stopPropagation(), this.handleTypeChange(r);
-      }), a.addEventListener("mousedown", (c) => c.stopPropagation());
-      const i = $t(s.iconElements, 16);
-      i.style.color = s.borderColor;
->>>>>>> Stashed changes
       const l = document.createElement("span");
       l.textContent = s.label, i.appendChild(a), i.appendChild(l), this.dropdownEl.appendChild(i);
     }
@@ -10881,7 +9555,6 @@ const Rb = go.create({
       let o = t;
       const s = document.createElement("figure");
       s.classList.add("image-resizer");
-<<<<<<< Updated upstream
       const i = (A) => {
         const H = {
           left: "margin-right: auto; margin-left: 0;",
@@ -10899,25 +9572,6 @@ const Rb = go.create({
         }).catch(() => {
           a.src = A, a.style.opacity = "1";
         })) : a.src = A;
-=======
-      const a = (L) => {
-        const $ = {
-          left: "margin-right: auto; margin-left: 0;",
-          center: "margin-left: auto; margin-right: auto;",
-          right: "margin-left: auto; margin-right: 0;"
-        }[L] || "margin-left: auto; margin-right: auto;";
-        s.style.cssText = `display: block; position: relative; width: fit-content; ${$}`;
-      };
-      a(t.attrs.align || "left");
-      const i = document.createElement("img");
-      i.alt = t.attrs.alt || "", t.attrs.width && (i.style.width = `${t.attrs.width}px`);
-      const l = (L) => !(!L || L.startsWith("data:") || L.startsWith("blob:") || L.startsWith("http://") || L.startsWith("https://")), c = (L) => {
-        l(L) && e.resolveImageSrc ? (i.style.opacity = "0.5", i.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3C/svg%3E', e.resolveImageSrc(L).then(($) => {
-          i.src = $, i.style.opacity = "1";
-        }).catch(() => {
-          i.src = L, i.style.opacity = "1";
-        })) : i.src = L;
->>>>>>> Stashed changes
       };
       c(t.attrs.src);
       const d = document.createElement("div");
@@ -10985,15 +9639,9 @@ const Rb = go.create({
         z-index: 9999;
         pointer-events: auto;
       `;
-<<<<<<< Updated upstream
       const p = (A, H, G) => {
         const z = document.createElement("button");
         return z.setAttribute("type", "button"), z.style.cssText = `
-=======
-      const h = (L, $, G) => {
-        const W = document.createElement("button");
-        return W.setAttribute("type", "button"), W.style.cssText = `
->>>>>>> Stashed changes
           display: flex;
           align-items: center;
           gap: 8px;
@@ -11007,7 +9655,6 @@ const Rb = go.create({
           cursor: pointer;
           text-align: left;
           transition: background 0.15s ease;
-<<<<<<< Updated upstream
         `, z.innerHTML = `${H}<span>${A}</span>`, z.addEventListener("mouseenter", () => {
           z.style.background = "oklch(0.95 0 0)";
         }), z.addEventListener("mouseleave", () => {
@@ -11031,45 +9678,14 @@ const Rb = go.create({
         const A = o.attrs.src;
         try {
           const G = await (await fetch(A)).blob();
-=======
-        `, W.innerHTML = `${$}<span>${L}</span>`, W.addEventListener("mouseenter", () => {
-          W.style.background = "oklch(0.95 0 0)";
-        }), W.addEventListener("mouseleave", () => {
-          W.style.background = "transparent";
-        }), W.addEventListener("click", (U) => {
-          U.preventDefault(), U.stopPropagation(), G(), f.style.display = "none", D = !1;
-        }), W;
-      }, g = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>', p = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>', b = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>', v = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
-      f.appendChild(h("Edit", g, () => {
-        const L = typeof o == "function" ? o() : null;
-        if (L != null && e.onImageClick) {
-          const $ = i.getBoundingClientRect();
-          e.onImageClick({
-            src: r.attrs.src,
-            alt: r.attrs.alt || "",
-            pos: L,
-            rect: $
-          });
-        }
-      })), f.appendChild(h("Copy image", p, async () => {
-        const L = r.attrs.src;
-        try {
-          const G = await (await fetch(L)).blob();
->>>>>>> Stashed changes
           await navigator.clipboard.write([
             new ClipboardItem({ [G.type]: G })
           ]);
         } catch {
           try {
-<<<<<<< Updated upstream
             const H = new window.Image();
             H.crossOrigin = "anonymous", await new Promise((U, K) => {
               H.onload = () => U(), H.onerror = () => K(new Error("Image load failed")), H.src = A;
-=======
-            const $ = new window.Image();
-            $.crossOrigin = "anonymous", await new Promise((U, K) => {
-              $.onload = () => U(), $.onerror = () => K(new Error("Image load failed")), $.src = L;
->>>>>>> Stashed changes
             });
             const G = document.createElement("canvas");
             G.width = H.naturalWidth, G.height = H.naturalHeight;
@@ -11081,24 +9697,15 @@ const Rb = go.create({
               );
               U ? await navigator.clipboard.write([
                 new ClipboardItem({ "image/png": U })
-<<<<<<< Updated upstream
               ]) : await navigator.clipboard.writeText(A);
             }
           } catch {
             try {
               await navigator.clipboard.writeText(A);
-=======
-              ]) : await navigator.clipboard.writeText(L);
-            }
-          } catch {
-            try {
-              await navigator.clipboard.writeText(L);
->>>>>>> Stashed changes
             } catch {
             }
           }
         }
-<<<<<<< Updated upstream
       })), f.appendChild(p("Copy URL", v, async () => {
         const A = o.attrs.src;
         try {
@@ -11108,17 +9715,6 @@ const Rb = go.create({
       })), f.appendChild(p("Save image", y, () => {
         const A = o.attrs.src, H = o.attrs.alt || "image", G = document.createElement("a");
         G.href = A, G.download = H, G.target = "_blank", G.rel = "noopener noreferrer", document.body.appendChild(G), G.click(), setTimeout(() => {
-=======
-      })), f.appendChild(h("Copy URL", v, async () => {
-        const L = r.attrs.src;
-        try {
-          await navigator.clipboard.writeText(L);
-        } catch {
-        }
-      })), f.appendChild(h("Save image", b, () => {
-        const L = r.attrs.src, $ = r.attrs.alt || "image", G = document.createElement("a");
-        G.href = L, G.download = $, G.target = "_blank", G.rel = "noopener noreferrer", document.body.appendChild(G), G.click(), setTimeout(() => {
->>>>>>> Stashed changes
           document.body.removeChild(G);
         }, 100);
       }));
@@ -11162,7 +9758,6 @@ const Rb = go.create({
           label: "Right",
           icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>'
         }
-<<<<<<< Updated upstream
       ], E = [], S = (A) => {
         E.forEach((H) => {
           (H.getAttribute("data-align-value") || "left") === A ? (H.style.background = "oklch(1 0 0)", H.style.boxShadow = "0 1px 3px oklch(0 0 0 / 0.1)", H.style.color = "oklch(0.25 0 0)", H.style.fontWeight = "600") : (H.style.background = "transparent", H.style.boxShadow = "none", H.style.color = "oklch(0.5 0 0)", H.style.fontWeight = "400");
@@ -11171,16 +9766,6 @@ const Rb = go.create({
       w.forEach(({ value: A, label: H, icon: G }) => {
         const z = document.createElement("button");
         z.setAttribute("type", "button"), z.setAttribute("data-align-value", A), z.setAttribute("title", `Align ${H.toLowerCase()}`), z.style.cssText = `
-=======
-      ], C = [], S = (L) => {
-        C.forEach(($) => {
-          ($.getAttribute("data-align-value") || "left") === L ? ($.style.background = "oklch(1 0 0)", $.style.boxShadow = "0 1px 3px oklch(0 0 0 / 0.1)", $.style.color = "oklch(0.25 0 0)", $.style.fontWeight = "600") : ($.style.background = "transparent", $.style.boxShadow = "none", $.style.color = "oklch(0.5 0 0)", $.style.fontWeight = "400");
-        });
-      };
-      y.forEach(({ value: L, label: $, icon: G }) => {
-        const W = document.createElement("button");
-        W.setAttribute("type", "button"), W.setAttribute("data-align-value", L), W.setAttribute("title", `Align ${$.toLowerCase()}`), W.style.cssText = `
->>>>>>> Stashed changes
           flex: 1;
           display: flex;
           align-items: center;
@@ -11201,19 +9786,13 @@ const Rb = go.create({
               const { state: B, dispatch: J } = n.view, _ = B.doc.nodeAt(K);
               if (_ && _.type.name === "resizableImage") {
                 const ee = B.tr.setNodeMarkup(K, void 0, {
-<<<<<<< Updated upstream
                   ..._.attrs,
                   align: A
-=======
-                  ...O.attrs,
-                  align: L
->>>>>>> Stashed changes
                 });
                 J(ee);
               }
             } catch {
               n.chain().focus().setNodeSelection(K).updateAttributes("resizableImage", {
-<<<<<<< Updated upstream
                 align: A
               }).run();
             }
@@ -11228,22 +9807,6 @@ const Rb = go.create({
       u.addEventListener("click", (A) => {
         if (A.preventDefault(), A.stopPropagation(), N)
           f.style.display = "none", N = !1;
-=======
-                align: L
-              }).run();
-            }
-          S(L);
-        }), C.push(W), E.appendChild(W);
-      }), f.appendChild(E);
-      const k = () => {
-        const L = r.attrs.align || "left";
-        S(L);
-      };
-      let D = !1;
-      d.addEventListener("click", (L) => {
-        if (L.preventDefault(), L.stopPropagation(), D)
-          f.style.display = "none", D = !1;
->>>>>>> Stashed changes
         else {
           const H = u.getBoundingClientRect(), G = 200, z = f.closest('[role="dialog"]');
           let U = 0, K = 0;
@@ -11256,13 +9819,8 @@ const Rb = go.create({
           H.bottom + 4 + ne > _ && (B = H.top - ne - 4 - K), J + U < 8 && (J = 8 - U), J + G + U > ee - 8 && (J = ee - G - 8 - U), f.style.top = `${B}px`, f.style.left = `${J}px`, f.style.display = "flex", N = !0, k();
         }
       });
-<<<<<<< Updated upstream
       const C = (A) => {
         !f.contains(A.target) && !u.contains(A.target) && (f.style.display = "none", N = !1);
-=======
-      const x = (L) => {
-        !f.contains(L.target) && !d.contains(L.target) && (f.style.display = "none", D = !1);
->>>>>>> Stashed changes
       };
       document.addEventListener("click", C);
       const D = document.createElement("button");
@@ -11306,17 +9864,10 @@ const Rb = go.create({
       }), u.addEventListener("mouseleave", () => {
         u.style.background = "oklch(0.98 0 0 / 0.95)";
       });
-<<<<<<< Updated upstream
       const P = (A) => {
         A.preventDefault(), A.stopPropagation();
         const H = document.createElement("div");
         H.style.cssText = `
-=======
-      const I = (L) => {
-        L.preventDefault(), L.stopPropagation();
-        const $ = document.createElement("div");
-        $.style.cssText = `
->>>>>>> Stashed changes
           position: fixed;
           inset: 0;
           z-index: 99999;
@@ -11395,7 +9946,6 @@ const Rb = go.create({
           H.style.opacity = "1", G.style.transform = "scale(1)";
         });
       };
-<<<<<<< Updated upstream
       D.addEventListener("click", P);
       let O, $;
       const W = (A) => {
@@ -11412,47 +9962,20 @@ const Rb = go.create({
             const { state: G, dispatch: z } = n.view, U = G.doc.nodeAt(A);
             if (U && U.type.name === "resizableImage") {
               const K = G.tr.setNodeMarkup(A, void 0, {
-=======
-      M.addEventListener("click", I);
-      let R, _;
-      const H = (L) => {
-        L.preventDefault(), R = L.clientX, _ = i.offsetWidth, document.addEventListener("mousemove", V), document.addEventListener("mouseup", P);
-      }, V = (L) => {
-        const $ = L.clientX - R, G = Math.max(100, _ + $);
-        i.style.width = `${G}px`;
-      }, P = () => {
-        document.removeEventListener("mousemove", V), document.removeEventListener("mouseup", P), setTimeout(() => {
-        }, 100);
-        const L = typeof o == "function" ? o() : null, $ = i.offsetWidth;
-        if (L != null)
-          try {
-            const { state: G, dispatch: W } = n.view, U = G.doc.nodeAt(L);
-            if (U && U.type.name === "resizableImage") {
-              const K = G.tr.setNodeMarkup(L, void 0, {
->>>>>>> Stashed changes
                 ...U.attrs,
                 width: H
               });
               z(K);
             }
           } catch {
-<<<<<<< Updated upstream
             n.chain().focus().setNodeSelection(A).updateAttributes("resizableImage", {
               width: H
-=======
-            n.chain().focus().setNodeSelection(L).updateAttributes("resizableImage", {
-              width: $
->>>>>>> Stashed changes
             }).run();
           }
       };
       return d.addEventListener("mousedown", W), {
         dom: s,
-<<<<<<< Updated upstream
         update: (A) => A.type.name !== "resizableImage" ? !1 : (o = A, c(A.attrs.src), a.alt = A.attrs.alt || "", A.attrs.width && (a.style.width = `${A.attrs.width}px`), i(A.attrs.align || "left"), !0),
-=======
-        update: (L) => L.type.name !== "resizableImage" ? !1 : (r = L, c(L.attrs.src), i.alt = L.attrs.alt || "", L.attrs.width && (i.style.width = `${L.attrs.width}px`), a(L.attrs.align || "left"), !0),
->>>>>>> Stashed changes
         destroy: () => {
           d.removeEventListener("mousedown", W), D.removeEventListener("click", P), document.removeEventListener("click", C), f.remove();
         }
@@ -11468,13 +9991,8 @@ function Ob(e, t, n = "long") {
     timeZoneName: n
   }).format(t).split(/\s/g).slice(2).join(" ");
 }
-<<<<<<< Updated upstream
 const _b = {}, zn = {};
-function Wt(e, t) {
-=======
-const Bw = {}, Fn = {};
-function Ft(e, t) {
->>>>>>> Stashed changes
+function zt(e, t) {
   try {
     const r = (_b[e] ||= new Intl.DateTimeFormat("en-US", {
       timeZone: e,
@@ -11495,11 +10013,7 @@ function Ri(e, t) {
 class ot extends Date {
   //#region static
   constructor(...t) {
-<<<<<<< Updated upstream
-    super(), t.length > 1 && typeof t[t.length - 1] == "string" && (this.timeZone = t.pop()), this.internal = /* @__PURE__ */ new Date(), isNaN(Wt(this.timeZone, this)) ? this.setTime(NaN) : t.length ? typeof t[0] == "number" && (t.length === 1 || t.length === 2 && typeof t[1] != "number") ? this.setTime(t[0]) : typeof t[0] == "string" ? this.setTime(+new Date(t[0])) : t[0] instanceof Date ? this.setTime(+t[0]) : (this.setTime(+new Date(...t)), Ad(this), Rs(this)) : this.setTime(Date.now());
-=======
-    super(), t.length > 1 && typeof t[t.length - 1] == "string" && (this.timeZone = t.pop()), this.internal = /* @__PURE__ */ new Date(), isNaN(Ft(this.timeZone, this)) ? this.setTime(NaN) : t.length ? typeof t[0] == "number" && (t.length === 1 || t.length === 2 && typeof t[1] != "number") ? this.setTime(t[0]) : typeof t[0] == "string" ? this.setTime(+new Date(t[0])) : t[0] instanceof Date ? this.setTime(+t[0]) : (this.setTime(+new Date(...t)), Lu(this), Is(this)) : this.setTime(Date.now());
->>>>>>> Stashed changes
+    super(), t.length > 1 && typeof t[t.length - 1] == "string" && (this.timeZone = t.pop()), this.internal = /* @__PURE__ */ new Date(), isNaN(zt(this.timeZone, this)) ? this.setTime(NaN) : t.length ? typeof t[0] == "number" && (t.length === 1 || t.length === 2 && typeof t[1] != "number") ? this.setTime(t[0]) : typeof t[0] == "string" ? this.setTime(+new Date(t[0])) : t[0] instanceof Date ? this.setTime(+t[0]) : (this.setTime(+new Date(...t)), Ad(this), Rs(this)) : this.setTime(Date.now());
   }
   static tz(t, ...n) {
     return n.length ? new ot(...n, t) : new ot(Date.now(), t);
@@ -11510,7 +10024,7 @@ class ot extends Date {
     return new ot(+this, t);
   }
   getTimezoneOffset() {
-    const t = -Ft(this.timeZone, this);
+    const t = -zt(this.timeZone, this);
     return t > 0 ? Math.floor(t) : Math.ceil(t);
   }
   //#endregion
@@ -11537,15 +10051,14 @@ Object.getOwnPropertyNames(Date.prototype).forEach((e) => {
     return Date.prototype[t].apply(this, arguments), Rs(this), +this;
   }));
 });
-<<<<<<< Updated upstream
 function Rs(e) {
-  e.internal.setTime(+e), e.internal.setUTCSeconds(e.internal.getUTCSeconds() - Math.round(-Wt(e.timeZone, e) * 60));
+  e.internal.setTime(+e), e.internal.setUTCSeconds(e.internal.getUTCSeconds() - Math.round(-zt(e.timeZone, e) * 60));
 }
 function Hb(e) {
   Date.prototype.setFullYear.call(e, e.internal.getUTCFullYear(), e.internal.getUTCMonth(), e.internal.getUTCDate()), Date.prototype.setHours.call(e, e.internal.getUTCHours(), e.internal.getUTCMinutes(), e.internal.getUTCSeconds(), e.internal.getUTCMilliseconds()), Ad(e);
 }
 function Ad(e) {
-  const t = Wt(e.timeZone, e), n = t > 0 ? Math.floor(t) : Math.ceil(t), r = /* @__PURE__ */ new Date(+e);
+  const t = zt(e.timeZone, e), n = t > 0 ? Math.floor(t) : Math.ceil(t), r = /* @__PURE__ */ new Date(+e);
   r.setUTCHours(r.getUTCHours() - 1);
   const o = -(/* @__PURE__ */ new Date(+e)).getTimezoneOffset(), s = -(/* @__PURE__ */ new Date(+r)).getTimezoneOffset(), i = o - s, a = Date.prototype.getHours.apply(e) !== e.internal.getUTCHours();
   i && a && e.internal.setUTCMinutes(e.internal.getUTCMinutes() + i);
@@ -11553,12 +10066,12 @@ function Ad(e) {
   l && Date.prototype.setUTCMinutes.call(e, Date.prototype.getUTCMinutes.call(e) + l);
   const c = /* @__PURE__ */ new Date(+e);
   c.setUTCSeconds(0);
-  const d = o > 0 ? c.getSeconds() : (c.getSeconds() - 60) % 60, u = Math.round(-(Wt(e.timeZone, e) * 60)) % 60;
+  const d = o > 0 ? c.getSeconds() : (c.getSeconds() - 60) % 60, u = Math.round(-(zt(e.timeZone, e) * 60)) % 60;
   (u || d) && (e.internal.setUTCSeconds(e.internal.getUTCSeconds() + u), Date.prototype.setUTCSeconds.call(e, Date.prototype.getUTCSeconds.call(e) + u + d));
-  const f = Wt(e.timeZone, e), p = f > 0 ? Math.floor(f) : Math.ceil(f), m = -(/* @__PURE__ */ new Date(+e)).getTimezoneOffset() - p, y = p !== n, v = m - l;
+  const f = zt(e.timeZone, e), p = f > 0 ? Math.floor(f) : Math.ceil(f), m = -(/* @__PURE__ */ new Date(+e)).getTimezoneOffset() - p, y = p !== n, v = m - l;
   if (y && v) {
     Date.prototype.setUTCMinutes.call(e, Date.prototype.getUTCMinutes.call(e) + v);
-    const b = Wt(e.timeZone, e), x = b > 0 ? Math.floor(b) : Math.ceil(b), M = p - x;
+    const b = zt(e.timeZone, e), x = b > 0 ? Math.floor(b) : Math.ceil(b), M = p - x;
     M && (e.internal.setUTCMinutes(e.internal.getUTCMinutes() + M), Date.prototype.setUTCMinutes.call(e, Date.prototype.getUTCMinutes.call(e) + M));
   }
 }
@@ -11566,36 +10079,6 @@ class Ae extends ot {
   //#region static
   static tz(t, ...n) {
     return n.length ? new Ae(...n, t) : new Ae(Date.now(), t);
-=======
-function Is(e) {
-  e.internal.setTime(+e), e.internal.setUTCSeconds(e.internal.getUTCSeconds() - Math.round(-Ft(e.timeZone, e) * 60));
-}
-function Ww(e) {
-  Date.prototype.setFullYear.call(e, e.internal.getUTCFullYear(), e.internal.getUTCMonth(), e.internal.getUTCDate()), Date.prototype.setHours.call(e, e.internal.getUTCHours(), e.internal.getUTCMinutes(), e.internal.getUTCSeconds(), e.internal.getUTCMilliseconds()), Lu(e);
-}
-function Lu(e) {
-  const t = Ft(e.timeZone, e), n = t > 0 ? Math.floor(t) : Math.ceil(t), o = /* @__PURE__ */ new Date(+e);
-  o.setUTCHours(o.getUTCHours() - 1);
-  const r = -(/* @__PURE__ */ new Date(+e)).getTimezoneOffset(), s = -(/* @__PURE__ */ new Date(+o)).getTimezoneOffset(), a = r - s, i = Date.prototype.getHours.apply(e) !== e.internal.getUTCHours();
-  a && i && e.internal.setUTCMinutes(e.internal.getUTCMinutes() + a);
-  const l = r - n;
-  l && Date.prototype.setUTCMinutes.call(e, Date.prototype.getUTCMinutes.call(e) + l);
-  const c = /* @__PURE__ */ new Date(+e);
-  c.setUTCSeconds(0);
-  const u = r > 0 ? c.getSeconds() : (c.getSeconds() - 60) % 60, d = Math.round(-(Ft(e.timeZone, e) * 60)) % 60;
-  (d || u) && (e.internal.setUTCSeconds(e.internal.getUTCSeconds() + d), Date.prototype.setUTCSeconds.call(e, Date.prototype.getUTCSeconds.call(e) + d + u));
-  const f = Ft(e.timeZone, e), h = f > 0 ? Math.floor(f) : Math.ceil(f), p = -(/* @__PURE__ */ new Date(+e)).getTimezoneOffset() - h, b = h !== n, v = p - l;
-  if (b && v) {
-    Date.prototype.setUTCMinutes.call(e, Date.prototype.getUTCMinutes.call(e) + v);
-    const w = Ft(e.timeZone, e), N = w > 0 ? Math.floor(w) : Math.ceil(w), E = h - N;
-    E && (e.internal.setUTCMinutes(e.internal.getUTCMinutes() + E), Date.prototype.setUTCMinutes.call(e, Date.prototype.getUTCMinutes.call(e) + E));
-  }
-}
-class Le extends rt {
-  //#region static
-  static tz(t, ...n) {
-    return n.length ? new Le(...n, t) : new Le(Date.now(), t);
->>>>>>> Stashed changes
   }
   //#endregion
   //#region representation
@@ -11640,7 +10123,6 @@ class Le extends rt {
   }
   //#endregion
   withTimeZone(t) {
-<<<<<<< Updated upstream
     return new Ae(+this, t);
   }
   //#region date-fns integration
@@ -11650,17 +10132,6 @@ class Le extends rt {
   //#endregion
 }
 const Id = 6048e5, Bb = 864e5, Oi = Symbol.for("constructDateFrom");
-=======
-    return new Le(+this, t);
-  }
-  //#region date-fns integration
-  [Symbol.for("constructDateFrom")](t) {
-    return new Le(+new Date(t), this.timeZone);
-  }
-  //#endregion
-}
-const Pu = 6048e5, Fw = 864e5, Oa = Symbol.for("constructDateFrom");
->>>>>>> Stashed changes
 function ke(e, t) {
   return typeof e == "function" ? e(t) : e && typeof e == "object" && Oi in e ? e[Oi](t) : e instanceof Date ? new e.constructor(t) : new Date(t);
 }
@@ -12199,17 +10670,10 @@ const ww = /^(\d+)(th|st|nd|rd)?/i, xw = /\d+/i, kw = {
   short: /^(su|mo|tu|we|th|fr|sa)/i,
   abbreviated: /^(sun|mon|tue|wed|thu|fri|sat)/i,
   wide: /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)/i
-<<<<<<< Updated upstream
 }, Nw = {
   narrow: [/^s/i, /^m/i, /^t/i, /^w/i, /^t/i, /^f/i, /^s/i],
   any: [/^su/i, /^m/i, /^tu/i, /^w/i, /^th/i, /^f/i, /^sa/i]
 }, Lw = {
-=======
-}, Ly = {
-  narrow: [/^s/i, /^m/i, /^t/i, /^w/i, /^t/i, /^f/i, /^s/i],
-  any: [/^su/i, /^m/i, /^tu/i, /^w/i, /^th/i, /^f/i, /^sa/i]
-}, Py = {
->>>>>>> Stashed changes
   narrow: /^(a|p|mi|n|(in the|at) (morning|afternoon|evening|night))/i,
   any: /^([ap]\.?\s?m\.?|midnight|noon|(in the|at) (morning|afternoon|evening|night))/i
 }, Aw = {
@@ -12251,19 +10715,11 @@ const ww = /^(\d+)(th|st|nd|rd)?/i, xw = /\d+/i, kw = {
   day: $n({
     matchPatterns: Dw,
     defaultMatchWidth: "wide",
-<<<<<<< Updated upstream
     parsePatterns: Nw,
     defaultParseWidth: "any"
   }),
   dayPeriod: $n({
     matchPatterns: Lw,
-=======
-    parsePatterns: Ly,
-    defaultParseWidth: "any"
-  }),
-  dayPeriod: $n({
-    matchPatterns: Py,
->>>>>>> Stashed changes
     defaultMatchWidth: "any",
     parsePatterns: Aw,
     defaultParseWidth: "any"
@@ -12280,7 +10736,6 @@ const ww = /^(\d+)(th|st|nd|rd)?/i, xw = /\d+/i, kw = {
     firstWeekContainsDate: 1
   }
 };
-<<<<<<< Updated upstream
 function Rw(e, t) {
   const n = me(e, t?.in);
   return _d(n, Bd(n)) + 1;
@@ -12294,21 +10749,6 @@ function Fd(e, t) {
   i.setFullYear(r + 1, 0, s), i.setHours(0, 0, 0, 0);
   const a = vn(i, t), l = ke(t?.in || e, 0);
   l.setFullYear(r, 0, s), l.setHours(0, 0, 0, 0);
-=======
-function Oy(e, t) {
-  const n = pe(e, t?.in);
-  return _u(n, Hu(n)) + 1;
-}
-function Fu(e, t) {
-  const n = pe(e, t?.in), o = +Jn(n) - +Uw(n);
-  return Math.round(o / Pu) + 1;
-}
-function zu(e, t) {
-  const n = pe(e, t?.in), o = n.getFullYear(), r = ao(), s = t?.firstWeekContainsDate ?? t?.locale?.options?.firstWeekContainsDate ?? r.firstWeekContainsDate ?? r.locale?.options?.firstWeekContainsDate ?? 1, a = ke(t?.in || e, 0);
-  a.setFullYear(o + 1, 0, s), a.setHours(0, 0, 0, 0);
-  const i = vn(a, t), l = ke(t?.in || e, 0);
-  l.setFullYear(o, 0, s), l.setHours(0, 0, 0, 0);
->>>>>>> Stashed changes
   const c = vn(l, t);
   return +n >= +a ? r + 1 : +n >= +c ? r : r - 1;
 }
@@ -12316,21 +10756,15 @@ function Pw(e, t) {
   const n = ir(), r = t?.firstWeekContainsDate ?? t?.locale?.options?.firstWeekContainsDate ?? n.firstWeekContainsDate ?? n.locale?.options?.firstWeekContainsDate ?? 1, o = Fd(e, t), s = ke(t?.in || e, 0);
   return s.setFullYear(o, 0, r), s.setHours(0, 0, 0, 0), vn(s, t);
 }
-<<<<<<< Updated upstream
 function Ud(e, t) {
   const n = me(e, t?.in), r = +vn(n, t) - +Pw(n, t);
   return Math.round(r / Id) + 1;
-=======
-function Uu(e, t) {
-  const n = pe(e, t?.in), o = +vn(n, t) - +_y(n, t);
-  return Math.round(o / Pu) + 1;
->>>>>>> Stashed changes
 }
 function pe(e, t) {
   const n = e < 0 ? "-" : "", r = Math.abs(e).toString().padStart(t, "0");
   return n + r;
 }
-const Ct = {
+const Et = {
   // Year
   y(e, t) {
     const n = e.getFullYear(), r = n > 0 ? n : 1 - n;
@@ -12416,7 +10850,7 @@ const Ct = {
       const r = e.getFullYear(), o = r > 0 ? r : 1 - r;
       return n.ordinalNumber(o, { unit: "year" });
     }
-    return Ct.y(e, t);
+    return Et.y(e, t);
   },
   // Local week-numbering year
   Y: function(e, t, n, r) {
@@ -12519,7 +10953,7 @@ const Ct = {
     switch (t) {
       case "M":
       case "MM":
-        return Ct.M(e, t);
+        return Et.M(e, t);
       // 1st, 2nd, ..., 12th
       case "Mo":
         return n.ordinalNumber(r + 1, { unit: "month" });
@@ -12584,7 +11018,7 @@ const Ct = {
   },
   // Day of the month
   d: function(e, t, n) {
-    return t === "do" ? n.ordinalNumber(e.getDate(), { unit: "date" }) : Ct.d(e, t);
+    return t === "do" ? n.ordinalNumber(e.getDate(), { unit: "date" }) : Et.d(e, t);
   },
   // Day of year
   D: function(e, t, n) {
@@ -12830,11 +11264,11 @@ const Ct = {
       let r = e.getHours() % 12;
       return r === 0 && (r = 12), n.ordinalNumber(r, { unit: "hour" });
     }
-    return Ct.h(e, t);
+    return Et.h(e, t);
   },
   // Hour [0-23]
   H: function(e, t, n) {
-    return t === "Ho" ? n.ordinalNumber(e.getHours(), { unit: "hour" }) : Ct.H(e, t);
+    return t === "Ho" ? n.ordinalNumber(e.getHours(), { unit: "hour" }) : Et.H(e, t);
   },
   // Hour [0-11]
   K: function(e, t, n) {
@@ -12848,15 +11282,15 @@ const Ct = {
   },
   // Minute
   m: function(e, t, n) {
-    return t === "mo" ? n.ordinalNumber(e.getMinutes(), { unit: "minute" }) : Ct.m(e, t);
+    return t === "mo" ? n.ordinalNumber(e.getMinutes(), { unit: "minute" }) : Et.m(e, t);
   },
   // Second
   s: function(e, t, n) {
-    return t === "so" ? n.ordinalNumber(e.getSeconds(), { unit: "second" }) : Ct.s(e, t);
+    return t === "so" ? n.ordinalNumber(e.getSeconds(), { unit: "second" }) : Et.s(e, t);
   },
   // Fraction of second
   S: function(e, t) {
-    return Ct.S(e, t);
+    return Et.S(e, t);
   },
   // Timezone (ISO-8601. If offset is 0, output is always `'Z'`)
   X: function(e, t, n) {
@@ -12872,11 +11306,7 @@ const Ct = {
       // so this token always has the same output as `XX`
       case "XXXX":
       case "XX":
-<<<<<<< Updated upstream
-        return $t(r);
-=======
-        return Bt(o);
->>>>>>> Stashed changes
+        return Ht(r);
       // Hours, minutes and optional seconds with `:` delimiter
       // Note: neither ISO-8601 nor JavaScript supports seconds in timezone offsets
       // so this token always has the same output as `XXX`
@@ -12884,11 +11314,7 @@ const Ct = {
       case "XXX":
       // Hours and minutes with `:` delimiter
       default:
-<<<<<<< Updated upstream
-        return $t(r, ":");
-=======
-        return Bt(o, ":");
->>>>>>> Stashed changes
+        return Ht(r, ":");
     }
   },
   // Timezone (ISO-8601. If offset is 0, output is `'+00:00'` or equivalent)
@@ -12903,11 +11329,7 @@ const Ct = {
       // so this token always has the same output as `xx`
       case "xxxx":
       case "xx":
-<<<<<<< Updated upstream
-        return $t(r);
-=======
-        return Bt(o);
->>>>>>> Stashed changes
+        return Ht(r);
       // Hours, minutes and optional seconds with `:` delimiter
       // Note: neither ISO-8601 nor JavaScript supports seconds in timezone offsets
       // so this token always has the same output as `xxx`
@@ -12915,11 +11337,7 @@ const Ct = {
       case "xxx":
       // Hours and minutes with `:` delimiter
       default:
-<<<<<<< Updated upstream
-        return $t(r, ":");
-=======
-        return Bt(o, ":");
->>>>>>> Stashed changes
+        return Ht(r, ":");
     }
   },
   // Timezone (GMT)
@@ -12934,11 +11352,7 @@ const Ct = {
       // Long
       case "OOOO":
       default:
-<<<<<<< Updated upstream
-        return "GMT" + $t(r, ":");
-=======
-        return "GMT" + Bt(o, ":");
->>>>>>> Stashed changes
+        return "GMT" + Ht(r, ":");
     }
   },
   // Timezone (specific non-location)
@@ -12953,11 +11367,7 @@ const Ct = {
       // Long
       case "zzzz":
       default:
-<<<<<<< Updated upstream
-        return "GMT" + $t(r, ":");
-=======
-        return "GMT" + Bt(o, ":");
->>>>>>> Stashed changes
+        return "GMT" + Ht(r, ":");
     }
   },
   // Seconds timestamp
@@ -12974,21 +11384,12 @@ function Hi(e, t = "") {
   const n = e > 0 ? "-" : "+", r = Math.abs(e), o = Math.trunc(r / 60), s = r % 60;
   return s === 0 ? n + String(o) : n + String(o) + t + pe(s, 2);
 }
-<<<<<<< Updated upstream
 function Bi(e, t) {
-  return e % 60 === 0 ? (e > 0 ? "-" : "+") + pe(Math.abs(e) / 60, 2) : $t(e, t);
+  return e % 60 === 0 ? (e > 0 ? "-" : "+") + pe(Math.abs(e) / 60, 2) : Ht(e, t);
 }
-function $t(e, t = "") {
+function Ht(e, t = "") {
   const n = e > 0 ? "-" : "+", r = Math.abs(e), o = pe(Math.trunc(r / 60), 2), s = pe(r % 60, 2);
   return n + o + t + s;
-=======
-function Ha(e, t) {
-  return e % 60 === 0 ? (e > 0 ? "-" : "+") + fe(Math.abs(e) / 60, 2) : Bt(e, t);
-}
-function Bt(e, t = "") {
-  const n = e > 0 ? "-" : "+", o = Math.abs(e), r = fe(Math.trunc(o / 60), 2), s = fe(o % 60, 2);
-  return n + r + t + s;
->>>>>>> Stashed changes
 }
 const Wi = (e, t) => {
   switch (e) {
@@ -13160,7 +11561,6 @@ class Ue {
    * @param overrides Custom overrides for the date library functions.
    */
   constructor(t, n) {
-<<<<<<< Updated upstream
     this.Date = Date, this.today = () => this.overrides?.today ? this.overrides.today() : this.options.timeZone ? Ae.tz(this.options.timeZone) : new this.Date(), this.newDate = (r, o, s) => this.overrides?.newDate ? this.overrides.newDate(r, o, s) : this.options.timeZone ? new Ae(r, o, s, this.options.timeZone) : new Date(r, o, s), this.addDays = (r, o) => this.overrides?.addDays ? this.overrides.addDays(r, o) : Rd(r, o), this.addMonths = (r, o) => this.overrides?.addMonths ? this.overrides.addMonths(r, o) : Pd(r, o), this.addWeeks = (r, o) => this.overrides?.addWeeks ? this.overrides.addWeeks(r, o) : Fb(r, o), this.addYears = (r, o) => this.overrides?.addYears ? this.overrides.addYears(r, o) : Ub(r, o), this.differenceInCalendarDays = (r, o) => this.overrides?.differenceInCalendarDays ? this.overrides.differenceInCalendarDays(r, o) : _d(r, o), this.differenceInCalendarMonths = (r, o) => this.overrides?.differenceInCalendarMonths ? this.overrides.differenceInCalendarMonths(r, o) : Gb(r, o), this.eachMonthOfInterval = (r) => this.overrides?.eachMonthOfInterval ? this.overrides.eachMonthOfInterval(r) : Xb(r), this.eachYearOfInterval = (r) => {
       const o = this.overrides?.eachYearOfInterval ? this.overrides.eachYearOfInterval(r) : Jb(r), s = new Set(o.map((a) => this.getYear(a)));
       if (s.size === o.length)
@@ -13173,20 +11573,6 @@ class Ue {
       const i = this.overrides?.format ? this.overrides.format(r, o, this.options) : qw(r, o, this.options);
       return this.options.numerals && this.options.numerals !== "latn" ? this.replaceDigits(i) : i;
     }, this.getISOWeek = (r) => this.overrides?.getISOWeek ? this.overrides.getISOWeek(r) : zd(r), this.getMonth = (r, o) => this.overrides?.getMonth ? this.overrides.getMonth(r, this.options) : Qw(r, this.options), this.getYear = (r, o) => this.overrides?.getYear ? this.overrides.getYear(r, this.options) : Jw(r, this.options), this.getWeek = (r, o) => this.overrides?.getWeek ? this.overrides.getWeek(r, this.options) : Ud(r, this.options), this.isAfter = (r, o) => this.overrides?.isAfter ? this.overrides.isAfter(r, o) : e0(r, o), this.isBefore = (r, o) => this.overrides?.isBefore ? this.overrides.isBefore(r, o) : t0(r, o), this.isDate = (r) => this.overrides?.isDate ? this.overrides.isDate(r) : $d(r), this.isSameDay = (r, o) => this.overrides?.isSameDay ? this.overrides.isSameDay(r, o) : Vb(r, o), this.isSameMonth = (r, o) => this.overrides?.isSameMonth ? this.overrides.isSameMonth(r, o) : n0(r, o), this.isSameYear = (r, o) => this.overrides?.isSameYear ? this.overrides.isSameYear(r, o) : r0(r, o), this.max = (r) => this.overrides?.max ? this.overrides.max(r) : Yb(r), this.min = (r) => this.overrides?.min ? this.overrides.min(r) : jb(r), this.setMonth = (r, o) => this.overrides?.setMonth ? this.overrides.setMonth(r, o) : o0(r, o), this.setYear = (r, o) => this.overrides?.setYear ? this.overrides.setYear(r, o) : s0(r, o), this.startOfBroadcastWeek = (r, o) => this.overrides?.startOfBroadcastWeek ? this.overrides.startOfBroadcastWeek(r, this) : jd(r, this), this.startOfDay = (r) => this.overrides?.startOfDay ? this.overrides.startOfDay(r) : er(r), this.startOfISOWeek = (r) => this.overrides?.startOfISOWeek ? this.overrides.startOfISOWeek(r) : Jn(r), this.startOfMonth = (r) => this.overrides?.startOfMonth ? this.overrides.startOfMonth(r) : Zb(r), this.startOfWeek = (r, o) => this.overrides?.startOfWeek ? this.overrides.startOfWeek(r, this.options) : vn(r, this.options), this.startOfYear = (r) => this.overrides?.startOfYear ? this.overrides.startOfYear(r) : Bd(r), this.options = { locale: wa, ...t }, this.overrides = n;
-=======
-    this.Date = Date, this.today = () => this.overrides?.today ? this.overrides.today() : this.options.timeZone ? Le.tz(this.options.timeZone) : new this.Date(), this.newDate = (o, r, s) => this.overrides?.newDate ? this.overrides.newDate(o, r, s) : this.options.timeZone ? new Le(o, r, s, this.options.timeZone) : new Date(o, r, s), this.addDays = (o, r) => this.overrides?.addDays ? this.overrides.addDays(o, r) : Iu(o, r), this.addMonths = (o, r) => this.overrides?.addMonths ? this.overrides.addMonths(o, r) : Ru(o, r), this.addWeeks = (o, r) => this.overrides?.addWeeks ? this.overrides.addWeeks(o, r) : Yw(o, r), this.addYears = (o, r) => this.overrides?.addYears ? this.overrides.addYears(o, r) : jw(o, r), this.differenceInCalendarDays = (o, r) => this.overrides?.differenceInCalendarDays ? this.overrides.differenceInCalendarDays(o, r) : _u(o, r), this.differenceInCalendarMonths = (o, r) => this.overrides?.differenceInCalendarMonths ? this.overrides.differenceInCalendarMonths(o, r) : Xw(o, r), this.eachMonthOfInterval = (o) => this.overrides?.eachMonthOfInterval ? this.overrides.eachMonthOfInterval(o) : Qw(o), this.eachYearOfInterval = (o) => {
-      const r = this.overrides?.eachYearOfInterval ? this.overrides.eachYearOfInterval(o) : ty(o), s = new Set(r.map((i) => this.getYear(i)));
-      if (s.size === r.length)
-        return r;
-      const a = [];
-      return s.forEach((i) => {
-        a.push(new Date(i, 0, 1));
-      }), a;
-    }, this.endOfBroadcastWeek = (o) => this.overrides?.endOfBroadcastWeek ? this.overrides.endOfBroadcastWeek(o) : u0(o, this), this.endOfISOWeek = (o) => this.overrides?.endOfISOWeek ? this.overrides.endOfISOWeek(o) : ny(o), this.endOfMonth = (o) => this.overrides?.endOfMonth ? this.overrides.endOfMonth(o) : Zw(o), this.endOfWeek = (o, r) => this.overrides?.endOfWeek ? this.overrides.endOfWeek(o, r) : Wu(o, this.options), this.endOfYear = (o) => this.overrides?.endOfYear ? this.overrides.endOfYear(o) : ey(o), this.format = (o, r, s) => {
-      const a = this.overrides?.format ? this.overrides.format(o, r, this.options) : Zy(o, r, this.options);
-      return this.options.numerals && this.options.numerals !== "latn" ? this.replaceDigits(a) : a;
-    }, this.getISOWeek = (o) => this.overrides?.getISOWeek ? this.overrides.getISOWeek(o) : Fu(o), this.getMonth = (o, r) => this.overrides?.getMonth ? this.overrides.getMonth(o, this.options) : e0(o, this.options), this.getYear = (o, r) => this.overrides?.getYear ? this.overrides.getYear(o, this.options) : t0(o, this.options), this.getWeek = (o, r) => this.overrides?.getWeek ? this.overrides.getWeek(o, this.options) : Uu(o, this.options), this.isAfter = (o, r) => this.overrides?.isAfter ? this.overrides.isAfter(o, r) : n0(o, r), this.isBefore = (o, r) => this.overrides?.isBefore ? this.overrides.isBefore(o, r) : o0(o, r), this.isDate = (o) => this.overrides?.isDate ? this.overrides.isDate(o) : $u(o), this.isSameDay = (o, r) => this.overrides?.isSameDay ? this.overrides.isSameDay(o, r) : Gw(o, r), this.isSameMonth = (o, r) => this.overrides?.isSameMonth ? this.overrides.isSameMonth(o, r) : r0(o, r), this.isSameYear = (o, r) => this.overrides?.isSameYear ? this.overrides.isSameYear(o, r) : s0(o, r), this.max = (o) => this.overrides?.max ? this.overrides.max(o) : Vw(o), this.min = (o) => this.overrides?.min ? this.overrides.min(o) : Kw(o), this.setMonth = (o, r) => this.overrides?.setMonth ? this.overrides.setMonth(o, r) : i0(o, r), this.setYear = (o, r) => this.overrides?.setYear ? this.overrides.setYear(o, r) : a0(o, r), this.startOfBroadcastWeek = (o, r) => this.overrides?.startOfBroadcastWeek ? this.overrides.startOfBroadcastWeek(o, this) : ju(o, this), this.startOfDay = (o) => this.overrides?.startOfDay ? this.overrides.startOfDay(o) : eo(o), this.startOfISOWeek = (o) => this.overrides?.startOfISOWeek ? this.overrides.startOfISOWeek(o) : Jn(o), this.startOfMonth = (o) => this.overrides?.startOfMonth ? this.overrides.startOfMonth(o) : Jw(o), this.startOfWeek = (o, r) => this.overrides?.startOfWeek ? this.overrides.startOfWeek(o, this.options) : vn(o, this.options), this.startOfYear = (o) => this.overrides?.startOfYear ? this.overrides.startOfYear(o) : Hu(o), this.options = { locale: yi, ...t }, this.overrides = n;
->>>>>>> Stashed changes
   }
   /**
    * Generates a mapping of Arabic digits (0-9) to the target numbering system
@@ -13425,14 +11811,10 @@ function D0(e) {
   const { rootRef: t, ...n } = e;
   return X.createElement("div", { ...n, ref: t });
 }
-<<<<<<< Updated upstream
 function N0(e) {
-=======
-function L0(e) {
->>>>>>> Stashed changes
   return X.createElement("select", { ...e });
 }
-function P0(e) {
+function L0(e) {
   const { week: t, ...n } = e;
   return X.createElement("tr", { ...n });
 }
@@ -13473,7 +11855,6 @@ const $0 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   Month: b0,
   MonthCaption: w0,
   MonthGrid: x0,
-<<<<<<< Updated upstream
   Months: k0,
   MonthsDropdown: C0,
   Nav: E0,
@@ -13489,23 +11870,6 @@ const $0 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   Weekdays: I0,
   Weeks: O0,
   YearsDropdown: _0
-=======
-  Months: C0,
-  MonthsDropdown: E0,
-  Nav: T0,
-  NextMonthButton: S0,
-  Option: M0,
-  PreviousMonthButton: D0,
-  Root: A0,
-  Select: L0,
-  Week: P0,
-  WeekNumber: O0,
-  WeekNumberHeader: _0,
-  Weekday: I0,
-  Weekdays: R0,
-  Weeks: $0,
-  YearsDropdown: B0
->>>>>>> Stashed changes
 }, Symbol.toStringTag, { value: "Module" }));
 function ft(e, t, n = !1, r = lt) {
   let { from: o, to: s } = e;
@@ -13983,13 +12347,8 @@ function Dx(e, t, n, r, o) {
     }
   };
 }
-<<<<<<< Updated upstream
 function Nx(e, t) {
   const { selected: n, required: r, onSelect: o } = e, [s, i] = No(n, o ? n : void 0), a = o ? n : s, { isSameDay: l } = t, c = (p) => a?.some((g) => l(g, p)) ?? !1, { min: d, max: u } = e;
-=======
-function LN(e, t) {
-  const { selected: n, required: o, onSelect: r } = e, [s, a] = Dr(n, r ? n : void 0), i = r ? n : s, { isSameDay: l } = t, c = (h) => i?.some((g) => l(g, h)) ?? !1, { min: u, max: d } = e;
->>>>>>> Stashed changes
   return {
     selected: a,
     select: (p, g, m) => {
@@ -14005,7 +12364,6 @@ function LN(e, t) {
     isSelected: c
   };
 }
-<<<<<<< Updated upstream
 function Lx(e, t, n = 0, r = 0, o = !1, s = lt) {
   const { from: i, to: a } = t || {}, { isSameDay: l, isAfter: c, isBefore: d } = s;
   let u;
@@ -14016,20 +12374,6 @@ function Lx(e, t, n = 0, r = 0, o = !1, s = lt) {
   else if (i && a)
     if (l(i, e) && l(a, e))
       o ? u = { from: i, to: a } : u = void 0;
-=======
-function PN(e, t, n = 0, o = 0, r = !1, s = lt) {
-  const { from: a, to: i } = t || {}, { isSameDay: l, isAfter: c, isBefore: u } = s;
-  let d;
-  if (!a && !i)
-    d = { from: e, to: n > 0 ? void 0 : e };
-  else if (a && !i)
-    l(a, e) ? n === 0 ? d = { from: a, to: e } : r ? d = { from: a, to: void 0 } : d = void 0 : u(e, a) ? d = { from: e, to: a } : d = { from: a, to: e };
-  else if (a && i)
-    if (l(a, e) && l(i, e))
-      r ? d = { from: a, to: i } : d = void 0;
-    else if (l(a, e))
-      d = { from: a, to: n > 0 ? void 0 : e };
->>>>>>> Stashed changes
     else if (l(i, e))
       u = { from: i, to: n > 0 ? void 0 : e };
     else if (l(a, e))
@@ -14085,15 +12429,9 @@ function Rx(e, t) {
   const { disabled: n, excludeDisabled: r, selected: o, required: s, onSelect: i } = e, [a, l] = No(o, i ? o : void 0), c = i ? o : a;
   return {
     selected: c,
-<<<<<<< Updated upstream
     select: (f, p, g) => {
       const { min: m, max: y } = e, v = f ? Lx(f, c, m, y, s, t) : void 0;
       return r && n && v?.from && v.to && Ix({ from: v.from, to: v.to }, n, t) && (v.from = f, v.to = void 0), i || l(v), i?.(v, f, p, g), v;
-=======
-    select: (f, h, g) => {
-      const { min: p, max: b } = e, v = f ? PN(f, c, p, b, s, t) : void 0;
-      return o && n && v?.from && v.to && RN({ from: v.from, to: v.to }, n, t) && (v.from = f, v.to = void 0), a || l(v), a?.(v, f, h, g), v;
->>>>>>> Stashed changes
     },
     isSelected: (f) => c && ft(c, f, !1, t)
   };
@@ -14109,13 +12447,8 @@ function Px(e, t) {
     isSelected: (u) => a ? l(a, u) : !1
   };
 }
-<<<<<<< Updated upstream
 function Ox(e, t) {
   const n = Px(e, t), r = Nx(e, t), o = Rx(e, t);
-=======
-function $N(e, t) {
-  const n = _N(e, t), o = LN(e, t), r = ON(e, t);
->>>>>>> Stashed changes
   switch (e.mode) {
     case "single":
       return n;
@@ -14131,21 +12464,12 @@ function _x(e) {
   let t = e;
   t.timeZone && (t = {
     ...e
-<<<<<<< Updated upstream
   }, t.today && (t.today = new Ae(t.today, t.timeZone)), t.month && (t.month = new Ae(t.month, t.timeZone)), t.defaultMonth && (t.defaultMonth = new Ae(t.defaultMonth, t.timeZone)), t.startMonth && (t.startMonth = new Ae(t.startMonth, t.timeZone)), t.endMonth && (t.endMonth = new Ae(t.endMonth, t.timeZone)), t.mode === "single" && t.selected ? t.selected = new Ae(t.selected, t.timeZone) : t.mode === "multiple" && t.selected ? t.selected = t.selected?.map((le) => new Ae(le, t.timeZone)) : t.mode === "range" && t.selected && (t.selected = {
     from: t.selected.from ? new Ae(t.selected.from, t.timeZone) : void 0,
     to: t.selected.to ? new Ae(t.selected.to, t.timeZone) : void 0
   }));
-  const { components: n, formatters: r, labels: o, dateLib: s, locale: i, classNames: a } = Tt(() => {
+  const { components: n, formatters: r, labels: o, dateLib: s, locale: i, classNames: a } = St(() => {
     const le = { ...wa, ...t.locale };
-=======
-  }, t.today && (t.today = new Le(t.today, t.timeZone)), t.month && (t.month = new Le(t.month, t.timeZone)), t.defaultMonth && (t.defaultMonth = new Le(t.defaultMonth, t.timeZone)), t.startMonth && (t.startMonth = new Le(t.startMonth, t.timeZone)), t.endMonth && (t.endMonth = new Le(t.endMonth, t.timeZone)), t.mode === "single" && t.selected ? t.selected = new Le(t.selected, t.timeZone) : t.mode === "multiple" && t.selected ? t.selected = t.selected?.map((le) => new Le(le, t.timeZone)) : t.mode === "range" && t.selected && (t.selected = {
-    from: t.selected.from ? new Le(t.selected.from, t.timeZone) : void 0,
-    to: t.selected.to ? new Le(t.selected.to, t.timeZone) : void 0
-  }));
-  const { components: n, formatters: o, labels: r, dateLib: s, locale: a, classNames: i } = St(() => {
-    const le = { ...yi, ...t.locale };
->>>>>>> Stashed changes
     return {
       dateLib: new Ue({
         locale: le,
@@ -14176,12 +12500,11 @@ function _x(e) {
     t.formatters,
     t.labels,
     t.classNames
-<<<<<<< Updated upstream
-  ]), { captionLayout: l, mode: c, navLayout: d, numberOfMonths: u = 1, onDayBlur: f, onDayClick: p, onDayFocus: g, onDayKeyDown: m, onDayMouseEnter: y, onDayMouseLeave: v, onNextClick: b, onPrevClick: x, showWeekNumber: M, styles: w } = t, { formatCaption: E, formatDay: S, formatMonthDropdown: k, formatWeekNumber: N, formatWeekNumberHeader: C, formatWeekdayName: D, formatYearDropdown: L } = r, P = Mx(t, s), { days: O, months: $, navStart: W, navEnd: V, previousMonth: R, nextMonth: A, goToMonth: H } = P, G = H0(O, t, W, V, s), { isSelected: z, select: U, selected: K } = Ox(t, s) ?? {}, { blur: B, focused: J, isFocusTarget: _, moveFocus: ee, setFocused: ne } = Dx(t, P, G, z ?? (() => !1), s), { labelDayButton: ue, labelGridcell: ve, labelGrid: be, labelMonthDropdown: Ye, labelNav: At, labelPrevious: wt, labelNext: Dn, labelWeekday: Nn, labelWeekNumber: dr, labelWeekNumberHeader: ur, labelYearDropdown: fr } = o, pr = Tt(() => J0(s, t.ISOWeek), [s, t.ISOWeek]), Ln = c !== void 0 || p !== void 0, Kt = F(() => {
+  ]), { captionLayout: l, mode: c, navLayout: d, numberOfMonths: u = 1, onDayBlur: f, onDayClick: p, onDayFocus: g, onDayKeyDown: m, onDayMouseEnter: y, onDayMouseLeave: v, onNextClick: b, onPrevClick: x, showWeekNumber: M, styles: w } = t, { formatCaption: E, formatDay: S, formatMonthDropdown: k, formatWeekNumber: N, formatWeekNumberHeader: C, formatWeekdayName: D, formatYearDropdown: L } = r, P = Mx(t, s), { days: O, months: $, navStart: W, navEnd: V, previousMonth: R, nextMonth: A, goToMonth: H } = P, G = H0(O, t, W, V, s), { isSelected: z, select: U, selected: K } = Ox(t, s) ?? {}, { blur: B, focused: J, isFocusTarget: _, moveFocus: ee, setFocused: ne } = Dx(t, P, G, z ?? (() => !1), s), { labelDayButton: ue, labelGridcell: ve, labelGrid: be, labelMonthDropdown: Ye, labelNav: It, labelPrevious: wt, labelNext: Dn, labelWeekday: Nn, labelWeekNumber: dr, labelWeekNumberHeader: ur, labelYearDropdown: fr } = o, pr = St(() => J0(s, t.ISOWeek), [s, t.ISOWeek]), Ln = c !== void 0 || p !== void 0, Gt = F(() => {
     R && (H(R), x?.(R));
-  }, [R, H, x]), Gt = F(() => {
+  }, [R, H, x]), qt = F(() => {
     A && (H(A), b?.(A));
-  }, [H, A, b]), qt = F((le, he) => (oe) => {
+  }, [H, A, b]), Xt = F((le, he) => (oe) => {
     oe.preventDefault(), oe.stopPropagation(), ne(le), U?.(le.date, he, oe), p?.(le.date, he, oe);
   }, [U, p, ne]), hr = F((le, he) => (oe) => {
     ne(le), g?.(le.date, he, oe);
@@ -14189,20 +12512,6 @@ function _x(e) {
     B(), f?.(le.date, he, oe);
   }, [B, f]), gr = F((le, he) => (oe) => {
     const fe = {
-=======
-  ]), { captionLayout: l, mode: c, navLayout: u, numberOfMonths: d = 1, onDayBlur: f, onDayClick: h, onDayFocus: g, onDayKeyDown: p, onDayMouseEnter: b, onDayMouseLeave: v, onNextClick: w, onPrevClick: N, showWeekNumber: E, styles: y } = t, { formatCaption: C, formatDay: S, formatMonthDropdown: k, formatWeekNumber: D, formatWeekNumberHeader: x, formatWeekdayName: M, formatYearDropdown: A } = o, I = SN(t, s), { days: R, months: _, navStart: H, navEnd: V, previousMonth: P, nextMonth: L, goToMonth: $ } = I, G = W0(R, t, H, V, s), { isSelected: W, select: U, selected: K } = $N(t, s) ?? {}, { blur: B, focused: J, isFocusTarget: O, moveFocus: ee, setFocused: ne } = AN(t, I, G, W ?? (() => !1), s), { labelDayButton: de, labelGridcell: be, labelGrid: ve, labelMonthDropdown: Ye, labelNav: Pt, labelPrevious: yt, labelNext: Mn, labelWeekday: Dn, labelWeekNumber: uo, labelWeekNumberHeader: mo, labelYearDropdown: fo } = r, ho = St(() => tN(s, t.ISOWeek), [s, t.ISOWeek]), An = c !== void 0 || h !== void 0, Gt = F(() => {
-    P && ($(P), N?.(P));
-  }, [P, $, N]), qt = F(() => {
-    L && ($(L), w?.(L));
-  }, [$, L, w]), Xt = F((le, he) => (re) => {
-    re.preventDefault(), re.stopPropagation(), ne(le), U?.(le.date, he, re), h?.(le.date, he, re);
-  }, [U, h, ne]), po = F((le, he) => (re) => {
-    ne(le), g?.(le.date, he, re);
-  }, [g, ne]), go = F((le, he) => (re) => {
-    B(), f?.(le.date, he, re);
-  }, [B, f]), bo = F((le, he) => (re) => {
-    const me = {
->>>>>>> Stashed changes
       ArrowLeft: [
         oe.shiftKey ? "month" : "day",
         t.dir === "rtl" ? "after" : "before"
@@ -14218,7 +12527,6 @@ function _x(e) {
       Home: ["startOfWeek", "before"],
       End: ["endOfWeek", "after"]
     };
-<<<<<<< Updated upstream
     if (fe[oe.key]) {
       oe.preventDefault(), oe.stopPropagation();
       const [Te, de] = fe[oe.key];
@@ -14235,38 +12543,13 @@ function _x(e) {
   }, [s, H]), Ro = F((le) => (he) => {
     const oe = Number(he.target.value), fe = s.setYear(s.startOfMonth(le), oe);
     H(fe);
-  }, [s, H]), { className: Po, style: Oo } = Tt(() => ({
+  }, [s, H]), { className: Po, style: Oo } = St(() => ({
     className: [a[te.Root], t.className].filter(Boolean).join(" "),
     style: { ...w?.[te.Root], ...t.style }
   }), [a, t.className, t.style, w]), vr = z0(t), br = Y(null);
   gx(br, !!t.animate, {
     classNames: a,
     months: $,
-=======
-    if (me[re.key]) {
-      re.preventDefault(), re.stopPropagation();
-      const [Te, ue] = me[re.key];
-      ee(Te, ue);
-    }
-    p?.(le.date, he, re);
-  }, [ee, p, t.dir]), vo = F((le, he) => (re) => {
-    b?.(le.date, he, re);
-  }, [b]), Lr = F((le, he) => (re) => {
-    v?.(le.date, he, re);
-  }, [v]), Pr = F((le) => (he) => {
-    const re = Number(he.target.value), me = s.setMonth(s.startOfMonth(le), re);
-    $(me);
-  }, [s, $]), Ir = F((le) => (he) => {
-    const re = Number(he.target.value), me = s.setYear(s.startOfMonth(le), re);
-    $(me);
-  }, [s, $]), { className: Rr, style: Or } = St(() => ({
-    className: [i[te.Root], t.className].filter(Boolean).join(" "),
-    style: { ...y?.[te.Root], ...t.style }
-  }), [i, t.className, t.style, y]), wo = U0(t), yo = Y(null);
-  vN(yo, !!t.animate, {
-    classNames: i,
-    months: _,
->>>>>>> Stashed changes
     focused: J,
     dateLib: s
   });
@@ -14274,19 +12557,11 @@ function _x(e) {
     dayPickerProps: t,
     selected: K,
     select: U,
-<<<<<<< Updated upstream
     isSelected: z,
     months: $,
     nextMonth: A,
     previousMonth: R,
     goToMonth: H,
-=======
-    isSelected: W,
-    months: _,
-    nextMonth: L,
-    previousMonth: P,
-    goToMonth: $,
->>>>>>> Stashed changes
     getModifiers: G,
     components: n,
     classNames: a,
@@ -14302,15 +12577,9 @@ function _x(e) {
       { rootRef: t.animate ? br : void 0, className: Po, style: Oo, dir: t.dir, id: t.id, lang: t.lang, nonce: t.nonce, title: t.title, role: t.role, "aria-label": t["aria-label"], "aria-labelledby": t["aria-labelledby"], ...vr },
       X.createElement(
         n.Months,
-<<<<<<< Updated upstream
         { className: a[te.Months], style: w?.[te.Months] },
-        !t.hideNavigation && !d && X.createElement(n.Nav, { "data-animated-nav": t.animate ? "true" : void 0, className: a[te.Nav], style: w?.[te.Nav], "aria-label": At(), onPreviousClick: Kt, onNextClick: Gt, previousMonth: R, nextMonth: A }),
+        !t.hideNavigation && !d && X.createElement(n.Nav, { "data-animated-nav": t.animate ? "true" : void 0, className: a[te.Nav], style: w?.[te.Nav], "aria-label": It(), onPreviousClick: Gt, onNextClick: qt, previousMonth: R, nextMonth: A }),
         $.map((le, he) => X.createElement(
-=======
-        { className: i[te.Months], style: y?.[te.Months] },
-        !t.hideNavigation && !u && X.createElement(n.Nav, { "data-animated-nav": t.animate ? "true" : void 0, className: i[te.Nav], style: y?.[te.Nav], "aria-label": Pt(), onPreviousClick: Gt, onNextClick: qt, previousMonth: P, nextMonth: L }),
-        _.map((le, he) => X.createElement(
->>>>>>> Stashed changes
           n.Month,
           {
             "data-animated-month": t.animate ? "true" : void 0,
@@ -14323,25 +12592,15 @@ function _x(e) {
           },
           d === "around" && !t.hideNavigation && he === 0 && X.createElement(
             n.PreviousMonthButton,
-<<<<<<< Updated upstream
-            { type: "button", className: a[te.PreviousMonthButton], tabIndex: R ? void 0 : -1, "aria-disabled": R ? void 0 : !0, "aria-label": wt(R), onClick: Kt, "data-animated-button": t.animate ? "true" : void 0 },
+            { type: "button", className: a[te.PreviousMonthButton], tabIndex: R ? void 0 : -1, "aria-disabled": R ? void 0 : !0, "aria-label": wt(R), onClick: Gt, "data-animated-button": t.animate ? "true" : void 0 },
             X.createElement(n.Chevron, { disabled: R ? void 0 : !0, className: a[te.Chevron], orientation: t.dir === "rtl" ? "right" : "left" })
-=======
-            { type: "button", className: i[te.PreviousMonthButton], tabIndex: P ? void 0 : -1, "aria-disabled": P ? void 0 : !0, "aria-label": yt(P), onClick: Gt, "data-animated-button": t.animate ? "true" : void 0 },
-            X.createElement(n.Chevron, { disabled: P ? void 0 : !0, className: i[te.Chevron], orientation: t.dir === "rtl" ? "right" : "left" })
->>>>>>> Stashed changes
           ),
           X.createElement(n.MonthCaption, { "data-animated-caption": t.animate ? "true" : void 0, className: a[te.MonthCaption], style: w?.[te.MonthCaption], calendarMonth: le, displayIndex: he }, l?.startsWith("dropdown") ? X.createElement(
             n.DropdownNav,
             { className: a[te.Dropdowns], style: w?.[te.Dropdowns] },
             (() => {
-<<<<<<< Updated upstream
               const oe = l === "dropdown" || l === "dropdown-months" ? X.createElement(n.MonthsDropdown, { key: "month", className: a[te.MonthsDropdown], "aria-label": Ye(), classNames: a, components: n, disabled: !!t.disableNavigation, onChange: Io(le.date), options: Z0(le.date, W, V, r, s), style: w?.[te.Dropdown], value: s.getMonth(le.date) }) : X.createElement("span", { key: "month" }, k(le.date, s)), fe = l === "dropdown" || l === "dropdown-years" ? X.createElement(n.YearsDropdown, { key: "year", className: a[te.YearsDropdown], "aria-label": fr(s.options), classNames: a, components: n, disabled: !!t.disableNavigation, onChange: Ro(le.date), options: ex(W, V, r, s, !!t.reverseYears), style: w?.[te.Dropdown], value: s.getYear(le.date) }) : X.createElement("span", { key: "year" }, L(le.date, s));
               return s.getMonthYearOrder() === "year-first" ? [fe, oe] : [oe, fe];
-=======
-              const re = l === "dropdown" || l === "dropdown-months" ? X.createElement(n.MonthsDropdown, { key: "month", className: i[te.MonthsDropdown], "aria-label": Ye(), classNames: i, components: n, disabled: !!t.disableNavigation, onChange: Pr(le.date), options: J0(le.date, H, V, o, s), style: y?.[te.Dropdown], value: s.getMonth(le.date) }) : X.createElement("span", { key: "month" }, k(le.date, s)), me = l === "dropdown" || l === "dropdown-years" ? X.createElement(n.YearsDropdown, { key: "year", className: i[te.YearsDropdown], "aria-label": fo(s.options), classNames: i, components: n, disabled: !!t.disableNavigation, onChange: Ir(le.date), options: nN(H, V, o, s, !!t.reverseYears), style: y?.[te.Dropdown], value: s.getYear(le.date) }) : X.createElement("span", { key: "year" }, A(le.date, s));
-              return s.getMonthYearOrder() === "year-first" ? [me, re] : [re, me];
->>>>>>> Stashed changes
             })(),
             X.createElement("span", { role: "status", "aria-live": "polite", style: {
               border: 0,
@@ -14361,17 +12620,10 @@ function _x(e) {
           )),
           d === "around" && !t.hideNavigation && he === u - 1 && X.createElement(
             n.NextMonthButton,
-<<<<<<< Updated upstream
-            { type: "button", className: a[te.NextMonthButton], tabIndex: A ? void 0 : -1, "aria-disabled": A ? void 0 : !0, "aria-label": Dn(A), onClick: Gt, "data-animated-button": t.animate ? "true" : void 0 },
+            { type: "button", className: a[te.NextMonthButton], tabIndex: A ? void 0 : -1, "aria-disabled": A ? void 0 : !0, "aria-label": Dn(A), onClick: qt, "data-animated-button": t.animate ? "true" : void 0 },
             X.createElement(n.Chevron, { disabled: A ? void 0 : !0, className: a[te.Chevron], orientation: t.dir === "rtl" ? "left" : "right" })
           ),
-          he === u - 1 && d === "after" && !t.hideNavigation && X.createElement(n.Nav, { "data-animated-nav": t.animate ? "true" : void 0, className: a[te.Nav], style: w?.[te.Nav], "aria-label": At(), onPreviousClick: Kt, onNextClick: Gt, previousMonth: R, nextMonth: A }),
-=======
-            { type: "button", className: i[te.NextMonthButton], tabIndex: L ? void 0 : -1, "aria-disabled": L ? void 0 : !0, "aria-label": Mn(L), onClick: qt, "data-animated-button": t.animate ? "true" : void 0 },
-            X.createElement(n.Chevron, { disabled: L ? void 0 : !0, className: i[te.Chevron], orientation: t.dir === "rtl" ? "left" : "right" })
-          ),
-          he === d - 1 && u === "after" && !t.hideNavigation && X.createElement(n.Nav, { "data-animated-nav": t.animate ? "true" : void 0, className: i[te.Nav], style: y?.[te.Nav], "aria-label": Pt(), onPreviousClick: Gt, onNextClick: qt, previousMonth: P, nextMonth: L }),
->>>>>>> Stashed changes
+          he === u - 1 && d === "after" && !t.hideNavigation && X.createElement(n.Nav, { "data-animated-nav": t.animate ? "true" : void 0, className: a[te.Nav], style: w?.[te.Nav], "aria-label": It(), onPreviousClick: Gt, onNextClick: qt, previousMonth: R, nextMonth: A }),
           X.createElement(
             n.MonthGrid,
             { role: "grid", "aria-multiselectable": c === "multiple" || c === "range", "aria-label": be(le.date, s.options, s) || void 0, className: a[te.MonthGrid], style: w?.[te.MonthGrid] },
@@ -14383,7 +12635,6 @@ function _x(e) {
             ),
             X.createElement(n.Weeks, { "data-animated-weeks": t.animate ? "true" : void 0, className: a[te.Weeks], style: w?.[te.Weeks] }, le.weeks.map((oe) => X.createElement(
               n.Week,
-<<<<<<< Updated upstream
               { className: a[te.Week], key: oe.weekNumber, style: w?.[te.Week], week: oe },
               M && // biome-ignore lint/a11y/useSemanticElements: react component
               X.createElement(n.WeekNumber, { week: oe, style: w?.[te.WeekNumber], "aria-label": dr(oe.weekNumber, {
@@ -14392,30 +12643,13 @@ function _x(e) {
               oe.days.map((fe) => {
                 const { date: Te } = fe, de = G(fe);
                 if (de[ge.focused] = !de.hidden && !!J?.isEqualTo(fe), de[Xe.selected] = z?.(Te) || de.selected, xa(K)) {
-                  const { from: An, to: Qt } = K;
-                  de[Xe.range_start] = !!(An && Qt && s.isSameDay(Te, An)), de[Xe.range_end] = !!(An && Qt && s.isSameDay(Te, Qt)), de[Xe.range_middle] = ft(K, Te, !0, s);
+                  const { from: An, to: Jt } = K;
+                  de[Xe.range_start] = !!(An && Jt && s.isSameDay(Te, An)), de[Xe.range_end] = !!(An && Jt && s.isSameDay(Te, Jt)), de[Xe.range_middle] = ft(K, Te, !0, s);
                 }
-                const $o = Q0(de, w, t.modifiersStyles), Xt = B0(de, a, t.modifiersClassNames), Zt = !Ln && !de.hidden ? ve(Te, de, s.options, s) : void 0;
+                const $o = Q0(de, w, t.modifiersStyles), Zt = B0(de, a, t.modifiersClassNames), Qt = !Ln && !de.hidden ? ve(Te, de, s.options, s) : void 0;
                 return (
                   // biome-ignore lint/a11y/useSemanticElements: react component
-                  X.createElement(n.Day, { key: `${s.format(Te, "yyyy-MM-dd")}_${s.format(fe.displayMonth, "yyyy-MM")}`, day: fe, modifiers: de, className: Xt.join(" "), style: $o, role: "gridcell", "aria-selected": de.selected || void 0, "aria-label": Zt, "data-day": s.format(Te, "yyyy-MM-dd"), "data-month": fe.outside ? s.format(Te, "yyyy-MM") : void 0, "data-selected": de.selected || void 0, "data-disabled": de.disabled || void 0, "data-hidden": de.hidden || void 0, "data-outside": fe.outside || void 0, "data-focused": de.focused || void 0, "data-today": de.today || void 0 }, !de.hidden && Ln ? X.createElement(n.DayButton, { className: a[te.DayButton], style: w?.[te.DayButton], type: "button", day: fe, modifiers: de, disabled: de.disabled || void 0, tabIndex: _(fe) ? 0 : -1, "aria-label": ue(Te, de, s.options, s), onClick: qt(fe, de), onBlur: mr(fe, de), onFocus: hr(fe, de), onKeyDown: gr(fe, de), onMouseEnter: yr(fe, de), onMouseLeave: Ao(fe, de) }, S(Te, s.options, s)) : !de.hidden && S(fe.date, s.options, s))
-=======
-              { className: i[te.Week], key: re.weekNumber, style: y?.[te.Week], week: re },
-              E && // biome-ignore lint/a11y/useSemanticElements: react component
-              X.createElement(n.WeekNumber, { week: re, style: y?.[te.WeekNumber], "aria-label": uo(re.weekNumber, {
-                locale: a
-              }), className: i[te.WeekNumber], scope: "row", role: "rowheader" }, D(re.weekNumber, s)),
-              re.days.map((me) => {
-                const { date: Te } = me, ue = G(me);
-                if (ue[ge.focused] = !ue.hidden && !!J?.isEqualTo(me), ue[Xe.selected] = W?.(Te) || ue.selected, Ni(K)) {
-                  const { from: Ln, to: Jt } = K;
-                  ue[Xe.range_start] = !!(Ln && Jt && s.isSameDay(Te, Ln)), ue[Xe.range_end] = !!(Ln && Jt && s.isSameDay(Te, Jt)), ue[Xe.range_middle] = mt(K, Te, !0, s);
-                }
-                const $r = eN(ue, y, t.modifiersStyles), Zt = F0(ue, i, t.modifiersClassNames), Qt = !An && !ue.hidden ? be(Te, ue, s.options, s) : void 0;
-                return (
-                  // biome-ignore lint/a11y/useSemanticElements: react component
-                  X.createElement(n.Day, { key: `${s.format(Te, "yyyy-MM-dd")}_${s.format(me.displayMonth, "yyyy-MM")}`, day: me, modifiers: ue, className: Zt.join(" "), style: $r, role: "gridcell", "aria-selected": ue.selected || void 0, "aria-label": Qt, "data-day": s.format(Te, "yyyy-MM-dd"), "data-month": me.outside ? s.format(Te, "yyyy-MM") : void 0, "data-selected": ue.selected || void 0, "data-disabled": ue.disabled || void 0, "data-hidden": ue.hidden || void 0, "data-outside": me.outside || void 0, "data-focused": ue.focused || void 0, "data-today": ue.today || void 0 }, !ue.hidden && An ? X.createElement(n.DayButton, { className: i[te.DayButton], style: y?.[te.DayButton], type: "button", day: me, modifiers: ue, disabled: ue.disabled || void 0, tabIndex: O(me) ? 0 : -1, "aria-label": de(Te, ue, s.options, s), onClick: Xt(me, ue), onBlur: go(me, ue), onFocus: po(me, ue), onKeyDown: bo(me, ue), onMouseEnter: vo(me, ue), onMouseLeave: Lr(me, ue) }, S(Te, s.options, s)) : !ue.hidden && S(me.date, s.options, s))
->>>>>>> Stashed changes
+                  X.createElement(n.Day, { key: `${s.format(Te, "yyyy-MM-dd")}_${s.format(fe.displayMonth, "yyyy-MM")}`, day: fe, modifiers: de, className: Zt.join(" "), style: $o, role: "gridcell", "aria-selected": de.selected || void 0, "aria-label": Qt, "data-day": s.format(Te, "yyyy-MM-dd"), "data-month": fe.outside ? s.format(Te, "yyyy-MM") : void 0, "data-selected": de.selected || void 0, "data-disabled": de.disabled || void 0, "data-hidden": de.hidden || void 0, "data-outside": fe.outside || void 0, "data-focused": de.focused || void 0, "data-today": de.today || void 0 }, !de.hidden && Ln ? X.createElement(n.DayButton, { className: a[te.DayButton], style: w?.[te.DayButton], type: "button", day: fe, modifiers: de, disabled: de.disabled || void 0, tabIndex: _(fe) ? 0 : -1, "aria-label": ue(Te, de, s.options, s), onClick: Xt(fe, de), onBlur: mr(fe, de), onFocus: hr(fe, de), onKeyDown: gr(fe, de), onMouseEnter: yr(fe, de), onMouseLeave: Ao(fe, de) }, S(Te, s.options, s)) : !de.hidden && S(fe.date, s.options, s))
                 );
               })
             )))
@@ -14569,13 +12803,8 @@ function Hx({
   const o = ka(), s = T.useRef(null);
   return T.useEffect(() => {
     n.focused && s.current?.focus();
-<<<<<<< Updated upstream
   }, [n.focused]), /* @__PURE__ */ h(
-    Ft,
-=======
-  }, [n.focused]), /* @__PURE__ */ m(
     Ut,
->>>>>>> Stashed changes
     {
       ref: s,
       variant: "ghost",
@@ -14682,7 +12911,6 @@ function zx({
             $x,
             {
               mode: "single",
-<<<<<<< Updated upstream
               selected: i,
               onSelect: a
             }
@@ -14690,33 +12918,7 @@ function zx({
           /* @__PURE__ */ h("div", { className: "border-t border-border" }),
           /* @__PURE__ */ I("div", { className: "flex items-center justify-center gap-2 px-3 py-3", children: [
             /* @__PURE__ */ h(
-              Ft,
-=======
-              selected: a,
-              onSelect: i
-            },
-            void 0,
-            !1,
-            {
-              fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/DatePillComponent.tsx",
-              lineNumber: 197,
-              columnNumber: 13
-            },
-            this
-          ) }, void 0, !1, {
-            fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/DatePillComponent.tsx",
-            lineNumber: 196,
-            columnNumber: 11
-          }, this),
-          /* @__PURE__ */ m("div", { className: "border-t border-border" }, void 0, !1, {
-            fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/DatePillComponent.tsx",
-            lineNumber: 203,
-            columnNumber: 11
-          }, this),
-          /* @__PURE__ */ m("div", { className: "flex items-center justify-center gap-2 px-3 py-3", children: [
-            /* @__PURE__ */ m(
               Ut,
->>>>>>> Stashed changes
               {
                 variant: "outline",
                 size: "sm",
@@ -14728,13 +12930,8 @@ function zx({
                 children: "Today"
               }
             ),
-<<<<<<< Updated upstream
             /* @__PURE__ */ h(
-              Ft,
-=======
-            /* @__PURE__ */ m(
               Ut,
->>>>>>> Stashed changes
               {
                 variant: "outline",
                 size: "sm",
@@ -14746,13 +12943,8 @@ function zx({
                 children: "Tomorrow"
               }
             ),
-<<<<<<< Updated upstream
             /* @__PURE__ */ h(
-              Ft,
-=======
-            /* @__PURE__ */ m(
               Ut,
->>>>>>> Stashed changes
               {
                 variant: "outline",
                 size: "sm",
@@ -14891,7 +13083,7 @@ function Yx(e) {
     year: "numeric"
   });
 }
-function Ht(e) {
+function Bt(e) {
   const t = e.trim(), n = t.toLowerCase();
   if (n === "today") return hn();
   if (n === "tomorrow") return jn(1);
@@ -15014,20 +13206,12 @@ const jx = new Ne("datePillPaste"), Vx = go.create({
       handler: ({ range: d, chain: u }) => {
         u().deleteRange(d).insertDatePill(jn(-1)).run();
       }
-<<<<<<< Updated upstream
-    }), r = new Oe({
-=======
-    }), o = new _e({
->>>>>>> Stashed changes
+    }), r = new _e({
       find: /@(\d{4}-\d{2}-\d{2})\s$/,
       handler: ({ range: d, chain: u, match: f }) => {
         u().deleteRange(d).insertDatePill(f[1]).run();
       }
-<<<<<<< Updated upstream
-    }), o = new Oe({
-=======
-    }), r = new _e({
->>>>>>> Stashed changes
+    }), o = new _e({
       find: /@([A-Za-z]{3})\s?(\d{1,2})\s$/,
       handler: ({ range: d, chain: u, match: f }) => {
         const g = {
@@ -15051,58 +13235,32 @@ const jx = new Ne("datePillPaste"), Vx = go.create({
       }
     }), s = new _e({
       find: /@([A-Za-z]{3,9}\s+\d{1,2},?\s*\d{4})@$/,
-<<<<<<< Updated upstream
       handler: ({ range: d, chain: u, match: f }) => {
-        const p = Ht(f[1]);
+        const p = Bt(f[1]);
         p && u().deleteRange(d).insertDatePill(p).run();
-      }
-    }), i = new Oe({
-      find: /@(today|tomorrow|yesterday|next monday)@$/i,
-      handler: ({ range: d, chain: u, match: f }) => {
-        const p = Ht(f[1]);
-        p && u().deleteRange(d).insertDatePill(p).run();
-      }
-    }), a = new Oe({
-=======
-      handler: ({ range: u, chain: d, match: f }) => {
-        const h = Ht(f[1]);
-        h && d().deleteRange(u).insertDatePill(h).run();
-      }
-    }), a = new _e({
-      find: /@(today|tomorrow|yesterday|next monday)@$/i,
-      handler: ({ range: u, chain: d, match: f }) => {
-        const h = Ht(f[1]);
-        h && d().deleteRange(u).insertDatePill(h).run();
       }
     }), i = new _e({
->>>>>>> Stashed changes
+      find: /@(today|tomorrow|yesterday|next monday)@$/i,
+      handler: ({ range: d, chain: u, match: f }) => {
+        const p = Bt(f[1]);
+        p && u().deleteRange(d).insertDatePill(p).run();
+      }
+    }), a = new _e({
       find: /@(\d{4}-\d{2}-\d{2})@$/,
       handler: ({ range: d, chain: u, match: f }) => {
         u().deleteRange(d).insertDatePill(f[1]).run();
       }
     }), l = new _e({
       find: /@([A-Za-z]{3,9}\s+\d{1,2})@$/,
-<<<<<<< Updated upstream
       handler: ({ range: d, chain: u, match: f }) => {
-        const p = Ht(f[1]);
+        const p = Bt(f[1]);
         p && u().deleteRange(d).insertDatePill(p).run();
-=======
-      handler: ({ range: u, chain: d, match: f }) => {
-        const h = Ht(f[1]);
-        h && d().deleteRange(u).insertDatePill(h).run();
->>>>>>> Stashed changes
       }
     }), c = new _e({
       find: /@(\d{1,2}\/\d{1,2}\/\d{4})@$/,
-<<<<<<< Updated upstream
       handler: ({ range: d, chain: u, match: f }) => {
-        const p = Ht(f[1]);
+        const p = Bt(f[1]);
         p && u().deleteRange(d).insertDatePill(p).run();
-=======
-      handler: ({ range: u, chain: d, match: f }) => {
-        const h = Ht(f[1]);
-        h && d().deleteRange(u).insertDatePill(h).run();
->>>>>>> Stashed changes
       }
     });
     return [
@@ -15129,43 +13287,24 @@ const jx = new Ne("datePillPaste"), Vx = go.create({
             if (!r) return !1;
             const o = r.getData("text/plain"), s = r.getData("text/html");
             if (s && s.includes('data-type="date-pill"')) return !1;
-<<<<<<< Updated upstream
             const i = /@([^@\n]+)@/g;
             let a = !1, l;
             const c = new RegExp(i.source, i.flags);
             for (; (l = c.exec(o)) !== null; )
-              if (Ht(l[1])) {
+              if (Bt(l[1])) {
                 a = !0;
-=======
-            const a = /@([^@\n]+)@/g;
-            let i = !1, l;
-            const c = new RegExp(a.source, a.flags);
-            for (; (l = c.exec(r)) !== null; )
-              if (Ht(l[1])) {
-                i = !0;
->>>>>>> Stashed changes
                 break;
               }
             if (!a) return !1;
             const { state: d } = t, { tr: u, schema: f } = d, p = [];
             let g = 0;
-<<<<<<< Updated upstream
             const m = new RegExp(i.source, i.flags);
             let y;
             for (; (y = m.exec(o)) !== null; ) {
-              const M = y[1], w = Ht(M);
+              const M = y[1], w = Bt(M);
               if (w) {
                 const E = o.slice(g, y.index);
                 E && p.push(f.text(E)), p.push(e.create({ date: w })), g = y.index + y[0].length;
-=======
-            const p = new RegExp(a.source, a.flags);
-            let b;
-            for (; (b = p.exec(r)) !== null; ) {
-              const E = b[1], y = Ht(E);
-              if (y) {
-                const C = r.slice(g, b.index);
-                C && h.push(f.text(C)), h.push(e.create({ date: y })), g = b.index + b[0].length;
->>>>>>> Stashed changes
               }
             }
             const v = o.slice(g);
@@ -15470,15 +13609,9 @@ const Gx = new Ne("tagPillPaste"), qx = go.create({
   },
   addInputRules() {
     return this.type, [
-<<<<<<< Updated upstream
-      new Oe({
+      new _e({
         find: Xx,
         handler: ({ state: e, range: t, match: n, chain: r }) => {
-=======
-      new _e({
-        find: QN,
-        handler: ({ state: e, range: t, match: n, chain: o }) => {
->>>>>>> Stashed changes
           try {
             const o = n[1];
             if (!o) return;
@@ -15717,11 +13850,7 @@ function rk(e) {
     t = t.replace(`MANUSCODEPLACEHOLDER${u}END`, o[u]);
   return t;
 }
-<<<<<<< Updated upstream
-const ok = _e.create({
-=======
-const ik = $e.create({
->>>>>>> Stashed changes
+const ok = $e.create({
   name: "markdownPasteSafe",
   addOptions() {
     return {
@@ -15872,11 +14001,7 @@ function sk(e, t, n, r) {
   }
   return { structureChanged: l, newFingerprint: a };
 }
-<<<<<<< Updated upstream
-const ak = _e.create({
-=======
-const lk = $e.create({
->>>>>>> Stashed changes
+const ak = $e.create({
   name: "collapsibleHeading",
   addOptions() {
     return {
@@ -15971,25 +14096,14 @@ const lk = $e.create({
       })
     ];
   }
-<<<<<<< Updated upstream
-}), ik = /\[([^\]]+)\]\(([^)]+)\)$/, lk = /^(https?:\/\/|www\.)[^\s]+$/i, ck = _e.create({
-  name: "markdownLinkInputRule",
-  addInputRules() {
-    return [
-      new Oe({
-        find: ik,
-        handler: ({ state: e, range: t, match: n, chain: r }) => {
-          const o = n[1];
-=======
-}), ck = /\[([^\]]+)\]\(([^)]+)\)$/, uk = /^(https?:\/\/|www\.)[^\s]+$/i, dk = $e.create({
+}), ik = /\[([^\]]+)\]\(([^)]+)\)$/, lk = /^(https?:\/\/|www\.)[^\s]+$/i, ck = $e.create({
   name: "markdownLinkInputRule",
   addInputRules() {
     return [
       new _e({
-        find: ck,
-        handler: ({ state: e, range: t, match: n, chain: o }) => {
-          const r = n[1];
->>>>>>> Stashed changes
+        find: ik,
+        handler: ({ state: e, range: t, match: n, chain: r }) => {
+          const o = n[1];
           let s = n[2];
           s && !s.startsWith("http://") && !s.startsWith("https://") && (s.startsWith("www."), s = "https://" + s), r().deleteRange(t).insertContent({
             type: "text",
@@ -16033,17 +14147,10 @@ const lk = $e.create({
       })
     ];
   }
-<<<<<<< Updated upstream
-}), dk = _e.create({
+}), dk = $e.create({
   name: "calloutInputRule"
   // No plugins — logic moved to InputDispatcher
-}), Yr = new Ne("searchHighlight"), uk = _e.create({
-=======
-}), mk = $e.create({
-  name: "calloutInputRule"
-  // No plugins — logic moved to InputDispatcher
-}), jo = new De("searchHighlight"), fk = $e.create({
->>>>>>> Stashed changes
+}), Yr = new Ne("searchHighlight"), uk = $e.create({
   name: "searchHighlight",
   addOptions() {
     return {
@@ -16120,11 +14227,7 @@ const lk = $e.create({
       })
     ];
   }
-<<<<<<< Updated upstream
-}), fk = _e.create({
-=======
-}), hk = $e.create({
->>>>>>> Stashed changes
+}), fk = $e.create({
   name: "tabIndent"
   // No plugins — logic moved to InputDispatcher
 }), pk = new Ne("inputDispatcher"), hk = ["info", "note", "prompt", "resources", "todo"];
@@ -16160,11 +14263,7 @@ function qi(e, t) {
   }
   return !1;
 }
-<<<<<<< Updated upstream
-const gk = _e.create({
-=======
-const vk = $e.create({
->>>>>>> Stashed changes
+const gk = $e.create({
   name: "inputDispatcher",
   // Higher priority to ensure Tab handling runs before other extensions
   priority: 1e3,
@@ -16371,7 +14470,6 @@ function Dk(e, t) {
     if (n.node(r).type.name === "table") return !0;
   return !1;
 }
-<<<<<<< Updated upstream
 function Nk(e, t, n) {
   let r = !1;
   return e.nodesBetween(t, n, (o) => cu.has(o.type.name) ? (r = !0, !1) : !0), r;
@@ -16386,30 +14484,10 @@ function Lk(e, t, n) {
     const l = Sk(a, o, s);
     for (const c of l)
       Nk(e, c.from, c.to) ? c.from === 0 && c.to === e.content.size ? i({ from: 0, to: e.content.size, useSelectAll: !0 }) : i({ from: c.from, to: c.to, useSelectAll: !0 }) : i({ from: c.from, to: c.to });
-=======
-function Lk(e, t, n) {
-  let o = !1;
-  return e.nodesBetween(t, n, (r) => cd.has(r.type.name) ? (o = !0, !1) : !0), o;
-}
-function Pk(e, t, n) {
-  const o = [];
-  let r = t, s = n;
-  const a = (l) => l && (l.from < r || l.to > s) ? (o.push(l), r = l.from, s = l.to, !0) : !1;
-  a(xk(e, r, s)), Ak(e, t) && (a(Ck(e, r, s)), a(Ek(e, r, s))), a(Sk(e, r, s)), a(Tk(e, r, s));
-  const i = Mk(e);
-  if (i.length > 0) {
-    const l = Dk(i, r, s);
-    for (const c of l)
-      Lk(e, c.from, c.to) ? c.from === 0 && c.to === e.content.size ? a({ from: 0, to: e.content.size, useSelectAll: !0 }) : a({ from: c.from, to: c.to, useSelectAll: !0 }) : a({ from: c.from, to: c.to });
->>>>>>> Stashed changes
   }
   return (o > 0 || s < e.content.size) && r.push({ from: 0, to: e.content.size, useSelectAll: !0 }), r;
 }
-<<<<<<< Updated upstream
-const Ak = _e.create({
-=======
-const Ik = $e.create({
->>>>>>> Stashed changes
+const Ak = $e.create({
   name: "expandSelection",
   priority: 1e3,
   addStorage() {
@@ -16440,11 +14518,7 @@ const Ik = $e.create({
         const t = this.storage, { doc: n, selection: r } = e.state, { from: o, to: s } = r;
         if (t.expansionDepth > 0 && o === t.lastExpandedFrom && s === t.lastExpandedTo || (t.expansionDepth = 0), r instanceof Kf || o === 0 && s === n.content.size)
           return !0;
-<<<<<<< Updated upstream
         const a = Lk(n, o, s);
-=======
-        const i = Pk(n, r, s);
->>>>>>> Stashed changes
         let l = null;
         for (const c of a)
           if (c.from < o || c.to > s) {
@@ -16603,7 +14677,7 @@ function Xi(e, t, n, r, o) {
     return !0;
   }), s;
 }
-function Et(e, t) {
+function Mt(e, t) {
   const n = Se.getState(e.state);
   if (!n) return [];
   const r = [];
@@ -16621,11 +14695,7 @@ function $k(e, t) {
 function Me(e) {
   e.isActive = !1, e.ranges = [], e.searchTerm = "", e.typedBuffer = "", e.isTypingReplace = !1, e.allMatches = [], e.nextMatchIndex = 0, e.isIncremental = !1, e.undoStack = [], e.redoStack = [];
 }
-<<<<<<< Updated upstream
-const Hk = _e.create({
-=======
-const Wk = $e.create({
->>>>>>> Stashed changes
+const Hk = $e.create({
   name: "selectAllOccurrences",
   addStorage() {
     return {
@@ -16734,17 +14804,10 @@ const Wk = $e.create({
         }
         return setTimeout(() => {
           try {
-<<<<<<< Updated upstream
             const a = t.view;
             if (a) {
-              const l = Et(a, this.storage);
+              const l = Mt(a, this.storage);
               this.storage.ranges = l, l.length === 0 && Me(this.storage);
-=======
-            const i = t.view;
-            if (i) {
-              const l = Et(i, this.storage);
-              this.storage.ranges = l, l.length === 0 && Ee(this.storage);
->>>>>>> Stashed changes
             }
           } catch {
           }
@@ -16776,17 +14839,10 @@ const Wk = $e.create({
         }
         return e ? setTimeout(() => {
           try {
-<<<<<<< Updated upstream
             const o = t.view;
             if (o) {
-              const s = Et(o, this.storage);
+              const s = Mt(o, this.storage);
               this.storage.ranges = s, this.storage.searchTerm = e, s.length === 0 && Me(this.storage);
-=======
-            const r = t.view;
-            if (r) {
-              const s = Et(r, this.storage);
-              this.storage.ranges = s, this.storage.searchTerm = e, s.length === 0 && Ee(this.storage);
->>>>>>> Stashed changes
             }
           } catch {
           }
@@ -16872,17 +14928,10 @@ const Wk = $e.create({
             if ((n.metaKey || n.ctrlKey) && n.key === "z" && !n.shiftKey) {
               if (n.preventDefault(), e.isTypingReplace && e.undoStack.length > 0) {
                 e.redoStack.push(e.typedBuffer);
-<<<<<<< Updated upstream
                 const o = e.undoStack.pop();
                 return e.typedBuffer = o, o === "" && (e.isTypingReplace = !1), gp(t.state, t.dispatch), setTimeout(() => {
-                  const s = Et(t);
+                  const s = Mt(t);
                   e.ranges = s, s.length === 0 && Me(e);
-=======
-                const r = e.undoStack.pop();
-                return e.typedBuffer = r, r === "" && (e.isTypingReplace = !1), vf(t.state, t.dispatch), setTimeout(() => {
-                  const s = Et(t);
-                  e.ranges = s, s.length === 0 && Ee(e);
->>>>>>> Stashed changes
                 }, 10), !0;
               }
               Me(e);
@@ -16892,17 +14941,10 @@ const Wk = $e.create({
             if ((n.metaKey || n.ctrlKey) && (n.key === "z" && n.shiftKey || n.key === "y")) {
               if (n.preventDefault(), e.redoStack.length > 0) {
                 e.undoStack.push(e.isTypingReplace ? e.typedBuffer : "");
-<<<<<<< Updated upstream
                 const o = e.redoStack.pop();
                 return e.typedBuffer = o, e.isTypingReplace = !0, yp(t.state, t.dispatch), setTimeout(() => {
-                  const s = Et(t);
+                  const s = Mt(t);
                   e.ranges = s, s.length === 0 && Me(e);
-=======
-                const r = e.redoStack.pop();
-                return e.typedBuffer = r, e.isTypingReplace = !0, wf(t.state, t.dispatch), setTimeout(() => {
-                  const s = Et(t);
-                  e.ranges = s, s.length === 0 && Ee(e);
->>>>>>> Stashed changes
                 }, 10), !0;
               }
               Me(e);
@@ -16914,8 +14956,7 @@ const Wk = $e.create({
             if (n.key === "Backspace") {
               if (n.preventDefault(), e.isTypingReplace && e.typedBuffer.length > 0) {
                 e.undoStack.push(e.typedBuffer), e.typedBuffer = e.typedBuffer.slice(0, -1);
-<<<<<<< Updated upstream
-                const r = Et(t);
+                const r = Mt(t);
                 if (r.length === 0) {
                   Me(e);
                   const { tr: a } = t.state;
@@ -16925,22 +14966,8 @@ const Wk = $e.create({
                 for (const a of s)
                   i.replaceWith(a.from, a.to, t.state.schema.text(o));
                 t.dispatch(i), e.typedBuffer.length === 0 && (e.isTypingReplace = !1), setTimeout(() => {
-                  const a = Et(t);
+                  const a = Mt(t);
                   e.ranges = a, a.length === 0 && Me(e);
-=======
-                const o = Et(t);
-                if (o.length === 0) {
-                  Ee(e);
-                  const { tr: i } = t.state;
-                  return t.dispatch(i.setMeta(Se, { deactivate: !0 })), !0;
-                }
-                const r = e.typedBuffer.length > 0 ? e.typedBuffer : e.searchTerm, s = [...o].sort((i, l) => l.from - i.from), { tr: a } = t.state;
-                for (const i of s)
-                  a.replaceWith(i.from, i.to, t.state.schema.text(r));
-                t.dispatch(a), e.typedBuffer.length === 0 && (e.isTypingReplace = !1), setTimeout(() => {
-                  const i = Et(t);
-                  e.ranges = i, i.length === 0 && Ee(e);
->>>>>>> Stashed changes
                 }, 10);
               } else if (!e.isTypingReplace) {
                 const r = [...e.ranges].sort((i, a) => a.from - i.from), { tr: o } = t.state;
@@ -16983,47 +15010,28 @@ const Wk = $e.create({
            * would find false matches), we rely on ProseMirror's decoration mapping
            * to track where the replaced text lives.
            */
-<<<<<<< Updated upstream
           handleTextInput(t, n, r, o) {
             if (!e.isActive || !o) return !1;
-=======
-          handleTextInput(t, n, o, r) {
-            if (!e.isActive || !r) return !1;
->>>>>>> Stashed changes
-            const s = Et(t);
+            const s = Mt(t);
             if (s.length === 0) {
               Me(e);
               const { tr: l } = t.state;
               return t.dispatch(l.setMeta(Se, { deactivate: !0 })), !0;
             }
-<<<<<<< Updated upstream
             e.undoStack.push(e.isTypingReplace ? e.typedBuffer : ""), e.redoStack = [], e.isTypingReplace ? e.typedBuffer += o : (e.isTypingReplace = !0, e.typedBuffer = o);
             const i = [...s].sort((l, c) => c.from - l.from), { tr: a } = t.state;
             for (const l of i)
               a.replaceWith(l.from, l.to, t.state.schema.text(e.typedBuffer));
             return t.dispatch(a), setTimeout(() => {
-              const l = Et(t);
+              const l = Mt(t);
               e.ranges = l, l.length === 0 && Me(e);
-=======
-            e.undoStack.push(e.isTypingReplace ? e.typedBuffer : ""), e.redoStack = [], e.isTypingReplace ? e.typedBuffer += r : (e.isTypingReplace = !0, e.typedBuffer = r);
-            const a = [...s].sort((l, c) => c.from - l.from), { tr: i } = t.state;
-            for (const l of a)
-              i.replaceWith(l.from, l.to, t.state.schema.text(e.typedBuffer));
-            return t.dispatch(i), setTimeout(() => {
-              const l = Et(t);
-              e.ranges = l, l.length === 0 && Ee(e);
->>>>>>> Stashed changes
             }, 10), !0;
           }
         }
       })
     ];
   }
-<<<<<<< Updated upstream
-}), Bk = new Ne("linkBoundary"), Wk = _e.create({
-=======
-}), Fk = new De("linkBoundary"), zk = $e.create({
->>>>>>> Stashed changes
+}), Bk = new Ne("linkBoundary"), Wk = $e.create({
   name: "linkBoundary",
   addProseMirrorPlugins() {
     return [
@@ -17078,11 +15086,7 @@ function Zi(e) {
   }
   return { isFullContainer: !1, containerType: null };
 }
-<<<<<<< Updated upstream
-const Fk = _e.create({
-=======
-const Yk = $e.create({
->>>>>>> Stashed changes
+const Fk = $e.create({
   name: "smartCopyPaste",
   addProseMirrorPlugins() {
     const e = this.editor;
@@ -17318,11 +15322,7 @@ function Ji(e) {
     }
   return t;
 }
-<<<<<<< Updated upstream
-const Xk = _e.create({
-=======
-const Qk = $e.create({
->>>>>>> Stashed changes
+const Xk = $e.create({
   name: "imageUpload",
   addOptions() {
     return {
@@ -17887,15 +15887,9 @@ function nC(e) {
     setIsLightweight: E,
     lightweightCheckCounterRef: S,
     isLightweightRef: k
-<<<<<<< Updated upstream
   } = e, N = n && n.length > tC, C = Y(N ? n : null), D = N ? "" : n, L = Y(null), P = Y(null), O = Y(c), $ = Y(d), W = Y(u), V = Y(f), R = Y(null);
   O.current = c, $.current = d, W.current = u, V.current = f;
   const A = Vu({
-=======
-  } = e, D = n && n.length > ox, x = Y(D ? n : null), M = D ? "" : n, A = Y(null), I = Y(null), R = Y(c), _ = Y(u), H = Y(d), V = Y(f), P = Y(null);
-  R.current = c, _.current = u, H.current = d, V.current = f;
-  const L = Vd({
->>>>>>> Stashed changes
     /**
      * Performance: Render immediately without waiting for next tick
      */
@@ -17940,7 +15934,6 @@ function nC(e) {
         const K = z.state.doc.content.childCount > l;
         K !== k.current && E(K);
       }
-<<<<<<< Updated upstream
       L.current && clearTimeout(L.current), L.current = setTimeout(() => {
         if (z.isDestroyed) return;
         const U = z.getHTML();
@@ -17948,15 +15941,6 @@ function nC(e) {
           if (!z.isDestroyed && x.current === "wysiwyg" && R.current) {
             const K = z.getHTML(), B = R.current.turndown(K);
             M.current = B, W.current?.(Un(B));
-=======
-      A.current && clearTimeout(A.current), A.current = setTimeout(() => {
-        if (W.isDestroyed) return;
-        const U = W.getHTML();
-        (R.current || _.current) && (R.current?.(U), _.current?.(U)), V.current > 0 && H.current && (I.current && clearTimeout(I.current), I.current = setTimeout(() => {
-          if (!W.isDestroyed && N.current === "wysiwyg" && P.current) {
-            const K = W.getHTML(), B = P.current.turndown(K);
-            E.current = B, H.current?.(Un(B));
->>>>>>> Stashed changes
           }
         }, V.current));
       }, 150);
@@ -17965,19 +15949,11 @@ function nC(e) {
       m?.();
     },
     onBlur: () => {
-<<<<<<< Updated upstream
       if (P.current && (clearTimeout(P.current), P.current = null), L.current && (clearTimeout(L.current), L.current = null, A && !A.isDestroyed)) {
         const z = A.getHTML();
         if ((O.current || $.current) && (O.current?.(z), $.current?.(z)), x.current === "wysiwyg" && R.current) {
           const U = R.current.turndown(z);
           M.current = U, W.current?.(Un(U));
-=======
-      if (I.current && (clearTimeout(I.current), I.current = null), A.current && (clearTimeout(A.current), A.current = null, L && !L.isDestroyed)) {
-        const W = L.getHTML();
-        if ((R.current || _.current) && (R.current?.(W), _.current?.(W)), N.current === "wysiwyg" && P.current) {
-          const U = P.current.turndown(W);
-          E.current = U, H.current?.(Un(U));
->>>>>>> Stashed changes
         }
       }
       y?.();
@@ -17990,7 +15966,6 @@ function nC(e) {
     }
   });
   q(() => {
-<<<<<<< Updated upstream
     if (!C.current || !A || A.isDestroyed) return;
     const z = C.current;
     C.current = null;
@@ -18034,51 +16009,6 @@ function rC(e) {
     const u = (f) => {
       const p = f.querySelector(':scope > input[type="checkbox"]');
       if (p) return p;
-=======
-    if (!x.current || !L || L.isDestroyed) return;
-    const W = x.current;
-    x.current = null;
-    const U = requestAnimationFrame(() => {
-      const K = setTimeout(() => {
-        L.isDestroyed || L.commands.setContent(W);
-      }, 0);
-      L.__deferredTimerId = K;
-    });
-    return () => {
-      cancelAnimationFrame(U);
-      const K = L.__deferredTimerId;
-      K && clearTimeout(K);
-    };
-  }, [L]), q(() => () => {
-    if (I.current && (clearTimeout(I.current), I.current = null), A.current && (clearTimeout(A.current), A.current = null, L && !L.isDestroyed)) {
-      const W = L.getHTML();
-      if ((R.current || _.current) && (R.current?.(W), _.current?.(W)), N.current === "wysiwyg" && P.current) {
-        const U = P.current.turndown(W);
-        E.current = U, H.current?.(Un(U));
-      }
-    }
-  }, []);
-  const $ = nx();
-  P.current = $;
-  const G = Y(!1);
-  return q(() => {
-    if (!G.current && a === "markdown" && L && !L.isDestroyed && $) {
-      const W = L.getHTML(), U = $.turndown(W);
-      y(U), E.current = U, G.current = !0;
-    }
-  }, [L, $, a]), { editor: L, turndownService: $ };
-}
-function sx(e) {
-  const n = new DOMParser().parseFromString(`<div>${e}</div>`, "text/html"), o = n.body.firstElementChild;
-  if (!o) return e;
-  const r = (a) => {
-    Array.from(a.querySelectorAll("ul")).forEach(r);
-    const l = Array.from(a.children).filter((f) => f.tagName === "LI");
-    let c = !1, u = !1;
-    const d = (f) => {
-      const h = f.querySelector(':scope > input[type="checkbox"]');
-      if (h) return h;
->>>>>>> Stashed changes
       const g = f.querySelector(":scope > p");
       if (g) {
         const m = g.querySelector(':scope > input[type="checkbox"]');
@@ -18604,14 +16534,9 @@ function gC({
           disableTagPills: !!l.tagPills,
           isValidTag: cn,
           normalizeTag: Vn,
-          parseDateFromMarkdown: Ht,
-<<<<<<< Updated upstream
+          parseDateFromMarkdown: Bt,
           getDateVariant: Ca
         }, g = pC(r.current, f, p);
-=======
-          getDateVariant: xi
-        }, g = px(o.current, f, h);
->>>>>>> Stashed changes
         queueMicrotask(() => {
           e.isDestroyed || e.commands.setContent(g);
         });
@@ -18941,37 +16866,24 @@ function tl(e) {
     text: "md-text"
   }[e] || "md-text";
 }
-function zt(e) {
+function Ft(e) {
   return e.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 function Vr(e, t, n, r) {
   if (t.length === 0 && (!n || n.length === 0))
-    return zt(e);
-<<<<<<< Updated upstream
+    return Ft(e);
   let o = "";
-=======
-  let r = "";
->>>>>>> Stashed changes
   const s = e.split(`
 `);
   let i = 0;
   if (!n || n.length === 0) {
     for (let l = 0; l < s.length; l++) {
-<<<<<<< Updated upstream
       const c = s[l], d = i + c.length, u = t.filter((p) => p.start >= i && p.start < d);
       let f = i;
       for (const p of u)
-        p.start > f && (o += zt(e.substring(f, p.start))), o += `<span class="${tl(p.type)}">${zt(p.content)}</span>`, f = p.end;
-      f < d && (o += zt(e.substring(f, d))), l < s.length - 1 && (o += `
+        p.start > f && (o += Ft(e.substring(f, p.start))), o += `<span class="${tl(p.type)}">${Ft(p.content)}</span>`, f = p.end;
+      f < d && (o += Ft(e.substring(f, d))), l < s.length - 1 && (o += `
 `), i = d + 1;
-=======
-      const c = s[l], u = a + c.length, d = t.filter((h) => h.start >= a && h.start < u);
-      let f = a;
-      for (const h of d)
-        h.start > f && (r += zt(e.substring(f, h.start))), r += `<span class="${tl(h.type)}">${zt(h.content)}</span>`, f = h.end;
-      f < u && (r += zt(e.substring(f, u))), l < s.length - 1 && (r += `
-`), a = u + 1;
->>>>>>> Stashed changes
     }
     return o;
   }
@@ -18990,7 +16902,6 @@ function Vr(e, t, n, r) {
   }
   return o;
 }
-<<<<<<< Updated upstream
 function hs(e, t, n, r, o) {
   let s = "", i = t;
   for (; i < n; ) {
@@ -18999,32 +16910,14 @@ function hs(e, t, n, r, o) {
       const l = i;
       for (; i < n && o.get(i)?.matchIdx === a.matchIdx; )
         i++;
-      const c = zt(e.substring(l, i)), d = a.isCurrent ? "search-highlight search-highlight-current" : "search-highlight";
+      const c = Ft(e.substring(l, i)), d = a.isCurrent ? "search-highlight search-highlight-current" : "search-highlight";
       r ? s += `<span class="${r}"><mark class="${d}">${c}</mark></span>` : s += `<mark class="${d}">${c}</mark>`;
     } else {
       const l = i;
       for (; i < n && !o.has(i); )
         i++;
-      const c = zt(e.substring(l, i));
+      const c = Ft(e.substring(l, i));
       r ? s += `<span class="${r}">${c}</span>` : s += c;
-=======
-function hs(e, t, n, o, r) {
-  let s = "", a = t;
-  for (; a < n; ) {
-    const i = r.get(a);
-    if (i) {
-      const l = a;
-      for (; a < n && r.get(a)?.matchIdx === i.matchIdx; )
-        a++;
-      const c = zt(e.substring(l, a)), u = i.isCurrent ? "search-highlight search-highlight-current" : "search-highlight";
-      o ? s += `<span class="${o}"><mark class="${u}">${c}</mark></span>` : s += `<mark class="${u}">${c}</mark>`;
-    } else {
-      const l = a;
-      for (; a < n && !r.has(a); )
-        a++;
-      const c = zt(e.substring(l, a));
-      o ? s += `<span class="${o}">${c}</span>` : s += c;
->>>>>>> Stashed changes
     }
   }
   return s;
@@ -19040,23 +16933,13 @@ function xC({
   currentMatchIndex: a,
   autoClosePairs: l = !0
 }) {
-<<<<<<< Updated upstream
   const c = Y(null), d = Y(null), u = Y(null), f = Y(null), p = 5e3, g = 80, [m, y] = j(() => {
     const k = jr(e);
     return Vr(e, k, i, a);
-  }), v = Y(null), b = Tt(() => {
+  }), v = Y(null), b = St(() => {
     if (e.length <= p) {
       const k = jr(e), N = Vr(e, k, i, a);
       return v.current && (clearTimeout(v.current), v.current = null), N;
-=======
-  const c = Y(null), u = Y(null), d = Y(null), f = Y(null), h = 5e3, g = 80, [p, b] = j(() => {
-    const k = Vo(e);
-    return Ko(e, k, a, i);
-  }), v = Y(null), w = St(() => {
-    if (e.length <= h) {
-      const k = Vo(e), D = Ko(e, k, a, i);
-      return v.current && (clearTimeout(v.current), v.current = null), D;
->>>>>>> Stashed changes
     }
     return null;
   }, [e, i, a]);
@@ -19200,19 +17083,11 @@ function xC({
           ["~", "~"],
           ["[", "]"]
         ];
-<<<<<<< Updated upstream
         for (const [V, R] of W)
           if (O === V && $ === R) {
             k.preventDefault();
             const A = L.substring(0, C - 1) + L.substring(C + 1);
             f.current = { start: C - 1, end: C - 1 }, t(A);
-=======
-        for (const [V, P] of H)
-          if (R === V && _ === P) {
-            k.preventDefault();
-            const L = A.substring(0, x - 1) + A.substring(x + 1);
-            f.current = { start: x - 1, end: x - 1 }, t(L);
->>>>>>> Stashed changes
             return;
           }
         if (O === "[" && L.substring(C, C + 3) === "]()") {
@@ -19225,7 +17100,6 @@ function xC({
     }
     if (k.key === "Tab")
       if (k.preventDefault(), k.shiftKey) {
-<<<<<<< Updated upstream
         const O = L.substring(0, C), $ = L.substring(C, D), W = L.substring(D), R = O.lastIndexOf(`
 `) + 1, A = O.substring(0, R), H = O.substring(R), G = (H + $).split(`
 `), z = G.map((B) => B.startsWith("  ") ? B.substring(2) : B.startsWith("	") ? B.substring(1) : B), U = A + z.join(`
@@ -19234,32 +17108,15 @@ function xC({
         f.current = {
           start: Math.max(R, C - (G[0].length - z[0].length)),
           end: D - K
-=======
-        const R = A.substring(0, x), _ = A.substring(x, M), H = A.substring(M), P = R.lastIndexOf(`
-`) + 1, L = R.substring(0, P), $ = R.substring(P), G = ($ + _).split(`
-`), W = G.map((B) => B.startsWith("  ") ? B.substring(2) : B.startsWith("	") ? B.substring(1) : B), U = L + W.join(`
-`) + H, K = ($ + _).length - W.join(`
-`).length;
-        f.current = {
-          start: Math.max(P, x - (G[0].length - W[0].length)),
-          end: M - K
->>>>>>> Stashed changes
         }, t(U);
       } else if (C === D) {
         const O = L.substring(0, C) + "  " + L.substring(D);
         f.current = { start: C + 2, end: C + 2 }, t(O);
       } else {
-<<<<<<< Updated upstream
         const O = L.substring(0, C), $ = L.substring(C, D), W = L.substring(D), R = O.lastIndexOf(`
 `) + 1, A = O.substring(0, R), G = (O.substring(R) + $).split(`
 `), z = G.map((K) => "  " + K), U = A + z.join(`
 `) + W;
-=======
-        const R = A.substring(0, x), _ = A.substring(x, M), H = A.substring(M), P = R.lastIndexOf(`
-`) + 1, L = R.substring(0, P), G = (R.substring(P) + _).split(`
-`), W = G.map((K) => "  " + K), U = L + W.join(`
-`) + H;
->>>>>>> Stashed changes
         f.current = {
           start: C + 2,
           end: D + G.length * 2
@@ -19272,11 +17129,7 @@ function xC({
       {
         ref: d,
         className: "syntax-highlight-overlay",
-<<<<<<< Updated upstream
-        dangerouslySetInnerHTML: { __html: x || `<span class="md-placeholder">${zt(n)}</span>` },
-=======
-        dangerouslySetInnerHTML: { __html: N || `<span class="md-placeholder">${zt(n)}</span>` },
->>>>>>> Stashed changes
+        dangerouslySetInnerHTML: { __html: x || `<span class="md-placeholder">${Ft(n)}</span>` },
         "aria-hidden": "true"
       }
     ),
@@ -19331,7 +17184,6 @@ const CC = bt(function({
     };
   }, [t, r]), q(() => {
     if (!t) return;
-<<<<<<< Updated upstream
     let S = 0, k = performance.now(), N = 0;
     const C = (D) => {
       const L = D - c.current;
@@ -19350,26 +17202,6 @@ const CC = bt(function({
           domNodes: A,
           longFrames: u.current
         }), m((z) => [...z.slice(1), N]), v((z) => [...z.slice(1), O]), u.current = 0;
-=======
-    let S = 0, k = performance.now(), D = 0;
-    const x = (M) => {
-      const A = M - c.current;
-      if (c.current = M, l.current.push({ time: M, duration: A }), l.current.length > 120 && (l.current = l.current.slice(-120)), A > 16.67 && d.current++, S++, M - k >= 1e3) {
-        D = S, S = 0, k = M;
-        const I = l.current.slice(-60), R = I.length > 0 ? I.reduce((W, U) => W + U.duration, 0) / I.length : 0, _ = I.length > 0 ? Math.max(...I.map((W) => W.duration)) : 0, H = performance.memory, V = H ? H.usedJSHeapSize / (1024 * 1024) : 0, P = H ? H.jsHeapSizeLimit / (1024 * 1024) : 0, L = document.querySelectorAll("*").length, $ = nl - f.current, G = Os - h.current;
-        f.current = nl, h.current = Os, i({
-          fps: D,
-          frameTime: Math.round(R * 100) / 100,
-          frameTimeMax: Math.round(_ * 100) / 100,
-          memoryUsed: Math.round(V * 10) / 10,
-          memoryTotal: Math.round(P),
-          renderCount: $,
-          transactionCount: G,
-          lastTransactionTime: Math.round(fd * 100) / 100,
-          domNodes: L,
-          longFrames: d.current
-        }), p((W) => [...W.slice(1), D]), v((W) => [...W.slice(1), R]), d.current = 0;
->>>>>>> Stashed changes
       }
       d.current = requestAnimationFrame(C);
     };
@@ -19548,7 +17380,6 @@ class EC extends Xu {
   }
   render() {
     if (this.state.hasError) {
-<<<<<<< Updated upstream
       const { error: t, showDetails: n, retryCount: r, copied: o } = this.state, s = r >= 2;
       return /* @__PURE__ */ h("div", { className: ae("flex-1 flex items-center justify-center p-6", this.props.className), children: /* @__PURE__ */ I("div", { className: "flex flex-col items-center max-w-md w-full text-center gap-4", children: [
         /* @__PURE__ */ h("div", { className: "w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center", children: /* @__PURE__ */ h(Ef, { className: "w-6 h-6 text-destructive" }) }),
@@ -19558,39 +17389,7 @@ class EC extends Xu {
         ] }),
         /* @__PURE__ */ I("div", { className: "flex flex-col gap-2 w-full max-w-xs", children: [
           /* @__PURE__ */ I(
-            Ft,
-=======
-      const { error: t, showDetails: n, retryCount: o, copied: r } = this.state, s = o >= 2;
-      return /* @__PURE__ */ m("div", { className: ie("flex-1 flex items-center justify-center p-6", this.props.className), children: /* @__PURE__ */ m("div", { className: "flex flex-col items-center max-w-md w-full text-center gap-4", children: [
-        /* @__PURE__ */ m("div", { className: "w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center", children: /* @__PURE__ */ m(xm, { className: "w-6 h-6 text-destructive" }, void 0, !1, {
-          fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorErrorBoundary.tsx",
-          lineNumber: 140,
-          columnNumber: 15
-        }, this) }, void 0, !1, {
-          fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorErrorBoundary.tsx",
-          lineNumber: 139,
-          columnNumber: 13
-        }, this),
-        /* @__PURE__ */ m("div", { className: "space-y-1.5", children: [
-          /* @__PURE__ */ m("h3", { className: "text-base font-semibold text-foreground", children: "Editor encountered an error" }, void 0, !1, {
-            fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorErrorBoundary.tsx",
-            lineNumber: 145,
-            columnNumber: 15
-          }, this),
-          /* @__PURE__ */ m("p", { className: "text-sm text-muted-foreground leading-relaxed", children: s ? "The editor keeps crashing. The content may be malformed — try clearing it to recover." : "Something went wrong while rendering the editor. Your content is safe — try one of the recovery options below." }, void 0, !1, {
-            fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorErrorBoundary.tsx",
-            lineNumber: 148,
-            columnNumber: 15
-          }, this)
-        ] }, void 0, !0, {
-          fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/EditorErrorBoundary.tsx",
-          lineNumber: 144,
-          columnNumber: 13
-        }, this),
-        /* @__PURE__ */ m("div", { className: "flex flex-col gap-2 w-full max-w-xs", children: [
-          /* @__PURE__ */ m(
             Ut,
->>>>>>> Stashed changes
             {
               variant: "default",
               size: "sm",
@@ -19603,13 +17402,8 @@ class EC extends Xu {
               ]
             }
           ),
-<<<<<<< Updated upstream
           s && this.props.onClearContent && /* @__PURE__ */ I(
-            Ft,
-=======
-          s && this.props.onClearContent && /* @__PURE__ */ m(
             Ut,
->>>>>>> Stashed changes
             {
               variant: "ghost",
               size: "sm",
@@ -19713,7 +17507,7 @@ function TC({ editorMode: e, onModeSwitch: t }) {
     )
   ] });
 }
-function Lt({
+function At({
   children: e,
   className: t,
   zIndex: n = 99999,
@@ -19860,13 +17654,8 @@ const He = ({ onMouseDown: e, isActive: t, disabled: n, children: r, title: o })
       children: r ? /* @__PURE__ */ h(wn, { size: n, className: "text-green-500" }) : /* @__PURE__ */ h(bn, { size: n })
     }
   );
-<<<<<<< Updated upstream
 }), NC = bt(function({ editor: t, className: n = "", suppressWhenLinkPopoverOpen: r = !1, aiEnabled: o = !1, onAISparklesClick: s, onCopySelectionAsMarkdown: i }) {
   const a = Y(null), l = fl({
-=======
-}), Lx = wt(function({ editor: t, className: n = "", suppressWhenLinkPopoverOpen: o = !1, aiEnabled: r = !1, onAISparklesClick: s, onCopySelectionAsMarkdown: a }) {
-  const i = Y(null), l = ml({
->>>>>>> Stashed changes
     editor: t,
     selector: ({ editor: C }) => ({
       isBold: C.isActive("bold"),
@@ -19913,13 +17702,8 @@ const He = ({ onMouseDown: e, isActive: t, disabled: n, children: r, title: o })
             }, 150);
             return;
           }
-<<<<<<< Updated upstream
           b.current && (clearTimeout(b.current), b.current = null);
           const R = t.view.coordsAtPos(P), A = t.view.coordsAtPos(O), H = v.current?.offsetWidth || 500, G = v.current?.offsetHeight || 40, z = 8, U = window.innerWidth;
-=======
-          w.current && (clearTimeout(w.current), w.current = null);
-          const P = t.view.coordsAtPos(I), L = t.view.coordsAtPos(R), $ = v.current?.offsetWidth || 500, G = v.current?.offsetHeight || 40, W = 8, U = window.innerWidth;
->>>>>>> Stashed changes
           let K = 0, B = 0;
           if (v.current) {
             const ue = v.current.closest('[data-slot="dialog-content"]');
@@ -19928,21 +17712,12 @@ const He = ({ onMouseDown: e, isActive: t, disabled: n, children: r, title: o })
               K = ve.left, B = ve.top;
             }
           }
-<<<<<<< Updated upstream
           let _ = (R.left + A.left) / 2 - H / 2 - K;
           const ee = K ? U - K : U;
           _ = Math.max(z, Math.min(ee - H - z, _));
           let ne = R.top - G - 10 - B;
           ne < z && (ne = A.bottom + 10 - B), p ? y({ top: Math.max(z, ne), left: _ }) : (x.current && clearTimeout(x.current), x.current = setTimeout(() => {
             y({ top: Math.max(z, ne), left: _ }), g(!0);
-=======
-          let O = (P.left + L.left) / 2 - $ / 2 - K;
-          const ee = K ? U - K : U;
-          O = Math.max(W, Math.min(ee - $ - W, O));
-          let ne = P.top - G - 10 - B;
-          ne < W && (ne = L.bottom + 10 - B), h ? b({ top: Math.max(W, ne), left: O }) : (N.current && clearTimeout(N.current), N.current = setTimeout(() => {
-            b({ top: Math.max(W, ne), left: O }), g(!0);
->>>>>>> Stashed changes
           }, 50));
         } catch (D) {
           console.warn("FloatingToolbar: Error updating position", D);
@@ -20190,21 +17965,10 @@ const He = ({ onMouseDown: e, isActive: t, disabled: n, children: r, title: o })
       ]
     }
   );
-<<<<<<< Updated upstream
-  return /* @__PURE__ */ h(Lt, { onMouseDown: S, children: N });
+  return /* @__PURE__ */ h(At, { onMouseDown: S, children: N });
 });
 function LC({ editor: e, isOpen: t, onClose: n }) {
   const [r, o] = j(""), s = Y(null), i = Y(null), [a, l] = j({ top: 0, left: 0 });
-=======
-  return /* @__PURE__ */ m(Lt, { onMouseDown: S, children: D }, void 0, !1, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/FloatingToolbar.tsx",
-    lineNumber: 642,
-    columnNumber: 5
-  }, this);
-});
-function Px({ editor: e, isOpen: t, onClose: n }) {
-  const [o, r] = j(""), s = Y(null), a = Y(null), [i, l] = j({ top: 0, left: 0 });
->>>>>>> Stashed changes
   q(() => {
     if (t) {
       const g = e.getAttributes("link").href || "";
@@ -20276,15 +18040,7 @@ function Px({ editor: e, isOpen: t, onClose: n }) {
       ] })
     }
   );
-<<<<<<< Updated upstream
-  return /* @__PURE__ */ h(Lt, { children: p });
-=======
-  return /* @__PURE__ */ m(Lt, { children: h }, void 0, !1, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/LinkPopover.tsx",
-    lineNumber: 161,
-    columnNumber: 10
-  }, this);
->>>>>>> Stashed changes
+  return /* @__PURE__ */ h(At, { children: p });
 }
 function AC() {
   return "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -20468,15 +18224,7 @@ function IC({ editor: e, onEditLink: t }) {
       ] })
     }
   );
-<<<<<<< Updated upstream
-  return /* @__PURE__ */ h(Lt, { children: M });
-=======
-  return /* @__PURE__ */ m(Lt, { children: E }, void 0, !1, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/LinkHoverTooltip.tsx",
-    lineNumber: 385,
-    columnNumber: 10
-  }, this);
->>>>>>> Stashed changes
+  return /* @__PURE__ */ h(At, { children: M });
 }
 const RC = [
   {
@@ -20493,29 +18241,13 @@ const RC = [
   },
   {
     title: "Heading 2",
-<<<<<<< Updated upstream
     icon: /* @__PURE__ */ h(If, { size: 16 }),
-=======
-    icon: /* @__PURE__ */ m(Lm, { size: 16 }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/SlashCommands.tsx",
-      lineNumber: 76,
-      columnNumber: 11
-    }, void 0),
->>>>>>> Stashed changes
     command: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(),
     keywords: ["h2", "subtitle"]
   },
   {
     title: "Heading 3",
-<<<<<<< Updated upstream
     icon: /* @__PURE__ */ h(Rf, { size: 16 }),
-=======
-    icon: /* @__PURE__ */ m(Pm, { size: 16 }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/SlashCommands.tsx",
-      lineNumber: 82,
-      columnNumber: 11
-    }, void 0),
->>>>>>> Stashed changes
     command: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(),
     keywords: ["h3", "subheading"]
   },
@@ -20665,7 +18397,6 @@ function HC({ editor: e }) {
     let W;
     if (O >= x ? W = "below" : $ >= x ? W = "above" : W = O >= $ ? "below" : "above", g(W), m.current) {
       const V = Math.max(
-<<<<<<< Updated upstream
         Kr,
         Math.min(D, P - $C - Kr)
       ), R = W === "below" ? C + 4 : N - x - 4;
@@ -20676,18 +18407,6 @@ function HC({ editor: e }) {
     const { state: N } = e, { selection: C } = N, D = C.from, L = y.current;
     if (L >= 0 && L <= D)
       e.chain().focus().deleteRange({ from: L, to: D }).run();
-=======
-        Go,
-        Math.min(M, I - Hx - Go)
-      ), P = H === "below" ? x + 4 : D - N - 4;
-      p.current.style.top = `${P}px`, p.current.style.left = `${V}px`;
-    }
-  }, [t, i, N, w.length]);
-  const E = F(() => {
-    const { state: D } = e, { selection: x } = D, M = x.from, A = b.current;
-    if (A >= 0 && A <= M)
-      e.chain().focus().deleteRange({ from: A, to: M }).run();
->>>>>>> Stashed changes
     else {
       const { $from: P } = C, $ = P.parent.textBetween(0, P.parentOffset, void 0, "￼").lastIndexOf("/");
       if ($ !== -1) {
@@ -20785,23 +18504,9 @@ function HC({ editor: e }) {
       isOpen: c,
       onClose: () => d(!1),
       onInsert: S,
-<<<<<<< Updated upstream
       position: u
     }
-  ) : !t || b.length === 0 ? null : /* @__PURE__ */ h(Lt, { children: /* @__PURE__ */ h(
-=======
-      position: d
-    },
-    void 0,
-    !1,
-    {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/SlashCommands.tsx",
-      lineNumber: 530,
-      columnNumber: 7
-    },
-    this
-  ) : !t || w.length === 0 ? null : /* @__PURE__ */ m(Lt, { children: /* @__PURE__ */ m(
->>>>>>> Stashed changes
+  ) : !t || b.length === 0 ? null : /* @__PURE__ */ h(At, { children: /* @__PURE__ */ h(
     "div",
     {
       ref: m,
@@ -20861,21 +18566,12 @@ function UC({ editor: e, onSearch: t, onCreateItem: n }) {
     if (L < 0) return;
     const { state: P } = e, O = P.selection.from;
     try {
-<<<<<<< Updated upstream
       const $ = P.tr.delete(L, O), W = P.schema.marks.wikiLink;
       if (W) {
         const V = W.create({ pageName: D }), R = P.schema.text(D, [V]);
         $.insert(L, R);
         const A = L + D.length;
         $.setSelection(Ke.create($.doc, A)), $.removeStoredMark(W);
-=======
-      const _ = I.tr.delete(A, R), H = I.schema.marks.wikiLink;
-      if (H) {
-        const V = H.create({ pageName: M }), P = I.schema.text(M, [V]);
-        _.insert(A, P);
-        const L = A + M.length;
-        _.setSelection(Ke.create(_.doc, L)), _.removeStoredMark(H);
->>>>>>> Stashed changes
       } else
         $.insertText(`[[${D}]]`, L);
       e.view.dispatch($), e.view.focus();
@@ -20999,7 +18695,6 @@ function UC({ editor: e, onSearch: t, onCreateItem: n }) {
     Math.max(S, 1) * WC + zC,
     FC
   );
-<<<<<<< Updated upstream
   if (po(() => {
     if (!r || !u) return;
     const { top: D, bottom: L, left: P } = u, O = window.innerHeight, $ = window.innerWidth, W = O - L - Gr, V = D - Gr;
@@ -21013,23 +18708,7 @@ function UC({ editor: e, onSearch: t, onCreateItem: n }) {
     }
   }, [r, u, k, S]), !r) return null;
   const N = s.trim() && !a.some((D) => D.title.toLowerCase() === s.trim().toLowerCase());
-  return /* @__PURE__ */ h(Lt, { children: /* @__PURE__ */ I(
-=======
-  if (fr(() => {
-    if (!o || !d) return;
-    const { top: M, bottom: A, left: I } = d, R = window.innerHeight, _ = window.innerWidth, H = R - A - qo, V = M - qo;
-    let P;
-    if (H >= k ? P = "below" : V >= k ? P = "above" : P = H >= V ? "below" : "above", g(P), w.current) {
-      const L = Math.max(
-        qo,
-        Math.min(I, _ - Fx - qo)
-      ), $ = P === "below" ? A + 4 : M - k - 4;
-      w.current.style.top = `${$}px`, w.current.style.left = `${L}px`;
-    }
-  }, [o, d, k, S]), !o) return null;
-  const D = s.trim() && !i.some((M) => M.title.toLowerCase() === s.trim().toLowerCase());
-  return /* @__PURE__ */ m(Lt, { children: /* @__PURE__ */ m(
->>>>>>> Stashed changes
+  return /* @__PURE__ */ h(At, { children: /* @__PURE__ */ I(
     "div",
     {
       ref: b,
@@ -21205,8 +18884,7 @@ function YC({
       ]
     }
   );
-<<<<<<< Updated upstream
-  return /* @__PURE__ */ h(Lt, { children: m });
+  return /* @__PURE__ */ h(At, { children: m });
 }
 function jC({ containerRef: e, enabled: t = !0 }) {
   const [n, r] = j(!1), [o, s] = j(0), i = F((d) => {
@@ -21215,21 +18893,6 @@ function jC({ containerRef: e, enabled: t = !0 }) {
     d.preventDefault(), d.stopPropagation(), s((u) => {
       const f = u - 1;
       return f === 0 && r(!1), f;
-=======
-  return /* @__PURE__ */ m(Lt, { children: p }, void 0, !1, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/ImageEditPopover.tsx",
-    lineNumber: 213,
-    columnNumber: 10
-  }, this);
-}
-function Kx({ containerRef: e, enabled: t = !0 }) {
-  const [n, o] = j(!1), [r, s] = j(0), a = F((u) => {
-    u.preventDefault(), u.stopPropagation(), u.dataTransfer?.types.includes("Files") && (s((d) => d + 1), o(!0));
-  }, []), i = F((u) => {
-    u.preventDefault(), u.stopPropagation(), s((d) => {
-      const f = d - 1;
-      return f === 0 && o(!1), f;
->>>>>>> Stashed changes
     });
   }, []), l = F((d) => {
     d.preventDefault(), d.stopPropagation();
@@ -21353,15 +19016,7 @@ function KC({ actions: e, scope: t, onAction: n, onClose: r, position: o }) {
       )
     }
   );
-<<<<<<< Updated upstream
-  return /* @__PURE__ */ h(Lt, { onMouseDown: (y) => y.preventDefault(), children: m });
-=======
-  return /* @__PURE__ */ m(Lt, { onMouseDown: (b) => b.preventDefault(), children: p }, void 0, !1, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/ai/AIDropdownMenu.tsx",
-    lineNumber: 197,
-    columnNumber: 5
-  }, this);
->>>>>>> Stashed changes
+  return /* @__PURE__ */ h(At, { onMouseDown: (y) => y.preventDefault(), children: m });
 }
 function GC({
   state: e,
@@ -21388,8 +19043,7 @@ function GC({
     };
     return document.addEventListener("keydown", w), () => document.removeEventListener("keydown", w);
   }, [s]);
-<<<<<<< Updated upstream
-  const f = Tt(() => {
+  const f = St(() => {
     const k = window.innerWidth, N = window.innerHeight;
     let C = t.selectionCenterX - 380 / 2;
     C + 380 > k - 8 && (C = k - 380 - 8), C < 8 && (C = 8);
@@ -21399,18 +19053,6 @@ function GC({
   }, [t, d]), p = e.status === "streaming" || e.status === "complete" ? e.result : "", g = e.status === "streaming" || e.status === "complete" ? e.actionLabel : "", m = e.status === "streaming", y = e.status === "complete", v = e.status === "error", b = F(() => {
     navigator.clipboard.writeText(p), c(!0), setTimeout(() => c(!1), 1500);
   }, [p]);
-=======
-  const f = St(() => {
-    const k = window.innerWidth, D = window.innerHeight;
-    let x = t.selectionCenterX - 380 / 2;
-    x + 380 > k - 8 && (x = k - 380 - 8), x < 8 && (x = 8);
-    const M = D - t.selectionBottom - 8, A = t.selectionTop - 8, I = u || 200;
-    let R, _ = !1;
-    return M >= I || M >= A ? R = t.selectionBottom + 8 : (R = t.selectionTop - 8 - I, _ = !0), R < 8 && (R = 8), R + I > D - 8 && (R = D - I - 8), { top: R, left: x, placedAbove: _ };
-  }, [t, u]), h = e.status === "streaming" || e.status === "complete" ? e.result : "", g = e.status === "streaming" || e.status === "complete" ? e.actionLabel : "", p = e.status === "streaming", b = e.status === "complete", v = e.status === "error", w = F(() => {
-    navigator.clipboard.writeText(h), c(!0), setTimeout(() => c(!1), 1500);
-  }, [h]);
->>>>>>> Stashed changes
   if (e.status === "idle") return null;
   const x = f.placedAbove ? "animate-in fade-in-0 slide-in-from-bottom-2 duration-150" : "animate-in fade-in-0 slide-in-from-top-2 duration-150", M = /* @__PURE__ */ h(
     "div",
@@ -21525,15 +19167,7 @@ function GC({
       )
     }
   );
-<<<<<<< Updated upstream
-  return /* @__PURE__ */ h(Lt, { onMouseDown: (w) => w.preventDefault(), children: M });
-=======
-  return /* @__PURE__ */ m(Lt, { onMouseDown: (y) => y.preventDefault(), children: E }, void 0, !1, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/ai/AIResultPopover.tsx",
-    lineNumber: 260,
-    columnNumber: 5
-  }, this);
->>>>>>> Stashed changes
+  return /* @__PURE__ */ h(At, { onMouseDown: (w) => w.preventDefault(), children: M });
 }
 function an({
   icon: e,
@@ -21589,21 +19223,10 @@ function qC({
   onImageDelete: C,
   onImageEditClose: D
 }) {
-<<<<<<< Updated upstream
   return /* @__PURE__ */ I(ye, { children: [
     !n.images && !n.dragAndDrop && /* @__PURE__ */ h(jC, { containerRef: r, enabled: o }),
     !t && s && /* @__PURE__ */ h(
       NC,
-=======
-  return /* @__PURE__ */ m(ye, { children: [
-    !n.images && !n.dragAndDrop && /* @__PURE__ */ m(Kx, { containerRef: o, enabled: r }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/WYSIWYGOverlays.tsx",
-      lineNumber: 114,
-      columnNumber: 9
-    }, this),
-    !t && s && /* @__PURE__ */ m(
-      Lx,
->>>>>>> Stashed changes
       {
         editor: e,
         suppressWhenLinkPopoverOpen: i,
@@ -21633,25 +19256,10 @@ function qC({
         onDiscard: M
       }
     ),
-<<<<<<< Updated upstream
     !n.slashCommands && /* @__PURE__ */ h(HC, { editor: e, disabledFeatures: n }),
     !n.wikiLinks && S && /* @__PURE__ */ h(UC, { editor: e, onSearch: S }),
     /* @__PURE__ */ h(
       LC,
-=======
-    !n.slashCommands && /* @__PURE__ */ m(Wx, { editor: e, disabledFeatures: n }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/WYSIWYGOverlays.tsx",
-      lineNumber: 153,
-      columnNumber: 9
-    }, this),
-    !n.wikiLinks && S && /* @__PURE__ */ m(jx, { editor: e, onSearch: S }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/WYSIWYGOverlays.tsx",
-      lineNumber: 158,
-      columnNumber: 9
-    }, this),
-    /* @__PURE__ */ m(
-      Px,
->>>>>>> Stashed changes
       {
         editor: e,
         isOpen: i,
@@ -21737,19 +19345,13 @@ function QC(e) {
   }, []);
   return { state: t, executeAction: o, abort: s, reset: i };
 }
-<<<<<<< Updated upstream
 const al = Qu(
-  () => Promise.resolve().then(() => u1).then((e) => ({ default: e.TableOfContents }))
-), JC = () => {
-=======
-const il = Qd(
   () => Promise.resolve().then(() => p1).then((e) => ({ default: e.TableOfContents }))
-), t1 = () => {
->>>>>>> Stashed changes
+), JC = () => {
   if (typeof window > "u") return !1;
   const e = "ontouchstart" in window, t = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), n = window.innerWidth < 768;
   return e && (t || n) || t && n;
-}, n1 = {
+}, e1 = {
   info: "Info",
   note: "Note",
   prompt: "Prompt",
@@ -21757,22 +19359,18 @@ const il = Qd(
   todo: "Todo",
   summary: "Summary"
 };
-<<<<<<< Updated upstream
-function il(e) {
-=======
-function o1(e) {
+function t1(e) {
   return e.replace(
     /```ad-(\w+)\n([\s\S]*?)```/g,
-    (t, n, o) => {
-      const r = n1[n] || n.charAt(0).toUpperCase() + n.slice(1), s = o.trim();
-      return `#### ${r}
+    (t, n, r) => {
+      const o = e1[n] || n.charAt(0).toUpperCase() + n.slice(1), s = r.trim();
+      return `#### ${o}
 
 ${s}`;
     }
   );
 }
-function al(e) {
->>>>>>> Stashed changes
+function il(e) {
   const t = document.querySelector(".copy-md-toast");
   t && t.remove();
   const n = document.createElement("div");
@@ -21782,11 +19380,7 @@ function al(e) {
     n.style.animation = "sortToastOut 0.2s ease forwards", setTimeout(() => n.remove(), 200);
   }, 1500);
 }
-<<<<<<< Updated upstream
-const Q1 = Ju(function({
-=======
-const oC = Jd(function({
->>>>>>> Stashed changes
+const eE = Ju(function({
   content: t = "",
   onChange: n,
   onHTMLChange: r,
@@ -21821,15 +19415,9 @@ const oC = Jd(function({
   onBlur: $,
   onSelectionChange: W,
   onDestroy: V,
-<<<<<<< Updated upstream
   onSave: R,
   onRecover: A,
   onWikiLinkClick: H,
-=======
-  onSave: P,
-  onRecover: L,
-  onWikiLinkClick: $,
->>>>>>> Stashed changes
   validateWikiLink: G,
   onWikiLinkSearch: z,
   onLinkClick: U,
@@ -21843,9 +19431,8 @@ const oC = Jd(function({
   maxHeight: ve,
   spellCheck: be = !0,
   headingLevels: Ye = [1, 2, 3, 4, 5, 6],
-  collapsibleHeadingLevels: At = [1, 2, 3],
+  collapsibleHeadingLevels: It = [1, 2, 3],
   // TOC props
-<<<<<<< Updated upstream
   showTableOfContents: wt = !1,
   tocVisible: Dn = !0,
   onTocVisibilityChange: Nn,
@@ -21854,9 +19441,9 @@ const oC = Jd(function({
   tocMaxLevel: fr = 4,
   tocShowLevelIndicators: pr = !1,
   tocHighlightActive: Ln = !0,
-  tocTreeView: Kt = !1,
-  tocWidth: Gt = "240px",
-  tocPosition: qt = "right",
+  tocTreeView: Gt = !1,
+  tocWidth: qt = "240px",
+  tocPosition: Xt = "right",
   tocScrollOffset: hr = 20,
   onTocItemClick: mr,
   renderTocItem: gr,
@@ -21866,28 +19453,6 @@ const oC = Jd(function({
   // Performance profiler
   showPerformanceProfiler: Io = !1,
   onPerformanceProfilerClose: Ro,
-=======
-  showTableOfContents: yt = !1,
-  tocVisible: Mn = !0,
-  onTocVisibilityChange: Dn,
-  tocTitle: uo = "",
-  tocMinLevel: mo = 1,
-  tocMaxLevel: fo = 4,
-  tocShowLevelIndicators: ho = !1,
-  tocHighlightActive: An = !0,
-  tocTreeView: Gt = !1,
-  tocWidth: qt = "240px",
-  tocPosition: Xt = "right",
-  tocScrollOffset: po = 20,
-  onTocItemClick: go,
-  renderTocItem: bo,
-  tocShowToggleButton: vo = !0,
-  // Raw markdown editor
-  autoClosePairs: Lr = !0,
-  // Performance profiler
-  showPerformanceProfiler: Pr = !1,
-  onPerformanceProfilerClose: Ir,
->>>>>>> Stashed changes
   // Auto reorder checklist
   autoReorderChecklist: Po = !1,
   // Expand selection
@@ -21904,10 +19469,9 @@ const oC = Jd(function({
   // AI writing assistant
   aiActions: fe,
   onAIAction: Te,
-<<<<<<< Updated upstream
   onAISetupRequired: de
 }, $o) {
-  const [Xt] = j(() => JC()), [Zt, An] = j(D), [Qt, Ho] = j(""), wr = Y(D), xr = Y(""), In = Y(null), [bu, Ea] = j(0), kr = !!(fe && fe.length > 0 && Te), { state: je, executeAction: Cr, abort: wu, reset: xt } = QC(Te), [xu, Bo] = j(null), [ku, Cu] = j({ selectionTop: 0, selectionBottom: 0, selectionCenterX: 0 }), Eu = Y(Te);
+  const [Zt] = j(() => JC()), [Qt, An] = j(D), [Jt, Ho] = j(""), wr = Y(D), xr = Y(""), In = Y(null), [bu, Ea] = j(0), kr = !!(fe && fe.length > 0 && Te), { state: je, executeAction: Cr, abort: wu, reset: xt } = QC(Te), [xu, Bo] = j(null), [ku, Cu] = j({ selectionTop: 0, selectionBottom: 0, selectionCenterX: 0 }), Eu = Y(Te);
   Eu.current = Te;
   const Ma = Y(de);
   Ma.current = de;
@@ -21919,28 +19483,10 @@ const oC = Jd(function({
   Oa.current = Wo;
   const [zo, Er] = j(null), Iu = Zk({
     placeholder: i,
-    isMobile: Xt,
-    maxImageSize: M,
-=======
-  onAISetupRequired: ue
-}, $r) {
-  const [Zt] = j(() => t1()), [Qt, Ln] = j(M), [Jt, Br] = j(""), No = Y(M), ko = Y(""), Pn = Y(null), [wd, Ci] = j(0), xo = !!(me && me.length > 0 && Te), { state: je, executeAction: Co, abort: yd, reset: Nt } = e1(Te), [Nd, Hr] = j(null), [kd, xd] = j({ selectionTop: 0, selectionBottom: 0, selectionCenterX: 0 }), Cd = Y(Te);
-  Cd.current = Te;
-  const Ei = Y(ue);
-  Ei.current = ue;
-  const [Ed, Td] = j([]), [Sd, Md] = j(0), Dd = F((se, xe) => {
-    Td(se), Md(xe);
-  }, []), Ti = Y(y), Si = Y(C), Mi = Y(S), Di = Y(k), Ai = Y(D), Li = Y($), Pi = Y(G), Ii = Y(W);
-  Ti.current = y, Si.current = C, Mi.current = S, Di.current = k, Ai.current = D, Li.current = $, Pi.current = G, Ii.current = W;
-  const Ri = 2e3, [Wr, Ad] = j(() => he === "lightweight" ? !0 : he === "full" ? !1 : t && typeof t == "string" ? Math.ceil(t.length / 80) > Ri : !1), Ld = Y(0), Oi = Y(Wr);
-  Oi.current = Wr;
-  const [Fr, Eo] = j(null), Pd = Jk({
-    placeholder: a,
     isMobile: Zt,
-    maxImageSize: E,
->>>>>>> Stashed changes
+    maxImageSize: M,
     headingLevels: Ye,
-    collapsibleHeadingLevels: At,
+    collapsibleHeadingLevels: It,
     disabledFeatures: ne,
     progressiveSelectAll: Oo,
     enableCollapsibleHeadings: _o,
@@ -21950,7 +19496,6 @@ const oC = Jd(function({
     isLightweight: Wo,
     setImageEditState: Er,
     callbackRefs: {
-<<<<<<< Updated upstream
       onImageUploadStart: Ta,
       onImageUploadComplete: Sa,
       onImageUploadError: Da,
@@ -21961,18 +19506,6 @@ const oC = Jd(function({
     }
   }), { editor: re, turndownService: Mr } = nC({
     extensions: Iu,
-=======
-      onImageUploadStart: Ti,
-      onImageUploadComplete: Si,
-      onImageUploadError: Mi,
-      onImageUpload: Di,
-      resolveImageSrc: Ai,
-      onWikiLinkClick: Li,
-      validateWikiLink: Pi
-    }
-  }), { editor: oe, turndownService: To } = rx({
-    extensions: Pd,
->>>>>>> Stashed changes
     content: t,
     editable: a,
     autofocus: l,
@@ -21990,33 +19523,19 @@ const oC = Jd(function({
     onBlur: $,
     onSelectionChange: W,
     onLinkClick: U,
-<<<<<<< Updated upstream
     editorModeRef: wr,
     rawMarkdownRef: xr,
     setRawMarkdown: Ho,
     setIsLightweight: Lu,
     lightweightCheckCounterRef: Au,
     isLightweightRef: Oa
-  }), [Ru, Tr] = j(!1), [Pu, Ou] = j(!1), _u = K !== void 0 ? K : Pu, It = F((se) => {
+  }), [Ru, Tr] = j(!1), [Pu, Ou] = j(!1), _u = K !== void 0 ? K : Pu, Rt = F((se) => {
     Ou(se), B?.(se);
-  }, [B]), [$u, Sr] = j(0), [Hu, Bu] = j(""), Rt = nb(re, {
+  }, [B]), [$u, Sr] = j(0), [Hu, Bu] = j(""), Pt = nb(re, {
     storageKey: y,
-=======
-    editorModeRef: No,
-    rawMarkdownRef: ko,
-    setRawMarkdown: Br,
-    setIsLightweight: Ad,
-    lightweightCheckCounterRef: Ld,
-    isLightweightRef: Oi
-  }), [Id, So] = j(!1), [Rd, Od] = j(!1), _d = K !== void 0 ? K : Rd, It = F((se) => {
-    Od(se), B?.(se);
-  }, [B]), [$d, Mo] = j(0), [Bd, Hd] = j(""), Rt = rw(oe, {
-    storageKey: b,
->>>>>>> Stashed changes
     debounceMs: v,
     enabled: m,
     onSave: (se) => {
-<<<<<<< Updated upstream
       R?.(se);
     },
     onRecover: (se) => {
@@ -22031,22 +19550,6 @@ const oC = Jd(function({
     setRawMarkdown: Ho,
     onModeChange: L,
     enableTagAutoDetect: vr,
-=======
-      P?.(se);
-    },
-    onRecover: (se) => {
-      L?.(se);
-    }
-  }), zr = vx({
-    editor: oe,
-    turndownService: To,
-    editorModeRef: No,
-    rawMarkdownRef: ko,
-    setEditorMode: Ln,
-    setRawMarkdown: Br,
-    onModeChange: A,
-    enableTagAutoDetect: wo,
->>>>>>> Stashed changes
     disabledFeatures: ne
   }), _a = F((se) => {
     Ho(se), xr.current = se, o?.(se);
@@ -22055,84 +19558,59 @@ const oC = Jd(function({
     extendedStats: !1,
     enabled: u
   });
-<<<<<<< Updated upstream
   rb($o, {
     editor: re,
     turndownService: Mr,
     editorModeRef: wr,
     handleModeSwitch: Fo,
     wordCount: Dr,
-    autoSaveState: Rt,
-    setIsFindReplaceOpen: It,
+    autoSaveState: Pt,
+    setIsFindReplaceOpen: Rt,
     setFindReplaceFocusTrigger: Sr
   }), mC({
     editorModeRef: wr,
     rawMarkdownRef: xr,
-    editorMode: Zt,
+    editorMode: Qt,
     handleModeSwitch: Fo,
-    setIsFindReplaceOpen: It,
+    setIsFindReplaceOpen: Rt,
     setFindReplaceFocusTrigger: Sr
   });
-  const Wu = Tt(() => ({
+  const Wu = St(() => ({
     openLinkPopover: () => Tr(!0),
     openFindReplace: (se) => {
-      se && Bu(se), It(!0), Sr((Ce) => Ce + 1);
-=======
-  sw($r, {
-    editor: oe,
-    turndownService: To,
-    editorModeRef: No,
-    handleModeSwitch: zr,
-    wordCount: Do,
-    autoSaveState: Rt,
-    setIsFindReplaceOpen: It,
-    setFindReplaceFocusTrigger: Mo
-  }), bx({
-    editorModeRef: No,
-    rawMarkdownRef: ko,
-    editorMode: Qt,
-    handleModeSwitch: zr,
-    setIsFindReplaceOpen: It,
-    setFindReplaceFocusTrigger: Mo
-  });
-  const Wd = St(() => ({
-    openLinkPopover: () => So(!0),
-    openFindReplace: (se) => {
-      se && Hd(se), It(!0), Mo((xe) => xe + 1);
->>>>>>> Stashed changes
+      se && Bu(se), Rt(!0), Sr((Ce) => Ce + 1);
     },
     openFindReplaceWithReplace: () => {
-      It(!0);
+      Rt(!0);
     }
-  }), [It]);
-<<<<<<< Updated upstream
-  hC(re, Xt, Wu);
+  }), [Rt]);
+  hC(re, Zt, Wu);
   const $a = F((se, Ce) => {
     if (!kr) {
       Ma.current?.();
       return;
     }
     if (!re) return;
-    let $e = { top: 0, left: 0 };
+    let Oe = { top: 0, left: 0 };
     if (Ce) {
       const Re = Ce.getBoundingClientRect();
-      $e = { top: Re.bottom + 4, left: Re.left };
+      Oe = { top: Re.bottom + 4, left: Re.left };
     } else {
-      const { from: Re, to: et } = re.state.selection, Jt = re.view.coordsAtPos(Re), en = re.view.coordsAtPos(et);
-      $e = { top: en.bottom + 8, left: (Jt.left + en.left) / 2 };
+      const { from: Re, to: et } = re.state.selection, kt = re.view.coordsAtPos(Re), en = re.view.coordsAtPos(et);
+      Oe = { top: en.bottom + 8, left: (kt.left + en.left) / 2 };
     }
-    Bo({ scope: se, position: $e });
+    Bo({ scope: se, position: Oe });
   }, [kr, re]), zu = F((se, Ce) => {
     if (!re || !fe) return;
-    const $e = fe.find((Uo) => Uo.id === se);
-    if (!$e) return;
-    const { from: Re, to: et } = re.state.selection, Jt = Re !== et ? re.state.doc.textBetween(Re, et, `
-`) : "", en = $e.scope === "document" || !Jt ? re.getText() : Jt, Nr = re.view.coordsAtPos(Re), Rn = re.view.coordsAtPos(et);
+    const Oe = fe.find((Uo) => Uo.id === se);
+    if (!Oe) return;
+    const { from: Re, to: et } = re.state.selection, kt = Re !== et ? re.state.doc.textBetween(Re, et, `
+`) : "", en = Oe.scope === "document" || !kt ? re.getText() : kt, Nr = re.view.coordsAtPos(Re), Rn = re.view.coordsAtPos(et);
     Cu({
       selectionTop: Nr.top,
       selectionBottom: Rn.bottom,
       selectionCenterX: (Nr.left + Rn.right) / 2
-    }), Bo(null), Cr(se, $e.label, en, { from: Re, to: et }, Ce);
+    }), Bo(null), Cr(se, Oe.label, en, { from: Re, to: et }, Ce);
   }, [re, fe, Cr]), Fu = F(() => {
     if (!re || je.status !== "complete") return;
     const { selectionRange: se, result: Ce } = je;
@@ -22145,79 +19623,27 @@ const oC = Jd(function({
   }, [re, je, xt]), Yu = F(() => {
     if (!(je.status !== "complete" && je.status !== "error"))
       if (je.status === "complete") {
-        const { action: se, actionLabel: Ce, inputText: $e, selectionRange: Re } = je;
-        xt(), Cr(se, Ce, $e, Re);
+        const { action: se, actionLabel: Ce, inputText: Oe, selectionRange: Re } = je;
+        xt(), Cr(se, Ce, Oe, Re);
       } else
         xt();
   }, [je, xt, Cr]), Ha = F(() => {
     if (!re) return;
-    const { from: se, to: Ce, empty: $e } = re.state.selection;
+    const { from: se, to: Ce, empty: Oe } = re.state.selection;
     let Re, et;
-    if ($e)
-      Re = re.getHTML(), et = re.getText();
-=======
-  gx(oe, Zt, Wd);
-  const $i = F((se, xe) => {
-    if (!xo) {
-      Ei.current?.();
-      return;
-    }
-    if (!oe) return;
-    let Oe = { top: 0, left: 0 };
-    if (xe) {
-      const Ie = xe.getBoundingClientRect();
-      Oe = { top: Ie.bottom + 4, left: Ie.left };
-    } else {
-      const { from: Ie, to: et } = oe.state.selection, kt = oe.view.coordsAtPos(Ie), en = oe.view.coordsAtPos(et);
-      Oe = { top: en.bottom + 8, left: (kt.left + en.left) / 2 };
-    }
-    Hr({ scope: se, position: Oe });
-  }, [xo, oe]), Fd = F((se, xe) => {
-    if (!oe || !me) return;
-    const Oe = me.find((Ur) => Ur.id === se);
-    if (!Oe) return;
-    const { from: Ie, to: et } = oe.state.selection, kt = Ie !== et ? oe.state.doc.textBetween(Ie, et, `
-`) : "", en = Oe.scope === "document" || !kt ? oe.getText() : kt, Ao = oe.view.coordsAtPos(Ie), In = oe.view.coordsAtPos(et);
-    xd({
-      selectionTop: Ao.top,
-      selectionBottom: In.bottom,
-      selectionCenterX: (Ao.left + In.right) / 2
-    }), Hr(null), Co(se, Oe.label, en, { from: Ie, to: et }, xe);
-  }, [oe, me, Co]), zd = F(() => {
-    if (!oe || je.status !== "complete") return;
-    const { selectionRange: se, result: xe } = je;
-    oe.chain().focus().setTextSelection(se).deleteSelection().insertContent(xe).run(), Nt();
-  }, [oe, je, Nt]), Ud = F(() => {
-    if (!oe || je.status !== "complete") return;
-    const { selectionRange: se, result: xe } = je;
-    oe.chain().focus().setTextSelection(se.to).insertContent(`
-` + xe).run(), Nt();
-  }, [oe, je, Nt]), Yd = F(() => {
-    if (!(je.status !== "complete" && je.status !== "error"))
-      if (je.status === "complete") {
-        const { action: se, actionLabel: xe, inputText: Oe, selectionRange: Ie } = je;
-        Nt(), Co(se, xe, Oe, Ie);
-      } else
-        Nt();
-  }, [je, Nt, Co]), Bi = F(() => {
-    if (!oe) return;
-    const { from: se, to: xe, empty: Oe } = oe.state.selection;
-    let Ie, et;
     if (Oe)
-      Ie = oe.getHTML(), et = oe.getText();
->>>>>>> Stashed changes
+      Re = re.getHTML(), et = re.getText();
     else {
       const en = re.state.doc.slice(se, Ce), Nr = Gf.fromSchema(re.schema), Rn = document.createElement("div"), Uo = Nr.serializeFragment(en.content);
       Rn.appendChild(Uo), Re = Rn.innerHTML, et = re.state.doc.textBetween(se, Ce, `
 `);
     }
-<<<<<<< Updated upstream
-    const Jt = Un(Mr.turndown(Re));
-    navigator.clipboard.writeText(Jt).then(() => {
-      il($e ? "Document copied as Markdown" : "Selection copied as Markdown");
+    let kt = Un(Mr.turndown(Re));
+    Oe && (kt = t1(kt)), navigator.clipboard.writeText(kt).then(() => {
+      il(Oe ? "Document copied as Markdown" : "Selection copied as Markdown");
     }).catch(() => {
       navigator.clipboard.writeText(et).then(() => {
-        il($e ? "Document copied" : "Selection copied");
+        il(Oe ? "Document copied" : "Selection copied");
       });
     });
   }, [re, Mr]);
@@ -22225,33 +19651,13 @@ const oC = Jd(function({
     return /* @__PURE__ */ h(MC, { className: c, theme: p });
   const Ba = /* @__PURE__ */ h(
     Xv,
-=======
-    let kt = Un(To.turndown(Ie));
-    Oe && (kt = o1(kt)), navigator.clipboard.writeText(kt).then(() => {
-      al(Oe ? "Document copied as Markdown" : "Selection copied as Markdown");
-    }).catch(() => {
-      navigator.clipboard.writeText(et).then(() => {
-        al(Oe ? "Document copied" : "Selection copied");
-      });
-    });
-  }, [oe, To]);
-  if (!oe)
-    return /* @__PURE__ */ m(Sx, { className: c, theme: h }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-      lineNumber: 941,
-      columnNumber: 12
-    }, this);
-  const Hi = /* @__PURE__ */ m(
-    Qv,
->>>>>>> Stashed changes
     {
       editor: re,
       onCopyMarkdown: J ? Ha : void 0,
       onOpenLinkPopover: () => Tr(!0),
       className: "flex-1",
       onOpenFindReplace: () => {
-<<<<<<< Updated upstream
-        It(!0), Sr((se) => se + 1);
+        Rt(!0), Sr((se) => se + 1);
       },
       disabledFeatures: ne,
       autoReorderChecklist: Po,
@@ -22262,105 +19668,49 @@ const oC = Jd(function({
     m && /* @__PURE__ */ h(
       bC,
       {
-        status: Rt.status,
-        lastSaved: Rt.lastSaved
+        status: Pt.status,
+        lastSaved: Pt.lastSaved
       }
-=======
-        It(!0), Mo((se) => se + 1);
-      },
-      disabledFeatures: ne,
-      autoReorderChecklist: Rr,
-      aiEnabled: xo || !!ue,
-      onAISparklesClick: (se) => $i("document", se)
-    },
-    void 0,
-    !1,
-    {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-      lineNumber: 946,
-      columnNumber: 5
-    },
-    this
-  ), Wi = /* @__PURE__ */ m("div", { className: "editor-footer", children: [
-    p && /* @__PURE__ */ m(
-      Nx,
-      {
-        status: Rt.status,
-        lastSaved: Rt.lastSaved
-      },
-      void 0,
-      !1,
-      {
-        fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-        lineNumber: 966,
-        columnNumber: 9
-      },
-      this
->>>>>>> Stashed changes
     ),
     /* @__PURE__ */ h("div", { className: "word-count", children: /* @__PURE__ */ I("span", { children: [
       Dr.words,
       " words"
-<<<<<<< Updated upstream
     ] }) })
   ] }), ju = {
     minHeight: ue,
     ...ve && { maxHeight: ve, overflowY: "auto" }
   };
   return /* @__PURE__ */ I("div", { className: `markdown-editor-container ${g === "neutral" ? "color-theme-neutral" : ""} ${c}`, "data-theme": p, children: [
-    m && b && Rt.hasRecoverableContent && /* @__PURE__ */ h(
+    m && b && Pt.hasRecoverableContent && /* @__PURE__ */ h(
       wC,
-=======
-    ] }, void 0, !0, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-      lineNumber: 972,
-      columnNumber: 9
-    }, this) }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-      lineNumber: 971,
-      columnNumber: 7
-    }, this)
-  ] }, void 0, !0, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-    lineNumber: 964,
-    columnNumber: 5
-  }, this), jd = {
-    minHeight: de,
-    ...be && { maxHeight: be, overflowY: "auto" }
-  };
-  return /* @__PURE__ */ m("div", { className: `markdown-editor-container ${g === "neutral" ? "color-theme-neutral" : ""} ${c}`, "data-theme": h, children: [
-    p && w && Rt.hasRecoverableContent && /* @__PURE__ */ m(
-      kx,
->>>>>>> Stashed changes
       {
         onRecover: () => {
-          Rt.recover();
+          Pt.recover();
         },
-        onDismiss: Rt.dismissRecovery
-<<<<<<< Updated upstream
+        onDismiss: Pt.dismissRecovery
       }
     ),
     d && /* @__PURE__ */ I("div", { className: "flex items-center bg-card/50 editor-toolbar-wrapper", children: [
       _ ? _(re, Ba) : Ba,
-      C && /* @__PURE__ */ h(TC, { editorMode: Zt, onModeSwitch: Fo })
+      C && /* @__PURE__ */ h(TC, { editorMode: Qt, onModeSwitch: Fo })
     ] }),
-    !Xt && /* @__PURE__ */ h(
+    !Zt && /* @__PURE__ */ h(
       Zv,
       {
         editor: re,
         isOpen: _u,
-        onClose: () => It(!1),
+        onClose: () => Rt(!1),
         focusTrigger: $u,
         initialSearchQuery: Hu,
-        editorMode: Zt,
-        rawMarkdown: Qt,
+        editorMode: Qt,
+        rawMarkdown: Jt,
         onRawMarkdownChange: _a,
         onMatchesChange: Nu
       }
     ),
     /* @__PURE__ */ h(eb, { editor: re }),
     /* @__PURE__ */ I("div", { className: `editor-main-area ${wt ? "editor-with-toc" : ""}`, children: [
-      wt && qt === "left" && /* @__PURE__ */ h(za, { fallback: null, children: /* @__PURE__ */ h(
+      wt && Xt === "left" && /* @__PURE__ */ h(za, { fallback: null, children: /* @__PURE__ */ h(
         al,
         {
           editor: re,
@@ -22371,9 +19721,9 @@ const oC = Jd(function({
           maxLevel: fr,
           showLevelIndicators: pr,
           highlightActive: Ln,
-          treeView: Kt,
-          width: Gt,
-          position: qt,
+          treeView: Gt,
+          width: qt,
+          position: Xt,
           scrollOffset: hr,
           onItemClick: mr,
           renderItem: gr,
@@ -22383,93 +19733,6 @@ const oC = Jd(function({
       ) }),
       /* @__PURE__ */ I(
         EC,
-=======
-      },
-      void 0,
-      !1,
-      {
-        fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-        lineNumber: 987,
-        columnNumber: 9
-      },
-      this
-    ),
-    u && /* @__PURE__ */ m("div", { className: "flex items-center bg-card/50 editor-toolbar-wrapper", children: [
-      O ? O(oe, Hi) : Hi,
-      x && /* @__PURE__ */ m(Mx, { editorMode: Qt, onModeSwitch: zr }, void 0, !1, {
-        fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-        lineNumber: 1e3,
-        columnNumber: 13
-      }, this)
-    ] }, void 0, !0, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-      lineNumber: 997,
-      columnNumber: 9
-    }, this),
-    !Zt && /* @__PURE__ */ m(
-      Jv,
-      {
-        editor: oe,
-        isOpen: _d,
-        onClose: () => It(!1),
-        focusTrigger: $d,
-        initialSearchQuery: Bd,
-        editorMode: Qt,
-        rawMarkdown: Jt,
-        onRawMarkdownChange: _i,
-        onMatchesChange: Dd
-      },
-      void 0,
-      !1,
-      {
-        fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-        lineNumber: 1007,
-        columnNumber: 9
-      },
-      this
-    ),
-    /* @__PURE__ */ m(nw, { editor: oe }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-      lineNumber: 1021,
-      columnNumber: 7
-    }, this),
-    /* @__PURE__ */ m("div", { className: `editor-main-area ${yt ? "editor-with-toc" : ""}`, children: [
-      yt && Xt === "left" && /* @__PURE__ */ m(Fi, { fallback: null, children: /* @__PURE__ */ m(
-        il,
-        {
-          editor: oe,
-          visible: Mn,
-          onVisibilityChange: Dn,
-          title: uo,
-          minLevel: mo,
-          maxLevel: fo,
-          showLevelIndicators: ho,
-          highlightActive: An,
-          treeView: Gt,
-          width: qt,
-          position: Xt,
-          scrollOffset: po,
-          onItemClick: go,
-          renderItem: bo,
-          showToggleButton: vo,
-          scrollContainerRef: Pn
-        },
-        void 0,
-        !1,
-        {
-          fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-          lineNumber: 1028,
-          columnNumber: 11
-        },
-        this
-      ) }, void 0, !1, {
-        fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-        lineNumber: 1027,
-        columnNumber: 9
-      }, this),
-      /* @__PURE__ */ m(
-        Tx,
->>>>>>> Stashed changes
         {
           resetKey: `${t}-${bu}`,
           onRetry: () => Ea((se) => se + 1),
@@ -22478,14 +19741,13 @@ const oC = Jd(function({
           },
           onError: oe,
           children: [
-<<<<<<< Updated upstream
-            /* @__PURE__ */ h("div", { className: "editor-content-wrapper", ref: In, style: ju, children: Zt === "wysiwyg" ? /* @__PURE__ */ I(ye, { children: [
+            /* @__PURE__ */ h("div", { className: "editor-content-wrapper", ref: In, style: ju, children: Qt === "wysiwyg" ? /* @__PURE__ */ I(ye, { children: [
               /* @__PURE__ */ h(Ku, { editor: re, className: "editor-content" }),
               /* @__PURE__ */ h(
                 qC,
                 {
                   editor: re,
-                  isMobile: Xt,
+                  isMobile: Zt,
                   disabledFeatures: ne,
                   containerRef: In,
                   editable: a,
@@ -22499,32 +19761,6 @@ const oC = Jd(function({
                   aiActions: fe,
                   onAIActionSelect: zu,
                   onAIDropdownClose: () => Bo(null),
-=======
-            /* @__PURE__ */ m("div", { className: "editor-content-wrapper", ref: Pn, style: jd, children: Qt === "wysiwyg" ? /* @__PURE__ */ m(ye, { children: [
-              /* @__PURE__ */ m(Kd, { editor: oe, className: "editor-content" }, void 0, !1, {
-                fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-                lineNumber: 1066,
-                columnNumber: 13
-              }, this),
-              /* @__PURE__ */ m(
-                Zx,
-                {
-                  editor: oe,
-                  isMobile: Zt,
-                  disabledFeatures: ne,
-                  containerRef: Pn,
-                  editable: i,
-                  showFloatingToolbar: N,
-                  isLinkPopoverOpen: Id,
-                  aiEnabled: xo,
-                  onAISetupRequired: ue,
-                  onAISparklesClick: (se) => $i("selection", se),
-                  onCopySelectionAsMarkdown: Bi,
-                  aiDropdown: Nd,
-                  aiActions: me,
-                  onAIActionSelect: Fd,
-                  onAIDropdownClose: () => Hr(null),
->>>>>>> Stashed changes
                   aiState: je,
                   aiPopoverPosition: ku,
                   onAIReplace: Fu,
@@ -22546,41 +19782,17 @@ const oC = Jd(function({
                   onImageDelete: () => {
                     re.chain().focus().setNodeSelection(zo.pos).deleteSelection().run(), Er(null);
                   },
-<<<<<<< Updated upstream
                   onImageEditClose: () => Er(null)
                 }
               )
             ] }) : /* @__PURE__ */ h(
               xC,
               {
-                content: Qt,
-                onChange: _a,
-=======
-                  onImageEditClose: () => Eo(null)
-                },
-                void 0,
-                !1,
-                {
-                  fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-                  lineNumber: 1067,
-                  columnNumber: 13
-                },
-                this
-              )
-            ] }, void 0, !0, {
-              fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-              lineNumber: 1065,
-              columnNumber: 11
-            }, this) : /* @__PURE__ */ m(
-              xx,
-              {
                 content: Jt,
-                onChange: _i,
->>>>>>> Stashed changes
+                onChange: _a,
                 placeholder: "Write your markdown here...",
                 editable: a,
                 autofocus: !0,
-<<<<<<< Updated upstream
                 searchMatches: Mu,
                 currentMatchIndex: Su,
                 autoClosePairs: Ao
@@ -22590,7 +19802,7 @@ const oC = Jd(function({
           ]
         }
       ),
-      wt && qt === "right" && /* @__PURE__ */ h(za, { fallback: null, children: /* @__PURE__ */ h(
+      wt && Xt === "right" && /* @__PURE__ */ h(za, { fallback: null, children: /* @__PURE__ */ h(
         al,
         {
           editor: re,
@@ -22601,9 +19813,9 @@ const oC = Jd(function({
           maxLevel: fr,
           showLevelIndicators: pr,
           highlightActive: Ln,
-          treeView: Kt,
-          width: Gt,
-          position: qt,
+          treeView: Gt,
+          width: qt,
+          position: Xt,
           scrollOffset: hr,
           onItemClick: mr,
           renderItem: gr,
@@ -22614,101 +19826,12 @@ const oC = Jd(function({
     ] }),
     u && (ee ? ee(
       { words: Dr.words, characters: Dr.characters },
-      Rt.status,
+      Pt.status,
       Wa
     ) : Wa),
     /* @__PURE__ */ h(CC, { visible: Io, onClose: Ro, editor: re })
   ] });
-}), J1 = go.create({
-=======
-                searchMatches: Ed,
-                currentMatchIndex: Sd,
-                autoClosePairs: Lr
-              },
-              void 0,
-              !1,
-              {
-                fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-                lineNumber: 1108,
-                columnNumber: 11
-              },
-              this
-            ) }, void 0, !1, {
-              fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-              lineNumber: 1063,
-              columnNumber: 7
-            }, this),
-            /* @__PURE__ */ m(Qx, { scrollContainerRef: Pn }, void 0, !1, {
-              fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-              lineNumber: 1120,
-              columnNumber: 7
-            }, this)
-          ]
-        },
-        void 0,
-        !0,
-        {
-          fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-          lineNumber: 1048,
-          columnNumber: 7
-        },
-        this
-      ),
-      yt && Xt === "right" && /* @__PURE__ */ m(Fi, { fallback: null, children: /* @__PURE__ */ m(
-        il,
-        {
-          editor: oe,
-          visible: Mn,
-          onVisibilityChange: Dn,
-          title: uo,
-          minLevel: mo,
-          maxLevel: fo,
-          showLevelIndicators: ho,
-          highlightActive: An,
-          treeView: Gt,
-          width: qt,
-          position: Xt,
-          scrollOffset: po,
-          onItemClick: go,
-          renderItem: bo,
-          showToggleButton: vo,
-          scrollContainerRef: Pn
-        },
-        void 0,
-        !1,
-        {
-          fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-          lineNumber: 1125,
-          columnNumber: 11
-        },
-        this
-      ) }, void 0, !1, {
-        fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-        lineNumber: 1124,
-        columnNumber: 9
-      }, this)
-    ] }, void 0, !0, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-      lineNumber: 1024,
-      columnNumber: 7
-    }, this),
-    d && (ee ? ee(
-      { words: Do.words, characters: Do.characters },
-      Rt.status,
-      Wi
-    ) : Wi),
-    /* @__PURE__ */ m(Ex, { visible: Pr, onClose: Ir, editor: oe }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-      lineNumber: 1159,
-      columnNumber: 7
-    }, this)
-  ] }, void 0, !0, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/MarkdownEditor.tsx",
-    lineNumber: 984,
-    columnNumber: 5
-  }, this);
-}), rC = gr.create({
->>>>>>> Stashed changes
+}), tE = go.create({
   name: "callout",
   addOptions() {
     return {
@@ -22806,11 +19929,7 @@ const oC = Jd(function({
     "--syntax-function": "oklch(0.75 0.15 280)",
     "--syntax-variable": "oklch(0.8 0.1 220)"
   }
-<<<<<<< Updated upstream
-}, e1 = {
-=======
-}, r1 = {
->>>>>>> Stashed changes
+}, n1 = {
   name: "light",
   description: "Light theme for bright environments",
   variables: {
@@ -22847,11 +19966,7 @@ const oC = Jd(function({
     "--syntax-function": "oklch(0.5 0.18 280)",
     "--syntax-variable": "oklch(0.45 0.12 220)"
   }
-<<<<<<< Updated upstream
-}, t1 = {
-=======
-}, s1 = {
->>>>>>> Stashed changes
+}, r1 = {
   name: "sepia",
   description: "Warm sepia tones for comfortable reading",
   variables: {
@@ -22888,11 +20003,7 @@ const oC = Jd(function({
     "--syntax-function": "oklch(0.5 0.15 280)",
     "--syntax-variable": "oklch(0.45 0.1 220)"
   }
-<<<<<<< Updated upstream
-}, n1 = {
-=======
-}, i1 = {
->>>>>>> Stashed changes
+}, o1 = {
   name: "nord",
   description: "Arctic, north-bluish color palette",
   variables: {
@@ -22929,35 +20040,19 @@ const oC = Jd(function({
     "--syntax-function": "oklch(0.72 0.1 210)",
     "--syntax-variable": "oklch(0.9 0.01 230)"
   }
-<<<<<<< Updated upstream
 }, Fn = {
   dark: hu,
-  light: e1,
-  sepia: t1,
-  nord: n1
+  light: n1,
+  sepia: r1,
+  nord: o1
 };
-function r1(e, t) {
+function s1(e, t) {
   Object.entries(t.variables).forEach(([n, r]) => {
     e.style.setProperty(n, r);
   });
 }
-function eE(e, t, n, r) {
+function nE(e, t, n, r) {
   const o = Fn[e] || hu;
-=======
-}, zn = {
-  dark: hd,
-  light: r1,
-  sepia: s1,
-  nord: i1
-};
-function a1(e, t) {
-  Object.entries(t.variables).forEach(([n, o]) => {
-    e.style.setProperty(n, o);
-  });
-}
-function sC(e, t, n, o) {
-  const r = zn[e] || hd;
->>>>>>> Stashed changes
   return {
     name: t,
     description: n,
@@ -22967,13 +20062,8 @@ function sC(e, t, n, o) {
     }
   };
 }
-<<<<<<< Updated upstream
 const mu = hl(null);
-function tE({
-=======
-const pd = hl(null);
-function iC({
->>>>>>> Stashed changes
+function rE({
   children: e,
   defaultTheme: t = "dark",
   containerRef: n
@@ -22982,11 +20072,7 @@ function iC({
     Fn[l] && o(l);
   }, []);
   q(() => {
-<<<<<<< Updated upstream
-    n?.current && r1(n.current, s);
-=======
-    n?.current && a1(n.current, s);
->>>>>>> Stashed changes
+    n?.current && s1(n.current, s);
   }, [s, n]);
   const a = {
     theme: s,
@@ -22994,21 +20080,10 @@ function iC({
     setTheme: i,
     availableThemes: Object.keys(Fn)
   };
-<<<<<<< Updated upstream
   return /* @__PURE__ */ h(mu.Provider, { value: a, children: e });
 }
-function nE() {
+function oE() {
   const e = ml(mu);
-=======
-  return /* @__PURE__ */ m(pd.Provider, { value: i, children: e }, void 0, !1, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/ThemeProvider.tsx",
-    lineNumber: 54,
-    columnNumber: 5
-  }, this);
-}
-function aC() {
-  const e = pl(pd);
->>>>>>> Stashed changes
   if (!e)
     throw new Error("useEditorTheme must be used within an EditorThemeProvider");
   return e;
@@ -23040,15 +20115,9 @@ const ll = [
   { value: "bash", label: "Bash" },
   { value: "shell", label: "Shell" }
 ];
-<<<<<<< Updated upstream
-function rE({ node: e, updateAttributes: t }) {
+function sE({ node: e, updateAttributes: t }) {
   const [n, r] = j(!1), o = e.attrs.language || "plaintext";
   ll.find((i) => i.value === o)?.label;
-=======
-function lC({ node: e, updateAttributes: t }) {
-  const [n, o] = j(!1), r = e.attrs.language || "plaintext";
-  ll.find((a) => a.value === r)?.label;
->>>>>>> Stashed changes
   const s = F(() => {
     const i = e.textContent;
     navigator.clipboard.writeText(i).then(() => {
@@ -23078,41 +20147,12 @@ function lC({ node: e, updateAttributes: t }) {
           children: n ? /* @__PURE__ */ h(wn, { size: 14 }) : /* @__PURE__ */ h(bn, { size: 14 })
         }
       )
-<<<<<<< Updated upstream
     ] }),
     /* @__PURE__ */ h("pre", { className: "code-block-pre", children: /* @__PURE__ */ h("code", { children: /* @__PURE__ */ h(Gu, {}) }) })
   ] });
 }
-const gu = "paragon-editor-toc-width", o1 = 280, yu = 200, vu = 500, Hn = 30, cl = 5;
+const gu = "paragon-editor-toc-width", a1 = 280, yu = 200, vu = 500, Hn = 30, cl = 5;
 function dl() {
-=======
-    ] }, void 0, !0, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/CodeBlockComponent.tsx",
-      lineNumber: 56,
-      columnNumber: 7
-    }, this),
-    /* @__PURE__ */ m("pre", { className: "code-block-pre", children: /* @__PURE__ */ m("code", { children: /* @__PURE__ */ m(Gd, {}, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/CodeBlockComponent.tsx",
-      lineNumber: 83,
-      columnNumber: 11
-    }, this) }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/CodeBlockComponent.tsx",
-      lineNumber: 82,
-      columnNumber: 9
-    }, this) }, void 0, !1, {
-      fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/CodeBlockComponent.tsx",
-      lineNumber: 81,
-      columnNumber: 7
-    }, this)
-  ] }, void 0, !0, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/CodeBlockComponent.tsx",
-    lineNumber: 54,
-    columnNumber: 5
-  }, this);
-}
-const gd = "paragon-editor-toc-width", l1 = 280, bd = 200, vd = 500, Bn = 30, cl = 5;
-function ul() {
->>>>>>> Stashed changes
   try {
     const e = localStorage.getItem(gu);
     if (e) {
@@ -23122,29 +20162,17 @@ function ul() {
     }
   } catch {
   }
-<<<<<<< Updated upstream
-  return o1;
+  return a1;
 }
-function s1(e) {
-=======
-  return l1;
-}
-function c1(e) {
->>>>>>> Stashed changes
+function i1(e) {
   try {
     localStorage.setItem(gu, String(e));
   } catch {
   }
 }
-<<<<<<< Updated upstream
-function a1(e, t, n) {
+function l1(e, t, n) {
   const r = [];
   return e.state.doc.descendants((s, i) => {
-=======
-function u1(e, t, n) {
-  const o = [];
-  return e.state.doc.descendants((s, a) => {
->>>>>>> Stashed changes
     if (s.type.name === "heading") {
       const a = s.attrs.level;
       if (a >= t && a <= n) {
@@ -23154,11 +20182,7 @@ function u1(e, t, n) {
     }
   }), r;
 }
-<<<<<<< Updated upstream
-function i1(e) {
-=======
-function d1(e) {
->>>>>>> Stashed changes
+function c1(e) {
   let t = "";
   for (let n = 0; n < e.length; n++) {
     const r = e[n];
@@ -23166,11 +20190,7 @@ function d1(e) {
   }
   return t;
 }
-<<<<<<< Updated upstream
-function l1(e) {
-=======
-function m1(e) {
->>>>>>> Stashed changes
+function d1(e) {
   if (e.length === 0) return [];
   const t = [], n = [];
   for (const r of e) {
@@ -23242,11 +20262,7 @@ const _s = bt(function({
       )
     }
   );
-<<<<<<< Updated upstream
-}), c1 = bt(function({
-=======
-}), f1 = wt(function({
->>>>>>> Stashed changes
+}), u1 = bt(function({
   headings: t,
   activeId: n,
   minLevel: r,
@@ -23271,13 +20287,8 @@ const _s = bt(function({
     c(v.currentTarget.scrollTop);
   }, []), p = t.length * Hn, g = Math.max(0, Math.floor(l / Hn) - cl), m = Math.min(
     t.length,
-<<<<<<< Updated upstream
     Math.ceil((l + d) / Hn) + cl
-  ), y = Tt(() => {
-=======
-    Math.ceil((l + u) / Bn) + cl
-  ), b = St(() => {
->>>>>>> Stashed changes
+  ), y = St(() => {
     const v = [];
     for (let b = g; b < m; b++) {
       const x = t[b];
@@ -23345,11 +20356,7 @@ const _s = bt(function({
       )
     }
   );
-<<<<<<< Updated upstream
-}), d1 = bt(function({
-=======
-}), h1 = wt(function({
->>>>>>> Stashed changes
+}), f1 = bt(function({
   editor: t,
   visible: n = !0,
   onVisibilityChange: r,
@@ -23378,35 +20385,24 @@ const _s = bt(function({
   q(() => {
     S(n);
   }, [n]);
-<<<<<<< Updated upstream
   const R = F((_) => {
     _.preventDefault(), _.stopPropagation(), O.current = !0, $.current = _.clientX, W.current = C, document.body.style.cursor = "col-resize", document.body.style.userSelect = "none";
   }, [C]);
-=======
-  const P = F((O) => {
-    O.preventDefault(), O.stopPropagation(), R.current = !0, _.current = O.clientX, H.current = x, document.body.style.cursor = "col-resize", document.body.style.userSelect = "none";
-  }, [x]);
->>>>>>> Stashed changes
   q(() => {
     const _ = (ne) => {
       if (!O.current) return;
       const ue = f === "right" ? $.current - ne.clientX : ne.clientX - $.current, ve = Math.min(vu, Math.max(yu, W.current + ue));
       D(ve);
     }, ee = () => {
-<<<<<<< Updated upstream
-      O.current && (O.current = !1, document.body.style.cursor = "", document.body.style.userSelect = "", D((ne) => (s1(ne), ne)));
-=======
-      R.current && (R.current = !1, document.body.style.cursor = "", document.body.style.userSelect = "", M((ne) => (c1(ne), ne)));
->>>>>>> Stashed changes
+      O.current && (O.current = !1, document.body.style.cursor = "", document.body.style.userSelect = "", D((ne) => (i1(ne), ne)));
     };
     return document.addEventListener("mousemove", _), document.addEventListener("mouseup", ee), () => {
       document.removeEventListener("mousemove", _), document.removeEventListener("mouseup", ee);
     };
   }, [f]);
-<<<<<<< Updated upstream
   const A = F(() => {
     if (!t || t.isDestroyed) return;
-    const _ = a1(t, s, i), ee = i1(_);
+    const _ = l1(t, s, i), ee = c1(_);
     ee !== V.current && (V.current = ee, x(_));
   }, [t, s, i]);
   q(() => {
@@ -23421,32 +20417,13 @@ const _s = bt(function({
     if (!t || !l || !E || b.length === 0) return;
     const _ = v?.current || t.view.dom.closest(".editor-content-wrapper");
     if (!_) return;
-=======
-  const L = F(() => {
-    if (!t || t.isDestroyed) return;
-    const O = u1(t, s, a), ee = d1(O);
-    ee !== V.current && (V.current = ee, N(O));
-  }, [t, s, a]);
-  q(() => {
-    if (!t) return;
-    const O = () => {
-      I.current && clearTimeout(I.current), I.current = setTimeout(() => L(), 300);
-    };
-    return L(), t.on("update", O), t.on("create", O), () => {
-      t.off("update", O), t.off("create", O), I.current && clearTimeout(I.current);
-    };
-  }, [t, L]), q(() => {
-    if (!t || !l || !C || w.length === 0) return;
-    const O = v?.current || t.view.dom.closest(".editor-content-wrapper");
-    if (!O) return;
->>>>>>> Stashed changes
     const ee = () => {
       const ve = _.getBoundingClientRect();
       let be = null;
       for (let Ye = b.length - 1; Ye >= 0; Ye--) {
-        const At = b[Ye], wt = ul(t, At.pos);
+        const It = b[Ye], wt = ul(t, It.pos);
         if (wt && wt.getBoundingClientRect().top - ve.top <= p + 10) {
-          be = At.id;
+          be = It.id;
           break;
         }
       }
@@ -23512,15 +20489,9 @@ const _s = bt(function({
     return /* @__PURE__ */ h("div", { children: m(_, ee, () => H(_)) }, _.id);
   }) : null, [b, M, m, H]);
   if (!t) return null;
-<<<<<<< Updated upstream
-  const J = c ? l1(b) : [];
+  const J = c ? d1(b) : [];
   return /* @__PURE__ */ I(ye, { children: [
     y && /* @__PURE__ */ h(
-=======
-  const J = c ? m1(w) : [];
-  return /* @__PURE__ */ m(ye, { children: [
-    b && /* @__PURE__ */ m(
->>>>>>> Stashed changes
       "button",
       {
         className: `toc-toggle-button toc-toggle-${f}`,
@@ -23540,7 +20511,6 @@ const _s = bt(function({
             "div",
             {
               className: `toc-resize-handle toc-resize-${f}`,
-<<<<<<< Updated upstream
               onMouseDown: R
             }
           ),
@@ -23550,47 +20520,7 @@ const _s = bt(function({
               /* @__PURE__ */ h("p", { children: "No headings yet" }),
               /* @__PURE__ */ h("p", { className: "toc-empty-hint", children: "Add headings to see the outline." })
             ] }) : /* @__PURE__ */ h("div", { className: "toc-list", children: c ? K(J) : m ? B() : /* @__PURE__ */ h(
-              c1,
-=======
-              onMouseDown: P
-            },
-            void 0,
-            !1,
-            {
-              fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/TableOfContents.tsx",
-              lineNumber: 610,
-              columnNumber: 11
-            },
-            this
-          ),
-          /* @__PURE__ */ m("div", { className: "toc-inner", children: [
-            r && /* @__PURE__ */ m("div", { className: "toc-header", children: /* @__PURE__ */ m("span", { className: "toc-title", children: r }, void 0, !1, {
-              fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/TableOfContents.tsx",
-              lineNumber: 620,
-              columnNumber: 15
-            }, this) }, void 0, !1, {
-              fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/TableOfContents.tsx",
-              lineNumber: 619,
-              columnNumber: 13
-            }, this),
-            /* @__PURE__ */ m("div", { className: "toc-content toc-content-with-toggle", children: w.length === 0 ? /* @__PURE__ */ m("div", { className: "toc-empty", children: [
-              /* @__PURE__ */ m("p", { children: "No headings yet" }, void 0, !1, {
-                fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/TableOfContents.tsx",
-                lineNumber: 628,
-                columnNumber: 17
-              }, this),
-              /* @__PURE__ */ m("p", { className: "toc-empty-hint", children: "Add headings to see the outline." }, void 0, !1, {
-                fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/TableOfContents.tsx",
-                lineNumber: 629,
-                columnNumber: 17
-              }, this)
-            ] }, void 0, !0, {
-              fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/TableOfContents.tsx",
-              lineNumber: 627,
-              columnNumber: 15
-            }, this) : /* @__PURE__ */ m("div", { className: "toc-list", children: c ? K(J) : p ? B() : /* @__PURE__ */ m(
-              f1,
->>>>>>> Stashed changes
+              u1,
               {
                 headings: b,
                 activeId: M,
@@ -23604,27 +20534,26 @@ const _s = bt(function({
         ]
       }
     )
-<<<<<<< Updated upstream
   ] });
-}), u1 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}), p1 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  TableOfContents: d1
+  TableOfContents: f1
 }, Symbol.toStringTag, { value: "Module" }));
 export {
   bC as AutoSaveIndicator,
-  J1 as Callout,
+  tE as Callout,
   dk as CalloutInputRule,
-  rE as CodeBlockComponent,
+  sE as CodeBlockComponent,
   ak as CollapsibleHeading,
   Cb as CollapsibleList,
   Vx as DatePill,
-  tE as EditorThemeProvider,
+  rE as EditorThemeProvider,
   Xv as EditorToolbar,
   Zv as FindReplace,
   NC as FloatingToolbar,
   jC as ImageDropZone,
   Xk as ImageUpload,
-  Q1 as MarkdownEditor,
+  eE as MarkdownEditor,
   ck as MarkdownLinkInputRule,
   ok as MarkdownPasteSafe,
   yb as MixedBulletList,
@@ -23639,85 +20568,25 @@ export {
   Hk as SelectAllOccurrences,
   HC as SlashCommands,
   fk as TabIndent,
-  d1 as TableOfContents,
+  f1 as TableOfContents,
   qx as TagPill,
   Zx as WikiLinkSafe,
-  r1 as applyTheme,
-  eE as createCustomTheme,
+  s1 as applyTheme,
+  nE as createCustomTheme,
   hu as darkTheme,
   Ca as getDateVariant,
   cn as isValidTag,
-  e1 as lightTheme,
+  n1 as lightTheme,
   Cp as loadCoreLanguages,
   Xa as loadLanguageIfNeeded,
   ze as lowlight,
-  n1 as nordTheme,
+  o1 as nordTheme,
   Vn as normalizeTag,
-  Ht as parseDateFromMarkdown,
-  t1 as sepiaTheme,
+  Bt as parseDateFromMarkdown,
+  r1 as sepiaTheme,
   Fn as themes,
   nb as useAutoSave,
-  nE as useEditorTheme,
+  oE as useEditorTheme,
   vC as useWordCount
-=======
-  ] }, void 0, !0, {
-    fileName: "/home/ubuntu/manus-markdown-editor/client/src/components/editor/TableOfContents.tsx",
-    lineNumber: 590,
-    columnNumber: 5
-  }, this);
-}), p1 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-  __proto__: null,
-  TableOfContents: h1
-}, Symbol.toStringTag, { value: "Module" }));
-export {
-  Nx as AutoSaveIndicator,
-  rC as Callout,
-  mk as CalloutInputRule,
-  lC as CodeBlockComponent,
-  lk as CollapsibleHeading,
-  Ew as CollapsibleList,
-  GN as DatePill,
-  iC as EditorThemeProvider,
-  Qv as EditorToolbar,
-  Jv as FindReplace,
-  Lx as FloatingToolbar,
-  Kx as ImageDropZone,
-  Qk as ImageUpload,
-  oC as MarkdownEditor,
-  dk as MarkdownLinkInputRule,
-  ik as MarkdownPasteSafe,
-  ww as MixedBulletList,
-  xw as MixedListItem,
-  yw as MixedOrderedList,
-  kw as MixedTaskItem,
-  Nw as MixedTaskList,
-  kx as RecoveryBanner,
-  _w as ResizableImage,
-  fk as SearchHighlight,
-  nw as SelectAllActionBar,
-  Wk as SelectAllOccurrences,
-  Wx as SlashCommands,
-  hk as TabIndent,
-  h1 as TableOfContents,
-  ZN as TagPill,
-  JN as WikiLinkSafe,
-  a1 as applyTheme,
-  sC as createCustomTheme,
-  hd as darkTheme,
-  xi as getDateVariant,
-  cn as isValidTag,
-  r1 as lightTheme,
-  Ef as loadCoreLanguages,
-  Xi as loadLanguageIfNeeded,
-  Fe as lowlight,
-  i1 as nordTheme,
-  Vn as normalizeTag,
-  Ht as parseDateFromMarkdown,
-  s1 as sepiaTheme,
-  zn as themes,
-  rw as useAutoSave,
-  aC as useEditorTheme,
-  yx as useWordCount
->>>>>>> Stashed changes
 };
 //# sourceMappingURL=paragon.js.map
