@@ -67,10 +67,16 @@ const LAZY_LANGUAGES: Record<string, LazyLanguageLoader> = {
   java: () => import('highlight.js/lib/languages/java'),
   cpp: () => import('highlight.js/lib/languages/cpp'),
   c: () => import('highlight.js/lib/languages/cpp'),
+  csharp: () => import('highlight.js/lib/languages/csharp'),
   go: () => import('highlight.js/lib/languages/go'),
   golang: () => import('highlight.js/lib/languages/go'),
   rust: () => import('highlight.js/lib/languages/rust'),
   rs: () => import('highlight.js/lib/languages/rust'),
+  ruby: () => import('highlight.js/lib/languages/ruby'),
+  php: () => import('highlight.js/lib/languages/php'),
+  swift: () => import('highlight.js/lib/languages/swift'),
+  kotlin: () => import('highlight.js/lib/languages/kotlin'),
+  scss: () => import('highlight.js/lib/languages/scss'),
   markdown: () => import('highlight.js/lib/languages/markdown'),
   md: () => import('highlight.js/lib/languages/markdown'),
   yaml: () => import('highlight.js/lib/languages/yaml'),
@@ -232,17 +238,74 @@ const CHECK_PATHS = ['M20 6 9 17l-5-5'];
 // Lucide "chevron-down" icon paths
 const CHEVRON_DOWN_PATHS = ['m6 9 6 6 6-6'];
 
-// ─── Memoized language list ────────────────────────────────────────────────
+// ─── Curated Language List & Labels ───────────────────────────────────────
 
-let cachedAllLanguages: string[] | null = null;
+// Human-readable labels for language identifiers.
+// Only canonical names are listed — aliases (go→golang, rs→rust, etc.) are
+// resolved via ALIAS_TO_CANONICAL and never shown in the dropdown.
+const LANGUAGE_LABELS: Record<string, string> = {
+  javascript: 'JavaScript',
+  typescript: 'TypeScript',
+  python: 'Python',
+  java: 'Java',
+  cpp: 'C++',
+  c: 'C',
+  csharp: 'C#',
+  go: 'Go',
+  rust: 'Rust',
+  ruby: 'Ruby',
+  php: 'PHP',
+  swift: 'Swift',
+  kotlin: 'Kotlin',
+  html: 'HTML',
+  xml: 'XML',
+  css: 'CSS',
+  scss: 'SCSS',
+  json: 'JSON',
+  yaml: 'YAML',
+  markdown: 'Markdown',
+  sql: 'SQL',
+  bash: 'Bash',
+  shell: 'Shell',
+  diff: 'Diff',
+};
+
+// Map aliases to their canonical name so we never show duplicates.
+// When a user's code block has language="golang", we store "golang" but
+// display the canonical "Go" label and highlight the "Go" option.
+const ALIAS_TO_CANONICAL: Record<string, string> = {
+  js: 'javascript', jsx: 'javascript',
+  ts: 'typescript', tsx: 'typescript',
+  py: 'python',
+  golang: 'go',
+  rs: 'rust',
+  md: 'markdown',
+  yml: 'yaml',
+  patch: 'diff',
+  sh: 'bash', zsh: 'bash',
+  svg: 'xml',
+};
+
+// The curated set of languages shown in the dropdown, in display order.
+// This is the single source of truth — getAllLanguages() returns this list.
+const DROPDOWN_LANGUAGES: string[] = [
+  'javascript', 'typescript', 'python', 'java',
+  'cpp', 'c', 'csharp', 'go', 'rust',
+  'ruby', 'php', 'swift', 'kotlin',
+  'html', 'xml', 'css', 'scss',
+  'json', 'yaml', 'markdown',
+  'sql', 'bash', 'shell', 'diff',
+];
 
 function getAllLanguages(): string[] {
-  // Rebuild when new languages are registered (rare)
-  // For simplicity, we always rebuild — the Set dedup + sort is fast (<1ms)
-  const registered = lowlight.listLanguages();
-  const all = Array.from(new Set([...registered, ...Object.keys(LAZY_LANGUAGES)])).sort();
-  cachedAllLanguages = all;
-  return all;
+  return DROPDOWN_LANGUAGES;
+}
+
+function getLanguageLabel(lang: string): string {
+  if (lang === 'plaintext') return 'Plain Text';
+  // Resolve alias to canonical for label lookup
+  const canonical = ALIAS_TO_CANONICAL[lang] || lang;
+  return LANGUAGE_LABELS[canonical] || lang.charAt(0).toUpperCase() + lang.slice(1);
 }
 
 // ─── Plain ProseMirror NodeView ────────────────────────────────────────────
@@ -394,23 +457,27 @@ class CodeBlockNodeView implements NodeView {
     for (const lang of allLangs) {
       const opt = document.createElement('option');
       opt.value = lang;
-      opt.textContent = lang.charAt(0).toUpperCase() + lang.slice(1);
+      opt.textContent = getLanguageLabel(lang);
       this.selectEl.appendChild(opt);
     }
 
-    this.selectEl.value = currentLanguage;
+    // If the current language is an alias (e.g. "golang"), resolve to
+    // its canonical form ("go") so the correct option is selected.
+    const resolved = ALIAS_TO_CANONICAL[currentLanguage] || currentLanguage;
+    this.selectEl.value = resolved;
   }
 
   private formatLanguageLabel(lang: string): string {
-    return lang === 'plaintext'
-      ? 'Plain Text'
-      : lang.charAt(0).toUpperCase() + lang.slice(1);
+    return getLanguageLabel(lang);
   }
 
   private handleLanguageChange = () => {
     const newLang = this.selectEl.value;
     const pos = this.getPos();
     if (pos == null) return;
+
+    // Update label immediately for responsive feel
+    this.labelEl.textContent = this.formatLanguageLabel(newLang);
     
     // Update the node attribute via a ProseMirror transaction
     this.view.dispatch(
@@ -451,6 +518,13 @@ class CodeBlockNodeView implements NodeView {
 
   private async onBecameVisible() {
     const lang = this.node.attrs.language || 'plaintext';
+
+    // Always ensure core languages are loaded so the dropdown is fully
+    // populated. Without this, code blocks with language="plaintext" or
+    // an already-registered language would return early and never trigger
+    // loadCoreLanguages(), leaving the dropdown incomplete on cold starts.
+    await loadCoreLanguages();
+
     if (lang === 'plaintext') {
       this.setLanguageReady(true);
       return;
@@ -465,8 +539,6 @@ class CodeBlockNodeView implements NodeView {
     }
     const loaded = await loadLanguageIfNeeded(lang);
     this.setLanguageReady(loaded || lang === 'plaintext');
-    // Repopulate options in case new languages were registered
-    this.populateLanguageOptions(lang);
     // Force the lowlight plugin to re-run decorations now that the language
     // is registered. Without this, the plugin's cached decorations remain
     // empty because it ran before the language was available.
