@@ -42,6 +42,15 @@ function run(cmd, label) {
 run('NODE_ENV=production npx vite build --config vite.lib.config.ts', 'Building library bundle');
 
 // Step 2: Generate TypeScript declarations
+// Clear incremental build cache to ensure declarations are always emitted.
+// The base tsconfig.json has incremental: true with a tsBuildInfoFile, which
+// can cause tsc to skip emit when it thinks nothing changed.
+const tsBuildInfoPath = path.resolve(ROOT, 'node_modules/typescript/tsbuildinfo');
+if (existsSync(tsBuildInfoPath)) {
+  const { unlinkSync } = await import('node:fs');
+  unlinkSync(tsBuildInfoPath);
+  console.log('   Cleared stale tsBuildInfo cache');
+}
 run('npx tsc --project tsconfig.lib.json', 'Generating TypeScript declarations');
 
 // Step 2.5: Rewrite @/ path aliases to relative paths in .d.ts files
