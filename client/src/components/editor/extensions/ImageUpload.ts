@@ -288,13 +288,15 @@ async function processAndInsertImage(
     // Mark the just-inserted image node as uploading
     const { state } = editor.view;
     const pos = state.selection.from - 1;
-    const node = state.doc.nodeAt(pos);
-    if (node && node.type.name === 'resizableImage') {
-      const nodeView = editor.view.nodeDOM(pos);
-      if (nodeView) {
-        const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
-        if (figure) {
-          figure.classList.add('image-uploading');
+    if (pos >= 0) {
+      const node = state.doc.nodeAt(pos);
+      if (node && node.type.name === 'resizableImage') {
+        const nodeView = editor.view.nodeDOM(pos);
+        if (nodeView) {
+          const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
+          if (figure) {
+            figure.classList.add('image-uploading');
+          }
         }
       }
     }
@@ -359,6 +361,25 @@ async function processAndInsertImage(
       return false;
     }
   } catch (error) {
+    // Clean up any base64 placeholder that may have been inserted before the error
+    // This prevents raw data URLs from leaking into the document
+    try {
+      editor.view.state.doc.descendants((n: any, p: number) => {
+        if (n.type.name === 'resizableImage' && n.attrs.src?.startsWith('data:') && n.attrs.alt === file.name) {
+          try {
+            const { state: cleanupState, dispatch } = editor.view;
+            const tr = cleanupState.tr.delete(p, p + n.nodeSize);
+            dispatch(tr);
+          } catch {
+            // Node may have already been removed
+          }
+          return false;
+        }
+        return true;
+      });
+    } catch {
+      // Cleanup itself failed — document may be in an inconsistent state
+    }
     options.onUploadError?.(`Failed to process image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return false;
   }
