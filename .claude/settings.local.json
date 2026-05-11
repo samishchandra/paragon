@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Bash(do)",
+      "Bash(mkdir -p ~/.claude/scripts)",
+      "Bash(cp /opt/facebook/claude-templates-cli/components/plugins/10x-engineer/skills/sessions/scripts/index-sessions.py ~/.claude/scripts/index-sessions.py)",
+      "Bash(*)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(jq *)",
+      "Bash(mclone *)",
+      "Bash(realpath *)",
+      "Bash(meta *)",
+      "Edit(*)",
+      "Read(*)",
+      "Skill(*)"
+    ]
+  }
+}
