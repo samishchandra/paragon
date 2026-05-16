@@ -7314,7 +7314,7 @@ function Rd({
 }
 function Pd({
   className: e,
-  sideOffset: t = 0,
+  sideOffset: t = 10,
   children: n,
   ...r
 }) {
@@ -7324,13 +7324,13 @@ function Pd({
       "data-slot": "tooltip-content",
       sideOffset: t,
       className: ae(
-        "bg-foreground text-background animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance",
+        "bg-foreground text-background animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-4 py-2 text-xs text-balance",
         e
       ),
       ...r,
       children: [
-        n,
-        /* @__PURE__ */ h(Jv, { className: "bg-foreground fill-foreground z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" })
+        /* @__PURE__ */ h("span", { className: "relative z-10", children: n }),
+        /* @__PURE__ */ h(Jv, { className: "bg-foreground fill-foreground z-0 size-4 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" })
       ]
     }
   ) });
@@ -7354,7 +7354,7 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
   );
   return o ? /* @__PURE__ */ I(Id, { children: [
     /* @__PURE__ */ h(Rd, { asChild: !0, children: s }),
-    /* @__PURE__ */ h(Pd, { side: "bottom", className: "text-xs", children: o })
+    /* @__PURE__ */ h(Pd, { side: "bottom", sideOffset: 4, className: "text-xs", children: o })
   ] }) : s;
 }, _t = () => /* @__PURE__ */ h("div", { className: "w-px h-5 bg-border mx-0.5 shrink-0" }), tb = bt(function({ editor: t, onCopyMarkdown: n, onOpenLinkPopover: r, className: o = "", autoReorderChecklist: s = !1, aiEnabled: i = !1, onAISparklesClick: a }) {
   const c = Y(null), [l, d] = j(!1), [u, f] = j(void 0), p = hc({
@@ -7479,7 +7479,7 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
   const w = F(() => {
     T(t);
   }, [t, T]);
-  return /* @__PURE__ */ I("div", { className: `flex items-center gap-0.5 px-2 py-1.5 border-b border-border/30 bg-muted/30 overflow-x-auto scrollbar-hide editor-toolbar ${o}`, children: [
+  return /* @__PURE__ */ I("div", { className: `flex items-center gap-0.5 px-2 py-1.5 bg-muted/30 overflow-x-auto scrollbar-hide editor-toolbar ${o}`, children: [
     n && /* @__PURE__ */ h(
       we,
       {
@@ -7805,7 +7805,7 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
         {
           variant: "ghost",
           size: "sm",
-          className: "h-8 px-1.5 gap-1 bg-primary/10 shrink-0",
+          style: { paddingLeft: 12, paddingRight: 12 }, className: "h-8 gap-1.5 bg-primary/10 shrink-0",
           children: [
             /* @__PURE__ */ h(ys, { size: 16 }),
             /* @__PURE__ */ h("span", { className: "text-xs hidden sm:inline", children: "Table" })
@@ -7955,7 +7955,7 @@ const we = ({ onClick: e, isActive: t, disabled: n, children: r, tooltip: o }) =
             children: /* @__PURE__ */ h(go, { size: 16 })
           }
         ) }),
-        /* @__PURE__ */ h(Pd, { side: "bottom", className: "text-xs", children: "AI Writing Assistant" })
+        /* @__PURE__ */ h(Pd, { side: "bottom", sideOffset: 4, className: "text-xs", children: "AI Writing Assistant" })
       ] })
     ] }),
     /* @__PURE__ */ h("div", { className: "flex-1 min-w-2" })
@@ -16789,14 +16789,14 @@ function TC({ onRecover: e, onDismiss: t, className: n = "" }) {
       children: [
         /* @__PURE__ */ I("div", { className: "flex items-center gap-3 min-w-0", children: [
           /* @__PURE__ */ h(Tf, { className: "w-5 h-5 recovery-banner-icon flex-shrink-0" }),
-          /* @__PURE__ */ h("span", { className: "text-sm recovery-banner-text", children: "We found unsaved content from your last session." })
+          /* @__PURE__ */ h("span", { className: "text-sm recovery-banner-text", children: "Found unsaved content from the last session." })
         ] }),
         /* @__PURE__ */ I("div", { className: "flex items-center gap-3 flex-shrink-0", children: [
           /* @__PURE__ */ I(
             "button",
             {
               onClick: e,
-              className: "recovery-banner-btn flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150",
+              className: "recovery-banner-btn flex items-center gap-1.5 px-6 py-2 text-sm font-medium rounded-md transition-colors duration-150",
               children: [
                 /* @__PURE__ */ h(Zs, { className: "w-4 h-4" }),
                 "Recover"
@@ -19810,7 +19810,7 @@ const lc = nf(
         onDismiss: Pt.dismissRecovery
       }
     ),
-    d && /* @__PURE__ */ I("div", { className: "flex items-center bg-card/50 editor-toolbar-wrapper", children: [
+    d && /* @__PURE__ */ I("div", { className: "flex items-center bg-card/50 border-b border-border/30 editor-toolbar-wrapper", children: [
       _ ? _(re, za) : za,
       C && /* @__PURE__ */ h(IC, { editorMode: Jt, onModeSwitch: Uo })
     ] }),

@@ -966,7 +966,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       
       {/* Top toolbar with mode toggle */}
       {showToolbar && (
-        <div className="flex items-center bg-card/50 editor-toolbar-wrapper">
+        <div className="flex items-center bg-card/50 border-b border-border/30 editor-toolbar-wrapper">
           {renderToolbar ? renderToolbar(editor, defaultToolbar) : defaultToolbar}
           {showModeToggle && (
             <EditorModeToggle editorMode={editorMode} onModeSwitch={handleModeSwitch} />

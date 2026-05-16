@@ -123,7 +123,7 @@ const ToolbarButton = ({ onClick, isActive, disabled, children, tooltip }: Toolb
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">
+        <TooltipContent side="bottom" sideOffset={4} className="text-xs">
           {tooltip}
         </TooltipContent>
       </Tooltip>
@@ -379,7 +379,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
   }, [editor, performReorder]);
 
   return (
-    <div className={`flex items-center gap-0.5 px-2 py-1.5 border-b border-border/30 bg-muted/30 overflow-x-auto scrollbar-hide editor-toolbar ${className}`}>
+    <div className={`flex items-center gap-0.5 px-2 py-1.5 bg-muted/30 overflow-x-auto scrollbar-hide editor-toolbar ${className}`}>
       {/* Copy as Markdown */}
       {onCopyMarkdown && (
         <ToolbarButton
@@ -641,10 +641,11 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="flex items-center justify-center w-8 h-8 rounded-md shrink-0 transition-all duration-100 ease-out touch-manipulation bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80"
+            className="flex items-center justify-center gap-0.5 h-8 px-1.5 rounded-md shrink-0 transition-all duration-100 ease-out touch-manipulation bg-transparent text-foreground hover:bg-secondary active:bg-secondary/80"
             title="Insert Callout"
           >
             <Info size={16} />
+            <ChevronDown size={12} strokeWidth={2.5} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
@@ -670,10 +671,11 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
       {editor.isActive('table') && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 px-1.5 gap-1 bg-primary/10 shrink-0"
+            <Button
+              variant="ghost"
+              size="sm"
+              style={{ paddingLeft: 12, paddingRight: 12 }}
+              className="h-8 gap-1.5 bg-primary/10 shrink-0"
             >
               <Table size={16} />
               <span className="text-xs hidden sm:inline">Table</span>
@@ -783,7 +785,7 @@ export const EditorToolbar = memo(function EditorToolbar({ editor, onCopyMarkdow
                 <Sparkles size={16} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">
+            <TooltipContent side="bottom" sideOffset={4} className="text-xs">
               AI Writing Assistant
             </TooltipContent>
           </Tooltip>

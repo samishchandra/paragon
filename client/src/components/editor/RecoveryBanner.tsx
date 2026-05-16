@@ -21,14 +21,14 @@ export function RecoveryBanner({ onRecover, onDismiss, className = '' }: Recover
       <div className="flex items-center gap-3 min-w-0">
         <AlertCircle className="w-5 h-5 recovery-banner-icon flex-shrink-0" />
         <span className="text-sm recovery-banner-text">
-          We found unsaved content from your last session.
+          Found unsaved content from the last session.
         </span>
       </div>
       
       <div className="flex items-center gap-3 flex-shrink-0">
         <button
           onClick={onRecover}
-          className="recovery-banner-btn flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150"
+          className="recovery-banner-btn flex items-center gap-1.5 px-6 py-2 text-sm font-medium rounded-md transition-colors duration-150"
         >
           <RotateCcw className="w-4 h-4" />
           Recover
