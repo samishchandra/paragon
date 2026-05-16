@@ -180,7 +180,8 @@
 }
 
 /* Things Theme - Dark Mode */
-.dark {
+.dark,
+[data-theme="dark"] {
   /* Heading colors - Dark mode */
   --h1-color: #2e80f2;
   --h2-color: #2e80f2;

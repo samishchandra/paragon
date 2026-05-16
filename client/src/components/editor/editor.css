@@ -1691,7 +1691,8 @@
 }
 
 /* Dark mode floating toolbar */
-.dark .floating-toolbar {
+.dark .floating-toolbar,
+[data-theme="dark"] .floating-toolbar {
   background: oklch(0.19 0.015 250 / 0.95);
   border: 1px solid oklch(0.35 0.01 250 / 0.5);
   box-shadow: 0 4px 20px oklch(0 0 0 / 0.3);
