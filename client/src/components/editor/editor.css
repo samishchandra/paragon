@@ -3385,6 +3385,8 @@ pre.with-line-numbers code .line::before {
 .word-count {
   margin-left: auto;
   font-weight: 300;
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace);
+  font-variant-numeric: tabular-nums;
   color: oklch(0.65 0.01 250);
   opacity: 0.85;
 }
