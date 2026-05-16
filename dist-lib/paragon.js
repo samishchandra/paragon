@@ -19804,6 +19804,11 @@ const lc = nf(
     minHeight: ue,
     ...ve && { maxHeight: ve, overflowY: "auto" }
   };
+  q(() => {
+    const _r = document.documentElement;
+    _r.setAttribute("data-theme", p);
+    _r.classList.toggle("dark", p === "dark");
+  }, [p]);
   return /* @__PURE__ */ I("div", { className: `markdown-editor-container ${g === "neutral" ? "color-theme-neutral" : ""} ${l}`, "data-theme": p, children: [
     m && v && Pt.hasRecoverableContent && /* @__PURE__ */ h(
       TC,

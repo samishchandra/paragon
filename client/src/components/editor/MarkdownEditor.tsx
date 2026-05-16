@@ -947,6 +947,14 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   );
 
   // Dynamic styles for min/max height
+  // Sync theme to document root so portaled elements (floating toolbar,
+  // dropdowns, tooltips) inherit CSS variables and dark mode styles.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', theme);
+    root.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
   const editorContentStyle: React.CSSProperties = {
     minHeight,
     ...(maxHeight && { maxHeight, overflowY: 'auto' as const }),
