@@ -19,6 +19,8 @@ export interface UseEditorInstanceOptions {
   onChange?: (html: string) => void;
   onHTMLChange?: (html: string) => void;
   onMarkdownChange?: (markdown: string) => void;
+  /** Lightweight callback on every transaction — zero serialization cost */
+  onDocUpdate?: () => void;
   /** Debounce delay for firing onMarkdownChange during WYSIWYG typing (0 = lazy-only) */
   markdownChangeDebounceMs: number;
   onReady?: (editor: Editor) => void;
@@ -67,6 +69,7 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
     onChange,
     onHTMLChange,
     onMarkdownChange,
+    onDocUpdate,
     markdownChangeDebounceMs,
     onReady,
     onDestroy: onDestroyProp,
@@ -98,12 +101,14 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
   const onChangeRef = useRef(onChange);
   const onHTMLChangeRef = useRef(onHTMLChange);
   const onMarkdownChangeRef = useRef(onMarkdownChange);
+  const onDocUpdateRef = useRef(onDocUpdate);
   const markdownChangeDebounceMsRef = useRef(markdownChangeDebounceMs);
   // Ref for turndownService so onUpdate callback can access it (turndownService is created after useEditor)
   const turndownServiceRef = useRef<ReturnType<typeof useTurndownService> | null>(null);
   onChangeRef.current = onChange;
   onHTMLChangeRef.current = onHTMLChange;
   onMarkdownChangeRef.current = onMarkdownChange;
+  onDocUpdateRef.current = onDocUpdate;
   markdownChangeDebounceMsRef.current = markdownChangeDebounceMs;
 
   const editor = useEditor({
@@ -154,6 +159,9 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
       },
     },
     onUpdate: ({ editor }) => {
+      // Fire lightweight update signal (zero serialization)
+      onDocUpdateRef.current?.();
+
       // === Auto lightweight mode detection ===
       if (performanceMode === 'auto') {
         lightweightCheckCounterRef.current++;

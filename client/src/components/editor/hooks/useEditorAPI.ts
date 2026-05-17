@@ -57,10 +57,21 @@ export function useEditorAPI(
       return stripZWSP(turndownService.turndown(editor.getHTML()));
     },
     getText: () => editor?.getText() || '',
+    getJSON: () => {
+      if (!editor) return { type: 'doc', content: [] };
+      return editor.getJSON();
+    },
     setContent: (content: string) => {
       if (editor && !editor.isDestroyed) {
         queueMicrotask(() => {
           editor.commands.setContent(content);
+        });
+      }
+    },
+    setContentJSON: (json: Record<string, unknown>) => {
+      if (editor && !editor.isDestroyed) {
+        queueMicrotask(() => {
+          editor.commands.setContent(json);
         });
       }
     },

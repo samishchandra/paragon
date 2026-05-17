@@ -107,8 +107,12 @@ export interface MarkdownEditorRef {
   getMarkdown: () => string;
   /** Get plain text content */
   getText: () => string;
+  /** Get ProseMirror JSON document (native format, no serialization overhead) */
+  getJSON: () => Record<string, unknown>;
   /** Set content (HTML string) */
   setContent: (content: string) => void;
+  /** Set content from ProseMirror JSON (near-instant, no HTML parsing) */
+  setContentJSON: (json: Record<string, unknown>) => void;
   /** Clear all content */
   clearContent: () => void;
   /** Focus the editor */
@@ -214,6 +218,9 @@ export interface MarkdownEditorProps {
   onHTMLChange?: (html: string) => void;
   /** Callback when raw markdown content changes */
   onMarkdownChange?: (markdown: string) => void;
+  /** Lightweight callback on every editor transaction — no serialization, just a signal.
+   * Use this for dirty-flag tracking without the cost of getHTML()/getJSON(). */
+  onDocUpdate?: () => void;
   /**
    * Debounce delay in ms for firing onMarkdownChange during WYSIWYG typing.
    * When set to a positive value, onMarkdownChange fires after the user stops
@@ -460,6 +467,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   onChange,
   onHTMLChange,
   onMarkdownChange,
+  onDocUpdate,
   markdownChangeDebounceMs = 0,
   placeholder = 'Start writing... Use "/" for commands',
   editable = true,
@@ -674,6 +682,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     onChange,
     onHTMLChange,
     onMarkdownChange,
+    onDocUpdate,
     markdownChangeDebounceMs,
     onReady,
     onDestroy,
