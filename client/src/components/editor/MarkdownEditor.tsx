@@ -30,7 +30,7 @@ import { EditorContent } from '@tiptap/react';
  *     structureImagesInListItems – restructures images inside list items for TipTap
  *     restoreHeaderColumn   – restores header-column markers in table HTML
  */
-import { useCallback, useMemo, useState, useRef, forwardRef, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef, forwardRef, lazy, Suspense } from 'react';
 import { EditorToolbar } from './EditorToolbar';
 import { FindReplace, type SearchMatch } from './FindReplace';
 import { SelectAllActionBar } from './SelectAllActionBar';
@@ -912,6 +912,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   // Sync theme to document root so portaled elements (floating toolbar,
   // dropdowns, tooltips) inherit CSS variables and dark mode styles.
   useEffect(() => {
+    if (!theme) return;
     const root = document.documentElement;
     root.setAttribute('data-theme', theme);
     root.classList.toggle('dark', theme === 'dark');
