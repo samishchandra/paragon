@@ -167,18 +167,21 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
         }
       }
 
-      // Performance: Debounce HTML serialization to avoid calling getHTML() on every keystroke
-      if (onUpdateTimeoutRef.current) {
-        clearTimeout(onUpdateTimeoutRef.current);
-      }
-      onUpdateTimeoutRef.current = setTimeout(() => {
-        if (editor.isDestroyed) return;
-        const html = editor.getHTML();
-        if (onChangeRef.current || onHTMLChangeRef.current) {
+      // Only serialize HTML when a consumer is listening.
+      // Debounce at 300ms to avoid calling getHTML() on every keystroke.
+      if (onChangeRef.current || onHTMLChangeRef.current) {
+        if (onUpdateTimeoutRef.current) {
+          clearTimeout(onUpdateTimeoutRef.current);
+        }
+        onUpdateTimeoutRef.current = setTimeout(() => {
+          if (editor.isDestroyed) return;
+          const html = editor.getHTML();
           onChangeRef.current?.(html);
           onHTMLChangeRef.current?.(html);
-        }
-        // Debounced markdown change: only when markdownChangeDebounceMs > 0
+        }, 300);
+      }
+
+      // Debounced markdown change: only when markdownChangeDebounceMs > 0
         // This gives embedding apps opt-in control over the performance tradeoff.
         // When 0, rawMarkdown is synced lazily: on blur, on mode-switch, and on unmount.
         if (markdownChangeDebounceMsRef.current > 0 && onMarkdownChangeRef.current) {
@@ -195,7 +198,6 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
             }
           }, markdownChangeDebounceMsRef.current);
         }
-      }, 150);
     },
     onFocus: () => {
       onFocusProp?.();

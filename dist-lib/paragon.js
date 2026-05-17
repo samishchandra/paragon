@@ -16087,16 +16087,16 @@ function cC(e) {
         const K = z.state.doc.content.childCount > c;
         K !== k.current && E(K);
       }
-      L.current && clearTimeout(L.current), L.current = setTimeout(() => {
+      (O.current || $.current) && (L.current && clearTimeout(L.current), L.current = setTimeout(() => {
         if (z.isDestroyed) return;
         const U = z.getHTML();
-        (O.current || $.current) && (O.current?.(U), $.current?.(U)), V.current > 0 && W.current && (P.current && clearTimeout(P.current), P.current = setTimeout(() => {
-          if (!z.isDestroyed && x.current === "wysiwyg" && R.current) {
-            const K = z.getHTML(), B = R.current.turndown(K);
-            T.current = B, W.current?.(Yt(B));
-          }
-        }, V.current));
-      }, 150);
+        O.current?.(U), $.current?.(U);
+      }, 300)), V.current > 0 && W.current && (P.current && clearTimeout(P.current), P.current = setTimeout(() => {
+        if (!z.isDestroyed && x.current === "wysiwyg" && R.current) {
+          const U = z.getHTML(), K = R.current.turndown(U);
+          T.current = K, W.current?.(Yt(K));
+        }
+      }, V.current));
     },
     onFocus: () => {
       m?.();
