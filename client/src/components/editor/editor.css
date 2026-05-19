@@ -3988,11 +3988,14 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-slot="dropdown-menu-item"] {
+  display: flex !important;
+  align-items: center !important;
   color: #dadada !important;
   padding: 6px 10px !important;
   border-radius: 4px !important;
   margin: 1px 0 !important;
   gap: 8px !important;
+  cursor: pointer !important;
 }
 
 [data-slot="dropdown-menu-item"]:focus,
@@ -4004,6 +4007,24 @@ pre.with-line-numbers code .line::before {
 [data-slot="dropdown-menu-item"].bg-accent {
   background: #3a4048 !important;
   color: #ffffff !important;
+}
+
+/* Heading label spans inside dropdown items */
+[data-slot="dropdown-menu-item"] span:first-child {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  min-width: 24px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #888 !important;
+  flex-shrink: 0 !important;
+}
+[data-slot="dropdown-menu-item"] span + span,
+[data-slot="dropdown-menu-item"] > span + span {
+  color: inherit !important;
+  font-size: 13px !important;
 }
 
 /* Dark theme footer */
