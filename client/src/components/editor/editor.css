@@ -3956,12 +3956,12 @@ pre.with-line-numbers code .line::before {
 }
 
 [data-theme="dark"] .toolbar-button {
-  color: #bababa;
+  color: rgba(255,255,255,0.35);
 }
 
 [data-theme="dark"] .toolbar-button:hover {
-  background: #35393e;
-  color: #dadada;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.75);
 }
 
 [data-theme="dark"] .toolbar-button.active {
