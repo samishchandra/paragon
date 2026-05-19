@@ -8597,10 +8597,7 @@ function db(e, {
     },
     setContentJSON: (l) => {
       t && !t.isDestroyed && queueMicrotask(() => {
-        t.commands.setContent(l), requestAnimationFrame(() => {
-          const d = t.view.dom;
-          d.parentElement && (d.parentElement.scrollTop = 0), d.scrollTop = 0;
-        });
+        t.commands.blur(), t.commands.setContent(l);
       });
     },
     clearContent: () => {

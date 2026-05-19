@@ -3985,17 +3985,20 @@ pre.with-line-numbers code .line::before {
   border: 1px solid #3a3f47 !important;
   padding: 4px !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  min-width: 160px !important;
+  overflow: visible !important;
 }
 
 [data-slot="dropdown-menu-item"] {
   display: flex !important;
   align-items: center !important;
   color: #dadada !important;
-  padding: 6px 10px !important;
+  padding: 6px 12px !important;
   border-radius: 4px !important;
   margin: 1px 0 !important;
   gap: 8px !important;
   cursor: pointer !important;
+  overflow: visible !important;
 }
 
 [data-slot="dropdown-menu-item"]:focus,

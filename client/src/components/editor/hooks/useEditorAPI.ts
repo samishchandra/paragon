@@ -71,13 +71,9 @@ export function useEditorAPI(
     setContentJSON: (json: Record<string, unknown>) => {
       if (editor && !editor.isDestroyed) {
         queueMicrotask(() => {
+          // Blur before setContent to prevent scrollIntoView
+          editor.commands.blur();
           editor.commands.setContent(json);
-          // Force scroll to top — setContent triggers scrollIntoView to cursor position
-          requestAnimationFrame(() => {
-            const dom = editor.view.dom;
-            if (dom.parentElement) dom.parentElement.scrollTop = 0;
-            dom.scrollTop = 0;
-          });
         });
       }
     },
