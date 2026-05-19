@@ -1904,7 +1904,7 @@
 
 .code-block-pre code {
   font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-size: calc(1em - 1px);
   line-height: 1.6;
   color: oklch(0.25 0.02 250);
   background: transparent;
@@ -2378,14 +2378,27 @@ pre.with-line-numbers code .line::before {
   outline-offset: 1px;
 }
 
-/* Dark theme tag pill - match dark code-block background */
-.dark .tag-pill {
-  background: oklch(0.22 0.01 250); /* Same as dark code-block background */
-  border-color: var(--border); /* Same border as dark code-block */
+/* Dark theme tag pill */
+.dark .tag-pill,
+[data-theme="dark"] .tag-pill {
+  background: rgba(46, 128, 242, 0.12);
+  border-color: rgba(46, 128, 242, 0.25);
+  color: #7ab4f5;
 }
 
-.dark .tag-pill:hover {
-  background: oklch(0.18 0.01 250);
+.dark .tag-pill:hover,
+[data-theme="dark"] .tag-pill:hover {
+  background: rgba(46, 128, 242, 0.2);
+}
+
+.dark .tag-pill .tag-text,
+[data-theme="dark"] .tag-pill .tag-text {
+  color: #7ab4f5;
+}
+
+.dark .tag-pill .tag-icon,
+[data-theme="dark"] .tag-pill .tag-icon {
+  color: #5a9cf5;
 }
 
 /* Light theme explicit overrides */
@@ -4346,8 +4359,9 @@ pre.with-line-numbers code .line::before {
    DARK THEME - HORIZONTAL RULE
    ============================================ */
 
-[data-theme="dark"] .tiptap-editor hr {
-  border-color: var(--muted-foreground);
+[data-theme="dark"] .tiptap-editor hr,
+.dark .tiptap-editor hr {
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* ============================================

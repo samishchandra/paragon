@@ -80,6 +80,11 @@ export function useEditorAPI(
         editor.commands.clearContent();
       }
     },
+    insertAtEnd: (text: string) => {
+      if (editor && !editor.isDestroyed) {
+        editor.chain().focus('end').insertContent(text).run();
+      }
+    },
     focus: (position) => {
       if (editor && !editor.isDestroyed) {
         editor.commands.focus(position);

@@ -276,6 +276,21 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         }
       };
 
+      // Error handler — show path when image fails to load
+      img.addEventListener('error', () => {
+        const src = img.getAttribute('src') || '';
+        container.style.borderRadius = '8px';
+        container.style.border = `1px solid ${isDarkTheme ? 'rgba(255,255,255,0.1)' : 'oklch(0.9 0 0)'}`;
+        container.style.background = isDarkTheme ? 'rgba(255,255,255,0.03)' : '#f8f8f8';
+        container.style.padding = '12px';
+        container.style.minHeight = '60px';
+        img.style.display = 'none';
+        const errorLabel = document.createElement('div');
+        errorLabel.style.cssText = `font-size: 12px; color: ${isDarkTheme ? '#999' : '#888'}; word-break: break-all;`;
+        errorLabel.textContent = `Image not found: ${src}`;
+        container.insertBefore(errorLabel, container.firstChild);
+      });
+
       // Set initial src (resolve if needed)
       resolveAndSetSrc(node.attrs.src);
       
@@ -343,18 +358,21 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       // Dropdown menu
       const dropdown = document.createElement('div');
       dropdown.classList.add('image-menu-dropdown');
+      const isDarkTheme = document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme')?.match(/midnight|carbon|ocean|forest|sunset|lavender|rose|slate/);
       dropdown.style.cssText = `
         position: fixed;
         display: none;
         flex-direction: column;
         min-width: 200px;
         padding: 4px;
-        background: oklch(0.99 0 0);
-        border: 1px solid oklch(0.9 0 0);
+        background: ${isDarkTheme ? 'var(--bg-tertiary, #2c313c)' : 'oklch(0.99 0 0)'};
+        border: 1px solid ${isDarkTheme ? 'var(--border, rgba(255,255,255,0.1))' : 'oklch(0.9 0 0)'};
         border-radius: 8px;
-        box-shadow: 0 4px 16px oklch(0 0 0 / 0.15);
+        box-shadow: 0 4px 16px oklch(0 0 0 / ${isDarkTheme ? '0.4' : '0.15'});
         z-index: 9999;
         pointer-events: auto;
+        color: ${isDarkTheme ? '#dadada' : 'inherit'};
       `;
       
       const createMenuItem = (label: string, icon: string, onClick: () => void) => {
@@ -367,7 +385,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           width: 100%;
           padding: 8px 12px;
           font-size: 13px;
-          color: oklch(0.3 0 0);
+          color: ${isDarkTheme ? '#dadada' : 'oklch(0.3 0 0)'};
           background: transparent;
           border: none;
           border-radius: 4px;
@@ -377,7 +395,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         `;
         item.innerHTML = `${icon}<span>${label}</span>`;
         item.addEventListener('mouseenter', () => {
-          item.style.background = 'oklch(0.95 0 0)';
+          item.style.background = isDarkTheme ? 'rgba(255,255,255,0.06)' : 'oklch(0.95 0 0)';
         });
         item.addEventListener('mouseleave', () => {
           item.style.background = 'transparent';
@@ -487,11 +505,20 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         }, 100);
       }));
 
+      // Delete image menu item
+      const deleteIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+      const deleteItem = createMenuItem('Delete image', deleteIcon, () => {
+        const pos = editor.view.state.selection.from;
+        editor.chain().focus().deleteRange({ from: pos, to: pos + 1 }).run();
+      });
+      deleteItem.style.color = '#e04674';
+      dropdown.appendChild(deleteItem);
+
       // --- Alignment toggle (3-button segmented control) ---
       const alignSeparator = document.createElement('div');
       alignSeparator.style.cssText = `
         height: 1px;
-        background: oklch(0.92 0 0);
+        background: var(--border, oklch(0.92 0 0));
         margin: 4px 8px;
       `;
       dropdown.appendChild(alignSeparator);
@@ -500,7 +527,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       alignLabel.style.cssText = `
         font-size: 11px;
         font-weight: 500;
-        color: oklch(0.55 0 0);
+        color: ${isDarkTheme ? '#999' : 'oklch(0.55 0 0)'};
         padding: 4px 12px 4px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
