@@ -72,6 +72,12 @@ export function useEditorAPI(
       if (editor && !editor.isDestroyed) {
         queueMicrotask(() => {
           editor.commands.setContent(json);
+          // Force scroll to top — setContent triggers scrollIntoView to cursor position
+          requestAnimationFrame(() => {
+            const dom = editor.view.dom;
+            if (dom.parentElement) dom.parentElement.scrollTop = 0;
+            dom.scrollTop = 0;
+          });
         });
       }
     },
