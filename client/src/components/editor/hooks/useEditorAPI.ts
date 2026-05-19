@@ -72,7 +72,6 @@ export function useEditorAPI(
       if (editor && !editor.isDestroyed) {
         queueMicrotask(() => {
           editor.commands.setContent(json);
-          try { editor.commands.setTextSelection(0); } catch {};
         });
       }
     },
