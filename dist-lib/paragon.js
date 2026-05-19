@@ -8598,6 +8598,10 @@ function db(e, {
     setContentJSON: (l) => {
       t && !t.isDestroyed && queueMicrotask(() => {
         t.commands.setContent(l);
+        try {
+          t.commands.setTextSelection(0);
+        } catch {
+        }
       });
     },
     clearContent: () => {
