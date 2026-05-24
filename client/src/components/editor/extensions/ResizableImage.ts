@@ -266,6 +266,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           extensionOptions.resolveImageSrc(src).then((resolvedUrl) => {
             img.src = resolvedUrl;
             img.style.opacity = '1';
+            img.offsetHeight;
           }).catch(() => {
             // Fallback: try using the original src directly
             img.src = src;

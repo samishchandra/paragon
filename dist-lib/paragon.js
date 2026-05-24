@@ -9713,7 +9713,7 @@ const Wb = yo.create({
       a.alt = t.attrs.alt || "", t.attrs.width && (a.style.width = `${t.attrs.width}px`);
       const c = (H) => !(!H || H.startsWith("data:") || H.startsWith("blob:") || H.startsWith("http://") || H.startsWith("https://")), l = (H) => {
         c(H) && e.resolveImageSrc ? (a.style.opacity = "0.5", a.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3C/svg%3E', e.resolveImageSrc(H).then((z) => {
-          a.src = z, a.style.opacity = "1";
+          a.src = z, a.style.opacity = "1", a.offsetHeight;
         }).catch(() => {
           a.src = H, a.style.opacity = "1";
         })) : a.src = H;
