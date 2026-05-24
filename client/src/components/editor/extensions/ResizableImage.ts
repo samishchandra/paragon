@@ -608,21 +608,14 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           e.stopPropagation();
           const pos = typeof getPos === 'function' ? getPos() : null;
           if (pos !== null && pos !== undefined) {
-            try {
-              const { state, dispatch } = editor.view;
-              const nodeAtPos = state.doc.nodeAt(pos);
-              if (nodeAtPos && nodeAtPos.type.name === 'resizableImage') {
-                const tr = state.tr.setNodeMarkup(pos, undefined, {
-                  ...nodeAtPos.attrs,
-                  align: value,
-                });
-                dispatch(tr);
+            editor.commands.command(({ tr, dispatch }) => {
+              const nodeAtPos = tr.doc.nodeAt(pos);
+              if (!nodeAtPos || nodeAtPos.type.name !== 'resizableImage') return false;
+              if (dispatch) {
+                tr.setNodeMarkup(pos, undefined, { ...nodeAtPos.attrs, align: value });
               }
-            } catch {
-              editor.chain().focus().setNodeSelection(pos).updateAttributes('resizableImage', {
-                align: value,
-              }).run();
-            }
+              return true;
+            });
           }
           updateAlignButtons(value);
           // Don't close dropdown — let user see the change
@@ -925,28 +918,19 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         document.removeEventListener('mouseup', onMouseUp);
         // Delay clearing the flag so the click event from mouseup doesn't trigger lightbox
         setTimeout(() => { isResizing = false; }, 100);
-        
+
         const pos = typeof getPos === 'function' ? getPos() : null;
         const newWidth = img.offsetWidth;
-        if (pos !== null && pos !== undefined) {
-          // Use setNodeMarkup with explicit position instead of updateAttributes
-          // which relies on the current selection and may fail if focus() moves it
-          try {
-            const { state, dispatch } = editor.view;
-            const node = state.doc.nodeAt(pos);
-            if (node && node.type.name === 'resizableImage') {
-              const tr = state.tr.setNodeMarkup(pos, undefined, {
-                ...node.attrs,
-                width: newWidth,
-              });
-              dispatch(tr);
+        if (pos !== null && pos !== undefined && newWidth > 0) {
+          editor.commands.command(({ tr, dispatch }) => {
+            const node = tr.doc.nodeAt(pos);
+            if (!node || node.type.name !== 'resizableImage') return false;
+            if (node.attrs.width === newWidth) return false;
+            if (dispatch) {
+              tr.setNodeMarkup(pos, undefined, { ...node.attrs, width: newWidth });
             }
-          } catch (e) {
-            // Fallback: try updateAttributes with selection at the node position
-            editor.chain().focus().setNodeSelection(pos).updateAttributes('resizableImage', {
-              width: newWidth,
-            }).run();
-          }
+            return true;
+          });
         }
       };
       
