@@ -41,24 +41,19 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
   });
   const tooltipRef = useRef<HTMLDivElement>(null);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const switchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const activeLinkRef = useRef<HTMLElement | null>(null);
 
-  const showTooltip = useCallback((linkElement: HTMLElement) => {
+  const showTooltipImmediate = useCallback((linkElement: HTMLElement) => {
     if (!editor || editor.isDestroyed) return;
-    if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current);
-      hideTimeoutRef.current = null;
-    }
 
     try {
       const href = linkElement.getAttribute('href') || '';
       const rect = linkElement.getBoundingClientRect();
 
-      // Estimated tooltip height: ~40px (padding 0.25rem*2 + button 1.75rem + border)
       const tooltipHeight = 44;
       const gap = 8;
 
-      // Prefer positioning above the link; fall back to below if not enough space
       const spaceAbove = rect.top;
       const canFitAbove = spaceAbove >= tooltipHeight + gap;
 
@@ -80,6 +75,30 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     }
   }, [editor]);
 
+  const showTooltip = useCallback((linkElement: HTMLElement) => {
+    if (!editor || editor.isDestroyed) return;
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+    if (switchTimeoutRef.current) {
+      clearTimeout(switchTimeoutRef.current);
+      switchTimeoutRef.current = null;
+    }
+
+    // When tooltip is already showing for a different link, delay the switch
+    // so the user can move their mouse to the tooltip without it jumping
+    if (activeLinkRef.current && activeLinkRef.current !== linkElement && tooltip.isVisible) {
+      switchTimeoutRef.current = setTimeout(() => {
+        switchTimeoutRef.current = null;
+        showTooltipImmediate(linkElement);
+      }, 200);
+      return;
+    }
+
+    showTooltipImmediate(linkElement);
+  }, [editor, tooltip.isVisible, showTooltipImmediate]);
+
   const hideTooltip = useCallback(() => {
     hideTimeoutRef.current = setTimeout(() => {
       activeLinkRef.current = null;
@@ -92,6 +111,10 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
       clearTimeout(hideTimeoutRef.current);
       hideTimeoutRef.current = null;
     }
+    if (switchTimeoutRef.current) {
+      clearTimeout(switchTimeoutRef.current);
+      switchTimeoutRef.current = null;
+    }
     activeLinkRef.current = null;
     setTooltip(prev => ({ ...prev, isVisible: false, linkElement: null }));
   }, []);
@@ -101,19 +124,23 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
       clearTimeout(hideTimeoutRef.current);
       hideTimeoutRef.current = null;
     }
+    if (switchTimeoutRef.current) {
+      clearTimeout(switchTimeoutRef.current);
+      switchTimeoutRef.current = null;
+    }
   }, []);
 
   // Handle mouse events on the editor (desktop)
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
-    
+
     const editorElement = editor.view.dom;
     if (!editorElement) return;
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const linkElement = target.closest('a') as HTMLElement | null;
-      
+
       if (linkElement && editorElement.contains(linkElement)) {
         showTooltip(linkElement);
       }
@@ -122,7 +149,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     const handleMouseOut = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const relatedTarget = e.relatedTarget as HTMLElement | null;
-      
+
       // Check if we're leaving a link
       if (target.closest('a')) {
         // Don't hide if moving to the tooltip
@@ -142,13 +169,16 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
       if (hideTimeoutRef.current) {
         clearTimeout(hideTimeoutRef.current);
       }
+      if (switchTimeoutRef.current) {
+        clearTimeout(switchTimeoutRef.current);
+      }
     };
   }, [editor, showTooltip, hideTooltip]);
 
   // Handle touch events on the editor (mobile)
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
-    
+
     const editorElement = editor.view.dom;
     if (!editorElement) return;
 
@@ -186,7 +216,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
 
     const handleTouchOutside = (e: TouchEvent) => {
       const target = e.target as HTMLElement;
-      
+
       // Don't dismiss if tapping the tooltip itself
       if (tooltipRef.current?.contains(target)) {
         return;
@@ -243,13 +273,16 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
 
   const handleOpenLink = useCallback(() => {
     if (tooltip.url) {
-      // Use anchor element click instead of window.open() with features string
-      // to ensure external links open in the default browser when running as a PWA
-      const a = document.createElement('a');
-      a.href = tooltip.url;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.click();
+      const wk = (window as any).webkit?.messageHandlers?.openURL;
+      if (wk) {
+        wk.postMessage(tooltip.url);
+      } else {
+        const a = document.createElement('a');
+        a.href = tooltip.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.click();
+      }
     }
   }, [tooltip.url]);
 
@@ -258,11 +291,11 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     if (tooltip.linkElement) {
       const { view } = editor;
       const { doc } = view.state;
-      
+
       // Find the link position in the document
       let linkPos: number | null = null;
       let linkEnd: number | null = null;
-      
+
       doc.descendants((node, pos) => {
         if (node.isText && node.marks.some(m => m.type.name === 'link')) {
           const dom = view.nodeDOM(pos);
@@ -295,7 +328,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
     if (tooltip.linkElement) {
       const { view } = editor;
       const { doc } = view.state;
-      
+
       doc.descendants((node, pos) => {
         if (node.isText && node.marks.some(m => m.type.name === 'link')) {
           const dom = view.nodeDOM(pos);
@@ -307,7 +340,7 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
         return true;
       });
     }
-    
+
     setTooltip(prev => ({ ...prev, isVisible: false }));
     onEditLink();
   }, [editor, tooltip.linkElement, onEditLink]);
@@ -315,8 +348,8 @@ export function LinkHoverTooltip({ editor, onEditLink }: LinkHoverTooltipProps) 
   if (!tooltip.isVisible) return null;
 
   // Truncate long URLs for display
-  const displayUrl = tooltip.url.length > 40 
-    ? tooltip.url.substring(0, 40) + '...' 
+  const displayUrl = tooltip.url.length > 40
+    ? tooltip.url.substring(0, 40) + '...'
     : tooltip.url;
 
   // Get the theme from the editor's container
