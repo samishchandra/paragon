@@ -333,14 +333,19 @@ export function useEditorExtensions({
               position: { x: attrs.rect.left + attrs.rect.width / 2, y: attrs.rect.bottom },
             });
           },
-          resolveImageSrc: callbackRefs.resolveImageSrc.current ? ((...args: any[]) => (callbackRefs.resolveImageSrc.current as any)(...args)) : undefined,
+          resolveImageSrc: (...args: any[]) => (callbackRefs.resolveImageSrc.current as any)?.(...args),
         }),
         ImageUpload.configure({
           maxFileSize: maxImageSize,
-          onUploadStart: callbackRefs.onImageUploadStart.current ? ((...args: any[]) => (callbackRefs.onImageUploadStart.current as any)(...args)) : undefined,
-          onUploadComplete: callbackRefs.onImageUploadComplete.current ? ((...args: any[]) => (callbackRefs.onImageUploadComplete.current as any)(...args)) : undefined,
-          onUploadError: callbackRefs.onImageUploadError.current ? ((...args: any[]) => (callbackRefs.onImageUploadError.current as any)(...args)) : undefined,
-          onImageUpload: callbackRefs.onImageUpload.current ? ((file: File, options: any) => (callbackRefs.onImageUpload.current as any)(file, options)) : undefined,
+          onUploadStart: (...args: any[]) => (callbackRefs.onImageUploadStart.current as any)?.(...args),
+          onUploadComplete: (...args: any[]) => (callbackRefs.onImageUploadComplete.current as any)?.(...args),
+          onUploadError: (...args: any[]) => (callbackRefs.onImageUploadError.current as any)?.(...args),
+          onImageUpload: (file: File, options: any) => {
+            if (!callbackRefs.onImageUpload.current) {
+              return Promise.reject(new Error('Image upload is not available. Please configure an image storage adapter.'));
+            }
+            return (callbackRefs.onImageUpload.current as any)(file, options);
+          },
         })
       );
     }

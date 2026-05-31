@@ -257,19 +257,40 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         return true;
       };
 
+      // Resolution generation counter — incremented on each call to
+      // resolveAndSetSrc so stale async results are discarded.
+      let resolveGeneration = 0;
+
       // Helper: resolve and set image src
       const resolveAndSetSrc = (src: string) => {
+        const gen = ++resolveGeneration;
+
         if (needsResolution(src) && extensionOptions.resolveImageSrc) {
-          // Set a loading placeholder while resolving
-          img.style.opacity = '0.5';
-          img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3C/svg%3E';
+          // If the img already has a displayable src (base64/blob/http),
+          // keep it visible while resolving instead of showing a gray placeholder.
+          const currentSrc = img.getAttribute('src') || '';
+          const hasDisplayableSrc = currentSrc.startsWith('data:') ||
+            currentSrc.startsWith('blob:') ||
+            currentSrc.startsWith('http://') ||
+            currentSrc.startsWith('https://');
+
+          if (!hasDisplayableSrc) {
+            img.style.opacity = '0.5';
+            img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3C/svg%3E';
+          }
+
           extensionOptions.resolveImageSrc(src).then((resolvedUrl) => {
-            img.src = resolvedUrl;
+            if (gen !== resolveGeneration) return;
+            // Only update if we got an actually displayable URL back
+            if (resolvedUrl && resolvedUrl !== src) {
+              img.src = resolvedUrl;
+            }
             img.style.opacity = '1';
             img.offsetHeight;
           }).catch(() => {
-            // Fallback: try using the original src directly
-            img.src = src;
+            if (gen !== resolveGeneration) return;
+            // Resolution failed — keep whatever is currently displayed
+            // rather than setting an unresolvable relative path
             img.style.opacity = '1';
           });
         } else {

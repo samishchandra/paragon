@@ -88,6 +88,34 @@ function dataUrlToFile(dataUrl: string, fileName: string): File {
 }
 
 /**
+ * Get image dimensions from a File object without creating a full base64 data URL.
+ * Uses a temporary object URL which is much cheaper than base64.
+ */
+function getImageDimensionsFromFile(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new window.Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.width, height: img.height });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: 400, height: 300 });
+    };
+    img.src = url;
+  });
+}
+
+/**
+ * Build a lightweight SVG placeholder with the correct aspect ratio.
+ * Much cheaper than a full base64 data URL of the actual image.
+ */
+function buildPlaceholderSvg(width: number, height: number): string {
+  return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'%3E%3Crect width='100%25' height='100%25' fill='%23f0f0f0'/%3E%3C/svg%3E`;
+}
+
+/**
  * Validate if a file is an allowed image type
  */
 function isValidImage(file: File, allowedTypes: string[]): boolean {
@@ -230,62 +258,43 @@ async function processAndInsertImage(
   }
 
   const uploadId = generateUploadId();
+  // Unique placeholder src — lightweight SVG, NOT base64 of the actual image.
+  // The uploadId makes it easy to find for replacement after upload.
+  const placeholderTag = `placeholder://${uploadId}`;
 
   try {
     options.onUploadStart?.();
 
-    // Step 1: Compress the image (or read as-is) for the temporary placeholder
-    let placeholderDataUrl: string;
-    let displayWidth: number;
-    let compressedFile: File;
+    // Step 1: Get image dimensions (cheap — uses a temporary object URL, no base64)
+    const dimensions = await getImageDimensionsFromFile(file);
+    const maxDisplayWidth = 600;
+    const displayWidth = Math.min(dimensions.width, maxDisplayWidth);
+    const displayHeight = Math.round(dimensions.height * (displayWidth / dimensions.width));
+    const placeholderSvg = buildPlaceholderSvg(displayWidth, displayHeight);
 
-    const isCompressible = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
-
-    if (options.enableCompression && isCompressible) {
-      const compressed = await compressImage(
-        file,
-        options.maxCompressedWidth,
-        options.compressionQuality
-      );
-      placeholderDataUrl = compressed.dataUrl;
-      compressedFile = compressed.file;
-      const maxDisplayWidth = 600;
-      displayWidth = Math.min(compressed.width, maxDisplayWidth);
-    } else {
-      placeholderDataUrl = await fileToBase64(file);
-      compressedFile = file;
-      const dimensions = await getImageDimensions(placeholderDataUrl);
-      const maxDisplayWidth = 600;
-      displayWidth = Math.min(dimensions.width, maxDisplayWidth);
-    }
-
-    // Step 2: Insert a temporary placeholder image while uploading
-    // Ensure the document has at least one valid paragraph node.
-    // When a note is brand new with no content, the ProseMirror document
-    // might just have a minimal structure (or even an empty fragment),
-    // and setImage tries to insert at a position that doesn't exist yet.
+    // Step 2: Insert a lightweight placeholder with a loading spinner.
+    // The placeholder is a tiny SVG with correct aspect ratio — no heavy
+    // base64 conversion of the actual image.
     const { doc } = editor.view.state;
     const isEmpty = doc.content.size === 0 || (doc.childCount === 1 && doc.firstChild?.isTextblock && doc.firstChild.content.size === 0);
     if (isEmpty) {
-      // Use insertContent which handles empty documents more gracefully
-      // by creating the necessary structure around the image node
       editor.chain().focus().insertContent({
         type: 'resizableImage',
         attrs: {
-          src: placeholderDataUrl,
-          alt: file.name,
+          src: placeholderSvg,
+          alt: placeholderTag,
           width: displayWidth,
         },
       }).run();
     } else {
       editor.chain().focus().setImage({
-        src: placeholderDataUrl,
-        alt: file.name,
+        src: placeholderSvg,
+        alt: placeholderTag,
         width: displayWidth,
       }).run();
     }
 
-    // Mark the just-inserted image node as uploading
+    // Mark the just-inserted image node as uploading (shows CSS spinner overlay)
     const { state } = editor.view;
     const pos = state.selection.from - 1;
     if (pos >= 0) {
@@ -301,7 +310,20 @@ async function processAndInsertImage(
       }
     }
 
-    // Step 3: Perform the external upload
+    // Step 3: Compress (if needed) and upload
+    let compressedFile: File;
+    const isCompressible = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
+    if (options.enableCompression && isCompressible) {
+      const compressed = await compressImage(
+        file,
+        options.maxCompressedWidth,
+        options.compressionQuality
+      );
+      compressedFile = compressed.file;
+    } else {
+      compressedFile = file;
+    }
+
     try {
       const imageRef = await options.onImageUpload(compressedFile, {
         fileName: file.name,
@@ -310,11 +332,12 @@ async function processAndInsertImage(
         uploadId,
       });
 
-      // Replace the placeholder src with the returned reference
+      // Replace the placeholder with the uploaded reference.
+      // Match by the unique placeholderTag stored in alt.
       let found = false;
       editor.view.state.doc.descendants((n: any, p: number) => {
         if (found) return false;
-        if (n.type.name === 'resizableImage' && n.attrs.src === placeholderDataUrl && n.attrs.alt === file.name) {
+        if (n.type.name === 'resizableImage' && n.attrs.alt === placeholderTag) {
           try {
             const { state: currentState, dispatch } = editor.view;
             const currentNode = currentState.doc.nodeAt(p);
@@ -322,6 +345,7 @@ async function processAndInsertImage(
               const tr = currentState.tr.setNodeMarkup(p, undefined, {
                 ...currentNode.attrs,
                 src: imageRef,
+                alt: file.name,
               });
               dispatch(tr);
             }
@@ -352,20 +376,17 @@ async function processAndInsertImage(
       options.onUploadComplete?.();
       return true;
     } catch (uploadError) {
-      // Upload failed — remove the placeholder entirely (no base64 fallback)
       console.warn('Image upload failed, removing placeholder:', uploadError);
-      removePlaceholderNode(editor, placeholderDataUrl, file.name);
-
+      removePlaceholderNode(editor, placeholderSvg, placeholderTag);
       options.onUploadError?.(`Upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
       options.onUploadComplete?.();
       return false;
     }
   } catch (error) {
-    // Clean up any base64 placeholder that may have been inserted before the error
-    // This prevents raw data URLs from leaking into the document
+    // Clean up placeholder if it was inserted before the error
     try {
       editor.view.state.doc.descendants((n: any, p: number) => {
-        if (n.type.name === 'resizableImage' && n.attrs.src?.startsWith('data:') && n.attrs.alt === file.name) {
+        if (n.type.name === 'resizableImage' && n.attrs.alt === placeholderTag) {
           try {
             const { state: cleanupState, dispatch } = editor.view;
             const tr = cleanupState.tr.delete(p, p + n.nodeSize);
@@ -378,7 +399,7 @@ async function processAndInsertImage(
         return true;
       });
     } catch {
-      // Cleanup itself failed — document may be in an inconsistent state
+      // Cleanup itself failed
     }
     options.onUploadError?.(`Failed to process image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return false;
