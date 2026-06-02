@@ -13820,7 +13820,7 @@ function cx(e, t) {
 function uo(e) {
   let t = e;
   const n = [];
-  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (r, o, s) => {
+  t = t.replace(/\[((?:[^\[\]]|\[[^\]]*\])+)\]\(([^)]+)\)/g, (r, o, s) => {
     const i = `MANUSINLINELINKPH${n.length}END`;
     return n.push(`<a href="${s}">${o}</a>`), i;
   }), t = t.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>"), t = t.replace(new RegExp("(?<!\\*)\\*(?!\\*)(.+?)(?<!\\*)\\*(?!\\*)", "g"), "<em>$1</em>"), t = t.replace(/~~(.+?)~~/g, "<s>$1</s>"), t = t.replace(/`([^`]+)`/g, "<code>$1</code>"), t = t.replace(/==(.+?)==/g, "<mark>$1</mark>");
@@ -13829,10 +13829,10 @@ function uo(e) {
   return t;
 }
 function qi(e) {
-  if (!/!\[[^\]]*\]\([^)]+\)/.test(e)) return `<p>${uo(e)}</p>`;
-  const n = /(!\[[^\]]*\]\([^)]+\))/g, r = e.split(n).filter((s) => s.trim()), o = [];
+  if (!/!\[(?:[^\[\]]|\[[^\]]*\])*\]\([^)]+\)/.test(e)) return `<p>${uo(e)}</p>`;
+  const n = /(!\[(?:[^\[\]]|\[[^\]]*\])*\]\([^)]+\))/g, r = e.split(n).filter((s) => s.trim()), o = [];
   for (const s of r) {
-    const i = s.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    const i = s.match(/^!\[((?:[^\[\]]|\[[^\]]*\])*)\]\(([^)]+)\)$/);
     i ? o.push(cx(i[1], i[2])) : o.push(`<p>${uo(s.trim())}</p>`);
   }
   return o.join("");
@@ -13983,13 +13983,13 @@ function dx(e) {
   c(), t = i.join(`
 `);
   const l = [];
-  t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (f, p, g) => {
+  t = t.replace(/!\[((?:[^\[\]]|\[[^\]]*\])*)\]\(([^)]+)\)/g, (f, p, g) => {
     const m = p.split("|").map((E) => E.trim());
     let y = "", b = "left", v = null;
     m.length === 1 ? y = m[0] : m.length === 2 ? (y = m[0], /^\d+$/.test(m[1]) ? v = m[1] : ["left", "center", "right"].includes(m[1]) ? b = m[1] : y = p) : m.length === 3 ? (y = m[0], ["left", "center", "right"].includes(m[1]) && (b = m[1]), /^\d+$/.test(m[2]) && (v = m[2])) : y = p;
     const w = v ? ` width="${v}" style="width: ${v}px"` : "", T = `<img src="${g.trim()}" alt="${y}" data-align="${b}"${w}>`, k = `MANUSLINKPLACEHOLDER${l.length}END`;
     return l.push(T), k;
-  }), t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (f, p, g) => {
+  }), t = t.replace(/\[((?:[^\[\]]|\[[^\]]*\])+)\]\(([^)]+)\)/g, (f, p, g) => {
     const m = `<a href="${g}">${p}</a>`, y = `MANUSLINKPLACEHOLDER${l.length}END`;
     return l.push(m), y;
   }), t = t.replace(/<a\s[^>]*>.*?<\/a>/g, (f) => {
@@ -14259,7 +14259,7 @@ const px = He.create({
       })
     ];
   }
-}), hx = /\[([^\]]+)\]\(([^)]+)\)$/, mx = /^(https?:\/\/|www\.)[^\s]+$/i, gx = He.create({
+}), hx = /\[((?:[^\[\]]|\[[^\]]*\])+)\]\(([^)]+)\)$/, mx = /^(https?:\/\/|www\.)[^\s]+$/i, gx = He.create({
   name: "markdownLinkInputRule",
   addInputRules() {
     return [
@@ -16348,7 +16348,7 @@ function pC(e) {
 function po(e) {
   let t = e;
   const n = [];
-  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (r, o, s) => {
+  t = t.replace(/\[((?:[^\[\]]|\[[^\]]*\])+)\]\(([^)]+)\)/g, (r, o, s) => {
     const i = `MANUSINLINELINKPH${n.length}END`;
     return n.push(`<a href="${s}">${o}</a>`), i;
   }), t = t.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>"), t = t.replace(new RegExp("(?<!\\*)\\*(?!\\*)(.+?)(?<!\\*)\\*(?!\\*)", "g"), "<em>$1</em>"), t = t.replace(/~~(.+?)~~/g, "<s>$1</s>"), t = t.replace(/`([^`]+)`/g, "<code>$1</code>"), t = t.replace(/==(.+?)==/g, "<mark>$1</mark>");
@@ -16370,7 +16370,7 @@ function oc(e) {
     return e.split(t).filter((r) => r.trim()).map((r) => /^<img\s/i.test(r) ? hC(r) : r.trim() ? `<p>${po(r.trim())}</p>` : "").join("");
   }
   if (/^!\[/.test(e)) {
-    const t = e.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    const t = e.match(/^!\[((?:[^\[\]]|\[[^\]]*\])*)\]\(([^)]+)\)$/);
     if (t)
       return `<figure class="image-resizer" style="margin-right: auto;"><img src="${t[2]}" alt="${t[1]}" data-align="left" /></figure>`;
   }
@@ -16467,7 +16467,7 @@ function vC(e, t, n = {}) {
     }
   }
   return p !== null && (f.push(`\`\`\`ad-${p}`), f.push(...g)), l = f.join(`
-`), l = l.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (y, b, v) => {
+`), l = l.replace(/!\[((?:[^\[\]]|\[[^\]]*\])*)\]\(([^)]+)\)/g, (y, b, v) => {
     const w = b.split("|").map((D) => D.trim());
     let T = "", k = "left", E = null;
     w.length === 1 ? T = w[0] : w.length === 2 ? (T = w[0], /^\d+$/.test(w[1]) ? E = w[1] : ["left", "center", "right"].includes(w[1]) ? k = w[1] : T = b) : w.length === 3 ? (T = w[0], ["left", "center", "right"].includes(w[1]) && (k = w[1]), /^\d+$/.test(w[2]) && (E = w[2])) : T = b;
