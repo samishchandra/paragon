@@ -50,6 +50,12 @@ export interface PreprocessOptions {
  */
 export function inlineMarkdownToHtml(text: string): string {
   let result = text;
+  const inlineLinkPlaceholders: string[] = [];
+  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m: string, t: string, u: string) => {
+    const ph = `MANUSINLINELINKPH${inlineLinkPlaceholders.length}END`;
+    inlineLinkPlaceholders.push(`<a href="${u}">${t}</a>`);
+    return ph;
+  });
   // Bold: **text**
   result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   // Italic: *text*
@@ -60,8 +66,9 @@ export function inlineMarkdownToHtml(text: string): string {
   result = result.replace(/`([^`]+)`/g, '<code>$1</code>');
   // Highlight: ==text==
   result = result.replace(/==(.+?)==/g, '<mark>$1</mark>');
-  // Links: [text](url)
-  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  for (let i = 0; i < inlineLinkPlaceholders.length; i++) {
+    result = result.replace(`MANUSINLINELINKPH${i}END`, inlineLinkPlaceholders[i]);
+  }
   return result;
 }
 

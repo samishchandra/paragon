@@ -87,12 +87,20 @@ function imageToFigure(metadata: string, src: string): string {
  */
 function inlineMarkdownToHtml(text: string): string {
   let result = text;
+  const inlineLinkPlaceholders: string[] = [];
+  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m: string, t: string, u: string) => {
+    const ph = `MANUSINLINELINKPH${inlineLinkPlaceholders.length}END`;
+    inlineLinkPlaceholders.push(`<a href="${u}">${t}</a>`);
+    return ph;
+  });
   result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   result = result.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
   result = result.replace(/~~(.+?)~~/g, '<s>$1</s>');
   result = result.replace(/`([^`]+)`/g, '<code>$1</code>');
   result = result.replace(/==(.+?)==/g, '<mark>$1</mark>');
-  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  for (let i = 0; i < inlineLinkPlaceholders.length; i++) {
+    result = result.replace(`MANUSINLINELINKPH${i}END`, inlineLinkPlaceholders[i]);
+  }
   return result;
 }
 
@@ -437,19 +445,11 @@ export function markdownToHtml(markdown: string): string {
   
   html = outputBlocks.join('\n');
   
-  // Bold and italic (combined pass)
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-  html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
-  html = html.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
-  
-  // Strikethrough
-  html = html.replace(/~~([^~]+)~~/g, '<s>$1</s>');
-  
-  // Highlight ==text==
-  html = html.replace(/(?<!`)==((?:(?!==)[^\n])+)==(?!`)/g, '<mark>$1</mark>');
-  
-  // Images with optional alignment and width: ![alt|alignment|width](url), ![alt|width](url), or ![alt](url)
+  // Extract images and links into placeholders before bold/italic
+  // to prevent underscores in URLs from being converted to <em> tags
+  const linkPlaceholders: string[] = [];
+
+  // Images with optional alignment and width
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match: string, metadata: string, src: string) => {
     const parts = metadata.split('|').map((p: string) => p.trim());
     let alt = '', align = 'left', width: string | null = null;
@@ -466,10 +466,48 @@ export function markdownToHtml(markdown: string): string {
       if (/^\d+$/.test(parts[2])) { width = parts[2]; }
     } else { alt = metadata; }
     const w = width ? ` width="${width}" style="width: ${width}px"` : '';
-    return `<img src="${src.trim()}" alt="${alt}" data-align="${align}"${w}>`;
+    const imgHtml = `<img src="${src.trim()}" alt="${alt}" data-align="${align}"${w}>`;
+    const placeholder = `MANUSLINKPLACEHOLDER${linkPlaceholders.length}END`;
+    linkPlaceholders.push(imgHtml);
+    return placeholder;
   });
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+  // Markdown links
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match: string, text: string, url: string) => {
+    const linkHtml = `<a href="${url}">${text}</a>`;
+    const placeholder = `MANUSLINKPLACEHOLDER${linkPlaceholders.length}END`;
+    linkPlaceholders.push(linkHtml);
+    return placeholder;
+  });
+
+  // Also protect any <a> and <img> tags already in the HTML (e.g. from list item processing)
+  html = html.replace(/<a\s[^>]*>.*?<\/a>/g, (match: string) => {
+    const placeholder = `MANUSLINKPLACEHOLDER${linkPlaceholders.length}END`;
+    linkPlaceholders.push(match);
+    return placeholder;
+  });
+  html = html.replace(/<img\s[^>]*\/?>/g, (match: string) => {
+    const placeholder = `MANUSLINKPLACEHOLDER${linkPlaceholders.length}END`;
+    linkPlaceholders.push(match);
+    return placeholder;
+  });
+
+  // Bold and italic (combined pass)
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+  html = html.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
+
+  // Strikethrough
+  html = html.replace(/~~([^~]+)~~/g, '<s>$1</s>');
+
+  // Highlight ==text==
+  html = html.replace(/(?<!`)==((?:(?!==)[^\n])+)==(?!`)/g, '<mark>$1</mark>');
+
+  // Restore link/image placeholders
+  for (let i = 0; i < linkPlaceholders.length; i++) {
+    html = html.replace(`MANUSLINKPLACEHOLDER${i}END`, linkPlaceholders[i]);
+  }
   
   // Wrap remaining lines in paragraphs
   const lines = html.split('\n');

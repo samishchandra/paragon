@@ -888,3 +888,43 @@ describe('parseListLine — Whitespace edge cases', () => {
     expect(result).toEqual({ type: 'ul', depth: 0, text: 'Visit [Google](https://google.com)' });
   });
 });
+
+// ---------------------------------------------------------------------------
+// URL underscore protection — regression test for underscore-in-URL bug
+// ---------------------------------------------------------------------------
+describe('markdownToHtml — URLs with underscores should not be mangled', () => {
+  it('should preserve underscores in markdown link URLs', () => {
+    const md = '[Creation MRI | 2026 H1 - Trackers](https://trackers.internalmeta.com/creation_mri_2026_h1)';
+    const html = markdownToHtml(md);
+    expect(html).toContain('href="https://trackers.internalmeta.com/creation_mri_2026_h1"');
+    expect(html).not.toContain('<em>');
+    expect(html).not.toContain('%3Cem%3E');
+  });
+
+  it('should preserve underscores in URLs with multiple underscore segments', () => {
+    const md = '[Link](https://example.com/path_one_two_three_four)';
+    const html = markdownToHtml(md);
+    expect(html).toContain('href="https://example.com/path_one_two_three_four"');
+    expect(html).not.toContain('<em>');
+  });
+
+  it('should still apply italic to link text while preserving URL', () => {
+    const md = '[_italic title_](https://example.com/some_path_here)';
+    const html = markdownToHtml(md);
+    expect(html).toContain('href="https://example.com/some_path_here"');
+  });
+
+  it('should preserve underscores in image URLs', () => {
+    const md = '![alt text](https://example.com/image_name_here.png)';
+    const html = markdownToHtml(md);
+    expect(html).toContain('src="https://example.com/image_name_here.png"');
+    expect(html).not.toContain('<em>');
+  });
+
+  it('should preserve underscores in inline list item links', () => {
+    const md = '- [Tracker Link](https://trackers.internalmeta.com/creation_mri_2026_h1)';
+    const html = markdownToHtml(md);
+    expect(html).toContain('href="https://trackers.internalmeta.com/creation_mri_2026_h1"');
+    expect(html).not.toContain('<em>');
+  });
+});
