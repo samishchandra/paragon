@@ -51,7 +51,7 @@ export interface PreprocessOptions {
 export function inlineMarkdownToHtml(text: string): string {
   let result = text;
   const inlineLinkPlaceholders: string[] = [];
-  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m: string, t: string, u: string) => {
+  result = result.replace(/\[((?:[^\[\]]|\[[^\]]*\])+)\]\(([^)]+)\)/g, (_m: string, t: string, u: string) => {
     const ph = `MANUSINLINELINKPH${inlineLinkPlaceholders.length}END`;
     inlineLinkPlaceholders.push(`<a href="${u}">${t}</a>`);
     return ph;
@@ -100,7 +100,7 @@ export function lineToBlocks(line: string): string {
     }).join('');
   }
   if (/^!\[/.test(line)) {
-    const imgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    const imgMatch = line.match(/^!\[((?:[^\[\]]|\[[^\]]*\])*)\]\(([^)]+)\)$/);
     if (imgMatch) {
       return `<figure class="image-resizer" style="margin-right: auto;"><img src="${imgMatch[2]}" alt="${imgMatch[1]}" data-align="left" /></figure>`;
     }
@@ -333,7 +333,7 @@ export function preprocessMarkdown(
   md = outputLines.join('\n');
 
   // 3. Image metadata: ![alt|alignment|width](url) → <img> tags
-  md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, metadata, src) => {
+  md = md.replace(/!\[((?:[^\[\]]|\[[^\]]*\])*)\]\(([^)]+)\)/g, (_match, metadata, src) => {
     const parts = metadata.split('|').map((p: string) => p.trim());
     let alt = '';
     let align = 'left';

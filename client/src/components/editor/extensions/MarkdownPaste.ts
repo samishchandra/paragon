@@ -44,7 +44,7 @@ function imageToFigure(metadata: string, src: string): string {
 function inlineMarkdownToHtml(text: string): string {
   let result = text;
   const inlineLinkPlaceholders: string[] = [];
-  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m: string, t: string, u: string) => {
+  result = result.replace(/\[((?:[^\[\]]|\[[^\]]*\])+)\]\(([^)]+)\)/g, (_m: string, t: string, u: string) => {
     const ph = `MANUSINLINELINKPH${inlineLinkPlaceholders.length}END`;
     inlineLinkPlaceholders.push(`<a href="${u}">${t}</a>`);
     return ph;
@@ -61,13 +61,13 @@ function inlineMarkdownToHtml(text: string): string {
 }
 
 function convertLineToBlocks(line: string): string {
-  const hasImages = /!\[[^\]]*\]\([^)]+\)/.test(line);
+  const hasImages = /!\[(?:[^\[\]]|\[[^\]]*\])*\]\([^)]+\)/.test(line);
   if (!hasImages) return `<p>${inlineMarkdownToHtml(line)}</p>`;
-  const imgPattern = /(!\[[^\]]*\]\([^)]+\))/g;
+  const imgPattern = /(!\[(?:[^\[\]]|\[[^\]]*\])*\]\([^)]+\))/g;
   const segments = line.split(imgPattern).filter(s => s.trim());
   const blocks: string[] = [];
   for (const segment of segments) {
-    const imgMatch = segment.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    const imgMatch = segment.match(/^!\[((?:[^\[\]]|\[[^\]]*\])*)\]\(([^)]+)\)$/);
     if (imgMatch) blocks.push(imageToFigure(imgMatch[1], imgMatch[2]));
     else blocks.push(`<p>${inlineMarkdownToHtml(segment.trim())}</p>`);
   }
@@ -382,7 +382,7 @@ function markdownToHtml(markdown: string): string {
   const linkPlaceholders: string[] = [];
 
   // Images with optional alignment and width
-  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match: string, metadata: string, src: string) => {
+  html = html.replace(/!\[((?:[^\[\]]|\[[^\]]*\])*)\]\(([^)]+)\)/g, (_match: string, metadata: string, src: string) => {
     const parts = metadata.split('|').map((p: string) => p.trim());
     let alt = '', align = 'left', width: string | null = null;
     if (parts.length === 1) {
@@ -404,8 +404,8 @@ function markdownToHtml(markdown: string): string {
     return placeholder;
   });
 
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match: string, text: string, url: string) => {
+  // Links (supports brackets in link text like [[Backup] Title])
+  html = html.replace(/\[((?:[^\[\]]|\[[^\]]*\])+)\]\(([^)]+)\)/g, (_match: string, text: string, url: string) => {
     const linkHtml = `<a href="${url}">${text}</a>`;
     const placeholder = `MANUSLINKPLACEHOLDER${linkPlaceholders.length}END`;
     linkPlaceholders.push(linkHtml);

@@ -9,7 +9,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 
 // Regex to match markdown link syntax: [text](url)
 // This matches when the user types the closing parenthesis
-const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)$/;
+const markdownLinkRegex = /\[((?:[^\[\]]|\[[^\]]*\])+)\]\(([^)]+)\)$/;
 
 // Regex to detect URLs
 const urlRegex = /^(https?:\/\/|www\.)[^\s]+$/i;

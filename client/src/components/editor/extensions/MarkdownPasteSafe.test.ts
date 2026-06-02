@@ -928,3 +928,29 @@ describe('markdownToHtml — URLs with underscores should not be mangled', () =>
     expect(html).not.toContain('<em>');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Brackets in link text — regression test for nested bracket bug
+// ---------------------------------------------------------------------------
+describe('markdownToHtml — brackets in link text', () => {
+  it('should handle square brackets in link text', () => {
+    const md = '[[Backup] Creation Tagging Infra | 2026 H1 - Projects Tracker](https://docs.google.com/spreadsheets/d/181ADO9P7D1ELXNyIfZTWvAV1EmAd7otQAVNxVeHFBFo/edit)';
+    const html = markdownToHtml(md);
+    expect(html).toContain('[Backup] Creation Tagging Infra');
+    expect(html).toContain('href="https://docs.google.com/spreadsheets/d/181ADO9P7D1ELXNyIfZTWvAV1EmAd7otQAVNxVeHFBFo/edit"');
+  });
+
+  it('should handle brackets in link text within a list item', () => {
+    const md = '- [[Backup] Sheet](https://example.com/sheet)';
+    const html = markdownToHtml(md);
+    expect(html).toContain('[Backup] Sheet');
+    expect(html).toContain('href="https://example.com/sheet"');
+  });
+
+  it('should handle multiple bracket groups in link text', () => {
+    const md = '[[A] and [B] tracker](https://example.com)';
+    const html = markdownToHtml(md);
+    expect(html).toContain('[A] and [B] tracker');
+    expect(html).toContain('href="https://example.com"');
+  });
+});
