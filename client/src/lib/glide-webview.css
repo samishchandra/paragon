@@ -1,0 +1,82 @@
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #0f1117;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+
+.glide-shell {
+  display: grid;
+  grid-template-rows: 32px minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  color: #d8dee9;
+  background: #0f1117;
+}
+
+.glide-toolbar {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+  padding: 0 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #151823;
+}
+
+.glide-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #cbd5e1;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.glide-status {
+  min-width: 64px;
+  color: #8b95a7;
+  font-size: 11px;
+  text-align: right;
+}
+
+.glide-save {
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  color: #d8dee9;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+}
+
+.glide-save:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.glide-save:disabled {
+  opacity: 0.5;
+}
+
+.glide-editor {
+  min-width: 0;
+  min-height: 0;
+}
+
+.glide-editor .markdown-editor-container {
+  height: 100%;
+}
+
+.glide-error {
+  padding: 16px;
+  color: #fca5a5;
+  font-size: 12px;
+}

@@ -23,6 +23,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "preview": "vite preview --host",
     "build:lib": "node scripts/build-lib.mjs",
+    "build:glide": "NODE_ENV=production vite build --config vite.glide.config.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
