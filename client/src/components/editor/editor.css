@@ -217,7 +217,8 @@
   padding: 2rem;
   padding-bottom: 40vh;
   outline: none;
-  caret-color: var(--editor-cursor);
+  /* Caret uses the theme text color (--foreground) for light/dark compliance. */
+  caret-color: var(--foreground);
   overflow-wrap: break-word;
   word-break: break-word;
   
@@ -4057,7 +4058,7 @@ pre.with-line-numbers code .line::before {
 }
 
 /* Dark theme text colors */
-[data-theme="dark"] .text-foreground {
+.markdown-editor-container[data-theme="dark"] .text-foreground {
   color: #dadada;
 }
 
@@ -4066,11 +4067,11 @@ pre.with-line-numbers code .line::before {
 }
 
 /* Dark theme primary badge */
-[data-theme="dark"] .bg-primary\/10 {
+.markdown-editor-container[data-theme="dark"] .bg-primary\/10 {
   background: rgba(46, 128, 242, 0.1);
 }
 
-[data-theme="dark"] .text-primary {
+.markdown-editor-container[data-theme="dark"] .text-primary {
   color: #2e80f2;
 }
 
@@ -4503,7 +4504,7 @@ pre.with-line-numbers code .line::before {
 }
 
 /* Light theme text colors in modal */
-[data-theme="light"] .text-foreground {
+.markdown-editor-container[data-theme="light"] .text-foreground {
   color: oklch(0.12 0.01 250);
 }
 
@@ -4512,11 +4513,11 @@ pre.with-line-numbers code .line::before {
 }
 
 /* Light theme primary badge */
-[data-theme="light"] .bg-primary\/10 {
+.markdown-editor-container[data-theme="light"] .bg-primary\/10 {
   background: oklch(0.55 0.18 220 / 0.1);
 }
 
-[data-theme="light"] .text-primary {
+.markdown-editor-container[data-theme="light"] .text-primary {
   color: oklch(0.45 0.18 220);
 }
 
