@@ -1,0 +1,73 @@
+/*
+ * standalone-tokens.css — host-owned design tokens for the STANDALONE
+ * Paragon app only. These are intentionally NOT shipped in the library
+ * bundle (paragon.css) so they never collide with a consuming app's own
+ * design system. The library consumes whatever the host defines.
+ */
+
+:root {
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #333333;
+  --card: #fafafa;
+  --card-foreground: #333333;
+  --popover: #ffffff;
+  --popover-foreground: #333333;
+  --primary: #2e80f2;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #666666;
+  --muted: #f5f5f5;
+  --muted-foreground: #9a9a9a;
+  --accent: #f5f5f5;
+  --accent-foreground: #333333;
+  --destructive: #e04674;
+  --destructive-foreground: #ffffff;
+  --border: #e8e8e8;
+  --input: #f5f5f5;
+  --ring: #2e80f2;
+  --chart-1: #2e80f2;
+  --chart-2: #4eb57c;
+  --chart-3: #9e86c8;
+  --chart-4: #e87d3e;
+  --chart-5: #ff82b2;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #333333;
+  --sidebar-primary: #2e80f2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #333333;
+  --sidebar-border: #e8e8e8;
+  --sidebar-ring: #2e80f2;
+}
+
+.dark,
+[data-theme="dark"] {
+  --background: #1c2127;
+  --foreground: #dadada;
+  --card: #282c34;
+  --card-foreground: #dadada;
+  --popover: #2c313c;
+  --popover-foreground: #dadada;
+  --primary: #2e80f2;
+  --primary-foreground: #ffffff;
+  --secondary: #35393e;
+  --secondary-foreground: #bababa;
+  --muted: #3f3f3f;
+  --muted-foreground: #999999;
+  --accent: #35393e;
+  --accent-foreground: #dadada;
+  --destructive: #e04674;
+  --destructive-foreground: #ffffff;
+  --border: #35393e;
+  --input: #2c313c;
+  --ring: #2e80f2;
+  --sidebar: #181c20;
+  --sidebar-foreground: #dadada;
+  --sidebar-primary: #2e80f2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #35393e;
+  --sidebar-accent-foreground: #dadada;
+  --sidebar-border: #35393e;
+  --sidebar-ring: #2e80f2;
+}

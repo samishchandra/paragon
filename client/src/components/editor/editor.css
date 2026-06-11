@@ -16,41 +16,22 @@
   --h6-color: var(--muted-foreground);
   
   /* Base layers - Things dark mode */
-  --background: #1c2127;
-  --foreground: #dadada;
   
   /* Card/elevated surfaces */
-  --card: #282c34;
-  --card-foreground: #dadada;
   
   /* Popover/floating elements */
-  --popover: #2c313c;
-  --popover-foreground: #dadada;
   
   /* Primary - Things blue */
-  --primary: #2e80f2;
-  --primary-foreground: #ffffff;
   
   /* Secondary */
-  --secondary: #35393e;
-  --secondary-foreground: #bababa;
   
   /* Muted */
-  --muted: #3f3f3f;
-  --muted-foreground: #999999;
   
   /* Accent */
-  --accent: #35393e;
-  --accent-foreground: #dadada;
   
   /* Destructive */
-  --destructive: #e04674;
-  --destructive-foreground: #ffffff;
   
   /* Borders and inputs */
-  --border: #35393e;
-  --input: #2c313c;
-  --ring: #2e80f2;
   
   /* Editor specific */
   --editor-bg: #1c2127;
@@ -115,41 +96,22 @@
   --h6-color: #9a9a9a;
   
   /* Base layers - Things light mode */
-  --background: #ffffff;
-  --foreground: #333333;
   
   /* Card/elevated surfaces */
-  --card: #fafafa;
-  --card-foreground: #333333;
   
   /* Popover/floating elements */
-  --popover: #ffffff;
-  --popover-foreground: #333333;
   
   /* Primary - Things blue */
-  --primary: #2e80f2;
-  --primary-foreground: #ffffff;
   
   /* Secondary */
-  --secondary: #f5f5f5;
-  --secondary-foreground: #666666;
   
   /* Muted */
-  --muted: #f5f5f5;
-  --muted-foreground: #9a9a9a;
   
   /* Accent */
-  --accent: #f5f5f5;
-  --accent-foreground: #333333;
   
   /* Destructive */
-  --destructive: #e04674;
-  --destructive-foreground: #ffffff;
   
   /* Borders and inputs */
-  --border: #e8e8e8;
-  --input: #f5f5f5;
-  --ring: #2e80f2;
   
   /* Editor specific */
   --editor-bg: #ffffff;
@@ -3980,7 +3942,7 @@ pre.with-line-numbers code .line::before {
 }
 
 /* Dark theme dropdown menus (portaled outside data-theme container) */
-[data-slot="dropdown-menu-content"] {
+[data-theme="dark"] [data-slot="dropdown-menu-content"] {
   background: #252a32 !important;
   color: #dadada !important;
   border: 1px solid #3a3f47 !important;
@@ -3990,7 +3952,7 @@ pre.with-line-numbers code .line::before {
   overflow: visible !important;
 }
 
-[data-slot="dropdown-menu-item"] {
+[data-theme="dark"] [data-slot="dropdown-menu-item"] {
   display: flex !important;
   align-items: center !important;
   color: #dadada !important;
@@ -4002,19 +3964,19 @@ pre.with-line-numbers code .line::before {
   overflow: visible !important;
 }
 
-[data-slot="dropdown-menu-item"]:focus,
-[data-slot="dropdown-menu-item"]:hover {
+[data-theme="dark"] [data-slot="dropdown-menu-item"]:focus,
+[data-theme="dark"] [data-slot="dropdown-menu-item"]:hover {
   background: #35393e !important;
   color: #ffffff !important;
 }
 
-[data-slot="dropdown-menu-item"].bg-accent {
+[data-theme="dark"] [data-slot="dropdown-menu-item"].bg-accent {
   background: #3a4048 !important;
   color: #ffffff !important;
 }
 
 /* Heading label spans inside dropdown items */
-[data-slot="dropdown-menu-item"] span:first-child {
+[data-theme="dark"] [data-slot="dropdown-menu-item"] span:first-child {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -4025,8 +3987,8 @@ pre.with-line-numbers code .line::before {
   color: #888 !important;
   flex-shrink: 0 !important;
 }
-[data-slot="dropdown-menu-item"] span + span,
-[data-slot="dropdown-menu-item"] > span + span {
+[data-theme="dark"] [data-slot="dropdown-menu-item"] span + span,
+[data-theme="dark"] [data-slot="dropdown-menu-item"] > span + span {
   color: inherit !important;
   font-size: 13px !important;
 }
