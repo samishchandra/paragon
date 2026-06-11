@@ -56,7 +56,6 @@
 
 :root {
   /* Things Theme - Light Mode (Default) */
-  --radius: 0.5rem;
   
   /* Things theme colors */
   --things-blue: #2e80f2;
@@ -78,58 +77,26 @@
   --h6-color: #9a9a9a;
   
   /* Base layers - Things light mode */
-  --background: #ffffff;
-  --foreground: #333333;
   
   /* Card/elevated surfaces */
-  --card: #fafafa;
-  --card-foreground: #333333;
   
   /* Popover/floating elements */
-  --popover: #ffffff;
-  --popover-foreground: #333333;
   
   /* Primary - Things blue */
-  --primary: #2e80f2;
-  --primary-foreground: #ffffff;
   
   /* Secondary */
-  --secondary: #f5f5f5;
-  --secondary-foreground: #666666;
   
   /* Muted */
-  --muted: #f5f5f5;
-  --muted-foreground: #9a9a9a;
   
   /* Accent */
-  --accent: #f5f5f5;
-  --accent-foreground: #333333;
   
   /* Destructive */
-  --destructive: #e04674;
-  --destructive-foreground: #ffffff;
   
   /* Borders and inputs */
-  --border: #e8e8e8;
-  --input: #f5f5f5;
-  --ring: #2e80f2;
   
   /* Charts */
-  --chart-1: #2e80f2;
-  --chart-2: #4eb57c;
-  --chart-3: #9e86c8;
-  --chart-4: #e87d3e;
-  --chart-5: #ff82b2;
   
   /* Sidebar */
-  --sidebar: #fafafa;
-  --sidebar-foreground: #333333;
-  --sidebar-primary: #2e80f2;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f5f5f5;
-  --sidebar-accent-foreground: #333333;
-  --sidebar-border: #e8e8e8;
-  --sidebar-ring: #2e80f2;
   
   /* Editor specific */
   --editor-bg: #ffffff;
@@ -191,51 +158,24 @@
   --h6-color: var(--muted-foreground);
   
   /* Base layers - Things dark mode */
-  --background: #1c2127;
-  --foreground: #dadada;
   
   /* Card/elevated surfaces */
-  --card: #282c34;
-  --card-foreground: #dadada;
   
   /* Popover/floating elements */
-  --popover: #2c313c;
-  --popover-foreground: #dadada;
   
   /* Primary - Things blue */
-  --primary: #2e80f2;
-  --primary-foreground: #ffffff;
   
   /* Secondary */
-  --secondary: #35393e;
-  --secondary-foreground: #bababa;
   
   /* Muted */
-  --muted: #3f3f3f;
-  --muted-foreground: #999999;
   
   /* Accent */
-  --accent: #35393e;
-  --accent-foreground: #dadada;
   
   /* Destructive */
-  --destructive: #e04674;
-  --destructive-foreground: #ffffff;
   
   /* Borders and inputs */
-  --border: #35393e;
-  --input: #2c313c;
-  --ring: #2e80f2;
   
   /* Sidebar */
-  --sidebar: #181c20;
-  --sidebar-foreground: #dadada;
-  --sidebar-primary: #2e80f2;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #35393e;
-  --sidebar-accent-foreground: #dadada;
-  --sidebar-border: #35393e;
-  --sidebar-ring: #2e80f2;
   
   /* Editor specific */
   --editor-bg: #1c2127;
