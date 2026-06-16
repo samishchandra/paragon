@@ -87,6 +87,22 @@ export function useEditorKeyboardShortcuts(
           const { state } = editor;
           const { selection } = state;
           const { $from } = selection;
+
+          // Skip markdown auto-detection inside code blocks and inline code.
+          // This document-level listener bypasses ProseMirror's input rules,
+          // so it must replicate their code guard — otherwise typing "* ",
+          // "- ", "# ", "``` ", "> ", "1. ", or "[] " inside a code block
+          // converts it to a list/heading/etc. instead of staying literal.
+          if ($from.parent.type.spec.code) return;
+          const codeMark = state.schema.marks.code;
+          if (
+            codeMark &&
+            (codeMark.isInSet($from.marks()) ||
+              (!!$from.nodeBefore && codeMark.isInSet($from.nodeBefore.marks)))
+          ) {
+            return;
+          }
+
           const textBefore = $from.nodeBefore?.textContent || '';
 
           // Heading shortcuts (check longest first to avoid partial matches)

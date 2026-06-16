@@ -16532,72 +16532,77 @@ function kC(e, t, n) {
         }
         if (o.key === " ")
           try {
-            const { state: a } = e, { selection: c } = a, { $from: l } = c, d = l.nodeBefore?.textContent || "";
-            if (d === "#####") {
+            const { state: a } = e, { selection: c } = a, { $from: l } = c;
+            if (l.parent.type.spec.code) return;
+            const d = a.schema.marks.code;
+            if (d && (d.isInSet(l.marks()) || l.nodeBefore && d.isInSet(l.nodeBefore.marks)))
+              return;
+            const u = l.nodeBefore?.textContent || "";
+            if (u === "#####") {
               o.preventDefault(), e.chain().focus().deleteRange({ from: l.pos - 5, to: l.pos }).setHeading({ level: 5 }).run();
               return;
             }
-            if (d === "####") {
+            if (u === "####") {
               o.preventDefault(), e.chain().focus().deleteRange({ from: l.pos - 4, to: l.pos }).setHeading({ level: 4 }).run();
               return;
             }
-            if (d === "###") {
+            if (u === "###") {
               o.preventDefault(), e.chain().focus().deleteRange({ from: l.pos - 3, to: l.pos }).setHeading({ level: 3 }).run();
               return;
             }
-            if (d === "##") {
+            if (u === "##") {
               o.preventDefault(), e.chain().focus().deleteRange({ from: l.pos - 2, to: l.pos }).setHeading({ level: 2 }).run();
               return;
             }
-            if (d === "#") {
+            if (u === "#") {
               o.preventDefault(), e.chain().focus().deleteRange({ from: l.pos - 1, to: l.pos }).setHeading({ level: 1 }).run();
               return;
             }
-            if (d === "-" || d === "*") {
+            if (u === "-" || u === "*") {
               o.preventDefault(), e.chain().focus().deleteRange({ from: l.pos - 1, to: l.pos }).toggleBulletList().run();
               return;
             }
-            if (/^\d+\.$/.test(d)) {
-              o.preventDefault(), e.chain().focus().deleteRange({ from: l.pos - d.length, to: l.pos }).toggleOrderedList().run();
+            if (/^\d+\.$/.test(u)) {
+              o.preventDefault(), e.chain().focus().deleteRange({ from: l.pos - u.length, to: l.pos }).toggleOrderedList().run();
               return;
             }
-            const u = /^(-\s*)?\[([ x])?\]$/.exec(d);
-            if (u) {
+            const f = /^(-\s*)?\[([ x])?\]$/.exec(u);
+            if (f) {
               o.preventDefault();
-              const f = u[2] === "x", p = a.schema.nodes.taskList, g = a.schema.nodes.taskItem;
-              if (p && g) {
-                const m = a.tr, y = l.pos - d.length, b = l.pos;
-                m.delete(y, b);
-                const w = m.doc.resolve(y).blockRange();
-                if (w) {
-                  const T = [
-                    { type: p, attrs: {} },
-                    { type: g, attrs: { checked: f } }
+              const p = f[2] === "x", g = a.schema.nodes.taskList, m = a.schema.nodes.taskItem;
+              if (g && m) {
+                const y = a.tr, b = l.pos - u.length, v = l.pos;
+                y.delete(b, v);
+                const T = y.doc.resolve(b).blockRange();
+                if (T) {
+                  const k = [
+                    { type: g, attrs: {} },
+                    { type: m, attrs: { checked: p } }
                   ];
-                  m.wrap(w, T), e.view.dispatch(m);
+                  y.wrap(T, k), e.view.dispatch(y);
                   return;
                 }
               }
-              e.chain().focus().deleteRange({ from: l.pos - d.length, to: l.pos }).toggleTaskList().run();
+              e.chain().focus().deleteRange({ from: l.pos - u.length, to: l.pos }).toggleTaskList().run();
               return;
             }
-            if (d === ">") {
+            if (u === ">") {
               o.preventDefault(), e.chain().focus().deleteRange({ from: l.pos - 1, to: l.pos }).toggleBlockquote().run();
               return;
             }
-            if (d === "```") {
+            if (u === "```") {
               o.preventDefault(), e.chain().focus().deleteRange({ from: l.pos - 3, to: l.pos }).toggleCodeBlock().run();
               return;
             }
-            if (d === "---" || d === "***") {
+            if (u === "---" || u === "***") {
               o.preventDefault(), Qr(e, l.pos - 3, l.pos);
               return;
             }
-            if (d === "—-") {
+            if (u === "—-") {
               o.preventDefault(), Qr(e, l.pos - 2, l.pos);
               return;
             }
-            if (d === "—") {
+            if (u === "—") {
               o.preventDefault(), Qr(e, l.pos - 1, l.pos);
               return;
             }

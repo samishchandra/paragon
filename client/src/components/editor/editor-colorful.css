@@ -373,7 +373,14 @@
   ul {
     list-style-type: disc;
   }
-  
+
+  /* Nested bullet lists use an outline (hollow) marker; only the top level
+     is filled. Applies at every nesting depth. Task lists keep their own
+     `list-style: none` via the more specific [data-type="taskList"] rules. */
+  ul ul {
+    list-style-type: circle;
+  }
+
   ol {
     list-style-type: decimal;
   }
