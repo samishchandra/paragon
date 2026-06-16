@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useEditor } from '@tiptap/react';
 import type { Extensions } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
+import { DOMSerializer } from '@tiptap/pm/model';
 import { useTurndownService } from './useTurndownService';
 import { stripZWSP } from '../utils/stripZWSP';
 
@@ -138,6 +139,32 @@ export function useEditorInstance(options: UseEditorInstanceOptions) {
       attributes: {
         class: 'tiptap-editor outline-none min-h-full',
         spellcheck: spellCheck ? 'true' : 'false',
+      },
+      // Serialize copied content to clean markdown for the text/plain clipboard
+      // flavor. ProseMirror's default joins every block with a blank line, so
+      // copying a list and pasting into a plain-text field or code block yields
+      // blank lines between items. Routing through the same turndown service used
+      // for getMarkdown() produces tight, single-newline output instead.
+      clipboardTextSerializer: (slice) => {
+        const fragment = slice.content;
+        try {
+          const schema = fragment.firstChild?.type.schema;
+          const td = turndownServiceRef.current;
+          if (schema && td) {
+            const dom = DOMSerializer.fromSchema(schema).serializeFragment(fragment);
+            const div = document.createElement('div');
+            div.appendChild(dom);
+            const md = stripZWSP(td.turndown(div.innerHTML)).replace(/^\n+|\n+$/g, '');
+            // turndown is lazy-loaded and returns '' until its dynamic import
+            // resolves. Treat an empty result as "not ready" and fall through to
+            // the plain-text fallback so the clipboard is never blanked out.
+            if (md) return md;
+          }
+        } catch {
+          // Fall through to the plain-text fallback below.
+        }
+        // Fallback: single-newline block separation (still avoids the default \n\n).
+        return fragment.textBetween(0, fragment.size, '\n', '\n');
       },
       handleClick: (view, pos, event) => {
         // Handle link clicks
