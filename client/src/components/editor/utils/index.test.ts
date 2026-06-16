@@ -33,6 +33,10 @@ describe('utils barrel file (index.ts)', () => {
       'lineToBlocks',
       'parseListLine',
       'buildNestedListHtml',
+      // transformCalloutsToHeadings.ts
+      'transformCalloutsToHeadings',
+      // showCopyToast.ts
+      'showCopyToast',
     ];
 
     it.each(expectedFunctions)('should export %s as a function', (name) => {
@@ -68,6 +72,8 @@ describe('utils barrel file (index.ts)', () => {
         'lineToBlocks',
         'parseListLine',
         'buildNestedListHtml',
+        'transformCalloutsToHeadings',
+        'showCopyToast',
       ];
       // Every export should be in our expected list
       for (const key of allExports) {

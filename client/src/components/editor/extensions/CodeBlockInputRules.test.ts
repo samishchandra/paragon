@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { CodeBlockWithFeatures } from './CodeBlockWithFeatures';
@@ -9,8 +9,13 @@ import { CodeBlockWithFeatures } from './CodeBlockWithFeatures';
  * 2. ``` + Enter should create a code block with cursor inside
  */
 
+// Track created editors so they can be destroyed after each test. Without this,
+// ProseMirror's DOMObserver leaves a pending setTimeout that fires after jsdom is
+// torn down, throwing "document is not defined" as an unhandled error.
+const createdEditors: Editor[] = [];
+
 function createEditor(content?: string) {
-  return new Editor({
+  const editor = new Editor({
     extensions: [
       StarterKit.configure({
         codeBlock: false, // Disable default, use CodeBlockWithFeatures
@@ -22,7 +27,15 @@ function createEditor(content?: string) {
     ],
     content: content || '',
   });
+  createdEditors.push(editor);
+  return editor;
 }
+
+afterEach(() => {
+  while (createdEditors.length) {
+    createdEditors.pop()?.destroy();
+  }
+});
 
 describe('Code block input rules', () => {
   describe('Issue 1: heading shortcuts inside code blocks', () => {
