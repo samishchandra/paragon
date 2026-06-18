@@ -271,6 +271,9 @@ export interface MarkdownEditorProps {
     maxHeight?: string;
     /** Enable spellcheck (default: true) */
     spellCheck?: boolean;
+    /** Replace the native blinking caret with a steady (non-blinking) bar sized to
+     *  the font height of the text (WYSIWYG mode only). Default: false. */
+    steadyCaret?: boolean;
     /** Heading levels to enable (default: [1, 2, 3, 4, 5, 6]) */
     headingLevels?: (1 | 2 | 3 | 4 | 5 | 6)[];
     /** Collapsible heading levels (default: [1, 2, 3]) */

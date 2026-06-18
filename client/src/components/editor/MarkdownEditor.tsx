@@ -51,6 +51,7 @@ import { PerformanceProfiler } from './PerformanceProfiler';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
 import { EditorLoadingSkeleton } from './EditorLoadingSkeleton';
 import { EditorModeToggle } from './EditorModeToggle';
+import { SteadyCaret } from './SteadyCaret';
 import { WYSIWYGOverlays } from './WYSIWYGOverlays';
 import { stripZWSP } from './utils/stripZWSP';
 import { transformCalloutsToHeadings } from './utils/transformCalloutsToHeadings';
@@ -347,6 +348,9 @@ export interface MarkdownEditorProps {
   maxHeight?: string;
   /** Enable spellcheck (default: true) */
   spellCheck?: boolean;
+  /** Replace the native blinking caret with a steady (non-blinking) bar sized to
+   *  the font height of the text (WYSIWYG mode only). Default: false. */
+  steadyCaret?: boolean;
   /** Heading levels to enable (default: [1, 2, 3, 4, 5, 6]) */
   headingLevels?: (1 | 2 | 3 | 4 | 5 | 6)[];
   /** Collapsible heading levels (default: [1, 2, 3]) */
@@ -513,6 +517,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   minHeight = '200px',
   maxHeight,
   spellCheck = true,
+  steadyCaret = false,
   headingLevels = [1, 2, 3, 4, 5, 6],
   collapsibleHeadingLevels = [1, 2, 3],
   // TOC props
@@ -1053,6 +1058,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         {editorMode === 'wysiwyg' ? (
           <>
             <EditorContent editor={editor} className="editor-content" />
+            {steadyCaret && editor && (
+              <SteadyCaret editor={editor} containerRef={editorContentRef as React.RefObject<HTMLElement>} />
+            )}
             <WYSIWYGOverlays
               editor={editor}
               isMobile={isMobile}
