@@ -294,21 +294,10 @@ async function processAndInsertImage(
       }).run();
     }
 
-    // Mark the just-inserted image node as uploading (shows CSS spinner overlay)
-    const { state } = editor.view;
-    const pos = state.selection.from - 1;
-    if (pos >= 0) {
-      const node = state.doc.nodeAt(pos);
-      if (node && node.type.name === 'resizableImage') {
-        const nodeView = editor.view.nodeDOM(pos);
-        if (nodeView) {
-          const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
-          if (figure) {
-            figure.classList.add('image-uploading');
-          }
-        }
-      }
-    }
+    // The spinner overlay is driven by the ResizableImage node view from the
+    // node's placeholder alt ("placeholder://<id>"), so it always tracks the
+    // correct image even after another image is inserted. No imperative DOM
+    // class toggling here.
 
     // Step 3: Compress (if needed) and upload
     let compressedFile: File;
@@ -358,20 +347,8 @@ async function processAndInsertImage(
         return true;
       });
 
-      // Remove uploading class
-      editor.view.state.doc.descendants((n: any, p: number) => {
-        if (n.type.name === 'resizableImage' && n.attrs.src === imageRef) {
-          const nodeView = editor.view.nodeDOM(p);
-          if (nodeView) {
-            const figure = nodeView instanceof HTMLElement ? nodeView : (nodeView as any).dom;
-            if (figure) {
-              figure.classList.remove('image-uploading');
-            }
-          }
-          return false;
-        }
-        return true;
-      });
+      // The spinner is removed automatically by the node view once the
+      // placeholder alt is replaced with the real filename above.
 
       options.onUploadComplete?.();
       return true;

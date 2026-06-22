@@ -261,9 +261,17 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       // resolveAndSetSrc so stale async results are discarded.
       let resolveGeneration = 0;
 
+      // Track the most recently requested attr src so we can skip redundant
+      // re-resolution on no-op updates (e.g. selection changes). Re-resolving
+      // on every update re-assigned the <img> src asynchronously, which
+      // triggered a WebKit/Tauri repaint glitch that blanked the image when
+      // the node was deselected.
+      let lastRequestedSrc: string | null = null;
+
       // Helper: resolve and set image src
       const resolveAndSetSrc = (src: string) => {
         const gen = ++resolveGeneration;
+        lastRequestedSrc = src;
 
         if (needsResolution(src) && extensionOptions.resolveImageSrc) {
           // If the img already has a displayable src (base64/blob/http),
@@ -312,6 +320,21 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         errorLabel.textContent = `Image not found: ${src}`;
         container.insertBefore(errorLabel, container.firstChild);
       });
+
+      // Drive the upload spinner from node state instead of an imperative DOM
+      // class toggled by the upload plugin. The upload placeholder is
+      // identified by an alt of the form "placeholder://<id>"; once the real
+      // image is uploaded the alt is replaced with the filename. Deriving the
+      // spinner from the node ensures it always tracks the correct image, even
+      // when ProseMirror reuses node-view DOM after another image is inserted.
+      const applyUploadingState = (alt: string | null | undefined) => {
+        if (alt && alt.startsWith('placeholder://')) {
+          container.classList.add('image-uploading');
+        } else {
+          container.classList.remove('image-uploading');
+        }
+      };
+      applyUploadingState(node.attrs.alt);
 
       // Set initial src (resolve if needed)
       resolveAndSetSrc(node.attrs.src);
@@ -851,29 +874,91 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         closeBtn.addEventListener('mouseenter', () => { closeBtn.style.background = 'rgba(255, 255, 255, 0.25)'; });
         closeBtn.addEventListener('mouseleave', () => { closeBtn.style.background = 'rgba(255, 255, 255, 0.15)'; });
 
-        // Alt text caption
-        const altText = currentNode.attrs.alt;
-        let caption: HTMLElement | null = null;
-        if (altText && altText.trim()) {
-          caption = document.createElement('div');
-          caption.style.cssText = `
+        // Gather every image in the document (in render order) so the lightbox
+        // can cycle through the whole doc, not just the clicked image. We read
+        // the already-resolved <img> src values straight from the DOM.
+        const galleryImgs = Array.from(
+          editor.view.dom.querySelectorAll('figure.image-resizer img')
+        ) as HTMLImageElement[];
+        let currentIndex = galleryImgs.indexOf(img);
+        if (currentIndex < 0) currentIndex = 0;
+        const hasMultiple = galleryImgs.length > 1;
+
+        // Caption: alt text plus an "n / N" counter when there are multiple
+        // images. Always created; hidden when there is nothing to show.
+        const caption = document.createElement('div');
+        caption.style.cssText = `
+          position: absolute;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          max-width: 80vw;
+          padding: 8px 16px;
+          background: rgba(0, 0, 0, 0.6);
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 13px;
+          border-radius: 6px;
+          text-align: center;
+          pointer-events: none;
+        `;
+
+        const showAt = (index: number) => {
+          const total = galleryImgs.length;
+          if (total === 0) return;
+          currentIndex = ((index % total) + total) % total;
+          const target = galleryImgs[currentIndex];
+          lightboxImg.src = target.src;
+          lightboxImg.alt = target.alt || '';
+          const altLabel = (target.alt || '').trim();
+          const counter = total > 1 ? `${currentIndex + 1} / ${total}` : '';
+          const label = [altLabel, counter].filter(Boolean).join('   ·   ');
+          caption.textContent = label;
+          caption.style.display = label ? 'block' : 'none';
+        };
+
+        // Prev / next navigation buttons (only when there is more than one image)
+        const makeNavButton = (side: 'left' | 'right', svg: string, step: number) => {
+          const btn = document.createElement('button');
+          btn.setAttribute('type', 'button');
+          btn.setAttribute('aria-label', step < 0 ? 'Previous image' : 'Next image');
+          btn.style.cssText = `
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            max-width: 80vw;
-            padding: 8px 16px;
-            background: rgba(0, 0, 0, 0.6);
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 13px;
-            border-radius: 6px;
-            text-align: center;
-            pointer-events: none;
+            ${side}: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease;
+            z-index: 1;
           `;
-          caption.textContent = altText;
-        }
+          btn.innerHTML = svg;
+          btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(255, 255, 255, 0.25)'; });
+          btn.addEventListener('mouseleave', () => { btn.style.background = 'rgba(255, 255, 255, 0.15)'; });
+          btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            showAt(currentIndex + step);
+          });
+          return btn;
+        };
+        const prevBtn = hasMultiple
+          ? makeNavButton('left', `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`, -1)
+          : null;
+        const nextBtn = hasMultiple
+          ? makeNavButton('right', `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`, 1)
+          : null;
 
         const closeLightbox = () => {
+          // Clean up on every close path (Escape, backdrop, close button) so
+          // the keydown listener never accumulates across open/close cycles.
+          document.removeEventListener('keydown', onKeyDown);
           overlay.style.opacity = '0';
           lightboxImg.style.transform = 'scale(0.92)';
           setTimeout(() => overlay.remove(), 200);
@@ -884,18 +969,28 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         });
         closeBtn.addEventListener('click', closeLightbox);
 
-        // Close on Escape key
+        // Close on Escape, navigate with arrow keys
         const onKeyDown = (ev: KeyboardEvent) => {
           if (ev.key === 'Escape') {
             closeLightbox();
-            document.removeEventListener('keydown', onKeyDown);
+          } else if (hasMultiple && ev.key === 'ArrowLeft') {
+            ev.preventDefault();
+            showAt(currentIndex - 1);
+          } else if (hasMultiple && ev.key === 'ArrowRight') {
+            ev.preventDefault();
+            showAt(currentIndex + 1);
           }
         };
         document.addEventListener('keydown', onKeyDown);
 
         overlay.appendChild(lightboxImg);
         overlay.appendChild(closeBtn);
-        if (caption) overlay.appendChild(caption);
+        if (prevBtn) overlay.appendChild(prevBtn);
+        if (nextBtn) overlay.appendChild(nextBtn);
+        overlay.appendChild(caption);
+
+        // Show the clicked image and populate the caption/counter
+        showAt(currentIndex);
 
         // Append to dialog if inside one, otherwise to body
         const dialogEl = container.closest('[role="dialog"]');
@@ -913,6 +1008,15 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       };
 
       magnifyBtn.addEventListener('click', openLightbox);
+
+      // Double-click the image to open the lightbox (same as the magnifier).
+      // Skip when a resize just happened so the drag-release isn't treated as
+      // a double-click.
+      const onImageDblClick = (e: MouseEvent) => {
+        if (isResizing) return;
+        openLightbox(e);
+      };
+      img.addEventListener('dblclick', onImageDblClick);
 
       // Resize logic
       let startX: number;
@@ -965,9 +1069,16 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           }
           // Update the mutable reference so menu actions use latest values
           currentNode = updatedNode;
-          // Resolve src if it's a relative path or custom protocol
-          resolveAndSetSrc(updatedNode.attrs.src);
+          // Only re-resolve when the src actually changed. Re-resolving on
+          // every update (including pure selection changes like deselecting
+          // the image) re-assigned the <img> src and blanked the image in
+          // WebKit/Tauri.
+          if (updatedNode.attrs.src !== lastRequestedSrc) {
+            resolveAndSetSrc(updatedNode.attrs.src);
+          }
           img.alt = updatedNode.attrs.alt || '';
+          // Keep the upload spinner in sync with the node's placeholder state.
+          applyUploadingState(updatedNode.attrs.alt);
           if (updatedNode.attrs.width) {
             img.style.width = `${updatedNode.attrs.width}px`;
           }
@@ -978,6 +1089,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         destroy: () => {
           resizeHandle.removeEventListener('mousedown', onMouseDown);
           magnifyBtn.removeEventListener('click', openLightbox);
+          img.removeEventListener('dblclick', onImageDblClick);
           document.removeEventListener('click', closeDropdown);
           dropdown.remove();
         },
