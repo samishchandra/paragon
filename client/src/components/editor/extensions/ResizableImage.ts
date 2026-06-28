@@ -268,6 +268,26 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       // the node was deselected.
       let lastRequestedSrc: string | null = null;
 
+      let errorLabel: HTMLDivElement | null = null;
+
+      const isUploadPlaceholderAlt = (alt: string | null | undefined) => {
+        return Boolean(alt?.startsWith('placeholder://'));
+      };
+
+      const clearImageError = () => {
+        if (errorLabel) {
+          errorLabel.remove();
+          errorLabel = null;
+        }
+        img.style.display = '';
+        applyAlignment(currentNode.attrs.align || 'left');
+        container.style.borderRadius = '';
+        container.style.border = '';
+        container.style.background = '';
+        container.style.padding = '';
+        container.style.minHeight = '';
+      };
+
       // Helper: resolve and set image src
       const resolveAndSetSrc = (src: string) => {
         const gen = ++resolveGeneration;
@@ -291,6 +311,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
             if (gen !== resolveGeneration) return;
             // Only update if we got an actually displayable URL back
             if (resolvedUrl && resolvedUrl !== src) {
+              clearImageError();
               img.src = resolvedUrl;
             }
             img.style.opacity = '1';
@@ -302,12 +323,13 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
             img.style.opacity = '1';
           });
         } else {
+          clearImageError();
           img.src = src;
         }
       };
 
       // Error handler — show path when image fails to load
-      img.addEventListener('error', () => {
+      const onImageError = () => {
         const src = img.getAttribute('src') || '';
         container.style.borderRadius = '8px';
         container.style.border = `1px solid ${isDarkTheme ? 'rgba(255,255,255,0.1)' : 'oklch(0.9 0 0)'}`;
@@ -315,11 +337,15 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
         container.style.padding = '12px';
         container.style.minHeight = '60px';
         img.style.display = 'none';
-        const errorLabel = document.createElement('div');
+        if (errorLabel) {
+          errorLabel.remove();
+        }
+        errorLabel = document.createElement('div');
         errorLabel.style.cssText = `font-size: 12px; color: ${isDarkTheme ? '#999' : '#888'}; word-break: break-all;`;
         errorLabel.textContent = `Image not found: ${src}`;
         container.insertBefore(errorLabel, container.firstChild);
-      });
+      };
+      img.addEventListener('error', onImageError);
 
       // Drive the upload spinner from node state instead of an imperative DOM
       // class toggled by the upload plugin. The upload placeholder is
@@ -328,7 +354,7 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
       // spinner from the node ensures it always tracks the correct image, even
       // when ProseMirror reuses node-view DOM after another image is inserted.
       const applyUploadingState = (alt: string | null | undefined) => {
-        if (alt && alt.startsWith('placeholder://')) {
+        if (isUploadPlaceholderAlt(alt)) {
           container.classList.add('image-uploading');
         } else {
           container.classList.remove('image-uploading');
@@ -1067,13 +1093,23 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           if (updatedNode.type.name !== 'resizableImage') {
             return false;
           }
+          const srcChanged = updatedNode.attrs.src !== lastRequestedSrc;
+          const completedUploadPlaceholder =
+            srcChanged &&
+            isUploadPlaceholderAlt(currentNode.attrs.alt) &&
+            !isUploadPlaceholderAlt(updatedNode.attrs.alt);
+
+          if (completedUploadPlaceholder) {
+            return false;
+          }
+
           // Update the mutable reference so menu actions use latest values
           currentNode = updatedNode;
           // Only re-resolve when the src actually changed. Re-resolving on
           // every update (including pure selection changes like deselecting
           // the image) re-assigned the <img> src and blanked the image in
           // WebKit/Tauri.
-          if (updatedNode.attrs.src !== lastRequestedSrc) {
+          if (srcChanged) {
             resolveAndSetSrc(updatedNode.attrs.src);
           }
           img.alt = updatedNode.attrs.alt || '';
@@ -1087,9 +1123,11 @@ export const ResizableImage = Image.extend<ResizableImageOptions>({
           return true;
         },
         destroy: () => {
+          resolveGeneration++;
           resizeHandle.removeEventListener('mousedown', onMouseDown);
           magnifyBtn.removeEventListener('click', openLightbox);
           img.removeEventListener('dblclick', onImageDblClick);
+          img.removeEventListener('error', onImageError);
           document.removeEventListener('click', closeDropdown);
           dropdown.remove();
         },
