@@ -904,7 +904,7 @@
     min-width: 160px !important;
     max-width: 200px !important;
     width: auto !important;
-    background: hsl(var(--popover)) !important;
+    background: var(--popover, var(--card, #2c313c)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: 6px !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08) !important;
@@ -941,7 +941,7 @@
     padding: 6px 8px;
     font-size: 12px;
     font-weight: 450;
-    color: hsl(var(--popover-foreground));
+    color: var(--popover-foreground, var(--foreground, #dadada));
     background: transparent;
     border: none;
     border-radius: 4px;
@@ -1501,7 +1501,7 @@
   z-index: 50;
   min-width: 140px;
   padding: 4px;
-  background: var(--popover);
+  background: var(--popover, var(--card, #2c313c));
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 16px oklch(0 0 0 / 0.15);
@@ -1650,7 +1650,7 @@
   gap: 2px;
   padding: 4px 6px;
   border-radius: 8px;
-  background: var(--popover);
+  background: var(--popover, var(--card, #2c313c));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
@@ -2028,7 +2028,7 @@ pre.with-line-numbers code .line::before {
 
 /* Slash command menu — Taskmate compact style */
 .slash-menu {
-  background: var(--popover);
+  background: var(--popover, var(--card, #2c313c));
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 16px oklch(0 0 0 / 0.25);
@@ -2251,13 +2251,13 @@ pre.with-line-numbers code .line::before {
 
 /* Arrow pointing from picker to pill */
 .date-picker-arrow {
-  background: var(--popover);
+  background: var(--popover, var(--card, #2c313c));
   border: 1px solid var(--border);
   clip-path: polygon(0% 0%, 100% 0%, 0% 100%);
 }
 
 .date-picker-portal.dark .date-picker-arrow {
-  background: var(--popover);
+  background: var(--popover, var(--card, #2c313c));
   border-color: var(--border);
 }
 
@@ -2384,7 +2384,7 @@ pre.with-line-numbers code .line::before {
 
 /* Link Popover Styles */
 .link-popover {
-  background: var(--popover);
+  background: var(--popover, var(--card, #2c313c));
   backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: 0.5rem;
@@ -2392,7 +2392,7 @@ pre.with-line-numbers code .line::before {
   box-shadow: 0 8px 32px oklch(0 0 0 / 0.12);
   min-width: 300px;
   max-width: 400px;
-  color: var(--popover-foreground);
+  color: var(--popover-foreground, var(--foreground, #dadada));
 }
 
 .link-popover-form {
@@ -2444,7 +2444,7 @@ pre.with-line-numbers code .line::before {
 
 /* Link Hover Tooltip Styles */
 .link-hover-tooltip {
-  background: var(--popover);
+  background: var(--popover, var(--card, #2c313c));
   backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: 0.375rem;
@@ -2452,7 +2452,7 @@ pre.with-line-numbers code .line::before {
   box-shadow: 0 4px 16px oklch(0 0 0 / 0.1);
   min-width: 180px;
   max-width: 320px;
-  color: var(--popover-foreground);
+  color: var(--popover-foreground, var(--foreground, #dadada));
 }
 
 .link-hover-tooltip-content {
@@ -2589,7 +2589,7 @@ pre.with-line-numbers code .line::before {
 
 /* Wiki Link Autocomplete Menu */
 .wikilink-menu {
-  background: var(--popover);
+  background: var(--popover, var(--card, #2c313c));
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 16px oklch(0 0 0 / 0.25);
